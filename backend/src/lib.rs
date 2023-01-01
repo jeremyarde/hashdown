@@ -7,10 +7,10 @@ struct Survey {
     questions: Vec<Question>,
 }
 #[derive(Clone, Debug)]
-struct Question {
+pub struct Question {
     id: i32,
-    text: String,
-    options: Vec<String>,
+    pub text: String,
+    pub options: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -27,8 +27,10 @@ enum Types {
     text,
 }
 
-fn parse_markdown_blocks() {
-    let markdown = include_str!("../test_file.md").to_string();
+pub type Questions = Vec<Question>;
+
+pub fn parse_markdown_blocks(markdown: String) -> Questions {
+    // let markdown = include_str!("../test_file.md").to_string();
     let questions = Regex::new(r"(?m)^(\d). (.*)$").unwrap();
     let locations = questions.captures_iter(&markdown);
     // for x in locations {
@@ -43,7 +45,10 @@ fn parse_markdown_blocks() {
     let mut current = 1;
     // for line in markdown.lines() {
     let mut lines = markdown.lines();
-    let mut currline = lines.next().unwrap();
+    let mut currline = match lines.next() {
+        Some(x) => x,
+        None => return vec![],
+    };
 
     loop {
         let mut q_num = format!("{}. ", current);
@@ -53,12 +58,25 @@ fn parse_markdown_blocks() {
             current += 1;
 
             // current_question = currline.trim_start_matches(q_num.as_str()).to_owned();
-            current_question = parse_question_text(currline).to_owned();
+            current_question = match parse_question_text(currline).to_owned() {
+                Some(x) => x.to_string(),
+                None => "".to_string(),
+            };
+            // current_question = parse_question_text(currline).to_owned();
 
-            currline = lines.next().unwrap();
+            currline = match lines.next() {
+                Some(x) => x,
+                None => {
+                    println!("Did not find a new line to parse");
+                    continue;
+                }
+            };
             println!("{}", currline);
             while currline.starts_with("  ") {
-                options.push(parse_question_text(currline).to_owned());
+                match parse_question_text(currline).to_owned() {
+                    Some(x) => options.push(x.to_string()),
+                    None => {}
+                }
                 currline = match lines.next() {
                     Some(x) => x,
                     None => break,
@@ -82,10 +100,14 @@ fn parse_markdown_blocks() {
     }
 
     println!("{:#?}", questions);
+    questions
 }
 
-fn parse_question_text(line: &str) -> &str {
-    line.split_once(". ").unwrap().1
+fn parse_question_text(line: &str) -> Option<&str> {
+    match line.split_once(". ") {
+        Some(x) => Some(x.1),
+        None => None,
+    }
 }
 
 enum MarkdownElement {
@@ -95,6 +117,16 @@ enum MarkdownElement {
     Nothing,
 }
 
-fn main() {
-    parse_markdown_blocks();
+#[cfg(test)]
+mod tests {
+    use crate::parse_markdown_blocks;
+
+    #[test]
+    fn test() {
+        let teststring = "1. this is a test\n  ";
+
+        let content = String::from(teststring);
+        let result = parse_markdown_blocks(content);
+        print!("test result: {:?}\n", result);
+    }
 }
