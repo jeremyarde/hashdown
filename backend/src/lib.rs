@@ -8,7 +8,7 @@ struct Survey {
 }
 #[derive(Clone, Debug)]
 pub struct Question {
-    id: i32,
+    pub id: i32,
     pub text: String,
     pub options: Vec<String>,
 }
