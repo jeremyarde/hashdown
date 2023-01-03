@@ -527,6 +527,10 @@ video {
   margin-right: auto;
 }
 
+.hidden {
+  display: none;
+}
+
 .max-w-3xl {
   max-width: 48rem;
 }
@@ -579,6 +583,10 @@ video {
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));
+}
+
+.filter {
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
 
 .hover\:bg-sky-700:hover {
