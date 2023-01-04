@@ -1,87 +1,93 @@
-use cfg_if::cfg_if;
-use leptos::*;
+#![allow(non_snake_case)]
 
-// boilerplate to run in different modes
-cfg_if! {
-if #[cfg(feature = "ssr")] {
-    use axum::{
-        routing::{post},
-        error_handling::HandleError,
-        Router,
-    };
-    use crate::todo::*;
-    use todo_app_sqlite_axum::*;
-    use http::StatusCode;
-    use tower_http::services::ServeDir;
+//! Example: Basic Tailwind usage
+//!
+//! This example shows how an app might be styled with TailwindCSS.
+//!
+//! To minify your tailwind bundle, currently you need to use npm. Follow these instructions:
+//!
+//!     https://dev.to/arctic_hen7/how-to-set-up-tailwind-css-with-yew-and-trunk-il9
 
-    #[tokio::main]
-    async fn main() {
-        simple_logger::init_with_level(log::Level::Debug).expect("couldn't initialize logging");
+use dioxus::prelude::{dioxus_elements::link, *};
+// use dioxus_desktop::Config;
+// use dioxus_desktop::Config;
 
-        let mut conn = db().await.expect("couldn't connect to DB");
-        sqlx::migrate!()
-            .run(&mut conn)
-            .await
-            .expect("could not run SQLx migrations");
 
-        crate::todo::register_server_functions();
-
-        let conf = get_configuration(Some("Cargo.toml")).await.unwrap();
-        let leptos_options = conf.leptos_options;
-        let site_root = &leptos_options.site_root;
-        let pkg_dir = &leptos_options.site_pkg_dir;
-
-        // The URL path of the generated JS/WASM bundle from cargo-leptos
-        let bundle_path = format!("/{site_root}/{pkg_dir}");
-        // The filesystem path of the generated JS/WASM bundle from cargo-leptos
-        let bundle_filepath = format!("./{site_root}/{pkg_dir}");
-        let addr = leptos_options.site_address.clone();
-        log::debug!("serving at {addr}");
-
-        // These are Tower Services that will serve files from the static and pkg repos.
-        // HandleError is needed as Axum requires services to implement Infallible Errors
-        // because all Errors are converted into Responses
-        let static_service = HandleError::new( ServeDir::new("./static"), handle_file_error);
-        let pkg_service = HandleError::new( ServeDir::new("./pkg"), handle_file_error);
-        let cargo_leptos_service = HandleError::new( ServeDir::new(&bundle_filepath), handle_file_error);
-
-        /// Convert the Errors from ServeDir to a type that implements IntoResponse
-        async fn handle_file_error(err: std::io::Error) -> (StatusCode, String) {
-            (
-                StatusCode::NOT_FOUND,
-                format!("File Not Found: {}", err),
-            )
+pub fn app(cx: Scope) -> Element {
+    cx.render(rsx!(
+        div {
+            link {
+                href: "./style/output.css", rel: "stylesheet"
+            }
+            header { class: "text-gray-400 bg-gray-900 body-font",
+            div { class: "container mx-auto flex flex-wrap p-5 flex-col md:flex-row items-center",
+            a { class: "flex title-font font-medium items-center text-white mb-4 md:mb-0",
+            // StacksIcon {}
+            span { class: "ml-3 text-xl", "Hello Dioxus!"}
         }
-
-        // build our application with a route
-        let app = Router::new()
-        .route("/api/*fn_name", post(leptos_axum::handle_server_fns))
-        .nest_service("/pkg", pkg_service) // Only need if using wasm-pack. Can be deleted if using cargo-leptos
-        .nest_service(&bundle_path, cargo_leptos_service) // Only needed if using cargo-leptos. Can be deleted if using wasm-pack and cargo-run
-        .nest_service("/static", static_service)
-        .fallback(leptos_axum::render_app_to_stream(leptos_options, |cx| view! { cx, <TodoApp/> }));
-
-        // run our app with hyper
-        // `axum::Server` is a re-export of `hyper::Server`
-        log!("listening on {}", &addr);
-        axum::Server::bind(&addr)
-            .serve(app.into_make_service())
-            .await
-            .unwrap();
+        nav { class: "md:ml-auto flex flex-wrap items-center text-base justify-center",
+        a { class: "mr-5 hover:text-white", "First Link"}
+        a { class: "mr-5 hover:text-white", "Second Link"}
+        a { class: "mr-5 hover:text-white", "Third Link"}
+        a { class: "mr-5 hover:text-white", "Fourth Link"}
+    }
+    button {
+        class: "inline-flex items-center bg-gray-800 border-0 py-1 px-3 focus:outline-none hover:bg-gray-700 rounded text-base mt-4 md:mt-0",
+        "Button"
+        // RightArrowIcon {}
     }
 }
+}
 
-    // client-only stuff for Trunk
-    else {
-        use todo_app_sqlite_axum::todo::*;
-
-        pub fn main() {
-            console_error_panic_hook::set_once();
-            _ = console_log::init_with_level(log::Level::Debug);
-            console_error_panic_hook::set_once();
-            mount_to_body(|cx| {
-                view! { cx, <TodoApp/> }
-            });
+section { class: "text-gray-400 bg-gray-900 body-font",
+div { class: "container mx-auto flex px-5 py-24 md:flex-row flex-col items-center",
+div { class: "lg:flex-grow md:w-1/2 lg:pr-24 md:pr-16 flex flex-col md:items-start md:text-left mb-16 md:mb-0 items-center text-center",
+h1 { class: "title-font sm:text-4xl text-3xl mb-4 font-medium text-white",
+br { class: "hidden lg:inline-block" }
+"Dioxus Sneak Peek"
+}
+p {
+    class: "mb-8 leading-relaxed",
+    
+    "Dioxus is a new UI framework that makes it easy and simple to write cross-platform apps using web
+    technologies! It is functional, fast, and portable. Dioxus can run on the web, on the desktop, and
+    on mobile and embedded platforms."
+    
+}
+div { class: "flex justify-center",
+button {
+    class: "inline-flex text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg",
+    "Learn more"
+}
+                            button {
+                                class: "ml-4 inline-flex text-gray-400 bg-gray-800 border-0 py-2 px-6 focus:outline-none hover:bg-gray-700 hover:text-white rounded text-lg",
+                                "Build an app"
+                            }
+                        }
+                    }
+                    div { class: "lg:max-w-lg lg:w-full md:w-1/2 w-5/6",
+                    // img {
+                        //     class: "object-cover object-center rounded",
+                        //     src: "https://i.imgur.com/oK6BLtw.png",
+                        //     referrerpolicy:"no-referrer",
+                        //     alt: "hero",
+                        // }
+                    }
+                }
+            }
         }
-    }
+    ))
+}
+
+fn main() {
+    // dioxus::desktop::launch_cfg(app, |c| {
+    //     // c.with_custom_head("<link href= './style/output.css', rel='stylesheet'/></link>".into());
+    //     c.with_custom_head("<script src=\"https://cdn.tailwindcss.com\"></script>".to_string());
+    //     c.with_window(|w| w.with_title("My App"))
+    // });
+
+    dioxus::web::launch_cfg(app, |c| {
+        // c.with_custom_head("<link href= './style/output.css', rel='stylesheet'/></link>".into());
+        c.into()
+    });
 }
