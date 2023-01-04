@@ -16,7 +16,8 @@ asset_dir = "public"
 [web.app]
 
 # HTML title tag content
-title = "dioxus | ⛺"
+title = "Testing stuff | ⛺"
+link = "href= './output.css', rel='stylesheet'"
 
 [web.watcher]
 
@@ -30,7 +31,7 @@ watch_path = ["src", "public"]
 [web.resource]
 
 # CSS style file
-style = []
+style = ["./output.css"]
 
 # Javascript code file
 script = []
