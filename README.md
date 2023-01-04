@@ -11,3 +11,9 @@ User
 Technical
 1. save markdown file contents
 2. parse markdown into questionnaire
+
+
+
+
+## tailwind build
+npx tailwindcss -i ./input.css -o ./public/output.css --watch

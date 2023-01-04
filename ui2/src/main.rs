@@ -12,9 +12,9 @@ fn app(cx: Scope) -> Element {
     cx.render(rsx! (
         div {
             style: "text-align: center;",
-            h1 { class: "bg-gray-900", "🌗 Dioxus 🚀" }
-            h3 { "Frontend that scales." }
-            p { class: "bg-gray-300", "Dioxus is a portable, performant, and ergonomic framework for building cross-platform user interfaces in Rust." }
+            h1 { class: "bg-red-600", "🌗 Dioxus 🚀" }
+            h3 { "Frontend that scales, I think this is all that is takes." }
+            p { class: "bg-yellow-100", "This is jeremy testing hot reload, performant, and ergonomic framework for building cross-platform user interfaces in Rust." }
         }
     ))
 }

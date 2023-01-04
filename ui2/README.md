@@ -20,7 +20,7 @@ dioxus init hello-dioxus --template=gh:dioxuslabs/dioxus-template
 
 ```
 cd ./hello-dioxus
-dioxus serve
+dioxus serve --hot-reload
 ```
 
 or package this project:

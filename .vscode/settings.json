@@ -10,6 +10,9 @@
     "files.associations": {
         "*.rs": "rust"
     },
+    "tailwindCSS.experimental.classRegex": [
+        "class: \"(.*)\","
+    ],
     "editor.quickSuggestions": {
         "other": "on",
         "comments": "on",
