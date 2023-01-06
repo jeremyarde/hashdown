@@ -16,4 +16,10 @@ Technical
 
 
 ## tailwind build
+
+from ui folder:
+```
 npx tailwindcss -i ./input.css -o ./public/output.css --watch
+```
+
+## dioxus building
