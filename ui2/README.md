@@ -38,3 +38,12 @@ dioxus build --release
 - - utils # save some public function
 - - components # save some custom components
 ```
+
+
+
+## TODO
+
+### Components
+1. Title Bar?
+2. Editor section
+3. Preview section
