@@ -23,3 +23,7 @@ npx tailwindcss -i ./input.css -o ./public/output.css --watch
 ```
 
 ## dioxus building
+
+
+sudo lsof -i :8080
+kill -9 PID

@@ -1,17 +1,45 @@
 use dioxus::{
     events::oninput,
+    fermi::use_atom_state,
     prelude::{dioxus_elements::textarea, *},
 };
 
-use markdownparser::parse_markdown_blocks;
+// use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
+use markdownparser::{parse_markdown_blocks, Questions};
+
+static APP: Atom<AppState> = |_| AppState::new();
+
+struct AppState {
+    questions: Questions,
+    input_text: String,
+}
+
+impl AppState {
+    fn new() -> Self {
+        AppState {
+            questions: vec![],
+            input_text: String::from(""),
+        }
+    }
+}
 
 fn app(cx: Scope) -> Element {
-    let model = use_state(&cx, || String::from(""));
+    // let model = use_state(&cx, || String::from(""));
+    // let results = use_state(&cx, || String::from(""));
+    // let set_app = use_set(&cx, APP);
+    let set_app = use_atom_state(&cx, APP);
 
-    fn send_input(content: String) {
-        print!("Testing in send input");
-        parse_markdown_blocks(content);
-    }
+    let send_input = move |content: String| {
+        print!("Testing in send inputa");
+        let question = parse_markdown_blocks(content.clone());
+        // println!("results: {:?}", results);
+        // set_app = question;
+        let _x = &set_app.get().questions;
+        set_app.set(AppState {
+            questions: question,
+            input_text: content.clone(),
+        });
+    };
 
     cx.render(rsx! (
         div {
@@ -21,16 +49,15 @@ fn app(cx: Scope) -> Element {
             p { class: "bg-blue-600", "This is jeremy testing hot reload, performant, and ergonomic framework for building cross-platform user interfaces in Rust." }
         }
         div{
-            textarea { rows: "10", cols: "100", oninput: move |e| {model.set(e.value.clone());send_input(e.value.clone());}}
+            textarea { rows: "10", cols: "100", oninput: move |e| {send_input(e.value.clone())}}
+            h2 { "{set_app.input_text}" }
+            h3 { "{set_app.questions:?}"}
         }
     ))
 }
 
 fn main() {
-    // cargo watch -- cargo run --package ui2 --bin ui2 --target wasm32-unknown-unknown
-    // cargo watch -- cargo run --target wasm32-unknown-unknown
-
-    // cargo 
+    // cargo watch -- dioxus serve
 
     // init debug tool for WebAssembly
     wasm_logger::init(wasm_logger::Config::default());
