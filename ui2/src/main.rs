@@ -14,6 +14,11 @@ struct AppState {
     input_text: String,
 }
 
+struct Survey {
+    title: String,
+    questions: Questions,
+}
+
 impl AppState {
     fn new() -> Self {
         AppState {
@@ -24,16 +29,11 @@ impl AppState {
 }
 
 fn app(cx: Scope) -> Element {
-    // let model = use_state(&cx, || String::from(""));
-    // let results = use_state(&cx, || String::from(""));
-    // let set_app = use_set(&cx, APP);
     let set_app = use_atom_state(&cx, APP);
 
     let send_input = move |content: String| {
         print!("Testing in send inputa");
         let question = parse_markdown_blocks(content.clone());
-        // println!("results: {:?}", results);
-        // set_app = question;
         let _x = &set_app.get().questions;
         set_app.set(AppState {
             questions: question,
