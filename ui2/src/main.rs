@@ -1,12 +1,15 @@
 #![allow(non_snake_case)]
 use dioxus::{
-    events::oninput,
+    events::{onclick, oninput},
     fermi::use_atom_state,
-    prelude::{dioxus_elements::textarea, *},
+    prelude::{
+        dioxus_elements::{h5, textarea},
+        *,
+    },
 };
 
 // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
-use markdownparser::{parse_markdown_blocks, Questions};
+use markdownparser::{parse_markdown_blocks, Question, Questions};
 
 static APP: Atom<AppState> = |_| AppState::new();
 
@@ -52,6 +55,11 @@ fn Editor(cx: Scope) -> Element {
     cx.render(rsx! {
         div{
             textarea { rows: "10", cols: "50", oninput: move |e| {send_input(e.value.clone())}}
+            button { 
+                class:"px-5 py-5 font-bold text-white bg-blue-500 rounded hover:bg-blue-700", 
+                onclick: move |_| send_input("1. this is a question\\n  1. option1\\n  2. option 2 here".to_string()), 
+                "Debug"
+            }
         }
     })
 }
@@ -60,21 +68,20 @@ fn Questions(cx: Scope) -> Element {
     let app_state = use_atom_state(&cx, APP);
     let editor_state = use_atom_state(&cx, EDITOR);
 
-    // let parse_markdown = move || {
-    //     let questions = parse_markdown_blocks(editor_state.get().clone());
-    // };
-
     cx.render(rsx! {
         div{
-            ul{app_state.questions.iter().map(|f| rsx!{
+            ul{app_state.questions.iter().map(|q| rsx!{
                 li {
-                    div { class: "container m-auto grid bg-red-400"}
-                    div{ class: "bg-green-200", "{f:?}"}
+                    div { class: "container m-auto grid bg-red-400",
+                        h5 { "{q.text}"}
+                        ol {
+                            q.options.iter().map(|o| rsx!{li {"{o}"}})
+                        }
+                    }
+                    // div{ class: "bg-green-200", "{q:?}"}
                 }
             })}
-            h2 { "tets h2"}
             h2 { "{editor_state}" }
-            h3 { "testing" }
             h3 { "{app_state.questions:?}"}
         }
     })
@@ -82,6 +89,7 @@ fn Questions(cx: Scope) -> Element {
 
 fn app(cx: Scope) -> Element {
     let set_app = use_atom_state(&cx, APP);
+    let editor_state = use_atom_state(&cx, EDITOR);
 
     cx.render(rsx! (
         div {
@@ -93,8 +101,6 @@ fn app(cx: Scope) -> Element {
         div{
             Editor {}
             Questions {}
-            // h2 { "{set_app.input_text}" }
-            // h3 { "{set_app.questions:?}"}
         }
     ))
 }
