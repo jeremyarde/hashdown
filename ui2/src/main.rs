@@ -92,21 +92,34 @@ fn app(cx: Scope) -> Element {
     let editor_state = use_atom_state(&cx, EDITOR);
 
     cx.render(rsx! (
-        div {
-            style: "text-align: center;",
-            h1 { class: "bg-red-200", "🌗 Dioxus 🚀" }
-            h3 { "Frontend that scales, I think this is all that is takes." }
-            p { class: "bg-lime-600", "This is jeremy testing hot reload, performant, and ergonomic framework for building cross-platform user interfaces in Rust." }
-        }
-        div{
-            Editor {}
-            Questions {}
+        main{
+            class: "wrapper",
+            div {
+                style: "text-align: center; display: grid; grid-template-columns: 1f1 min(65ch, 100%) 1fr;",
+                h1 { 
+                    style: "color: red; background-color: green;",
+                    "test regular css in html" }
+                h1 { class: "bg-red-200", "🌗 Dioxus 🚀" }
+                h3 { "Frontend that scales, I think this is all that is takes." }
+                p { class: "bg-lime-600", "This is jeremy testing hot reload, performant, and ergonomic framework for building cross-platform user interfaces in Rust." }
+            }
+            div{
+                Editor {}
+                Questions {}
+            }
         }
     ))
 }
 
 fn main() {
+    // css
+    // npx tailwindcss -i ./input.css -o ./public/output.css --watch
+
+    // hot reload
     // cargo watch -- dioxus serve
+    // kill hot reload
+    // sudo lsof -i :8080
+    // 
 
     // init debug tool for WebAssembly
     wasm_logger::init(wasm_logger::Config::default());
