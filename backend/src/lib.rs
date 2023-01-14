@@ -217,10 +217,35 @@ mod tests {
 
     #[test]
     fn test_v3() {
-        let teststring = "1. this is a test\n  1. option 1\n  2. option 2\n2. Question number 2";
+        let teststring = r#"
+1. Question number 1
+  1. option 1
+  2. option 2
+2. Question number 2
+3. Question number 3
+  1. q3 option 1
+  2. q3 option 2
+"#;
 
         let res = parse_markdown_v3(teststring.to_string());
 
-        println!("{:?}", res)
+        println!("{:#?}", res)
+    }
+
+    #[test]
+    fn test_bullet_points() {
+        let teststring = r#"
+- Question number 1
+  - option 1
+  - option 2
+- Question number 2
+- Question number 3
+  - q3 option 1
+  - q3 option 2
+"#;
+
+        let res = parse_markdown_v3(teststring.to_string());
+
+        println!("{:#?}", res)
     }
 }
