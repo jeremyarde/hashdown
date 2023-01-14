@@ -606,7 +606,7 @@ fn main() {
     // cargo watch -- dioxus serve
     // kill hot reload
     // sudo lsof -i :8080
-    // 
+    // kill -9 PID
 
     // init debug tool for WebAssembly
     wasm_logger::init(wasm_logger::Config::default());

@@ -1,4 +1,16 @@
+use anyhow::{anyhow, Result};
+use nanoid::nanoid;
 use regex::Regex;
+
+const NANOID_LEN: usize = 12;
+// const NANOID_ALPHA: [char; 36] = [
+//     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+//     'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+// ];
+const NANOID_ALPHA: [char; 34] = [
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+    'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+];
 
 #[derive(Clone, Debug)]
 struct Survey {
@@ -8,9 +20,19 @@ struct Survey {
 }
 #[derive(Clone, Debug)]
 pub struct Question {
-    pub id: i32,
+    pub id: String,
     pub text: String,
     pub options: Vec<String>,
+}
+
+impl Question {
+    fn from(q_text: &str, options: Vec<String>) -> Self {
+        return Question {
+            id: nanoid!(NANOID_LEN, &NANOID_ALPHA),
+            text: q_text.to_string(),
+            options,
+        };
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -83,11 +105,7 @@ pub fn parse_markdown_blocks(markdown: String) -> Questions {
                 };
             }
 
-            questions.push(Question {
-                id: question_id,
-                text: current_question,
-                options: options,
-            });
+            questions.push(Question::from(&current_question, options));
             options = vec![];
             question_id += 1;
         } else {
@@ -101,6 +119,73 @@ pub fn parse_markdown_blocks(markdown: String) -> Questions {
 
     println!("{:#?}", questions);
     questions
+}
+
+enum LineType {
+    Question,
+    Option,
+}
+
+fn parse_markdown_v3(contents: String) -> Result<Questions> {
+    let mut questions = Questions::new();
+    let mut curr_question_text: &str = "";
+    let mut curr_options: Vec<String> = vec![];
+    let mut in_question = false;
+    let mut last_line_type: LineType = LineType::Question;
+    let mut question_num = 0;
+
+    for line in contents.lines() {
+        match (is_question(line), &last_line_type) {
+            (true, LineType::Question) => {
+                if question_num > 0 {
+                    questions.push(Question::from(curr_question_text, curr_options.clone()));
+                    curr_question_text = line;
+                    curr_options.clear();
+                }
+                last_line_type = LineType::Question;
+                curr_question_text = line;
+            }
+            (true, LineType::Option) => {
+                questions.push(Question::from(curr_question_text, curr_options.clone()));
+                curr_question_text = line;
+                curr_options.clear();
+                last_line_type = LineType::Question;
+            }
+            _ => {}
+        }
+
+        match (is_option(line), &last_line_type) {
+            (true, LineType::Question) => {
+                curr_options.push(line.clone().to_string());
+                last_line_type = LineType::Option;
+            }
+            (true, LineType::Option) => {
+                curr_options.push(line.clone().to_string());
+                last_line_type = LineType::Option;
+            }
+            _ => {}
+        }
+    }
+
+    // adding the last question
+    questions.push(Question::from(curr_question_text, curr_options.clone()));
+
+    Ok(questions)
+}
+
+fn is_question(line: &str) -> bool {
+    !line.starts_with(" ") && line.starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
+}
+
+fn is_option(line: &str) -> bool {
+    let cleaned = line.clone().trim();
+    line.starts_with(" ") && cleaned.starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
+}
+
+fn is_valid_line(line: &str) -> bool {
+    let line_copy = line.clone().trim_start();
+
+    line_copy.starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
 }
 
 fn parse_question_text(line: &str) -> Option<&str> {
@@ -119,7 +204,7 @@ enum MarkdownElement {
 
 #[cfg(test)]
 mod tests {
-    use crate::parse_markdown_blocks;
+    use crate::{parse_markdown_blocks, parse_markdown_v3};
 
     #[test]
     fn test() {
@@ -128,5 +213,14 @@ mod tests {
         let content = String::from(teststring);
         let result = parse_markdown_blocks(content);
         print!("test result: {:?}\n", result);
+    }
+
+    #[test]
+    fn test_v3() {
+        let teststring = "1. this is a test\n  1. option 1\n  2. option 2\n2. Question number 2";
+
+        let res = parse_markdown_v3(teststring.to_string());
+
+        println!("{:?}", res)
     }
 }
