@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
-use nanoid::nanoid;
+// use nanoid::nanoid;
+use getrandom::getrandom;
 use regex::Regex;
 
 const NANOID_LEN: usize = 12;
@@ -11,6 +12,27 @@ const NANOID_ALPHA: [char; 34] = [
     '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
     'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
+
+fn nanoid_gen(size: usize) -> String {
+    let mask = NANOID_ALPHA.len().next_power_of_two() - 1;
+
+    let mut res = String::new();
+    let mut random: [u8; 32] = [0; 32];
+
+    loop {
+        getrandom(&mut random).unwrap();
+
+        for &byte in random.iter() {
+            let masked = byte as usize & mask;
+            if masked < NANOID_ALPHA.len() {
+                res.push(NANOID_ALPHA[masked]);
+            }
+            if res.len() == size {
+                return res;
+            }
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 struct Survey {
@@ -28,7 +50,8 @@ pub struct Question {
 impl Question {
     fn from(q_text: &str, options: Vec<String>) -> Self {
         return Question {
-            id: nanoid!(NANOID_LEN, &NANOID_ALPHA),
+            // id: nanoid!(NANOID_LEN, &NANOID_ALPHA, random),
+            id: nanoid_gen(NANOID_LEN),
             text: q_text.to_string(),
             options,
         };
@@ -127,7 +150,7 @@ enum LineType {
     Nothing,
 }
 
-fn parse_markdown_v3(contents: String) -> Result<Questions> {
+pub fn parse_markdown_v3(contents: String) -> Result<Questions> {
     let mut questions = Questions::new();
     let mut curr_question_text: &str = "";
     let mut curr_options: Vec<String> = vec![];
@@ -251,7 +274,7 @@ enum MarkdownElement {
 
 #[cfg(test)]
 mod tests {
-    use crate::{parse_markdown_blocks, parse_markdown_v3};
+    use crate::{nanoid_gen, parse_markdown_blocks, parse_markdown_v3};
 
     #[test]
     fn test() {
@@ -294,5 +317,11 @@ mod tests {
         let res = parse_markdown_v3(teststring.to_string());
 
         println!("{:#?}", res)
+    }
+
+    #[test]
+    fn test_nanoid_gen() {
+        let nanoid = nanoid_gen(10);
+        println!("nanoid: {nanoid:?}");
     }
 }

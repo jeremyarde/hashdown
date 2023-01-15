@@ -9,7 +9,7 @@ use dioxus::{
 };
 
 // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
-use markdownparser::{parse_markdown_blocks, Question, Questions};
+use markdownparser::{parse_markdown_blocks, Question, Questions, parse_markdown_v3};
 
 static APP: Atom<AppState> = |_| AppState::new();
 
@@ -40,7 +40,8 @@ fn Editor(cx: Scope) -> Element {
 
     let send_input = move |content: String| {
         print!("Testing in send inputa");
-        let question = parse_markdown_blocks(content.clone());
+        // let question = parse_markdown_blocks(content.clone());
+        let question = parse_markdown_v3(content.clone()).unwrap();
         question_state.modify(|curr| {
             AppState {
                 questions: question,
