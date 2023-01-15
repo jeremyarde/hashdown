@@ -103,10 +103,7 @@ pub fn parse_markdown_blocks(markdown: String) -> Questions {
             current += 1;
 
             // current_question = currline.trim_start_matches(q_num.as_str()).to_owned();
-            current_question = match parse_question_text(currline).to_owned() {
-                Some(x) => x.to_string(),
-                None => "".to_string(),
-            };
+            current_question = parse_question_text(currline).to_owned();
             // current_question = parse_question_text(currline).to_owned();
 
             currline = match lines.next() {
@@ -118,10 +115,7 @@ pub fn parse_markdown_blocks(markdown: String) -> Questions {
             };
             println!("{}", currline);
             while currline.starts_with("  ") {
-                match parse_question_text(currline).to_owned() {
-                    Some(x) => options.push(x.to_string()),
-                    None => {}
-                }
+                options.push(parse_question_text(currline).to_owned());
                 currline = match lines.next() {
                     Some(x) => x,
                     None => break,
@@ -159,49 +153,19 @@ pub fn parse_markdown_v3(contents: String) -> Result<Questions> {
     let mut question_num = 0;
 
     for line in contents.lines() {
-        // match (is_question(line), &last_line_type) {
-        //     (true, LineType::Question) => {
-        //         if question_num > 0 {
-        //             questions.push(Question::from(curr_question_text, curr_options.clone()));
-        //             curr_question_text = line;
-        //             curr_options.clear();
-        //         }
-        //         last_line_type = LineType::Question;
-        //         curr_question_text = line;
-        //     }
-        //     (true, LineType::Option) => {
-        //         questions.push(Question::from(curr_question_text, curr_options.clone()));
-        //         curr_question_text = line;
-        //         curr_options.clear();
-        //         last_line_type = LineType::Question;
-        //     }
-        //     _ => {}
-        // }
-
-        // match (is_option(line), &last_line_type) {
-        //     (true, LineType::Question) => {
-        //         curr_options.push(line.clone().to_string());
-        //         last_line_type = LineType::Option;
-        //     }
-        //     (true, LineType::Option) => {
-        //         curr_options.push(line.clone().to_string());
-        //         last_line_type = LineType::Option;
-        //     }
-        //     _ => {}
-        // }
         println!("Curr line: {line}");
         match (find_line_type(line), &last_line_type) {
             (LineType::Question, LineType::Question) => {
                 // new question after question, push prev, clear old
                 questions.push(Question::from(curr_question_text, curr_options.clone()));
-                curr_question_text = line;
+                curr_question_text = parse_question_text(line);
                 curr_options.clear();
                 last_line_type = LineType::Question;
             }
             (LineType::Question, LineType::Nothing) => {
                 // new question, push prev, clear options
                 // questions.push(Question::from(curr_question_text, curr_options.clone()));
-                curr_question_text = line;
+                curr_question_text = parse_question_text(line);
                 curr_options.clear();
                 last_line_type = LineType::Question;
             }
@@ -209,17 +173,17 @@ pub fn parse_markdown_v3(contents: String) -> Result<Questions> {
                 // new question, push prev, clear options
                 questions.push(Question::from(curr_question_text, curr_options.clone()));
                 curr_options.clear();
-                curr_question_text = line;
+                curr_question_text = parse_question_text(line);
             }
             (LineType::Option, LineType::Question) => {
                 // option for new question, clear options, push option
                 curr_options.clear();
-                curr_options.push(line.clone().to_string());
+                curr_options.push(parse_question_text(line).to_string());
                 last_line_type = LineType::Option;
             }
             (LineType::Option, LineType::Option) => {
                 // new option same question, push option
-                curr_options.push(line.clone().to_string());
+                curr_options.push(parse_question_text(line).to_string());
                 last_line_type = LineType::Option;
             }
             _ => {}
@@ -258,11 +222,19 @@ fn find_line_type(line: &str) -> LineType {
 //     line_copy.starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
 // }
 
-fn parse_question_text(line: &str) -> Option<&str> {
-    match line.split_once(". ") {
-        Some(x) => Some(x.1),
-        None => None,
+fn parse_question_text(line: &str) -> &str {
+    let trimmed = line.clone().trim_start();
+    let mut question_text = match line.trim_start().split_once("- ") {
+        Some(x) => x.1,
+        None => line,
+    };
+
+    if trimmed.starts_with(char::is_numeric) {
+        question_text = trimmed.split_once(". ").unwrap_or((line, "")).1;
     }
+
+    println!("parse: {question_text:?}");
+    return question_text;
 }
 
 enum MarkdownElement {
@@ -274,7 +246,7 @@ enum MarkdownElement {
 
 #[cfg(test)]
 mod tests {
-    use crate::{nanoid_gen, parse_markdown_blocks, parse_markdown_v3};
+    use crate::{nanoid_gen, parse_markdown_blocks, parse_markdown_v3, parse_question_text};
 
     #[test]
     fn test() {
@@ -323,5 +295,14 @@ mod tests {
     fn test_nanoid_gen() {
         let nanoid = nanoid_gen(10);
         println!("nanoid: {nanoid:?}");
+    }
+
+    #[test]
+    fn test_question_parsing() {
+        assert_eq!(parse_question_text("- testing"), "testing");
+        assert_eq!(parse_question_text("  - testing"), "testing");
+
+        assert_eq!(parse_question_text("1. testing"), "testing");
+        assert_eq!(parse_question_text("  1. testing"), "testing");
     }
 }
