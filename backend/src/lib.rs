@@ -124,6 +124,7 @@ pub fn parse_markdown_blocks(markdown: String) -> Questions {
 enum LineType {
     Question,
     Option,
+    Nothing,
 }
 
 fn parse_markdown_v3(contents: String) -> Result<Questions> {
@@ -131,35 +132,70 @@ fn parse_markdown_v3(contents: String) -> Result<Questions> {
     let mut curr_question_text: &str = "";
     let mut curr_options: Vec<String> = vec![];
     let mut in_question = false;
-    let mut last_line_type: LineType = LineType::Question;
+    let mut last_line_type: LineType = LineType::Nothing;
     let mut question_num = 0;
 
     for line in contents.lines() {
-        match (is_question(line), &last_line_type) {
-            (true, LineType::Question) => {
-                if question_num > 0 {
-                    questions.push(Question::from(curr_question_text, curr_options.clone()));
-                    curr_question_text = line;
-                    curr_options.clear();
-                }
-                last_line_type = LineType::Question;
-                curr_question_text = line;
-            }
-            (true, LineType::Option) => {
+        // match (is_question(line), &last_line_type) {
+        //     (true, LineType::Question) => {
+        //         if question_num > 0 {
+        //             questions.push(Question::from(curr_question_text, curr_options.clone()));
+        //             curr_question_text = line;
+        //             curr_options.clear();
+        //         }
+        //         last_line_type = LineType::Question;
+        //         curr_question_text = line;
+        //     }
+        //     (true, LineType::Option) => {
+        //         questions.push(Question::from(curr_question_text, curr_options.clone()));
+        //         curr_question_text = line;
+        //         curr_options.clear();
+        //         last_line_type = LineType::Question;
+        //     }
+        //     _ => {}
+        // }
+
+        // match (is_option(line), &last_line_type) {
+        //     (true, LineType::Question) => {
+        //         curr_options.push(line.clone().to_string());
+        //         last_line_type = LineType::Option;
+        //     }
+        //     (true, LineType::Option) => {
+        //         curr_options.push(line.clone().to_string());
+        //         last_line_type = LineType::Option;
+        //     }
+        //     _ => {}
+        // }
+        println!("Curr line: {line}");
+        match (find_line_type(line), &last_line_type) {
+            (LineType::Question, LineType::Question) => {
+                // new question after question, push prev, clear old
                 questions.push(Question::from(curr_question_text, curr_options.clone()));
                 curr_question_text = line;
                 curr_options.clear();
                 last_line_type = LineType::Question;
             }
-            _ => {}
-        }
-
-        match (is_option(line), &last_line_type) {
-            (true, LineType::Question) => {
+            (LineType::Question, LineType::Nothing) => {
+                // new question, push prev, clear options
+                // questions.push(Question::from(curr_question_text, curr_options.clone()));
+                curr_question_text = line;
+                curr_options.clear();
+                last_line_type = LineType::Question;
+            }
+            (LineType::Question, LineType::Option) => {
+                // new question, push prev, clear options
+                questions.push(Question::from(curr_question_text, curr_options.clone()));
+                curr_options.clear();
+                curr_question_text = line;
+            }
+            (LineType::Option, LineType::Question) => {
+                // option for new question, clear options, push option
+                curr_options.clear();
                 curr_options.push(line.clone().to_string());
                 last_line_type = LineType::Option;
             }
-            (true, LineType::Option) => {
+            (LineType::Option, LineType::Option) => {
+                // new option same question, push option
                 curr_options.push(line.clone().to_string());
                 last_line_type = LineType::Option;
             }
@@ -173,20 +209,31 @@ fn parse_markdown_v3(contents: String) -> Result<Questions> {
     Ok(questions)
 }
 
-fn is_question(line: &str) -> bool {
-    !line.starts_with(" ") && line.starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
+fn find_line_type(line: &str) -> LineType {
+    let linetype: LineType;
+    if !line.starts_with(" ") && line.starts_with(|c: char| c.eq(&'-') || c.is_digit(10)) {
+        linetype = LineType::Question
+    } else if line.starts_with(" ")
+        && line
+            .trim_start()
+            .starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
+    {
+        linetype = LineType::Option
+    } else {
+        linetype = LineType::Nothing;
+    }
+    linetype
 }
 
-fn is_option(line: &str) -> bool {
-    let cleaned = line.clone().trim();
-    line.starts_with(" ") && cleaned.starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
-}
+// fn is_question(line: &str) -> bool {
+//     !line.starts_with(" ") && line.starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
+// }
 
-fn is_valid_line(line: &str) -> bool {
-    let line_copy = line.clone().trim_start();
+// fn is_valid_line(line: &str) -> bool {
+//     let line_copy = line.clone().trim_start();
 
-    line_copy.starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
-}
+//     line_copy.starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
+// }
 
 fn parse_question_text(line: &str) -> Option<&str> {
     match line.split_once(". ") {
