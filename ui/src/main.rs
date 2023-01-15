@@ -318,10 +318,6 @@ fn Questions(cx: Scope) -> Element {
                                                                 class: "font-medium text-gray-700",
                                                                 "{o}"
                                                             }
-                                                            // p { 
-                                                            //     class: "text-gray-500",
-                                                            //     "Get notified when someones posts a comment on a posting."
-                                                            // }
                                                         }
                                                     }
                                                                                              }
@@ -356,43 +352,11 @@ fn app(cx: Scope) -> Element {
                 Questions {}
             }
             div {
-                component()
-            }
-            div {
                 all_forms()
             }
         }
     ))
 }
-
-
-
-fn component(cx: Scope) -> Element {
-    cx.render(rsx!(
-        h1 { 
-            "This is the dropdown comopnent"
-        }
-        div { 
-            class: "col-span-6 sm:col-span-3",
-            label { 
-                class: "block text-sm font-medium text-gray-700",
-                // htmlfor: "country",
-                "Country"
-            }
-            select { 
-                id: "country",
-                name: "country",
-                autocomplete: "country-name",
-                class: "mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm",
-                option { 
-                    "United States"
-                }
-
-            }
-        }
-    ))
-}
-
 
 
 fn all_forms(cx: Scope) -> Element {

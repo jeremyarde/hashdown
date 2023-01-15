@@ -45,16 +45,54 @@ pub struct Question {
     pub id: String,
     pub text: String,
     pub options: Vec<String>,
+    pub qtype: QuestionType,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum QuestionType {
+    Radio,
+    Checkbox,
+    Text,
 }
 
 impl Question {
-    fn from(q_text: &str, options: Vec<String>) -> Self {
+    fn from(q_text: &str, options: Vec<&str>) -> Self {
         return Question {
             // id: nanoid!(NANOID_LEN, &NANOID_ALPHA, random),
             id: nanoid_gen(NANOID_LEN),
-            text: q_text.to_string(),
-            options,
+            text: Question::parse_question_text(q_text).to_string(),
+            options: options
+                .iter()
+                .map(|&o| Question::parse_question_text(o).to_string())
+                .collect(),
+            qtype: Question::parse_question_type(q_text),
         };
+    }
+
+    fn parse_question_type(line: &str) -> QuestionType {
+        let res: QuestionType;
+        if line.contains("[checkbox]") {
+            res = QuestionType::Checkbox;
+        } else {
+            res = QuestionType::Radio;
+        }
+
+        res
+    }
+
+    fn parse_question_text(line: &str) -> &str {
+        let trimmed = line.clone().trim_start();
+        let mut question_text = match line.trim_start().split_once("- ") {
+            Some(x) => x.1,
+            None => line,
+        };
+
+        if trimmed.starts_with(char::is_numeric) {
+            question_text = trimmed.split_once(". ").unwrap_or((line, "")).1;
+        }
+
+        println!("parse: {question_text:?}");
+        return question_text;
     }
 }
 
@@ -83,8 +121,8 @@ pub fn parse_markdown_blocks(markdown: String) -> Questions {
     // }
     let mut questions = vec![];
 
-    let mut current_question: String;
-    let mut options: Vec<String> = vec![];
+    let mut current_question: &str;
+    let mut options: Vec<&str> = vec![];
     let mut question_id = 1;
 
     let mut current = 1;
@@ -103,7 +141,7 @@ pub fn parse_markdown_blocks(markdown: String) -> Questions {
             current += 1;
 
             // current_question = currline.trim_start_matches(q_num.as_str()).to_owned();
-            current_question = parse_question_text(currline).to_owned();
+            current_question = currline;
             // current_question = parse_question_text(currline).to_owned();
 
             currline = match lines.next() {
@@ -115,7 +153,7 @@ pub fn parse_markdown_blocks(markdown: String) -> Questions {
             };
             println!("{}", currline);
             while currline.starts_with("  ") {
-                options.push(parse_question_text(currline).to_owned());
+                options.push(currline);
                 currline = match lines.next() {
                     Some(x) => x,
                     None => break,
@@ -147,7 +185,7 @@ enum LineType {
 pub fn parse_markdown_v3(contents: String) -> Result<Questions> {
     let mut questions = Questions::new();
     let mut curr_question_text: &str = "";
-    let mut curr_options: Vec<String> = vec![];
+    let mut curr_options: Vec<&str> = vec![];
     let mut in_question = false;
     let mut last_line_type: LineType = LineType::Nothing;
     let mut question_num = 0;
@@ -158,14 +196,14 @@ pub fn parse_markdown_v3(contents: String) -> Result<Questions> {
             (LineType::Question, LineType::Question) => {
                 // new question after question, push prev, clear old
                 questions.push(Question::from(curr_question_text, curr_options.clone()));
-                curr_question_text = parse_question_text(line);
+                curr_question_text = line;
                 curr_options.clear();
                 last_line_type = LineType::Question;
             }
             (LineType::Question, LineType::Nothing) => {
                 // new question, push prev, clear options
                 // questions.push(Question::from(curr_question_text, curr_options.clone()));
-                curr_question_text = parse_question_text(line);
+                curr_question_text = line;
                 curr_options.clear();
                 last_line_type = LineType::Question;
             }
@@ -173,17 +211,17 @@ pub fn parse_markdown_v3(contents: String) -> Result<Questions> {
                 // new question, push prev, clear options
                 questions.push(Question::from(curr_question_text, curr_options.clone()));
                 curr_options.clear();
-                curr_question_text = parse_question_text(line);
+                curr_question_text = line;
             }
             (LineType::Option, LineType::Question) => {
                 // option for new question, clear options, push option
                 curr_options.clear();
-                curr_options.push(parse_question_text(line).to_string());
+                curr_options.push(line);
                 last_line_type = LineType::Option;
             }
             (LineType::Option, LineType::Option) => {
                 // new option same question, push option
-                curr_options.push(parse_question_text(line).to_string());
+                curr_options.push(line);
                 last_line_type = LineType::Option;
             }
             _ => {}
@@ -212,31 +250,6 @@ fn find_line_type(line: &str) -> LineType {
     linetype
 }
 
-// fn is_question(line: &str) -> bool {
-//     !line.starts_with(" ") && line.starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
-// }
-
-// fn is_valid_line(line: &str) -> bool {
-//     let line_copy = line.clone().trim_start();
-
-//     line_copy.starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
-// }
-
-fn parse_question_text(line: &str) -> &str {
-    let trimmed = line.clone().trim_start();
-    let mut question_text = match line.trim_start().split_once("- ") {
-        Some(x) => x.1,
-        None => line,
-    };
-
-    if trimmed.starts_with(char::is_numeric) {
-        question_text = trimmed.split_once(". ").unwrap_or((line, "")).1;
-    }
-
-    println!("parse: {question_text:?}");
-    return question_text;
-}
-
 enum MarkdownElement {
     Heading,
     List,
@@ -246,7 +259,7 @@ enum MarkdownElement {
 
 #[cfg(test)]
 mod tests {
-    use crate::{nanoid_gen, parse_markdown_blocks, parse_markdown_v3, parse_question_text};
+    use crate::{nanoid_gen, parse_markdown_blocks, parse_markdown_v3, Question};
 
     #[test]
     fn test() {
@@ -299,10 +312,12 @@ mod tests {
 
     #[test]
     fn test_question_parsing() {
-        assert_eq!(parse_question_text("- testing"), "testing");
-        assert_eq!(parse_question_text("  - testing"), "testing");
+        assert_eq!(Question::parse_question_text("- testing"), "testing");
+        assert_eq!(Question::parse_question_text(" - testing"), "testing");
+        assert_eq!(Question::parse_question_text("  - testing"), "testing");
 
-        assert_eq!(parse_question_text("1. testing"), "testing");
-        assert_eq!(parse_question_text("  1. testing"), "testing");
+        assert_eq!(Question::parse_question_text("1. testing"), "testing");
+        assert_eq!(Question::parse_question_text(" 1. testing"), "testing");
+        assert_eq!(Question::parse_question_text("  1. testing"), "testing");
     }
 }
