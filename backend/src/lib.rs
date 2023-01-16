@@ -48,7 +48,7 @@ pub struct Question {
     pub qtype: QuestionType,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum QuestionType {
     Radio,
     Checkbox,
