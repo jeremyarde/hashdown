@@ -61,7 +61,10 @@ fn Editor(cx: Scope) -> Element {
                 //     class: "block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500",
                 //     placeholder: "Write your thoughts here..."
                 // }
-                form { 
+                form {
+                    oninput: move |e| {
+                        log::info!("form event: {e:#?}")
+                    },
                     div { class: "w-full mb-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600",
                         // div { class: "flex items-center justify-between px-3 py-2 border-b dark:border-gray-600",
                         // }
@@ -75,8 +78,8 @@ fn Editor(cx: Scope) -> Element {
                                 required: "",
                                 rows: "8",
                                 placeholder: "Write your survey here",
-                                oninput: move |e| {send_input(e.value.clone())},
-                                ""
+                                name: "textinput"
+                                // oninput: move |e| {send_input(e.value.clone())},
                             }
                         }
                     }
@@ -126,7 +129,7 @@ fn Questions(cx: Scope) -> Element {
 
                                             rsx!{
                                                 div { 
-                                                    class: "mt-4 space-y-4",
+                                                    class: "mt-4 space-y-4  bg-orange-200 hover:bg-sky-700",
                                                     div { 
                                                         class: "flex items-start",
                                                         div { 
@@ -135,7 +138,7 @@ fn Questions(cx: Scope) -> Element {
                                                                 id: "comments",
                                                                 r#type: "{qtype}",
                                                                 class: "h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500",
-                                                                name: "comments",
+                                                                name: "comments"
                                                             }
                                                         }
                                                         div { 
@@ -193,6 +196,20 @@ fn main() {
     // kill hot reload
     // sudo lsof -i :8080
     // kill -9 PID
+
+    /*
+    
+1. question one
+   1. option 1
+   2. option 2
+2. testing
+
+
+- this is another
+  - option 1 in other
+- test2 question
+  - this is great
+    */
 
     // init debug tool for WebAssembly
     wasm_logger::init(wasm_logger::Config::default());
