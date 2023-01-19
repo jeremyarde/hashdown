@@ -33,13 +33,15 @@ impl AppState {
 }
 
 static EDITOR: Atom<String> = |_| String::from("");
+// static FORMINPUT_KEY: Atom<String> = |_| String::from("forminput");
+const FORMINPUT_KEY: &str = "forminput";
 
 fn Editor(cx: Scope) -> Element {
     let editor_state = use_atom_state(&cx, EDITOR);
     let question_state = use_atom_state(&cx, APP);
 
     let send_input = move |content: String| {
-        print!("Testing in send inputa");
+        log::info!("Recieved input: {content}");
         // let question = parse_markdown_blocks(content.clone());
         let question = parse_markdown_v3(content.clone()).unwrap();
         question_state.modify(|curr| {
@@ -53,34 +55,31 @@ fn Editor(cx: Scope) -> Element {
         editor_state.set(content);
     };
 
+    // send_input("1. testing\n 1. another\n 2. second option".to_string());
+
     cx.render(rsx! {
         div{
             form {
-                // textarea { 
-                //     rows: "10", cols: "50", oninput: move |e| {send_input(e.value.clone())},
-                //     class: "block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500",
-                //     placeholder: "Write your thoughts here..."
-                // }
-                form {
-                    oninput: move |e| {
-                        log::info!("form event: {e:#?}")
-                    },
-                    div { class: "w-full mb-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600",
-                        // div { class: "flex items-center justify-between px-3 py-2 border-b dark:border-gray-600",
-                        // }
-                        div { class: "px-4 py-2 bg-white rounded-b-lg dark:bg-gray-800",
-                            label { class: "sr-only",
-                                r#for: "editor",
-                                "Publish post"
-                            }
-                            textarea { class: "block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400",
-                                id: "editor",
-                                required: "",
-                                rows: "8",
-                                placeholder: "Write your survey here",
-                                name: "textinput"
-                                // oninput: move |e| {send_input(e.value.clone())},
-                            }
+                oninput: move |e| {
+                    log::info!("form event: {e:#?}");
+                    let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
+                    send_input(formvalue);
+                },
+                div { class: "w-full mb-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600",
+                    // div { class: "flex items-center justify-between px-3 py-2 border-b dark:border-gray-600",
+                    // }
+                    div { class: "px-4 py-2 bg-white rounded-b-lg dark:bg-gray-800 focus:ring-red-500",
+                        id: "editor",
+                        label { class: "sr-only",
+                            r#for: "editor",
+                            "Publish post"
+                        }
+                        textarea { class: "block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800   dark:text-white dark:placeholder-gray-400",
+                            required: "",
+                            rows: "8",
+                            placeholder: "Write your survey here",
+                            name: "forminput"
+                            // oninput: move |e| {send_input(e.value.clone())},
                         }
                     }
                 }
@@ -128,26 +127,14 @@ fn Questions(cx: Scope) -> Element {
                                             };
 
                                             rsx!{
-                                                div { 
-                                                    class: "mt-4 space-y-4  bg-orange-200 hover:bg-sky-700",
-                                                    div { 
-                                                        class: "flex items-start",
-                                                        div { 
-                                                            class: "flex h-5 items-center",
-                                                            input { 
-                                                                id: "comments",
-                                                                r#type: "{qtype}",
-                                                                class: "h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500",
-                                                                name: "comments"
-                                                            }
-                                                        }
-                                                        div { 
-                                                            class: "ml-3 text-sm",
-                                                            label { 
-                                                                class: "font-medium text-gray-700",
-                                                                "{option}"
-                                                            }
-                                                        }
+                                                li {
+                                                    class: "list-none mt-4 space-y-4  bg-gray-100 hover:bg-gray-200 space-x-2 flex items-start h-5",
+                                                    key: "{option.id}",
+                                                    input { 
+                                                        id: "{option.id}",
+                                                        r#type: "{qtype}",
+                                                        class: "h-4 w-4 rounded border-gray-300 text-yellow-100-600 focus:fill-red-400",
+                                                        name: "{q.id}",
                                                     }
                                                 }
                                             }

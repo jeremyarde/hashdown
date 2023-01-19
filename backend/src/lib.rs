@@ -44,8 +44,14 @@ struct Survey {
 pub struct Question {
     pub id: String,
     pub text: String,
-    pub options: Vec<String>,
+    pub options: Vec<Option>,
     pub qtype: QuestionType,
+}
+
+#[derive(Clone, Debug)]
+pub struct Option {
+    pub id: String,
+    pub text: String,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -63,7 +69,10 @@ impl Question {
             text: Question::parse_question_text(q_text).to_string(),
             options: options
                 .iter()
-                .map(|&o| Question::parse_question_text(o).to_string())
+                .map(|&o| Option {
+                    id: nanoid_gen(NANOID_LEN),
+                    text: Question::parse_question_text(o).to_string(),
+                })
                 .collect(),
             qtype: Question::parse_question_type(q_text),
         };
