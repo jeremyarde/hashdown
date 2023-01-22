@@ -2,10 +2,7 @@
 use dioxus::{
     events::{onclick, oninput},
     fermi::use_atom_state,
-    prelude::{
-        dioxus_elements::{button, fieldset, h5, textarea},
-        *,
-    },
+    prelude::*,
 };
 
 // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
@@ -62,30 +59,26 @@ fn Editor(cx: Scope) -> Element {
     cx.render(rsx! {
         div{
             form {
+                prevent_default: "onclick",
                 oninput: move |e| {
                     log::info!("form event: {e:#?}");
                     let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
                     send_input(formvalue);
                 },
-                div { class: "w-full m-4  border-gray-200 bg-gray-50 dark:bg-gray-700 dark:border-gray-600",
-                    // div { class: "flex items-center justify-between px-3 py-2 border-b dark:border-gray-600",
-                    // }
-                    div { class: "p-4 bg-white rounded-b-lg dark:bg-gray-800 focus:ring-red-500",
-                        id: "editor",
-                        label { class: "sr-only",
-                            r#for: "editor",
-                            "Publish post"
-                        }
-                        textarea { class: "block w-full text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400",
-                            required: "",
-                            rows: "8",
-                            placeholder: "Write your survey here",
-                            name: "forminput"
-                            // oninput: move |e| {send_input(e.value.clone())},
-                        }
-                        Publish {}
-
+                div { class: "p-4 rounded-xl bg-white dark:bg-gray-800 focus:ring-red-500",
+                    id: "editor",
+                    label { class: "sr-only",
+                        r#for: "editor",
+                        "Publish post"
                     }
+                    textarea { class: " w-full resize-y rounded-xl text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400",
+                        required: "",
+                        rows: "8",
+                        placeholder: "Write your survey here",
+                        name: "forminput"
+                        // oninput: move |e| {send_input(e.value.clone())},
+                    }
+                    Publish {}
                 }
             }
         }
@@ -96,7 +89,10 @@ fn Publish(cx: Scope) -> Element {
     cx.render(rsx! {
         button {
             class: "hover:bg-violet-600 w-full text-blue-500 bg-blue-200 rounded p-2",
-            onclick: move |_| {log::info!("Pushed publish :)")},
+            onclick: move |evt| {
+                log::info!("Pushed publish :)");
+                evt.cancel_bubble();
+            },
             "Publish"
         }
     })
@@ -107,50 +103,46 @@ fn Questions(cx: Scope) -> Element {
     let editor_state = use_atom_state(&cx, EDITOR);
 
     cx.render(rsx! {
-            form {
-                // action: "#",
-                // method: "POST",
-                class: "",
-                div {
-                    class: "shadow bg-yellow-100",
-                        app_state.questions.iter().map(|q: &Question| rsx!{
-                            fieldset {
-                                legend {
-                                    class: "text-base font-medium text-gray-900",
-                                    "{q.text} - {q.qtype:?}"
+        form {
+            prevent_default: "onclick",
+            class: "",
+            app_state.questions.iter().map(|q: &Question| rsx!{
+                fieldset {
+                    legend {
+                        class: "text-base mt-5 font-medium text-gray-900",
+                        "{q.text} - {q.qtype:?}"
+                    }
+                    {
+                        q.options.iter().map(|option| {
+                            let qtype = match q.qtype {
+                                QuestionType::Radio => "radio",
+                                QuestionType::Checkbox => "checkbox",
+                                QuestionType::Text => "textarea",
+                            };
+
+                            rsx!{
+                                div{
+                                    key: "{option.id}",
+                                    class: "flex items-center",
+                                    input {
+                                        id: "{option.id}",
+                                        name: "{q.id}",
+                                        r#type: "{qtype}",
+                                        class: " m-3 border border-gray-400"
+                                    }
+                                    label {
+                                        r#for: "{option.id}",
+                                        class: " text-gray-700 font-medium",
+                                        "{option.text}"
+                                    }
                                 }
-                                {
-                                    q.options.iter().map(|option| {
-                                        let qtype = match q.qtype {
-                                            QuestionType::Radio => "radio",
-                                            QuestionType::Checkbox => "checkbox",
-                                            QuestionType::Text => "textarea",
-                                        };
-    
-                                        rsx!{
-                                            div{
-                                                key: "{option.id}",
-                                                class: "container mx-auto bg-blue-200 focus:fill-red-400 flex-row flex",
-                                                input {
-                                                    id: "{option.id}",
-                                                    name: "{q.id}",
-                                                    r#type: "{qtype}",
-                                                    class: "block p-2 border border-gray-400 rounded-lg"
-                                                }
-                                                label {
-                                                    r#for: "{option.id}",
-                                                    class: "block text-gray-700 font-medium",
-                                                    "{option.text}"
-                                                }
-                                            }
-    
-                                        }
-                                    })
-                                }
+
                             }
                         })
+                    }
                 }
-            }
+            })
+        }
     })
 }
 
@@ -160,7 +152,8 @@ fn app(cx: Scope) -> Element {
 
     cx.render(rsx! (
         main{
-            class: "container mx-auto max-w-lg p-6",
+            // class: "container mx-auto max-w-lg p-6",
+            class: "container p-6",
             div{
                 Editor {}
                 Questions {}

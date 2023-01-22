@@ -44,15 +44,21 @@ dioxus build --release
 ## TODO
 
 ### Components
-1. Title Bar?
-2. Editor section
-3. Preview section
+
+1. Editor
+2. Question display
+3. Publish button
+4. Credits
+5. instructions
 
 
-1. question one
+
+## Example inputs
+
+6. question one
    1. option 1
    2. option 2
-2. testing
+7. testing
 
 
 - this is another
