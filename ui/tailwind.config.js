@@ -8,7 +8,11 @@ module.exports = {
             "./src/**/*.css",
         ],
     },
-    theme: {},
+    theme: {
+        container: {
+            center: true,
+        },
+    },
     variants: {},
     plugins: [
         require('@tailwindcss/forms'),

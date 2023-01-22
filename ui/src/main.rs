@@ -70,13 +70,13 @@ fn Editor(cx: Scope) -> Element {
                 div { class: "w-full m-4  border-gray-200 bg-gray-50 dark:bg-gray-700 dark:border-gray-600",
                     // div { class: "flex items-center justify-between px-3 py-2 border-b dark:border-gray-600",
                     // }
-                    div { class: "px-4 py-2 bg-white rounded-b-lg dark:bg-gray-800 focus:ring-red-500",
+                    div { class: "p-4 bg-white rounded-b-lg dark:bg-gray-800 focus:ring-red-500",
                         id: "editor",
                         label { class: "sr-only",
                             r#for: "editor",
                             "Publish post"
                         }
-                        textarea { class: "block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800   dark:text-white dark:placeholder-gray-400",
+                        textarea { class: "block w-full text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400",
                             required: "",
                             rows: "8",
                             placeholder: "Write your survey here",
@@ -107,66 +107,50 @@ fn Questions(cx: Scope) -> Element {
     let editor_state = use_atom_state(&cx, EDITOR);
 
     cx.render(rsx! {
-        div {
-            class: "",
             form {
                 // action: "#",
                 // method: "POST",
+                class: "",
                 div {
                     class: "shadow bg-yellow-100",
                         app_state.questions.iter().map(|q: &Question| rsx!{
-                            legend {
-                                class: "sr-only",
-                                "{q.text}"
-                            }
-                            div {
-                                aria_hidden: "true",
-                                class: "text-base font-medium text-gray-900",
-                                "{q.text} - {q.qtype:?}"
-                            }
-                            {
-                                // create_questions(q)
-                                q.options.iter().map(|option| {
-                                    let qtype = match q.qtype {
-                                        QuestionType::Radio => "radio",
-                                        QuestionType::Checkbox => "checkbox",
-                                        QuestionType::Text => "textarea",
-                                    };
-
-                                    rsx!{
-                                        // li {
-                                        //     class: "list-none mt-4 space-y-4  bg-gray-100 hover:bg-gray-200 space-x-2 flex items-start h-5",
-                                        //     key: "{option.id}",
-                                        //     input {
-                                        //         id: "{option.id}",
-                                        //         r#type: "{qtype}",
-                                        //         class: "h-4 w-4 rounded border-gray-300 text-yellow-100-600 focus:fill-red-400",
-                                        //         name: "{q.id}",
-                                        //     }
-                                        // }
-                                        div{
-                                            key: "{option.id}",
-                                            class: "bg-blue-200 focus:fill-red-400",
-                                            input {
-                                                id: "{option.id}",
-                                                name: "{q.id}",
-                                                r#type: "{qtype}",
-                                                class: "bg-gray-100"
+                            fieldset {
+                                legend {
+                                    class: "text-base font-medium text-gray-900",
+                                    "{q.text} - {q.qtype:?}"
+                                }
+                                {
+                                    q.options.iter().map(|option| {
+                                        let qtype = match q.qtype {
+                                            QuestionType::Radio => "radio",
+                                            QuestionType::Checkbox => "checkbox",
+                                            QuestionType::Text => "textarea",
+                                        };
+    
+                                        rsx!{
+                                            div{
+                                                key: "{option.id}",
+                                                class: "container mx-auto bg-blue-200 focus:fill-red-400 flex-row flex",
+                                                input {
+                                                    id: "{option.id}",
+                                                    name: "{q.id}",
+                                                    r#type: "{qtype}",
+                                                    class: "block p-2 border border-gray-400 rounded-lg"
+                                                }
+                                                label {
+                                                    r#for: "{option.id}",
+                                                    class: "block text-gray-700 font-medium",
+                                                    "{option.text}"
+                                                }
                                             }
-                                            label {
-                                                r#for: "{option.id}",
-                                                class: "text-gray-900",
-                                                "{option.text}"
-                                            }
+    
                                         }
-
-                                    }
-                                })
+                                    })
+                                }
                             }
                         })
                 }
             }
-        }
     })
 }
 
@@ -176,6 +160,7 @@ fn app(cx: Scope) -> Element {
 
     cx.render(rsx! (
         main{
+            class: "container mx-auto max-w-lg p-6",
             div{
                 Editor {}
                 Questions {}
