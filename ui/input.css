@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 
-.wrapper {
+/* .wrapper {
     display: grid;
     grid-template-columns:
         1fr min(65ch, 100%) 1fr;
@@ -16,4 +16,4 @@
 .full-bleed {
     width: 100%;
     grid-column: 1 / 4;
-}
+} */
