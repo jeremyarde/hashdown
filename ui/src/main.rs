@@ -10,6 +10,7 @@ use markdownparser::{parse_markdown_blocks, parse_markdown_v3, Question, Questio
 
 static APP: Atom<AppState> = |_| AppState::new();
 
+#[derive(Debug)]
 struct AppState {
     questions: Questions,
     input_text: String,
@@ -54,8 +55,6 @@ fn Editor(cx: Scope) -> Element {
         editor_state.set(content);
     };
 
-    // send_input("1. testing\n 1. another\n 2. second option".to_string());
-
     cx.render(rsx! {
         div{
             form {
@@ -86,11 +85,20 @@ fn Editor(cx: Scope) -> Element {
 }
 
 fn Publish(cx: Scope) -> Element {
+    let question_state = use_atom_state(&cx, APP);
+
+    let post_questions = move || {
+        log::info!("Attempting to save questions...");
+        log::info!("Questions save: {:?}", question_state);
+    };
+
     cx.render(rsx! {
         button {
+            prevent_default: "onclick",
             class: "hover:bg-violet-600 w-full text-blue-500 bg-blue-200 rounded p-2",
             onclick: move |evt| {
                 log::info!("Pushed publish :)");
+                post_questions();
                 evt.cancel_bubble();
             },
             "Publish"
@@ -190,6 +198,9 @@ fn main() {
     // init debug tool for WebAssembly
     wasm_logger::init(wasm_logger::Config::default());
     console_error_panic_hook::set_once();
+    std::panic::set_hook(Box::new(|info| {
+        println!("Panic: {}", info);
+    }));
 
     dioxus::web::launch_cfg(app, |c| c.into());
 }
