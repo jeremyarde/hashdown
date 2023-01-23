@@ -2,6 +2,10 @@ use anyhow::{anyhow, Result};
 // use nanoid::nanoid;
 use getrandom::getrandom;
 use regex::Regex;
+use sqlx::{QueryBuilder, Sqlite, SqlitePool};
+use tracing::info;
+
+// mod db;
 
 const NANOID_LEN: usize = 12;
 // const NANOID_ALPHA: [char; 36] = [
@@ -34,12 +38,17 @@ fn nanoid_gen(size: usize) -> String {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, sqlx::FromRow)]
 struct Survey {
-    survey_id: i32,
-    content: String,
+    id: i32,
+    plaintext: String,
+    user_id: String,
+    created_at: String,
+    modified_at: String,
     questions: Vec<Question>,
+    version: String,
 }
+
 #[derive(Clone, Debug)]
 pub struct Question {
     pub id: String,
@@ -60,6 +69,14 @@ pub enum QuestionType {
     Checkbox,
     Text,
 }
+
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct PutSurveyRequest {
+    plaintext: String,
+}
+
+#[derive(Debug, Clone, Copy, sqlx::FromRow)]
+pub struct PutSurveyResponse {}
 
 impl Question {
     fn from(q_text: &str, options: Vec<&str>) -> Self {
@@ -102,6 +119,38 @@ impl Question {
 
         println!("parse: {question_text:?}");
         return question_text;
+    }
+
+    pub async fn insert(
+        &mut self,
+        survey: PutSurveyRequest,
+        pool: SqlitePool,
+    ) -> anyhow::Result<()> {
+        println!("To insert: {:?}", survey);
+
+        let res = sqlx::query("Insert into surveys (plaintext) values ($1) returning *")
+            .bind(survey.plaintext)
+            .execute(&mut pool.acquire().await?)
+            .await?;
+        // let mut query_builder: QueryBuilder<Sqlite> =
+        //     QueryBuilder::new(TodoModel::create_insert_sql());
+        // query_builder.push_values(todos.into_iter().take(512), |mut b, x| {
+        //     info!("todo to be entered: {x:?}");
+        //     b.push_bind(x.id)
+        //         .push_bind(x.status)
+        //         .push_bind(x.description)
+        //         .push_bind(x.file)
+        //         .push_bind(x.last_updated)
+        //         .push_bind(x.last_indexed)
+        //         .push_bind(x.due);
+        // });
+        // let res = query_builder.build().execute(&mut self.pool).await?;
+
+        info!("database insert results; #={:?}", res);
+
+        // potentially one way to make sure we don't overwrite certain fields:
+        // https://stackoverflow.com/questions/3634984/insert-if-not-exists-else-update
+        Ok(())
     }
 }
 
