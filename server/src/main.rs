@@ -1,5 +1,5 @@
 use axum::{
-    http::StatusCode,
+    http::{self, HeaderValue, Method, StatusCode},
     response::IntoResponse,
     routing::{get, post},
     Extension, Json, Router,
@@ -7,6 +7,11 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use sqlx::{Sqlite, SqlitePool};
 use std::{net::SocketAddr, sync::Arc};
+// use tower_http::http::cors::CorsLayer;
+use tower_http::cors::CorsLayer;
+// use tower_http::trace::TraceLayer;
+
+// use tower::http
 
 use crate::db::Database;
 
@@ -31,12 +36,17 @@ async fn main() -> anyhow::Result<()> {
         .route("/", get(root))
         // `POST /users` goes to `create_user`
         .route("/survey", post(create_survey))
-        .layer(Extension(state));
-
-    // run our app with hyper
-    // `axum::Server` is a re-export of `hyper::Server`
+        .layer(Extension(state))
+        .layer(
+            CorsLayer::new()
+                .allow_methods([Method::POST])
+                .allow_headers([http::header::CONTENT_TYPE])
+                .allow_origin("http://localhost:8080/".parse::<HeaderValue>().unwrap()),
+            // .allow_origin(tower_http::cors::Any),
+        );
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("listening on {}", addr);
+
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
@@ -44,6 +54,8 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+// Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://localhost:3000/survey. (Reason: CORS header “Access-Control-Allow-Origin” does not match “http://localhost:8080/”).
 
 // basic handler that responds with a static string
 async fn root() -> &'static str {

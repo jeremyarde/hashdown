@@ -6,10 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+tower-http = { version = "0.3.5", features = ["cors"] }
 anyhow = "1.0.68"
 axum = { version = "0.6.3" }
 serde = { version = "1.0.152", features = ["derive"] }
 sqlx = { version = "0.6.2", features = ["sqlite", 'runtime-tokio-rustls'] }
 tokio = { version = "1.24.2", features = ["macros"] }
+tower = "0.4.13"
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"

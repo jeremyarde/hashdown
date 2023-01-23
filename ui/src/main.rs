@@ -109,13 +109,16 @@ fn Publish(cx: Scope) -> Element {
             log::info!("Attempting to save questions...");
             // log::info!("Questions save: {:?}", question_state);
             match client
-                .post("localhost:3000/survey")
-                .body(content)
+                .post("http://localhost:3000/survey")
+                .json(content)
+                .header("Access-Control-Allow-Origin", "http://localhost:8080/")
+                .header("Access-Control-Allow-Origin", "http://localhost:3000/")
+                .header(reqwest::header::CONTENT_TYPE, "application/json")
                 .send()
                 .await
             {
-                Ok(x) => todo!(),
-                Err(x) => todo!(),
+                Ok(x) => log::info!("success: {x:?}"),
+                Err(x) => log::info!("error: {x:?}"),
             };
         })
     };
