@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 // use nanoid::nanoid;
 use getrandom::getrandom;
 use regex::Regex;
-use sqlx::{QueryBuilder, Sqlite, SqlitePool};
+// use sqlx::{QueryBuilder, Sqlite, SqlitePool};
 use tracing::info;
 
 // mod db;
@@ -38,7 +38,7 @@ fn nanoid_gen(size: usize) -> String {
     }
 }
 
-#[derive(Clone, Debug, sqlx::FromRow)]
+#[derive(Clone, Debug)]
 struct Survey {
     id: i32,
     plaintext: String,
@@ -70,12 +70,12 @@ pub enum QuestionType {
     Text,
 }
 
-#[derive(Debug, Clone, sqlx::FromRow)]
+#[derive(Debug, Clone)]
 pub struct PutSurveyRequest {
     plaintext: String,
 }
 
-#[derive(Debug, Clone, Copy, sqlx::FromRow)]
+#[derive(Debug, Clone, Copy)]
 pub struct PutSurveyResponse {}
 
 impl Question {
@@ -121,37 +121,37 @@ impl Question {
         return question_text;
     }
 
-    pub async fn insert(
-        &mut self,
-        survey: PutSurveyRequest,
-        pool: SqlitePool,
-    ) -> anyhow::Result<()> {
-        println!("To insert: {:?}", survey);
+    // pub async fn insert(
+    //     &mut self,
+    //     survey: PutSurveyRequest,
+    //     pool: SqlitePool,
+    // ) -> anyhow::Result<()> {
+    //     println!("To insert: {:?}", survey);
 
-        let res = sqlx::query("Insert into surveys (plaintext) values ($1) returning *")
-            .bind(survey.plaintext)
-            .execute(&mut pool.acquire().await?)
-            .await?;
-        // let mut query_builder: QueryBuilder<Sqlite> =
-        //     QueryBuilder::new(TodoModel::create_insert_sql());
-        // query_builder.push_values(todos.into_iter().take(512), |mut b, x| {
-        //     info!("todo to be entered: {x:?}");
-        //     b.push_bind(x.id)
-        //         .push_bind(x.status)
-        //         .push_bind(x.description)
-        //         .push_bind(x.file)
-        //         .push_bind(x.last_updated)
-        //         .push_bind(x.last_indexed)
-        //         .push_bind(x.due);
-        // });
-        // let res = query_builder.build().execute(&mut self.pool).await?;
+    //     let res = sqlx::query("Insert into surveys (plaintext) values ($1) returning *")
+    //         .bind(survey.plaintext)
+    //         .execute(&mut pool.acquire().await?)
+    //         .await?;
+    //     // let mut query_builder: QueryBuilder<Sqlite> =
+    //     //     QueryBuilder::new(TodoModel::create_insert_sql());
+    //     // query_builder.push_values(todos.into_iter().take(512), |mut b, x| {
+    //     //     info!("todo to be entered: {x:?}");
+    //     //     b.push_bind(x.id)
+    //     //         .push_bind(x.status)
+    //     //         .push_bind(x.description)
+    //     //         .push_bind(x.file)
+    //     //         .push_bind(x.last_updated)
+    //     //         .push_bind(x.last_indexed)
+    //     //         .push_bind(x.due);
+    //     // });
+    //     // let res = query_builder.build().execute(&mut self.pool).await?;
 
-        info!("database insert results; #={:?}", res);
+    //     info!("database insert results; #={:?}", res);
 
-        // potentially one way to make sure we don't overwrite certain fields:
-        // https://stackoverflow.com/questions/3634984/insert-if-not-exists-else-update
-        Ok(())
-    }
+    //     // potentially one way to make sure we don't overwrite certain fields:
+    //     // https://stackoverflow.com/questions/3634984/insert-if-not-exists-else-update
+    //     Ok(())
+    // }
 }
 
 #[derive(Clone, Debug)]
