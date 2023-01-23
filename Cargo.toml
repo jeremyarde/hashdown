@@ -1,2 +1,4 @@
 [workspace]
 members = ["backend", "ui", "server"]
+
+resolver = "2"

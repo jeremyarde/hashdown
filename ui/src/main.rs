@@ -7,6 +7,7 @@ use dioxus::{
 
 // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
 use markdownparser::{parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions};
+use reqwest::Client;
 
 static APP: Atom<AppState> = |_| AppState::new();
 
@@ -14,6 +15,7 @@ static APP: Atom<AppState> = |_| AppState::new();
 struct AppState {
     questions: Questions,
     input_text: String,
+    client: Client,
 }
 
 struct Survey {
@@ -23,9 +25,11 @@ struct Survey {
 
 impl AppState {
     fn new() -> Self {
+        let client = reqwest::Client::new();
         AppState {
             questions: vec![],
             input_text: String::from(""),
+            client: client,
         }
     }
 }
@@ -48,6 +52,7 @@ fn Editor(cx: Scope) -> Element {
             AppState {
                 questions: question,
                 input_text: curr.input_text.clone(),
+                client: curr.client.clone(),
             }
             // curr.questions = question;
         });
@@ -86,11 +91,47 @@ fn Editor(cx: Scope) -> Element {
 
 fn Publish(cx: Scope) -> Element {
     let question_state = use_atom_state(&cx, APP);
+    let app_state = use_atom_state(&cx, APP);
 
-    let post_questions = move || {
-        log::info!("Attempting to save questions...");
-        log::info!("Questions save: {:?}", question_state);
+    // let post_questions = move || {
+    //     log::info!("Attempting to save questions...");
+    //     log::info!("Questions save: {:?}", question_state);
+    //     app_state
+    //         .client
+    //         .post("localhost:3000/survey")
+    //         .body(question_state)
+    //         .send()
+    //         .await?;
+    // };
+
+    let post_questions = move |content, client: Client| {
+        cx.spawn(async move {
+            log::info!("Attempting to save questions...");
+            // log::info!("Questions save: {:?}", question_state);
+            match client
+                .post("localhost:3000/survey")
+                .body(content)
+                .send()
+                .await
+            {
+                Ok(x) => todo!(),
+                Err(x) => todo!(),
+            };
+        })
     };
+
+    // let post_questions = async move || {
+    //     use_future(&cx, survey_content, |(survey_content)| async move {
+    //         log::info!("Attempting to save questions...");
+    //         log::info!("Questions save: {:?}", question_state);
+    //         app_state
+    //             .client
+    //             .post("localhost:3000/survey")
+    //             .body(question_state)
+    //             .send()
+    //             .await?;
+    //     })
+    // };
 
     cx.render(rsx! {
         button {
@@ -98,7 +139,7 @@ fn Publish(cx: Scope) -> Element {
             class: "hover:bg-violet-600 w-full text-blue-500 bg-blue-200 rounded p-2",
             onclick: move |evt| {
                 log::info!("Pushed publish :)");
-                post_questions();
+                post_questions("test", app_state.client.clone());
                 evt.cancel_bubble();
             },
             "Publish"
