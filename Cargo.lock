@@ -1921,6 +1921,7 @@ dependencies = [
  "log",
  "markdownparser",
  "reqwest",
+ "serde",
  "wasm-logger",
 ]
 

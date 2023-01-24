@@ -17,7 +17,7 @@ const NANOID_ALPHA: [char; 34] = [
     'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-fn nanoid_gen(size: usize) -> String {
+pub fn nanoid_gen(size: usize) -> String {
     let mask = NANOID_ALPHA.len().next_power_of_two() - 1;
 
     let mut res = String::new();

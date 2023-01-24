@@ -6,10 +6,19 @@ use dioxus::{
 };
 
 // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
-use markdownparser::{parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions};
+use markdownparser::{
+    nanoid_gen, parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions,
+};
 use reqwest::Client;
+use serde::Serialize;
 
 static APP: Atom<AppState> = |_| AppState::new();
+
+#[derive(Serialize)]
+struct CreateSurvey {
+    id: String,
+    plaintext: String,
+}
 
 #[derive(Debug)]
 struct AppState {
@@ -105,15 +114,20 @@ fn Publish(cx: Scope) -> Element {
     // };
 
     let post_questions = move |content, client: Client| {
+        let id = nanoid_gen(12);
+
         cx.spawn(async move {
             log::info!("Attempting to save questions...");
             // log::info!("Questions save: {:?}", question_state);
             match client
                 .post("http://localhost:3000/survey")
-                .json(content)
-                .header("Access-Control-Allow-Origin", "http://localhost:8080/")
-                .header("Access-Control-Allow-Origin", "http://localhost:3000/")
-                .header(reqwest::header::CONTENT_TYPE, "application/json")
+                .json(&CreateSurvey {
+                    id,
+                    plaintext: content,
+                })
+                // .header("Access-Control-Allow-Origin", "http://localhost:8080/")
+                // .header("Access-Control-Allow-Origin", "http://localhost:3000/")
+                // .header(reqwest::header::CONTENT_TYPE, "application/json")
                 .send()
                 .await
             {
@@ -123,29 +137,30 @@ fn Publish(cx: Scope) -> Element {
         })
     };
 
-    // let post_questions = async move || {
-    //     use_future(&cx, survey_content, |(survey_content)| async move {
-    //         log::info!("Attempting to save questions...");
-    //         log::info!("Questions save: {:?}", question_state);
-    //         app_state
-    //             .client
-    //             .post("localhost:3000/survey")
-    //             .body(question_state)
-    //             .send()
-    //             .await?;
-    //     })
-    // };
-
     cx.render(rsx! {
         button {
             prevent_default: "onclick",
             class: "hover:bg-violet-600 w-full text-blue-500 bg-blue-200 rounded p-2",
             onclick: move |evt| {
                 log::info!("Pushed publish :)");
-                post_questions("test", app_state.client.clone());
+                post_questions("test".to_string(), app_state.client.clone());
                 evt.cancel_bubble();
             },
             "Publish"
+        }
+    })
+}
+
+fn Home(cx: Scope) -> Element {
+    cx.render(rsx! {
+        main{
+            // class: "container mx-auto max-w-lg p-6",
+            class: "container p-6",
+            div{
+                Editor {}
+                Questions {}
+            }
+
         }
     })
 }
@@ -202,17 +217,11 @@ fn app(cx: Scope) -> Element {
     let set_app = use_atom_state(&cx, APP);
     let editor_state = use_atom_state(&cx, EDITOR);
 
-    cx.render(rsx! (
-        main{
-            // class: "container mx-auto max-w-lg p-6",
-            class: "container p-6",
-            div{
-                Editor {}
-                Questions {}
-            }
-
-        }
-    ))
+    cx.render(rsx!(Router {
+        Route { to: "", Home {}}
+        Route { to: "/", Home {}}
+        Redirect {from: "", to: "/"}
+    }))
 }
 
 fn main() {
