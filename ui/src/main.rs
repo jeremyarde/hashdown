@@ -13,7 +13,7 @@ use markdownparser::{
     nanoid_gen, parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions,
 };
 use reqwest::Client;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 static APP: Atom<AppState> = |_| AppState::new();
 
@@ -30,6 +30,8 @@ struct AppState {
     client: Client,
 }
 
+
+#[derive(Serialize, Deserialize, Debug)]
 struct Survey {
     title: String,
     questions: Questions,
@@ -39,7 +41,7 @@ impl AppState {
     fn new() -> Self {
         let client = reqwest::Client::new();
         AppState {
-            questions: vec![],
+            questions: Questions {qs: vec![]},
             input_text: String::from(""),
             client: client,
         }
@@ -181,8 +183,9 @@ fn Home(cx: Scope) -> Element {
             class: "container p-6",
             div{
                 Editor {}
-                Questions {}
+                QuestionsComponent {}
                 Toast {}
+                SurveysComponent {}
             }
 
         }
@@ -199,7 +202,7 @@ fn Toast(cx: Scope) -> Element {
             rsx!{
             div {
                 onclick: move |_| toast_visible.set(false),
-                class:"fixed right-10 bottom-10 px-5 py-4 border-r-8 bg-white drop-shadow-lg transition-opacity duration-700 opacity-100",
+                class:"fixed right-10 bottom-10 px-5 py-4 border-r-8 bg-white drop-shadow-lg fade-in transition-opacity duration-700 opacity-100",
                 p {
                     span {
                         class: "mr-2 inline-block px-3 py-1 rounded-full bg-blue-500 text-white font-extrabold",
@@ -212,7 +215,7 @@ fn Toast(cx: Scope) -> Element {
     })
 }
 
-fn Questions(cx: Scope) -> Element {
+fn QuestionsComponent(cx: Scope) -> Element {
     let app_state = use_atom_state(&cx, APP);
     let editor_state = use_atom_state(&cx, EDITOR);
 
@@ -220,7 +223,7 @@ fn Questions(cx: Scope) -> Element {
         form {
             prevent_default: "onclick",
             class: "",
-            app_state.questions.iter().map(|q: &Question| rsx!{
+            app_state.questions.qs.iter().map(|q: &Question| rsx!{
                 fieldset {
                     legend {
                         class: "text-base mt-5 font-medium text-gray-900",
@@ -268,7 +271,49 @@ fn app(cx: Scope) -> Element {
         Route { to: "", Home {}}
         Route { to: "/", Home {}}
         Redirect {from: "", to: "/"}
+        Route { to: "/surveys", SurveysComponent {}}
     }))
+}
+
+fn SurveysComponent(cx: Scope) -> Element {
+    let app_state = use_atom_state(&cx, APP);
+    
+    let get_surveys = move || {
+        cx.spawn({
+            // to_owned![toast_visible];
+            to_owned![app_state];
+            async move {
+                log::info!("Attempting to retrieve all questions...");
+                // log::info!("Questions save: {:?}", question_state);
+                match app_state.client
+                    .get("http://localhost:3000/survey")
+                    .send()
+                    .await
+                {
+                    Ok(x) => {
+                        log::info!("success: {x:?}");
+                        let val = x.json::<Vec<Survey>>().await.unwrap();
+                        log::info!("json: {val:?}")
+                        // return vec![x.json().await.unwrap()];
+                    }
+                    Err(x) => {
+                        log::info!("error: {x:?}");
+                        // return vec![];
+                    },
+                };
+            }
+        })
+    };
+
+
+    cx.render(rsx!{
+        h1 {
+            button {
+                onclick: move |_| get_surveys(),
+                "Click me for all surveys"
+            }
+        }
+    })
 }
 
 fn main() {

@@ -1,5 +1,5 @@
 use axum::{
-    extract,
+    extract::{self, State},
     http::{self, HeaderValue, Method, StatusCode},
     response::IntoResponse,
     routing::{get, post},
@@ -19,7 +19,8 @@ use crate::db::Database;
 use anyhow;
 mod db;
 
-struct State {
+#[derive(Debug, Clone)]
+struct ServerState {
     db: Database,
 }
 
@@ -36,34 +37,83 @@ struct CreateSurvey {
     plaintext: String,
 }
 
+#[axum::debug_handler]
 async fn create_survey(
     // this argument tells axum to parse the request body
     // as JSON into a `CreateUser` type
+    State(state): State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurvey>,
 ) -> impl IntoResponse {
     // insert your application logic here
+    // let survey = "yo";
     let survey = CreateSurvey {
         id: payload.id,
         plaintext: payload.plaintext,
     };
+
+    let pool = state.db.pool;
+    let res = sqlx::query("select * from surveys")
+        .fetch_all(&pool)
+        .await
+        .map_err(internal_error)
+        .unwrap();
 
     // this will be converted into a JSON response
     // with a status code of `201 Created`
     (StatusCode::CREATED, Json(survey))
 }
 
-// the input to our `create_user` handler
-// #[derive(Deserialize)]
-// struct CreateUser {
-//     username: String,
-// }
+#[axum::debug_handler]
+async fn list_survey(
+    // this argument tells axum to parse the request body
+    // as JSON into a `CreateUser` type
+    State(state): State<ServerState>,
+    // extract::Json(payload): extract::Json<CreateSurvey>,
+) -> impl IntoResponse {
+    // insert your application logic here
+    // let survey = "yo";
+    // let survey = CreateSurvey {
+    //     id: payload.id,
+    //     plaintext: payload.plaintext,
+    // };
 
-// // the output to our `create_user` handler
-// #[derive(Serialize)]
-// struct User {
-//     id: u64,
-//     username: String,
-// }
+    let pool = state.db.pool;
+    let res = sqlx::query_as::<_, Survey>(
+        "select plaintext, user_id, created_at, modified_at from surveys",
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(internal_error)
+    .unwrap();
+
+    println!("Survey: {res:#?}");
+
+    // for item in res.into_iter() {
+    //     println!("Survey: {res:#?}")
+    // }
+    // let mapped: Vec<String> = res.iter().map(|x| x["plaintext"]).collect();
+
+    // this will be converted into a JSON response
+    // with a status code of `201 Created`
+    (StatusCode::FOUND, Json(res))
+}
+
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
+struct Survey {
+    plaintext: String,
+    user_id: String,
+    created_at: String,
+    modified_at: String,
+}
+
+/// Utility function for mapping any error into a `500 Internal Server Error`
+/// response.
+fn internal_error<E>(err: E) -> (StatusCode, String)
+where
+    E: std::error::Error,
+{
+    (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -71,21 +121,22 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
     let db = Database::new(true).await?;
-    let state = Arc::new(State { db: db });
+    // let state = Arc::new(ServerState { db: db });
+    let state = ServerState { db: db };
 
     // build our application with a route
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root))
         // `POST /users` goes to `create_user`
-        .route("/survey", post(create_survey))
-        .layer(Extension(state))
+        .route("/survey", post(create_survey).get(list_survey))
+        // .layer(Extension(state))
+        .with_state(state)
         .layer(
             CorsLayer::new()
                 .allow_methods([Method::POST])
                 .allow_headers([http::header::CONTENT_TYPE])
                 .allow_origin("http://localhost:8080".parse::<HeaderValue>().unwrap()),
-            // .allow_origin(tower_http::cors::Any),
         );
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("listening on {}", addr);

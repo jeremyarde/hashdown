@@ -17,17 +17,17 @@ use tracing::info;
 
 // use crate::todo::{self, TodoModel};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Database {
     // data: Arc<RwLock<TodoModel>>,
     // pool: PgPool,
     // pool: SqliteConnection,
-    pool: SqlitePool,
+    pub pool: SqlitePool,
     // options: Option<DatabaseOptions>,
-    settings: Settings,
+    pub settings: Settings,
 }
 
-#[derive(sqlx::FromRow, Debug)]
+#[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Settings {
     pub base_path: Option<String>,
 }

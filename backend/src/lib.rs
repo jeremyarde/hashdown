@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 // use nanoid::nanoid;
 use getrandom::getrandom;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 // use sqlx::{QueryBuilder, Sqlite, SqlitePool};
 use tracing::info;
 
@@ -49,7 +50,7 @@ struct Survey {
     version: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Question {
     pub id: String,
     pub text: String,
@@ -57,13 +58,13 @@ pub struct Question {
     pub qtype: QuestionType,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Option {
     pub id: String,
     pub text: String,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum QuestionType {
     Radio,
     Checkbox,
@@ -168,7 +169,16 @@ enum Types {
     text,
 }
 
-pub type Questions = Vec<Question>;
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct Questions {
+    pub qs: Vec<Question>,
+}
+
+impl Questions {
+    fn new() -> Self {
+        Questions { qs: vec![] }
+    }
+}
 
 pub fn parse_markdown_blocks(markdown: String) -> Questions {
     // let markdown = include_str!("../test_file.md").to_string();
@@ -188,7 +198,7 @@ pub fn parse_markdown_blocks(markdown: String) -> Questions {
     let mut lines = markdown.lines();
     let mut currline = match lines.next() {
         Some(x) => x,
-        None => return vec![],
+        None => return Questions { qs: vec![] },
     };
 
     loop {
@@ -231,7 +241,7 @@ pub fn parse_markdown_blocks(markdown: String) -> Questions {
     }
 
     println!("{:#?}", questions);
-    questions
+    Questions { qs: questions }
 }
 
 enum LineType {
@@ -241,7 +251,8 @@ enum LineType {
 }
 
 pub fn parse_markdown_v3(contents: String) -> Result<Questions> {
-    let mut questions = Questions::new();
+    // let mut questions = Questions::new();
+    let mut questions = vec![];
     let mut curr_question_text: &str = "";
     let mut curr_options: Vec<&str> = vec![];
     let mut in_question = false;
@@ -289,7 +300,7 @@ pub fn parse_markdown_v3(contents: String) -> Result<Questions> {
     // adding the last question
     questions.push(Question::from(curr_question_text, curr_options.clone()));
 
-    Ok(questions)
+    Ok(Questions { qs: questions })
 }
 
 fn find_line_type(line: &str) -> LineType {

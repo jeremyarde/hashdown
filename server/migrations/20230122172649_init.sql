@@ -1,6 +1,6 @@
 -- Add migration script here
 CREATE TABLE surveys (
-    plaintext INTEGER PRIMARY KEY,
+    plaintext TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
     created_at TEXT NOT NULL,
     modified_at TEXT NOT NULL
