@@ -1,5 +1,5 @@
 module.exports = {
-    purge: {
+    content: {
         mode: "all",
         content: [
             "./src/**/*.rs",

@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
+use std::{time::Duration, thread::sleep};
+
 use dioxus::{
+    core::to_owned,
     events::{onclick, oninput},
     fermi::use_atom_state,
     prelude::*,
@@ -101,6 +104,7 @@ fn Editor(cx: Scope) -> Element {
 fn Publish(cx: Scope) -> Element {
     let question_state = use_atom_state(&cx, APP);
     let app_state = use_atom_state(&cx, APP);
+    let toast_visible = use_atom_state(&cx, TOAST);
 
     // let post_questions = move || {
     //     log::info!("Attempting to save questions...");
@@ -116,26 +120,45 @@ fn Publish(cx: Scope) -> Element {
     let post_questions = move |content, client: Client| {
         let id = nanoid_gen(12);
 
-        cx.spawn(async move {
-            log::info!("Attempting to save questions...");
-            // log::info!("Questions save: {:?}", question_state);
-            match client
-                .post("http://localhost:3000/survey")
-                .json(&CreateSurvey {
-                    id,
-                    plaintext: content,
-                })
-                // .header("Access-Control-Allow-Origin", "http://localhost:8080/")
-                // .header("Access-Control-Allow-Origin", "http://localhost:3000/")
-                // .header(reqwest::header::CONTENT_TYPE, "application/json")
-                .send()
-                .await
-            {
-                Ok(x) => log::info!("success: {x:?}"),
-                Err(x) => log::info!("error: {x:?}"),
-            };
+        cx.spawn({
+            to_owned![toast_visible];
+            async move {
+                log::info!("Attempting to save questions...");
+                // log::info!("Questions save: {:?}", question_state);
+                match client
+                    .post("http://localhost:3000/survey")
+                    .json(&CreateSurvey {
+                        id,
+                        plaintext: content,
+                    })
+                    // .header("Access-Control-Allow-Origin", "http://localhost:8080/")
+                    // .header("Access-Control-Allow-Origin", "http://localhost:3000/")
+                    // .header(reqwest::header::CONTENT_TYPE, "application/json")
+                    .send()
+                    .await
+                {
+                    Ok(x) => {
+                        log::info!("success: {x:?}");
+                        log::info!("should show toast now");
+                        toast_visible.set(true);
+                    }
+                    Err(x) => log::info!("error: {x:?}"),
+                };
+            }
         })
     };
+
+    // cx.spawn({
+    //     to_owned![toast_visible];
+    //     async move {
+    //         // tokio::time::sleep(Duration::from_millis(1000)).await;
+    //         toast_visible.set(true);
+    //         // std::time::Instant::now();
+    //         // sleep(Duration::new(2, 0));
+    //         // toast_visible.set(false);
+
+    //     }
+    // });
 
     cx.render(rsx! {
         button {
@@ -159,9 +182,33 @@ fn Home(cx: Scope) -> Element {
             div{
                 Editor {}
                 Questions {}
+                Toast {}
             }
 
         }
+    })
+}
+
+static TOAST: Atom<bool> = |_| false;
+
+fn Toast(cx: Scope) -> Element {
+    let toast_visible = use_atom_state(&cx, TOAST);
+
+    cx.render(rsx! {
+        toast_visible.then(|| 
+            rsx!{
+            div {
+                onclick: move |_| toast_visible.set(false),
+                class:"fixed right-10 bottom-10 px-5 py-4 border-r-8 bg-white drop-shadow-lg transition-opacity duration-700 opacity-100",
+                p {
+                    span {
+                        class: "mr-2 inline-block px-3 py-1 rounded-full bg-blue-500 text-white font-extrabold",
+                        "i"
+                    }
+                    "Successfully created the survey!"
+                }
+            }
+        })
     })
 }
 
