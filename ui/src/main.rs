@@ -1,4 +1,7 @@
 #![allow(non_snake_case)]
+#![feature(async_closure)]
+
+
 use std::{time::Duration, thread::sleep};
 
 use dioxus::{
@@ -28,6 +31,7 @@ struct AppState {
     questions: Questions,
     input_text: String,
     client: Client,
+    surveys: Vec<Survey>
 }
 
 
@@ -44,6 +48,7 @@ impl AppState {
             questions: Questions {qs: vec![]},
             input_text: String::from(""),
             client: client,
+            surveys: vec![]
         }
     }
 }
@@ -67,6 +72,7 @@ fn Editor(cx: Scope) -> Element {
                 questions: question,
                 input_text: curr.input_text.clone(),
                 client: curr.client.clone(),
+                surveys: vec![],
             }
             // curr.questions = question;
         });
@@ -293,12 +299,28 @@ fn SurveysComponent(cx: Scope) -> Element {
                     Ok(x) => {
                         log::info!("success: {x:?}");
                         let val = x.json::<Vec<Survey>>().await.unwrap();
-                        log::info!("json: {val:?}")
-                        // return vec![x.json().await.unwrap()];
+                        log::info!("json: {val:?}");
+
+                        // app_state.set(
+                        //     AppState { 
+                        //         questions: app_state.questions, 
+                        //         input_text: app_state.input_text, 
+                        //         client: app_state.client, 
+                        //         surveys: x.json::<Vec<Survey>>().await.unwrap() 
+                        //     }
+                        // );
+                        app_state.modify( |curr| {
+                            return AppState { 
+                                questions: curr.questions.clone(), 
+                                input_text: curr.input_text.clone(), 
+                                client: curr.client.clone(), 
+                                surveys: val,
+                            };
+                        });
+                        
                     }
                     Err(x) => {
                         log::info!("error: {x:?}");
-                        // return vec![];
                     },
                 };
             }
@@ -343,9 +365,9 @@ fn main() {
     // init debug tool for WebAssembly
     wasm_logger::init(wasm_logger::Config::default());
     console_error_panic_hook::set_once();
-    // std::panic::set_hook(Box::new(|info| {
-    //     println!("Panic: {}", info);
-    // }));
+    std::panic::set_hook(Box::new(|info| {
+        println!("Panic: {}", info);
+    }));
 
     dioxus::web::launch_cfg(app, |c| c.into());
 }

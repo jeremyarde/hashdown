@@ -11,7 +11,6 @@ use std::{net::SocketAddr, sync::Arc};
 // use tower_http::http::cors::CorsLayer;
 use tower_http::cors::CorsLayer;
 // use tower_http::trace::TraceLayer;
-
 // use tower::http
 
 use crate::db::Database;
@@ -52,15 +51,28 @@ async fn create_survey(
     };
 
     let pool = state.db.pool;
-    let res = sqlx::query("select * from surveys")
-        .fetch_all(&pool)
+    let res = sqlx::query_as::<_, Survey>(
+        "insert into surveys (id, plaintext) values ($1, $2) returning *;",
+    )
+    .bind(survey.id)
+    .bind(survey.plaintext)
+    .fetch_one(&pool)
+    .await
+    .map_err(internal_error)
+    .unwrap();
+
+    let count: i64 = sqlx::query_scalar("select count(id) from surveys")
+        .fetch_one(&pool)
         .await
         .map_err(internal_error)
         .unwrap();
+    // let countval: i32 = count.into();
+
+    println!("Survey count: {count:#?}");
 
     // this will be converted into a JSON response
     // with a status code of `201 Created`
-    (StatusCode::CREATED, Json(survey))
+    (StatusCode::CREATED, Json(res))
 }
 
 #[axum::debug_handler]
@@ -79,7 +91,7 @@ async fn list_survey(
 
     let pool = state.db.pool;
     let res = sqlx::query_as::<_, Survey>(
-        "select plaintext, user_id, created_at, modified_at from surveys",
+        "select id, plaintext, user_id, created_at, modified_at from surveys",
     )
     .fetch_all(&pool)
     .await
@@ -100,6 +112,7 @@ async fn list_survey(
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 struct Survey {
+    id: String,
     plaintext: String,
     user_id: String,
     created_at: String,
@@ -117,6 +130,7 @@ where
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    dotenvy::from_filename("dev.env").ok();
     // initialize tracing
     tracing_subscriber::fmt::init();
 
