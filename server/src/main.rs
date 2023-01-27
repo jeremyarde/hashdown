@@ -5,8 +5,10 @@ use axum::{
     routing::{get, post},
     Extension, Json, Router,
 };
+use ormlite::{model::ModelBuilder, Model};
 use serde::{Deserialize, Serialize};
-use sqlx::{Sqlite, SqlitePool};
+// use uuid::Uuid;
+// use sqlx::{Sqlite, SqlitePool};
 use std::{net::SocketAddr, sync::Arc};
 // use tower_http::http::cors::CorsLayer;
 use tower_http::cors::CorsLayer;
@@ -36,6 +38,17 @@ struct CreateSurvey {
     plaintext: String,
 }
 
+#[derive(Debug, Serialize, Model, Clone)]
+struct Survey {
+    id: i32,
+    nanoid: String,
+    plaintext: String,
+    user_id: String,
+    created_at: String,
+    modified_at: String,
+    version: String,
+}
+
 #[axum::debug_handler]
 async fn create_survey(
     // this argument tells axum to parse the request body
@@ -45,21 +58,34 @@ async fn create_survey(
 ) -> impl IntoResponse {
     // insert your application logic here
     // let survey = "yo";
-    let survey = CreateSurvey {
-        id: payload.id,
-        plaintext: payload.plaintext,
-    };
+    // let survey = CreateSurvey {
+    //     id: payload.id,
+    //     plaintext: payload.plaintext,
+    // };
+
+    // let insert = InsertSurvey {
+    //     id: payload.id,
+    //     plaintext: payload.plaintext,
+    // };
+
+    let res = Survey::builder()
+        .nanoid(payload.id)
+        .plaintext(payload.plaintext)
+        .insert(&state.db.pool)
+        .await
+        .unwrap();
 
     let pool = state.db.pool;
-    let res = sqlx::query_as::<_, Survey>(
-        "insert into surveys (id, plaintext) values ($1, $2) returning *;",
-    )
-    .bind(survey.id)
-    .bind(survey.plaintext)
-    .fetch_one(&pool)
-    .await
-    .map_err(internal_error)
-    .unwrap();
+    // let res = sqlx::query_as::<_, Survey>(
+    //     "insert into surveys (id, plaintext) values ($1, $2) returning *;",
+    // )
+    // .bind(survey.id)
+    // .bind(survey.plaintext)
+    // .fetch_one(&pool)
+    // .await
+    // .map_err(internal_error)
+    // .unwrap();
+    // let res: Survey = insert.insert(&pool).await.into();
 
     let count: i64 = sqlx::query_scalar("select count(id) from surveys")
         .fetch_one(&pool)
@@ -82,21 +108,19 @@ async fn list_survey(
     State(state): State<ServerState>,
     // extract::Json(payload): extract::Json<CreateSurvey>,
 ) -> impl IntoResponse {
-    // insert your application logic here
-    // let survey = "yo";
-    // let survey = CreateSurvey {
-    //     id: payload.id,
-    //     plaintext: payload.plaintext,
-    // };
-
     let pool = state.db.pool;
-    let res = sqlx::query_as::<_, Survey>(
-        "select id, plaintext, user_id, created_at, modified_at from surveys",
-    )
-    .fetch_all(&pool)
-    .await
-    .map_err(internal_error)
-    .unwrap();
+    // let res = sqlx::query_as::<_, Survey>(
+    //     "select id, plaintext, user_id, created_at, modified_at from surveys",
+    // )
+    // .fetch_all(&pool)
+    // .await
+    // .map_err(internal_error)
+    // .unwrap();
+    let res = Survey::select()
+        .fetch_all(&pool)
+        .await
+        .map_err(internal_error)
+        .unwrap();
 
     println!("Survey: {res:#?}");
 
@@ -110,14 +134,14 @@ async fn list_survey(
     (StatusCode::FOUND, Json(res))
 }
 
-#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
-struct Survey {
-    id: String,
-    plaintext: String,
-    user_id: String,
-    created_at: String,
-    modified_at: String,
-}
+// #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
+// struct Survey {
+//     id: String,
+//     plaintext: String,
+//     user_id: String,
+//     created_at: String,
+//     modified_at: String,
+// }
 
 /// Utility function for mapping any error into a `500 Internal Server Error`
 /// response.
@@ -135,6 +159,7 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
     let db = Database::new(true).await?;
+    // let ormdb = SqliteConnection::connect(":memory:").await?;
     // let state = Arc::new(ServerState { db: db });
     let state = ServerState { db: db };
 

@@ -54,12 +54,12 @@ struct Survey {
 pub struct Question {
     pub id: String,
     pub text: String,
-    pub options: Vec<Option>,
+    pub options: Vec<QuestionOption>,
     pub qtype: QuestionType,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Option {
+pub struct QuestionOption {
     pub id: String,
     pub text: String,
 }
@@ -87,7 +87,7 @@ impl Question {
             text: Question::parse_question_text(q_text).to_string(),
             options: options
                 .iter()
-                .map(|&o| Option {
+                .map(|&o| QuestionOption {
                     id: nanoid_gen(NANOID_LEN),
                     text: Question::parse_question_text(o).to_string(),
                 })
