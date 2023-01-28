@@ -25,13 +25,6 @@ struct ServerState {
     db: Database,
 }
 
-// Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://localhost:3000/survey. (Reason: CORS header “Access-Control-Allow-Origin” does not match “http://localhost:8080/”).
-
-// basic handler that responds with a static string
-async fn root() -> &'static str {
-    "Hello, World!"
-}
-
 #[derive(Deserialize, Serialize, sqlx::FromRow, Debug)]
 struct CreateSurvey {
     id: String,
@@ -92,8 +85,6 @@ async fn create_survey(
         .await
         .map_err(internal_error)
         .unwrap();
-    // let countval: i32 = count.into();
-
     println!("Survey count: {count:#?}");
 
     // this will be converted into a JSON response
@@ -109,18 +100,19 @@ async fn list_survey(
     // extract::Json(payload): extract::Json<CreateSurvey>,
 ) -> impl IntoResponse {
     let pool = state.db.pool;
-    // let res = sqlx::query_as::<_, Survey>(
-    //     "select id, plaintext, user_id, created_at, modified_at from surveys",
-    // )
-    // .fetch_all(&pool)
-    // .await
-    // .map_err(internal_error)
-    // .unwrap();
+
+    let count: i64 = sqlx::query_scalar("select count(id) from surveys")
+        .fetch_one(&pool)
+        .await
+        .map_err(internal_error)
+        .unwrap();
+    println!("Survey count: {count:#?}");
+
     let res = Survey::select()
         .fetch_all(&pool)
         .await
         .map_err(internal_error)
-        .unwrap();
+        .expect("Could not select all surveys");
 
     println!("Survey: {res:#?}");
 
@@ -175,12 +167,10 @@ async fn main() -> anyhow::Result<()> {
         .with_state(state)
         .layer(
             CorsLayer::new()
-                .allow_methods([Method::POST])
+                .allow_methods([Method::POST, Method::GET])
                 .allow_headers([http::header::CONTENT_TYPE])
-                // .header("Access-Control-Allow-Origin", "http://localhost:8080/")
-                // .header("Access-Control-Allow-Origin", "http://localhost:3000/")
-                // .header(reqwest::header::CONTENT_TYPE, "application/json")
-                .allow_origin("http://localhost:8080/".parse::<HeaderValue>().unwrap()),
+                .allow_origin("http://localhost:8080/".parse::<HeaderValue>().unwrap())
+                .allow_origin("localhost:8080/".parse::<HeaderValue>().unwrap()),
         );
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("listening on {}", addr);

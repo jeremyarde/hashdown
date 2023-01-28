@@ -153,18 +153,6 @@ fn Publish(cx: Scope) -> Element {
         })
     };
 
-    // cx.spawn({
-    //     to_owned![toast_visible];
-    //     async move {
-    //         // tokio::time::sleep(Duration::from_millis(1000)).await;
-    //         toast_visible.set(true);
-    //         // std::time::Instant::now();
-    //         // sleep(Duration::new(2, 0));
-    //         // toast_visible.set(false);
-
-    //     }
-    // });
-
     cx.render(rsx! {
         button {
             prevent_default: "onclick",

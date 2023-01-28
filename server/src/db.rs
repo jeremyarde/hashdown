@@ -54,7 +54,7 @@ impl Database {
                 let connection_options = SqliteConnectOptions::new()
                     .create_if_missing(true)
                     // .filename("~/Library/todowatcher_data.db"); // maybe try to save state in a common location
-                    .filename("./todowatcher_data.db");
+                    .filename("./surveyapp.db");
                 SqlitePool::connect_with(connection_options).await?
             }
         };
