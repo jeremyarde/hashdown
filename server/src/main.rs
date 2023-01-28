@@ -154,6 +154,8 @@ where
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    const V1: &str = "v1";
+
     dotenvy::from_filename("dev.env").ok();
     // initialize tracing
     tracing_subscriber::fmt::init();
@@ -165,10 +167,10 @@ async fn main() -> anyhow::Result<()> {
 
     // build our application with a route
     let app = Router::new()
-        // `GET /` goes to `root`
-        .route("/", get(root))
-        // `POST /users` goes to `create_user`
-        .route("/survey", post(create_survey).get(list_survey))
+        .route(
+            &format!("/{V1}/survey"),
+            post(create_survey).get(list_survey),
+        )
         // .layer(Extension(state))
         .with_state(state)
         .layer(
