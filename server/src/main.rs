@@ -177,7 +177,10 @@ async fn main() -> anyhow::Result<()> {
             CorsLayer::new()
                 .allow_methods([Method::POST])
                 .allow_headers([http::header::CONTENT_TYPE])
-                .allow_origin("http://localhost:8080".parse::<HeaderValue>().unwrap()),
+                // .header("Access-Control-Allow-Origin", "http://localhost:8080/")
+                // .header("Access-Control-Allow-Origin", "http://localhost:3000/")
+                // .header(reqwest::header::CONTENT_TYPE, "application/json")
+                .allow_origin("http://localhost:8080/".parse::<HeaderValue>().unwrap()),
         );
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("listening on {}", addr);

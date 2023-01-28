@@ -1,8 +1,7 @@
 #![allow(non_snake_case)]
 #![feature(async_closure)]
 
-
-use std::{time::Duration, thread::sleep};
+use std::{thread::sleep, time::Duration};
 
 use dioxus::{
     core::to_owned,
@@ -11,12 +10,13 @@ use dioxus::{
     prelude::*,
 };
 
+use gloo_timers::{callback::Timeout, future::TimeoutFuture};
 // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
 use markdownparser::{
     nanoid_gen, parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions,
 };
 use reqwest::Client;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 static APP: Atom<AppState> = |_| AppState::new();
 
@@ -31,9 +31,8 @@ struct AppState {
     questions: Questions,
     input_text: String,
     client: Client,
-    surveys: Vec<Survey>
+    surveys: Vec<Survey>,
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Survey {
@@ -45,10 +44,10 @@ impl AppState {
     fn new() -> Self {
         let client = reqwest::Client::new();
         AppState {
-            questions: Questions {qs: vec![]},
+            questions: Questions { qs: vec![] },
             input_text: String::from(""),
             client: client,
-            surveys: vec![]
+            surveys: vec![],
         }
     }
 }
@@ -65,7 +64,7 @@ fn Editor(cx: Scope) -> Element {
         log::info!("Recieved input: {content}");
         // let question = parse_markdown_blocks(content.clone());
         let question = parse_markdown_v3(content.clone()).unwrap();
-        log::info!("Questions: {question:#?}");
+        // log::info!("Questions: {question:#?}");
 
         question_state.modify(|curr| {
             AppState {
@@ -139,6 +138,7 @@ fn Publish(cx: Scope) -> Element {
                         id,
                         plaintext: content,
                     })
+                    .header(reqwest::header::CONTENT_TYPE, "application/json")
                     .send()
                     .await
                 {
@@ -200,18 +200,52 @@ static TOAST: Atom<bool> = |_| false;
 fn Toast(cx: Scope) -> Element {
     let toast_visible = use_atom_state(&cx, TOAST);
 
+    let timer = async move {
+        cx.spawn({
+            to_owned![toast_visible];
+            // TimeoutFuture::new(1_000).await;
+            // toast_visible.set(false);
+            async move {
+                // Timeout::new(2000, move || {
+                //     toast_visible.set(false);
+                // })
+                // .forget();
+                TimeoutFuture::new(1_000).await;
+                toast_visible.set(false);
+            }
+        })
+    };
+
     cx.render(rsx! {
-        toast_visible.then(|| 
+        toast_visible.then(|| {
+            cx.spawn({
+                to_owned![toast_visible];
+                // TimeoutFuture::new(1_000).await;
+                // toast_visible.set(false);
+                async move {
+                    // Timeout::new(2000, move || {
+                    //     toast_visible.set(false);
+                    // })
+                    // .forget();
+                    log::info!("before timeout");
+                    TimeoutFuture::new(7000).await;
+                    toast_visible.set(false);
+                    log::info!("after timeout");
+                }
+            });
             rsx!{
-            div {
-                onclick: move |_| toast_visible.set(false),
-                class:"fixed right-10 bottom-10 px-5 py-4 border-r-8 bg-white drop-shadow-lg fade-in transition-opacity duration-700 opacity-100",
-                p {
-                    span {
-                        class: "mr-2 inline-block px-3 py-1 rounded-full bg-blue-500 text-white font-extrabold",
-                        "i"
+                div {
+                    onclick:  move |_| {
+                        toast_visible.set(false)
+                    },
+                    class:"fixed right-10 bottom-10 px-5 py-4 border-r-8 bg-white drop-shadow-lg fade-in transition ease-in-out hover:-translate-y-1 hover:scale-110 hover:bg-indigo-500 duration-1000 from-blue-500",
+                    p {
+                        span {
+                            class: "mr-2 inline-block px-3 py-1 rounded-full bg-blue-500 text-white font-extrabold",
+                            "i"
+                        }
+                        "Successfully created the survey!"
                     }
-                    "Successfully created the survey!"
                 }
             }
         })
@@ -280,7 +314,7 @@ fn app(cx: Scope) -> Element {
 
 fn SurveysComponent(cx: Scope) -> Element {
     let app_state = use_atom_state(&cx, APP);
-    
+
     let get_surveys = move || {
         cx.spawn({
             // to_owned![toast_visible];
@@ -288,8 +322,9 @@ fn SurveysComponent(cx: Scope) -> Element {
             async move {
                 log::info!("Attempting to retrieve all questions...");
                 // log::info!("Questions save: {:?}", question_state);
-                match app_state.client
-                    .get("http://localhost:3000/survey")
+                match app_state
+                    .client
+                    .get("http://localhost:3000/v1/survey")
                     .send()
                     .await
                 {
@@ -299,33 +334,31 @@ fn SurveysComponent(cx: Scope) -> Element {
                         log::info!("json: {val:?}");
 
                         // app_state.set(
-                        //     AppState { 
-                        //         questions: app_state.questions, 
-                        //         input_text: app_state.input_text, 
-                        //         client: app_state.client, 
-                        //         surveys: x.json::<Vec<Survey>>().await.unwrap() 
+                        //     AppState {
+                        //         questions: app_state.questions,
+                        //         input_text: app_state.input_text,
+                        //         client: app_state.client,
+                        //         surveys: x.json::<Vec<Survey>>().await.unwrap()
                         //     }
                         // );
-                        app_state.modify( |curr| {
-                            return AppState { 
-                                questions: curr.questions.clone(), 
-                                input_text: curr.input_text.clone(), 
-                                client: curr.client.clone(), 
+                        app_state.modify(|curr| {
+                            return AppState {
+                                questions: curr.questions.clone(),
+                                input_text: curr.input_text.clone(),
+                                client: curr.client.clone(),
                                 surveys: val,
                             };
                         });
-                        
                     }
                     Err(x) => {
                         log::info!("error: {x:?}");
-                    },
+                    }
                 };
             }
         })
     };
 
-
-    cx.render(rsx!{
+    cx.render(rsx! {
         h1 {
             button {
                 onclick: move |_| get_surveys(),
