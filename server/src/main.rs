@@ -5,13 +5,15 @@ use axum::{
     routing::{get, post},
     Extension, Json, Router,
 };
-use ormlite::{model::ModelBuilder, Model};
+// use ormlite::FromRow;
+// use ormlite::{model::ModelBuilder, Model};
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
 use std::{net::SocketAddr, sync::Arc};
 // use tower_http::http::cors::CorsLayer;
-use tower_http::cors::CorsLayer;
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 // use tower_http::trace::TraceLayer;
 // use tower::http
 
@@ -31,9 +33,9 @@ struct CreateSurvey {
     plaintext: String,
 }
 
-#[derive(Debug, Serialize, Model, Clone)]
+#[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
 struct Survey {
-    id: i32,
+    id: String,
     nanoid: String,
     plaintext: String,
     user_id: String,
@@ -61,10 +63,17 @@ async fn create_survey(
     //     plaintext: payload.plaintext,
     // };
 
-    let res = Survey::builder()
-        .nanoid(payload.id)
-        .plaintext(payload.plaintext)
-        .insert(&state.db.pool)
+    // let res = Survey::builder()
+    //     .nanoid(payload.id)
+    //     .plaintext(payload.plaintext)
+    //     .insert(&state.db.pool)
+    //     .await
+    //     .unwrap();
+
+    let res = sqlx::query("insert into surveys (id, plaintext) values ($1, $2)")
+        .bind(payload.id.clone())
+        .bind(payload.plaintext)
+        .execute(&state.db.pool)
         .await
         .unwrap();
 
@@ -89,7 +98,7 @@ async fn create_survey(
 
     // this will be converted into a JSON response
     // with a status code of `201 Created`
-    (StatusCode::CREATED, Json(res))
+    (StatusCode::CREATED, Json(payload.id))
 }
 
 #[axum::debug_handler]
@@ -108,11 +117,16 @@ async fn list_survey(
         .unwrap();
     println!("Survey count: {count:#?}");
 
-    let res = Survey::select()
+    // let res = Survey::select()
+    //     .fetch_all(&pool)
+    //     .await
+    //     .map_err(internal_error)
+    //     .expect("Could not select all surveys");
+
+    let res = sqlx::query_as::<_, Survey>("select * from surveys")
         .fetch_all(&pool)
         .await
-        .map_err(internal_error)
-        .expect("Could not select all surveys");
+        .unwrap();
 
     println!("Survey: {res:#?}");
 
@@ -123,7 +137,7 @@ async fn list_survey(
 
     // this will be converted into a JSON response
     // with a status code of `201 Created`
-    (StatusCode::FOUND, Json(res))
+    (StatusCode::OK, Json(res))
 }
 
 // #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
@@ -146,6 +160,7 @@ where
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // cargo watch -- cargo run
     const V1: &str = "v1";
 
     dotenvy::from_filename("dev.env").ok();
@@ -159,19 +174,17 @@ async fn main() -> anyhow::Result<()> {
 
     // build our application with a route
     let app = Router::new()
-        .route(
-            &format!("/{V1}/survey"),
-            post(create_survey).get(list_survey),
-        )
+        .route(&format!("/survey"), post(create_survey).get(list_survey))
         // .layer(Extension(state))
         .with_state(state)
         .layer(
             CorsLayer::new()
                 .allow_methods([Method::POST, Method::GET])
-                .allow_headers([http::header::CONTENT_TYPE])
+                .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
                 .allow_origin("http://localhost:8080/".parse::<HeaderValue>().unwrap())
-                .allow_origin("localhost:8080/".parse::<HeaderValue>().unwrap()),
-        );
+                .allow_origin("http://localhost:8080".parse::<HeaderValue>().unwrap()),
+        )
+        .layer(TraceLayer::new_for_http());
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("listening on {}", addr);
 

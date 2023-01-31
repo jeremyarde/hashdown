@@ -15,7 +15,7 @@ use gloo_timers::{callback::Timeout, future::TimeoutFuture};
 use markdownparser::{
     nanoid_gen, parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions,
 };
-use reqwest::Client;
+use reqwest::{header, Client};
 use serde::{Deserialize, Serialize};
 
 static APP: Atom<AppState> = |_| AppState::new();
@@ -42,7 +42,19 @@ struct Survey {
 
 impl AppState {
     fn new() -> Self {
-        let client = reqwest::Client::new();
+        let mut headers = header::HeaderMap::new();
+        // headers.insert(
+        //     // "Content-Type",
+        //     header::CONTENT_TYPE,
+        //     header::HeaderValue::from_static("application/json"),
+        // );
+        // headers.insert(header::CONTENT_ENCODING,
+        // header::)
+
+        let client = reqwest::Client::builder()
+            .default_headers(headers)
+            .build()
+            .unwrap();
         AppState {
             questions: Questions { qs: vec![] },
             input_text: String::from(""),
@@ -133,12 +145,12 @@ fn Publish(cx: Scope) -> Element {
                 log::info!("Attempting to save questions...");
                 // log::info!("Questions save: {:?}", question_state);
                 match client
-                    .post("http://localhost:3000/v1/survey")
+                    .post("http://localhost:3000/survey")
                     .json(&CreateSurvey {
                         id,
                         plaintext: content,
                     })
-                    .header(reqwest::header::CONTENT_TYPE, "application/json")
+                    // .header(reqwest::header::CONTENT_TYPE, "application/json")
                     .send()
                     .await
                 {
@@ -312,7 +324,7 @@ fn SurveysComponent(cx: Scope) -> Element {
                 // log::info!("Questions save: {:?}", question_state);
                 match app_state
                     .client
-                    .get("http://localhost:3000/v1/survey")
+                    .get("http://localhost:3000/survey")
                     .send()
                     .await
                 {

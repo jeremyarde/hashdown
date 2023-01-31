@@ -2,6 +2,8 @@
 CREATE TABLE surveys (
     id TEXT PRIMARY KEY,
     plaintext TEXT NOT NULL,
+    nanoid TEXT,
+    version TEXT,
     user_id TEXT,
     created_at TEXT,
     modified_at TEXT
