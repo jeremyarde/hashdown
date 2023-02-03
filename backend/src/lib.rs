@@ -50,7 +50,7 @@ struct Survey {
     version: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Question {
     pub id: String,
     pub text: String,
@@ -58,7 +58,7 @@ pub struct Question {
     pub qtype: QuestionType,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct QuestionOption {
     pub id: String,
     pub text: String,

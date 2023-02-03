@@ -32,12 +32,34 @@ struct AppState {
     input_text: String,
     client: Client,
     surveys: Vec<Survey>,
+    curr_survey: Survey,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 struct Survey {
-    title: String,
-    questions: Questions,
+    id: String,
+    nanoid: String,
+    plaintext: String,
+    user_id: String,
+    created_at: String,
+    modified_at: String,
+    version: String,
+    questions: Vec<Question>,
+}
+
+impl Survey {
+    fn new() -> Survey {
+        Survey {
+            id: "".to_string(),
+            nanoid: "".to_string(),
+            plaintext: "".to_string(),
+            user_id: "".to_string(),
+            created_at: "".to_string(),
+            modified_at: "".to_string(),
+            version: "".to_string(),
+            questions: vec![],
+        }
+    }
 }
 
 impl AppState {
@@ -60,6 +82,7 @@ impl AppState {
             input_text: String::from(""),
             client: client,
             surveys: vec![],
+            curr_survey: Survey::new(),
         }
     }
 }
@@ -84,6 +107,7 @@ fn Editor(cx: Scope) -> Element {
                 input_text: curr.input_text.clone(),
                 client: curr.client.clone(),
                 surveys: vec![],
+                curr_survey: Survey::new(),
             }
             // curr.questions = question;
         });
@@ -121,7 +145,7 @@ fn Editor(cx: Scope) -> Element {
 }
 
 fn Publish(cx: Scope) -> Element {
-    let question_state = use_atom_state(&cx, APP);
+    // let question_state = use_atom_state(&cx, APP);
     let app_state = use_atom_state(&cx, APP);
     let toast_visible = use_atom_state(&cx, TOAST);
 
@@ -150,7 +174,6 @@ fn Publish(cx: Scope) -> Element {
                         id,
                         plaintext: content,
                     })
-                    // .header(reqwest::header::CONTENT_TYPE, "application/json")
                     .send()
                     .await
                 {
@@ -180,6 +203,8 @@ fn Publish(cx: Scope) -> Element {
 }
 
 fn Home(cx: Scope) -> Element {
+    let app_state = use_atom_state(&cx, APP);
+
     cx.render(rsx! {
         main{
             // class: "container mx-auto max-w-lg p-6",
@@ -252,15 +277,68 @@ fn Toast(cx: Scope) -> Element {
     })
 }
 
+#[derive(Props, PartialEq)]
+struct RenderSurveyProps {
+    testprops: Survey,
+    // body: Element<'a>
+}
+
+fn RenderSurvey<'a>(cx: Scope<RenderSurveyProps>) -> Element {
+    cx.render(rsx! {
+        form {
+            prevent_default: "onclick",
+            class: "",
+            // app_state.questions.qs.iter().map(|q: &Question| rsx!{
+                cx.props.testprops.questions.iter().map(|q: &Question| rsx!{
+                fieldset {
+                    legend {
+                        class: "text-base mt-5 font-medium text-gray-900",
+                        "{q.text} - {q.qtype:?}"
+                    }
+                    {
+                        q.options.iter().map(|option| {
+                            let qtype = match q.qtype {
+                                QuestionType::Radio => "radio",
+                                QuestionType::Checkbox => "checkbox",
+                                QuestionType::Text => "textarea",
+                            };
+
+                            rsx!{
+                                div{
+                                    key: "{option.id}",
+                                    class: "flex items-center",
+                                    input {
+                                        id: "{option.id}",
+                                        name: "{q.id}",
+                                        r#type: "{qtype}",
+                                        class: " m-3 border border-gray-400"
+                                    }
+                                    label {
+                                        r#for: "{option.id}",
+                                        class: " text-gray-700 font-medium",
+                                        "{option.text}"
+                                    }
+                                }
+
+                            }
+                        })
+                    }
+                }
+            })
+        }
+    })
+}
+
 fn QuestionsComponent(cx: Scope) -> Element {
     let app_state = use_atom_state(&cx, APP);
-    let editor_state = use_atom_state(&cx, EDITOR);
+    // let editor_state = use_atom_state(&cx, EDITOR);
 
     cx.render(rsx! {
         form {
             prevent_default: "onclick",
             class: "",
-            app_state.questions.qs.iter().map(|q: &Question| rsx!{
+            // app_state.questions.qs.iter().map(|q: &Question| rsx!{
+            app_state.curr_survey.questions.iter().map(|q: &Question| rsx!{
                 fieldset {
                     legend {
                         class: "text-base mt-5 font-medium text-gray-900",
@@ -333,20 +411,19 @@ fn SurveysComponent(cx: Scope) -> Element {
                         let val = x.json::<Vec<Survey>>().await.unwrap();
                         log::info!("json: {val:?}");
 
-                        // app_state.set(
-                        //     AppState {
-                        //         questions: app_state.questions,
-                        //         input_text: app_state.input_text,
-                        //         client: app_state.client,
-                        //         surveys: x.json::<Vec<Survey>>().await.unwrap()
-                        //     }
-                        // );
+                        // app_state.set(AppState {
+                        //     questions: app_state.questions,
+                        //     input_text: app_state.input_text,
+                        //     client: app_state.client,
+                        //     surveys: x.json::<Vec<Survey>>().await.unwrap(),
+                        // });
                         app_state.modify(|curr| {
                             return AppState {
                                 questions: curr.questions.clone(),
                                 input_text: curr.input_text.clone(),
                                 client: curr.client.clone(),
                                 surveys: val,
+                                curr_survey: curr.curr_survey.clone(),
                             };
                         });
                     }
@@ -361,9 +438,15 @@ fn SurveysComponent(cx: Scope) -> Element {
     cx.render(rsx! {
         h1 {
             button {
-                onclick: move |_| get_surveys(),
+                onclick: move |_| {
+                    get_surveys();
+
+                },
                 "Click me for all surveys"
             }
+        }
+        RenderSurvey {
+            RenderSurveyProps {testprops: app_state.surveys}
         }
     })
 }
