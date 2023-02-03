@@ -390,7 +390,17 @@ fn app(cx: Scope) -> Element {
     }))
 }
 
+struct SurveyComponent {
+    visible: bool,
+    surveys: Vec<Survey>,
+}
+static SURVEYS_PAGE: Atom<String> = |_| SurveyComponent {
+    visible: false,
+    surveys: vec![],
+};
+
 fn SurveysComponent(cx: Scope) -> Element {
+    let surveyspage = use_atom_state(&cx, SURVEYS_PAGE);
     let app_state = use_atom_state(&cx, APP);
 
     let get_surveys = move || {
@@ -446,7 +456,7 @@ fn SurveysComponent(cx: Scope) -> Element {
             }
         }
         RenderSurvey {
-            RenderSurveyProps {testprops: app_state.surveys}
+             {app_state.surveys}
         }
     })
 }
