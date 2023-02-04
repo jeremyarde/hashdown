@@ -15,6 +15,10 @@ use gloo_timers::{callback::Timeout, future::TimeoutFuture};
 use markdownparser::{
     nanoid_gen, parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions,
 };
+
+mod types;
+use types::SurveyDto;
+
 use reqwest::{header, Client};
 use serde::{Deserialize, Serialize};
 
@@ -44,7 +48,7 @@ struct Survey {
     created_at: String,
     modified_at: String,
     version: String,
-    questions: Vec<Question>,
+    // questions: Questions,
 }
 
 impl Survey {
@@ -57,7 +61,19 @@ impl Survey {
             created_at: "".to_string(),
             modified_at: "".to_string(),
             version: "".to_string(),
-            questions: vec![],
+            // questions: Questions { qs: vec![] },
+        }
+    }
+    fn from(text: String) -> Survey {
+        Survey {
+            id: "".to_string(),
+            nanoid: "".to_string(),
+            plaintext: text,
+            user_id: "".to_string(),
+            created_at: "".to_string(),
+            modified_at: "".to_string(),
+            version: "".to_string(),
+            // questions: parse_markdown_v3(text).unwrap(),
         }
     }
 }
@@ -107,7 +123,7 @@ fn Editor(cx: Scope) -> Element {
                 input_text: curr.input_text.clone(),
                 client: curr.client.clone(),
                 surveys: vec![],
-                curr_survey: Survey::new(),
+                curr_survey: Survey::from(content.clone()),
             }
             // curr.questions = question;
         });
@@ -277,19 +293,25 @@ fn Toast(cx: Scope) -> Element {
     })
 }
 
-#[derive(Props, PartialEq)]
-struct RenderSurveyProps {
-    testprops: Survey,
-    // body: Element<'a>
-}
+fn RenderSurvey(cx: Scope) -> Element {
+    let surveyspage = use_atom_state(&cx, SURVEYS_PAGE);
+    // let questions = &surveyspage.surveys.get(0).unwrap().questions;
+    let all_questions = surveyspage
+        .surveys
+        .iter()
+        .map(|s| parse_markdown_v3(s.plaintext.clone()).unwrap())
+        .collect::<Vec<Questions>>();
 
-fn RenderSurvey<'a>(cx: Scope<RenderSurveyProps>) -> Element {
+    let questions = all_questions.get(0).unwrap();
     cx.render(rsx! {
+        // questions.iter().map(|q|
         form {
             prevent_default: "onclick",
             class: "",
+            questions.qs.iter().map(|q: &Question| rsx!{
             // app_state.questions.qs.iter().map(|q: &Question| rsx!{
-                cx.props.testprops.questions.iter().map(|q: &Question| rsx!{
+                // surveyspage.get().surveys.into_iter().map(|s| s.questions.into_iter().map(|q| rsx! {
+                // .iter().map(|q: &Question| rsx!{
                 fieldset {
                     legend {
                         class: "text-base mt-5 font-medium text-gray-900",
@@ -332,13 +354,14 @@ fn RenderSurvey<'a>(cx: Scope<RenderSurveyProps>) -> Element {
 fn QuestionsComponent(cx: Scope) -> Element {
     let app_state = use_atom_state(&cx, APP);
     // let editor_state = use_atom_state(&cx, EDITOR);
-
+    let test = parse_markdown_v3(app_state.input_text.clone()).unwrap().qs;
     cx.render(rsx! {
         form {
             prevent_default: "onclick",
             class: "",
             // app_state.questions.qs.iter().map(|q: &Question| rsx!{
-            app_state.curr_survey.questions.iter().map(|q: &Question| rsx!{
+                test.iter().map(|q: &Question| rsx!{
+                // app_state.curr_survey.questions.iter().map(|q: &Question| rsx!{
                 fieldset {
                     legend {
                         class: "text-base mt-5 font-medium text-gray-900",
@@ -392,9 +415,9 @@ fn app(cx: Scope) -> Element {
 
 struct SurveyComponent {
     visible: bool,
-    surveys: Vec<Survey>,
+    surveys: Vec<SurveyDto>,
 }
-static SURVEYS_PAGE: Atom<String> = |_| SurveyComponent {
+static SURVEYS_PAGE: Atom<SurveyComponent> = |_| SurveyComponent {
     visible: false,
     surveys: vec![],
 };
@@ -406,7 +429,7 @@ fn SurveysComponent(cx: Scope) -> Element {
     let get_surveys = move || {
         cx.spawn({
             // to_owned![toast_visible];
-            to_owned![app_state];
+            to_owned![app_state, surveyspage];
             async move {
                 log::info!("Attempting to retrieve all questions...");
                 // log::info!("Questions save: {:?}", question_state);
@@ -418,8 +441,8 @@ fn SurveysComponent(cx: Scope) -> Element {
                 {
                     Ok(x) => {
                         log::info!("success: {x:?}");
-                        let val = x.json::<Vec<Survey>>().await.unwrap();
-                        log::info!("json: {val:?}");
+                        let val = x.json::<Vec<SurveyDto>>().await.unwrap();
+                        // let test = x.json::<Survey>().await.unwrap();
 
                         // app_state.set(AppState {
                         //     questions: app_state.questions,
@@ -427,14 +450,19 @@ fn SurveysComponent(cx: Scope) -> Element {
                         //     client: app_state.client,
                         //     surveys: x.json::<Vec<Survey>>().await.unwrap(),
                         // });
-                        app_state.modify(|curr| {
-                            return AppState {
-                                questions: curr.questions.clone(),
-                                input_text: curr.input_text.clone(),
-                                client: curr.client.clone(),
-                                surveys: val,
-                                curr_survey: curr.curr_survey.clone(),
-                            };
+                        // app_state.modify(|curr| {
+                        //     return AppState {
+                        //         questions: curr.questions.clone(),
+                        //         input_text: curr.input_text.clone(),
+                        //         client: curr.client.clone(),
+                        //         surveys: val.clone(),
+                        //         curr_survey: curr.curr_survey.clone(),
+                        //     };
+                        // });
+                        log::info!("surveys: {val:?}");
+                        surveyspage.modify(|curr| SurveyComponent {
+                            visible: true,
+                            surveys: val,
                         });
                     }
                     Err(x) => {
@@ -450,14 +478,13 @@ fn SurveysComponent(cx: Scope) -> Element {
             button {
                 onclick: move |_| {
                     get_surveys();
-
                 },
                 "Click me for all surveys"
             }
         }
-        RenderSurvey {
-             {app_state.surveys}
-        }
+        surveyspage.visible.then(|| rsx! {
+            RenderSurvey {}
+        })
     })
 }
 
@@ -465,25 +492,10 @@ fn main() {
     // css
     // npx tailwindcss -i ./input.css -o ./public/output.css --watch
 
-    // hot reload
     // cargo watch -- dioxus serve
     // kill hot reload
     // sudo lsof -i :8080
     // kill -9 PID
-
-    /*
-
-    1. question one
-       1. option 1
-       2. option 2
-    2. testing
-
-
-    - this is another
-      - option 1 in other
-    - test2 question
-      - this is great
-        */
 
     // init debug tool for WebAssembly
     wasm_logger::init(wasm_logger::Config::default());

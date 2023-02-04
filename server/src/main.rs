@@ -34,7 +34,7 @@ struct CreateSurvey {
 }
 
 #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
-struct Survey {
+pub struct Survey {
     id: String,
     nanoid: String,
     plaintext: String,
