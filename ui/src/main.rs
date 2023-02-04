@@ -35,8 +35,9 @@ struct AppState {
     questions: Questions,
     input_text: String,
     client: Client,
-    surveys: Vec<Survey>,
-    curr_survey: Survey,
+    // surveys: Vec<Survey>,
+    surveys: Vec<SurveyDto>,
+    curr_survey: SurveyDto,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -51,9 +52,9 @@ struct Survey {
     // questions: Questions,
 }
 
-impl Survey {
-    fn new() -> Survey {
-        Survey {
+impl SurveyDto {
+    fn new() -> SurveyDto {
+        SurveyDto {
             id: "".to_string(),
             nanoid: "".to_string(),
             plaintext: "".to_string(),
@@ -64,8 +65,8 @@ impl Survey {
             // questions: Questions { qs: vec![] },
         }
     }
-    fn from(text: String) -> Survey {
-        Survey {
+    fn from(text: String) -> SurveyDto {
+        SurveyDto {
             id: "".to_string(),
             nanoid: "".to_string(),
             plaintext: text,
@@ -98,10 +99,23 @@ impl AppState {
             input_text: String::from(""),
             client: client,
             surveys: vec![],
-            curr_survey: Survey::new(),
+            // curr_survey: Survey::new(),
+            curr_survey: SurveyDto {
+                id: "".to_string(),
+                nanoid: "".to_string(),
+                plaintext: "".to_string(),
+                user_id: "".to_string(),
+                created_at: "".to_string(),
+                modified_at: "".to_string(),
+                version: "".to_string(),
+            },
         }
     }
 }
+
+// impl SuveyDto {
+//     fn new() -> SurveyDto {}
+// }
 
 static EDITOR: Atom<String> = |_| String::from("");
 // static FORMINPUT_KEY: Atom<String> = |_| String::from("forminput");
@@ -123,7 +137,7 @@ fn Editor(cx: Scope) -> Element {
                 input_text: curr.input_text.clone(),
                 client: curr.client.clone(),
                 surveys: vec![],
-                curr_survey: Survey::from(content.clone()),
+                curr_survey: SurveyDto::from(content.clone()),
             }
             // curr.questions = question;
         });
@@ -220,18 +234,32 @@ fn Publish(cx: Scope) -> Element {
 
 fn Home(cx: Scope) -> Element {
     let app_state = use_atom_state(&cx, APP);
-
+    // let test = SurveyDto::from("- this is a thing".to_string());
+    // let test = SurveyComponentProps {
+    //     visible: true,
+    //     survey: app_state.curr_survey,
+    // };
     cx.render(rsx! {
         main{
             // class: "container mx-auto max-w-lg p-6",
             class: "container p-6",
-            div{
-                Editor {}
-                QuestionsComponent {}
-                Toast {}
-                SurveysComponent {}
+            div {
+                self::navbar {}
+                self::Editor {}
+                self::RenderSurvey { survey_to_render: &app_state.curr_survey }
+                // SurveysComponent { survey: &app_state.curr_survey }
+                self::Toast {}
             }
+        }
+    })
+}
 
+fn navbar(cx: Scope) -> Element {
+    cx.render(rsx! {
+        ul {
+            Link { to: "/surveys", "Go to all Surveys" }
+            br {}
+            Link { to: "/", "Home"}
         }
     })
 }
@@ -293,21 +321,25 @@ fn Toast(cx: Scope) -> Element {
     })
 }
 
-fn RenderSurvey(cx: Scope) -> Element {
-    let surveyspage = use_atom_state(&cx, SURVEYS_PAGE);
+#[inline_props]
+fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a SurveyDto) -> Element {
+    // let surveyspage = use_atom_state(&cx, SURVEYS_PAGE);
     // let questions = &surveyspage.surveys.get(0).unwrap().questions;
-    let all_questions = surveyspage
-        .surveys
-        .iter()
-        .map(|s| parse_markdown_v3(s.plaintext.clone()).unwrap())
-        .collect::<Vec<Questions>>();
+    // let all_questions = surveyspage
+    //     .surveys
+    //     .iter()
+    //     .map(|s| parse_markdown_v3(s.plaintext.clone()).unwrap())
+    //     .collect::<Vec<Questions>>();
+    let questions = parse_markdown_v3(survey_to_render.plaintext.clone()).unwrap();
 
-    let questions = all_questions.get(0).unwrap();
+    // let questions = all_questions.get(0).unwrap();
     cx.render(rsx! {
-        // questions.iter().map(|q|
-        form {
+            // questions.iter().map(|q|
+        div {
+            class: "outline-1 outline-red-400 bg-blue-600",
+            h1 {"this is the render survey comopnent"},
+            form {
             prevent_default: "onclick",
-            class: "",
             questions.qs.iter().map(|q: &Question| rsx!{
             // app_state.questions.qs.iter().map(|q: &Question| rsx!{
                 // surveyspage.get().surveys.into_iter().map(|s| s.questions.into_iter().map(|q| rsx! {
@@ -341,63 +373,13 @@ fn RenderSurvey(cx: Scope) -> Element {
                                         "{option.text}"
                                     }
                                 }
-
                             }
                         })
                     }
                 }
             })
         }
-    })
-}
-
-fn QuestionsComponent(cx: Scope) -> Element {
-    let app_state = use_atom_state(&cx, APP);
-    // let editor_state = use_atom_state(&cx, EDITOR);
-    let test = parse_markdown_v3(app_state.input_text.clone()).unwrap().qs;
-    cx.render(rsx! {
-        form {
-            prevent_default: "onclick",
-            class: "",
-            // app_state.questions.qs.iter().map(|q: &Question| rsx!{
-                test.iter().map(|q: &Question| rsx!{
-                // app_state.curr_survey.questions.iter().map(|q: &Question| rsx!{
-                fieldset {
-                    legend {
-                        class: "text-base mt-5 font-medium text-gray-900",
-                        "{q.text} - {q.qtype:?}"
-                    }
-                    {
-                        q.options.iter().map(|option| {
-                            let qtype = match q.qtype {
-                                QuestionType::Radio => "radio",
-                                QuestionType::Checkbox => "checkbox",
-                                QuestionType::Text => "textarea",
-                            };
-
-                            rsx!{
-                                div{
-                                    key: "{option.id}",
-                                    class: "flex items-center",
-                                    input {
-                                        id: "{option.id}",
-                                        name: "{q.id}",
-                                        r#type: "{qtype}",
-                                        class: " m-3 border border-gray-400"
-                                    }
-                                    label {
-                                        r#for: "{option.id}",
-                                        class: " text-gray-700 font-medium",
-                                        "{option.text}"
-                                    }
-                                }
-
-                            }
-                        })
-                    }
-                }
-            })
-        }
+    }
     })
 }
 
@@ -405,88 +387,176 @@ fn app(cx: Scope) -> Element {
     let set_app = use_atom_state(&cx, APP);
     let editor_state = use_atom_state(&cx, EDITOR);
 
-    cx.render(rsx!(Router {
-        Route { to: "", Home {}}
-        Route { to: "/", Home {}}
-        Redirect {from: "", to: "/"}
-        Route { to: "/surveys", SurveysComponent {}}
-    }))
+    cx.render(rsx!(
+        Router {
+            Route { to: "", self::Home {}}
+            // Route { to: "/", Home {}}
+            // Route { to: "/surveys", SurveysComponent {}}
+            // Redirect {from: "", to: "/"}
+            Route { to: "/surveys", self::ListSurveysComponent { }}
+        }
+    ))
 }
 
-struct SurveyComponent {
-    visible: bool,
-    surveys: Vec<SurveyDto>,
-}
-static SURVEYS_PAGE: Atom<SurveyComponent> = |_| SurveyComponent {
-    visible: false,
-    surveys: vec![],
-};
-
-fn SurveysComponent(cx: Scope) -> Element {
-    let surveyspage = use_atom_state(&cx, SURVEYS_PAGE);
+fn ListSurveysComponent(cx: Scope) -> Element {
     let app_state = use_atom_state(&cx, APP);
+    log::info!("In list survey components");
+    // let thing = move || {
+    //     cx.spawn(async move {
+    //         to_owned![app_state];
+    //         let surveys = list_surveys(&app_state.client).await;
+    //         app_state.modify(|curr| AppState {
+    //             questions: curr.questions.clone(),
+    //             input_text: curr.input_text.clone(),
+    //             client: curr.client.clone(),
+    //             surveys: surveys,
+    //             curr_survey: curr.curr_survey.clone(),
+    //         });
+    //     })
+    // };
 
-    let get_surveys = move || {
-        cx.spawn({
-            // to_owned![toast_visible];
-            to_owned![app_state, surveyspage];
-            async move {
-                log::info!("Attempting to retrieve all questions...");
-                // log::info!("Questions save: {:?}", question_state);
-                match app_state
-                    .client
-                    .get("http://localhost:3000/survey")
-                    .send()
-                    .await
-                {
-                    Ok(x) => {
-                        log::info!("success: {x:?}");
-                        let val = x.json::<Vec<SurveyDto>>().await.unwrap();
-                        // let test = x.json::<Survey>().await.unwrap();
+    // let post_questions = move |content, client: Client| {
+    //     let id = nanoid_gen(12);
+    //     cx.spawn({
+    //         to_owned![toast_visible];
+    //         async move {
+    //             log::info!("Attempting to save questions...");
+    //             // log::info!("Questions save: {:?}", question_state);
+    //             match client
+    //                 .post("http://localhost:3000/survey")
+    //                 .json(&CreateSurvey {
+    //                     id,
+    //                     plaintext: content,
+    //                 })
+    //                 .send()
+    //                 .await
+    //             {
+    //                 Ok(x) => {
+    //                     log::info!("success: {x:?}");
+    //                     log::info!("should show toast now");
+    //                     toast_visible.set(true);
+    //                 }
+    //                 Err(x) => log::info!("error: {x:?}"),
+    //             };
+    //         }
+    //     })
+    // };
 
-                        // app_state.set(AppState {
-                        //     questions: app_state.questions,
-                        //     input_text: app_state.input_text,
-                        //     client: app_state.client,
-                        //     surveys: x.json::<Vec<Survey>>().await.unwrap(),
-                        // });
-                        // app_state.modify(|curr| {
-                        //     return AppState {
-                        //         questions: curr.questions.clone(),
-                        //         input_text: curr.input_text.clone(),
-                        //         client: curr.client.clone(),
-                        //         surveys: val.clone(),
-                        //         curr_survey: curr.curr_survey.clone(),
-                        //     };
-                        // });
-                        log::info!("surveys: {val:?}");
-                        surveyspage.modify(|curr| SurveyComponent {
-                            visible: true,
-                            surveys: val,
-                        });
-                    }
-                    Err(x) => {
-                        log::info!("error: {x:?}");
-                    }
-                };
-            }
-        })
-    };
+    let get_questions = move |client: Client|  {
+            cx.spawn({
+                to_owned![app_state];
+                async move {
+                    let surveys = list_surveys(&client).await;
+                    app_state.modify(|curr| AppState {
+                        questions: curr.questions.clone(),
+                        input_text: curr.input_text.clone(),
+                        client: curr.client.clone(),
+                        surveys: surveys,
+                        curr_survey: curr.curr_survey.clone(),
+                    });
+                }
+            })
+        };
+
+    log::info!("list survey component");
 
     cx.render(rsx! {
-        h1 {
-            button {
-                onclick: move |_| {
-                    get_surveys();
-                },
-                "Click me for all surveys"
+        div {
+            class: "bg-green-400",
+            h1 {
+                "All Surveys"
             }
+            app_state.surveys.iter().map(|sur| rsx!{
+                h3 {
+                    "{sur.nanoid}"
+                }
+            })
         }
-        surveyspage.visible.then(|| rsx! {
-            RenderSurvey {}
-        })
     })
 }
+
+async fn list_surveys(client: &Client) -> Vec<SurveyDto> {
+    match client.get("http://localhost:3000/survey").send().await {
+        Ok(x) => {
+            log::info!("successfully listing surveys: {x:?}");
+            return x
+                .json::<Vec<SurveyDto>>()
+                .await
+                .expect("Could not parse json surveys");
+        }
+        Err(x) => {
+            log::info!("error listing surveys: {x:?}");
+            return vec![];
+        }
+    }
+}
+
+// #[inline_props]
+// fn SurveysComponent(cx: Scope, survey: SurveyDto) -> Element {
+//     // let surveyspage = use_atom_state(&cx, SURVEYS_PAGE);
+//     let app_state = use_atom_state(&cx, APP);
+
+//     let get_surveys = move || {
+//         cx.spawn({
+//             // to_owned![toast_visible];
+//             to_owned![app_state];
+//             async move {
+//                 log::info!("Attempting to retrieve all questions...");
+//                 // log::info!("Questions save: {:?}", question_state);
+//                 match app_state
+//                     .client
+//                     .get("http://localhost:3000/survey")
+//                     .send()
+//                     .await
+//                 {
+//                     Ok(x) => {
+//                         log::info!("success: {x:?}");
+//                         let val = x.json::<Vec<SurveyDto>>().await.unwrap();
+//                         // let test = x.json::<Survey>().await.unwrap();
+
+//                         // app_state.set(AppState {
+//                         //     questions: app_state.questions,
+//                         //     input_text: app_state.input_text,
+//                         //     client: app_state.client,
+//                         //     surveys: x.json::<Vec<Survey>>().await.unwrap(),
+//                         // });
+//                         // app_state.modify(|curr| {
+//                         //     return AppState {
+//                         //         questions: curr.questions.clone(),
+//                         //         input_text: curr.input_text.clone(),
+//                         //         client: curr.client.clone(),
+//                         //         surveys: val.clone(),
+//                         //         curr_survey: curr.curr_survey.clone(),
+//                         //     };
+//                         // });
+//                         log::info!("surveys: {val:?}");
+//                         // surveyspage.modify(|curr| SurveyComponent {
+//                         //     visible: true,
+//                         //     surveys: val,
+//                         // });
+//                     }
+//                     Err(x) => {
+//                         log::info!("error: {x:?}");
+//                     }
+//                 };
+//             }
+//         })
+//     };
+
+//     cx.render(rsx! {
+//         h1 {
+//             class: "outline-1 outline-red-400 bg-red-600",
+//             // button {
+//             //     onclick: move |_| {
+//             //         get_surveys();
+//             //     },
+//             //     "Click me for all surveys"
+//             // }
+//             Link { to: "/surveys", "Go to all Surveys" }
+//         }
+//         // RenderSurvey { survey_to_render: survey }
+//     })
+// }
 
 fn main() {
     // css
