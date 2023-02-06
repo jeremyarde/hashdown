@@ -1,7 +1,12 @@
 import React from 'react';
+import { nanoid_gen, parse_markdown_v3 } from "../../../backend/pkg";
 
 export default function Editor() {
     const [editor, setEditor] = React.useState('');
+    const [survey, setSurvey] = React.useState('');
+
+
+
     return (
         <>
             <div className={"p-4 rounded-xl bg-white dark:bg-gray-800 focus:ring-red-500"}>
@@ -11,8 +16,13 @@ export default function Editor() {
                     </label>
                     <textarea
                         className={'w-full text-sm text-gray-800 bg-white border-0 resize-y rounded-xl dark:bg-gray-800 dark:text-white dark:placeholder-gray-400'}
-                        name="testname" id="editor-field" rows={10} value={editor} onChange={event => {
+                        name="testname" id="editor-field" rows={10} value={editor}
+                        onChange={event => {
                             setEditor(event.target.value);
+                            const results = parse_markdown_v3(event.target.value);
+                            setSurvey(results);
+                            console.log("parsing results:");
+                            console.log(results);
                         }}
                     ></textarea>
                     <button className={'hover:bg-violet-600 w-full text-blue-500 bg-blue-200 rounded p-2'} onClick={event => {
@@ -21,6 +31,7 @@ export default function Editor() {
                     }}>
                         Publish
                     </button>
+                    <p>{survey}</p>
                 </form>
 
             </div>
