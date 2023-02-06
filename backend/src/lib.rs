@@ -1,4 +1,7 @@
+use wasm_bindgen::prelude::*;
+
 use anyhow::{anyhow, Result};
+
 // use nanoid::nanoid;
 use getrandom::getrandom;
 use regex::Regex;
@@ -18,6 +21,7 @@ const NANOID_ALPHA: [char; 34] = [
     'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
+#[wasm_bindgen]
 pub fn nanoid_gen(size: usize) -> String {
     let mask = NANOID_ALPHA.len().next_power_of_two() - 1;
 
@@ -39,6 +43,7 @@ pub fn nanoid_gen(size: usize) -> String {
     }
 }
 
+#[wasm_bindgen]
 #[derive(Clone, Debug)]
 struct Survey {
     id: i32,
@@ -50,6 +55,7 @@ struct Survey {
     version: String,
 }
 
+// #[wasm_bindgen]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Question {
     pub id: String,
@@ -58,12 +64,20 @@ pub struct Question {
     pub qtype: QuestionType,
 }
 
+// #[wasm_bindgen]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct TestQ {
+    pub text: String,
+}
+
+// #[wasm_bindgen]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct QuestionOption {
     pub id: String,
     pub text: String,
 }
 
+#[wasm_bindgen]
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum QuestionType {
     Radio,
@@ -162,18 +176,22 @@ struct Answer {
     question_number: i32,
     answer: String,
 }
+
+#[wasm_bindgen]
 #[derive(Clone, Debug)]
-enum Types {
+pub enum Types {
     checkbox,
     radio,
     text,
 }
 
+// #[wasm_bindgen]
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub struct Questions {
     pub qs: Vec<Question>,
 }
 
+#[wasm_bindgen]
 impl Questions {
     fn new() -> Self {
         Questions { qs: vec![] }
@@ -250,7 +268,8 @@ enum LineType {
     Nothing,
 }
 
-pub fn parse_markdown_v3(contents: String) -> Result<Questions> {
+#[wasm_bindgen]
+pub fn parse_markdown_v3(contents: String) -> JsValue {
     // let mut questions = Questions::new();
     let mut questions = vec![];
     let mut curr_question_text: &str = "";
@@ -300,7 +319,15 @@ pub fn parse_markdown_v3(contents: String) -> Result<Questions> {
     // adding the last question
     questions.push(Question::from(curr_question_text, curr_options.clone()));
 
-    Ok(Questions { qs: questions })
+    let value = Questions { qs: questions };
+
+    // let newq = TestQ {
+    //     text: "test".to_string(),
+    // };
+
+    return serde_wasm_bindgen::to_value(&value).unwrap();
+
+    // return JsValue::from(value);
 }
 
 fn find_line_type(line: &str) -> LineType {

@@ -11,7 +11,7 @@ export default function Editor() {
                     </label>
                     <textarea
                         className={'w-full text-sm text-gray-800 bg-white border-0 resize-y rounded-xl dark:bg-gray-800 dark:text-white dark:placeholder-gray-400'}
-                        name="testname" id="editor-field" rows="10" value={editor} onChange={event => {
+                        name="testname" id="editor-field" rows={10} value={editor} onChange={event => {
                             setEditor(event.target.value);
                         }}
                     ></textarea>

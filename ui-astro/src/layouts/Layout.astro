@@ -4,6 +4,16 @@ export interface Props {
 }
 
 const { title } = Astro.props;
+
+// const wasm = await WebAssembly.instantiateStreaming(
+// 	fetch(
+// 		"/Users/jarde/Documents/code/markdownparser/backend/pkg/markdownparser_bg.wasm"
+// 	)
+// );
+
+// const wasm = await WebAssembly.instantiateStreaming(
+// 	fetch("markdownparser_bg.wasm")
+// );
 ---
 
 <!DOCTYPE html>
@@ -19,7 +29,7 @@ const { title } = Astro.props;
 		<slot />
 	</body>
 </html>
-<style is:global>
+<!-- <style is:global>
 	:root {
 		--accent: 124, 58, 237;
 		--accent-gradient: linear-gradient(45deg, rgb(var(--accent)), #da62c4 30%, white 60%);
@@ -32,4 +42,4 @@ const { title } = Astro.props;
 		font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
 			Bitstream Vera Sans Mono, Courier New, monospace;
 	}
-</style>
+</style> -->

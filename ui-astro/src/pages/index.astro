@@ -2,11 +2,28 @@
 import Layout from "../layouts/Layout.astro";
 // import Card from "../components/Card.astro";
 import Editor from "../components/Editor";
+import Survey from "../components/Survey";
+
+// const wasm = await WebAssembly.instantiateStreaming(
+// 	fetch("/markdownparser_bg.wasm")
+// );
+
+// const wasm = await WebAssembly.instantiateStreaming(
+// 	fetch("../../../backend/pkg")
+// );
+
+import { nanoid_gen } from "../../../backend/pkg";
+// let test = initSync();
+// init().then((wasmmod) => {
+// 	// wasmmod.nanoid_gen(5);
+// });
 ---
 
 <Layout title="Welcome. Create your survey now">
 	<main>
 		<h1>Welcome</h1>
 		<Editor />
+		<Survey />
+		<h1>{nanoid_gen(10)}</h1>
 	</main>
 </Layout>

@@ -170,7 +170,8 @@ async fn main() -> anyhow::Result<()> {
                 .allow_methods([Method::POST, Method::GET])
                 .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
                 .allow_origin("http://localhost:8080/".parse::<HeaderValue>().unwrap())
-                .allow_origin("http://localhost:8080".parse::<HeaderValue>().unwrap()),
+                .allow_origin("http://localhost:8080".parse::<HeaderValue>().unwrap())
+                .allow_origin("http://localhost:3001".parse::<HeaderValue>().unwrap()),
         )
         .layer(TraceLayer::new_for_http());
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
