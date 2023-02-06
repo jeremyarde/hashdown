@@ -1,16 +1,22 @@
 #![allow(non_snake_case)]
 #![feature(async_closure)]
 
-use std::{thread::sleep, time::Duration};
+// use std::{thread::sleep, time::Duration};
 
 use dioxus::{
-    core::to_owned,
+    // core::to_owned,
     events::{onclick, oninput},
-    fermi::use_atom_state,
+    // fermi::use_atom_state,
     prelude::*,
+    // router::{Link, Route, Router},
 };
 
-use gloo_timers::{callback::Timeout, future::TimeoutFuture};
+// use dioxus_router::{Link, Route, Router};
+
+use dioxus_router::{Link, Route, Router};
+use fermi::{use_atom_state, use_init_atom_root, use_read, Atom, AtomRoot};
+use gloo_timers::future::TimeoutFuture;
+// use gloo_timers::future::TimeoutFuture;
 // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
 use markdownparser::{
     nanoid_gen, parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions,
@@ -225,7 +231,7 @@ fn Publish(cx: Scope) -> Element {
             onclick: move |evt| {
                 log::info!("Pushed publish :)");
                 post_questions("test".to_string(), app_state.client.clone());
-                evt.cancel_bubble();
+                evt.stop_propagation();
             },
             "Publish"
         }
@@ -233,7 +239,7 @@ fn Publish(cx: Scope) -> Element {
 }
 
 fn Home(cx: Scope) -> Element {
-    let app_state = use_atom_state(&cx, APP);
+    let app_state = use_read(cx, APP);
     // let test = SurveyDto::from("- this is a thing".to_string());
     // let test = SurveyComponentProps {
     //     visible: true,
@@ -244,7 +250,8 @@ fn Home(cx: Scope) -> Element {
             // class: "container mx-auto max-w-lg p-6",
             class: "container p-6",
             div {
-                self::navbar {}
+                // self::navbar {}
+                self::ListSurveyButton {},
                 self::Editor {}
                 self::RenderSurvey { survey_to_render: &app_state.curr_survey }
                 // SurveysComponent { survey: &app_state.curr_survey }
@@ -254,15 +261,28 @@ fn Home(cx: Scope) -> Element {
     })
 }
 
-fn navbar(cx: Scope) -> Element {
+fn ListSurveyButton(cx: Scope) -> Element {
     cx.render(rsx! {
-        ul {
-            Link { to: "/surveys", "Go to all Surveys" }
-            br {}
-            Link { to: "/", "Home"}
+        div{
+            class: "bg-red-500",
+            ul {
+                Link { to: "/surveys", "Go to all Surveys" }
+                br {}
+                Link { to: "/", "Home"}
+            }
         }
     })
 }
+
+// fn navbar(cx: Scope) -> Element {
+//     cx.render(rsx! {
+//         ul {
+//             Link { to: "/surveys", "Go to all Surveys" }
+//             br {}
+//             Link { to: "/", "Home"}
+//         }
+//     })
+// }
 
 static TOAST: Atom<bool> = |_| false;
 
@@ -279,7 +299,7 @@ fn Toast(cx: Scope) -> Element {
                 //     toast_visible.set(false);
                 // })
                 // .forget();
-                TimeoutFuture::new(1_000).await;
+                // TimeoutFuture::new(1_000).await;
                 toast_visible.set(false);
             }
         })
@@ -318,6 +338,33 @@ fn Toast(cx: Scope) -> Element {
                 }
             }
         })
+    })
+}
+
+fn User(cx: Scope) -> Element {
+    // let post = dioxus_router::use_route(cx).last_segment().unwrap();
+    let post = "example post";
+    // let query = dioxus_router::use_route(cx)
+    //     .query::<Query>()
+    //     .unwrap_or(Query { bold: false });
+
+    cx.render(rsx! {
+        div {
+            h1 { "Reading blog post: {post}" }
+            p { "example blog post" }
+
+            // if query.bold {
+            //     rsx!{ b { "bold" } }
+            // } else {
+            //     rsx!{ i { "italic" } }
+            // }
+        }
+    })
+}
+
+fn Releases<'a>(cx: Scope) -> Element {
+    cx.render(rsx! {
+        h1 { "Releases" },
     })
 }
 
@@ -384,17 +431,34 @@ fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a SurveyDto) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    let set_app = use_atom_state(&cx, APP);
-    let editor_state = use_atom_state(&cx, EDITOR);
+    use_init_atom_root(cx);
+
+    let set_app = use_atom_state(cx, APP);
+    let editor_state = use_atom_state(cx, EDITOR);
 
     cx.render(rsx!(
-        Router {
-            Route { to: "", self::Home {}}
-            // Route { to: "/", Home {}}
-            // Route { to: "/surveys", SurveysComponent {}}
-            // Redirect {from: "", to: "/"}
-            Route { to: "/surveys", self::ListSurveysComponent { }}
-        }
+        // Route { to: "/", Home {}}
+
+            Router {
+                // ul {
+                //     Link { to: "/" li {"home"}}
+                //     Link {to: "/surveys", li {"list surveys"}}
+                // }
+                // Route { to: "", self::Home {}},
+                // Route {
+                //     to: "/releases",
+                //     Releases { },
+                // },
+                Route { to: "", Home {}}
+                Route { to: "/surveys", ListSurveysComponent {}}
+                // Redirect {from: "", to: "/"}
+                // Route { to: "/surveys", ListSurveysComponent { }},
+                Route { to: "/users", "User list" },
+                // Route { to: "/users/:name", User {} },
+                Route { to: "", "Err 404 Route Not Found" }
+            },
+        // Home {}
+        // Editor {}
     ))
 }
 
@@ -442,21 +506,21 @@ fn ListSurveysComponent(cx: Scope) -> Element {
     //     })
     // };
 
-    let get_questions = move |client: Client|  {
-            cx.spawn({
-                to_owned![app_state];
-                async move {
-                    let surveys = list_surveys(&client).await;
-                    app_state.modify(|curr| AppState {
-                        questions: curr.questions.clone(),
-                        input_text: curr.input_text.clone(),
-                        client: curr.client.clone(),
-                        surveys: surveys,
-                        curr_survey: curr.curr_survey.clone(),
-                    });
-                }
-            })
-        };
+    let get_questions = move |client: Client| {
+        cx.spawn({
+            to_owned![app_state];
+            async move {
+                let surveys = list_surveys(&client).await;
+                app_state.modify(|curr| AppState {
+                    questions: curr.questions.clone(),
+                    input_text: curr.input_text.clone(),
+                    client: curr.client.clone(),
+                    surveys: surveys,
+                    curr_survey: curr.curr_survey.clone(),
+                });
+            }
+        })
+    };
 
     log::info!("list survey component");
 
@@ -570,9 +634,10 @@ fn main() {
     // init debug tool for WebAssembly
     wasm_logger::init(wasm_logger::Config::default());
     console_error_panic_hook::set_once();
-    std::panic::set_hook(Box::new(|info| {
-        println!("Panic: {}", info);
-    }));
+    // std::panic::set_hook(Box::new(|info| {
+    //     println!("Panic: {}", info);
+    // }));
 
-    dioxus::web::launch_cfg(app, |c| c.into());
+    dioxus_web::launch(app);
+    // dioxus::web::launch_cfg(app, |c| c.into());
 }

@@ -45,31 +45,29 @@ pub struct Survey {
 }
 
 #[axum::debug_handler]
+async fn answer_survey(
+    State(state): State<ServerState>,
+    extract::Json(payload): extract::Json<AnswerSurveyRequest>,
+) -> impl IntoResponse {
+    (StatusCode::ACCEPTED, Json("fakeid".to_string()))
+}
+
+#[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
+struct AnswerSurveyRequest {
+    id: String,
+}
+#[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
+struct AnswerSurveyResponse {
+    id: String,
+}
+
+#[axum::debug_handler]
 async fn create_survey(
     // this argument tells axum to parse the request body
     // as JSON into a `CreateUser` type
     State(state): State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurvey>,
 ) -> impl IntoResponse {
-    // insert your application logic here
-    // let survey = "yo";
-    // let survey = CreateSurvey {
-    //     id: payload.id,
-    //     plaintext: payload.plaintext,
-    // };
-
-    // let insert = InsertSurvey {
-    //     id: payload.id,
-    //     plaintext: payload.plaintext,
-    // };
-
-    // let res = Survey::builder()
-    //     .nanoid(payload.id)
-    //     .plaintext(payload.plaintext)
-    //     .insert(&state.db.pool)
-    //     .await
-    //     .unwrap();
-
     let res = sqlx::query("insert into surveys (id, plaintext) values ($1, $2)")
         .bind(payload.id.clone())
         .bind(payload.plaintext)
@@ -77,20 +75,10 @@ async fn create_survey(
         .await
         .unwrap();
 
-    let pool = state.db.pool;
-    // let res = sqlx::query_as::<_, Survey>(
-    //     "insert into surveys (id, plaintext) values ($1, $2) returning *;",
-    // )
-    // .bind(survey.id)
-    // .bind(survey.plaintext)
-    // .fetch_one(&pool)
-    // .await
-    // .map_err(internal_error)
-    // .unwrap();
-    // let res: Survey = insert.insert(&pool).await.into();
+    // let pool = state.db.pool;
 
     let count: i64 = sqlx::query_scalar("select count(id) from surveys")
-        .fetch_one(&pool)
+        .fetch_one(&state.db.pool)
         .await
         .map_err(internal_error)
         .unwrap();
