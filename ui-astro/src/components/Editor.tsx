@@ -33,7 +33,6 @@ export default function Editor() {
                     </button>
                     <p>{survey}</p>
                 </form>
-
             </div>
         </>
     )

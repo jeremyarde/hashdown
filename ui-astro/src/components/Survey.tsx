@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import Radio from './Radio';
 // import init, { nanoid_gen } from 'markdownparser';
 // import * as test from "markdownparser";
 
@@ -15,22 +16,11 @@ export default function Survey() {
     const [survey, setSurvey] = React.useState('');
     const [id, setId] = React.useState('');
 
-    // useEffect(() => {
-    //     init().then(() => {
-    //         setId(nanoid_gen(5));
-    //     })
-    // }, [])
-    // let allsurveys = survey.forEach(element => { });
-    // wasmtest.initSync()
-    // wasmtest.nanoid_gen(1);
-    // const testnanoid = wasmtest.nanoid_gen(8);
-    // const data = getData();
-
     return (
         <>
-            <h2>From rust...</h2>
-            <h3>The id is: {id}</h3>
-            <h2>Above was from rust...</h2>
+            <Radio
+            // radio_options={['a', 'b', 'c']}
+            />
         </>
     )
 }

@@ -13,6 +13,7 @@ import Survey from "../components/Survey";
 // );
 
 import { nanoid_gen, parse_markdown_v3 } from "../../../backend/pkg";
+import Radio from "../components/Radio";
 // let test = initSync();
 // init().then((wasmmod) => {
 // 	// wasmmod.nanoid_gen(5);
@@ -21,10 +22,10 @@ import { nanoid_gen, parse_markdown_v3 } from "../../../backend/pkg";
 
 <Layout title="Welcome. Create your survey now">
 	<main>
-		<h1>Welcome</h1>
-		<Editor parser={parse_markdown_v3} />
+		<!-- <Editor parser={parse_markdown_v3} /> -->
 		<Survey />
-		<h1>{nanoid_gen(10)}</h1>
-		<h1>{JSON.stringify(parse_markdown_v3("- this is a survey"))}</h1>
+		<!-- <h1>{nanoid_gen(10)}</h1>
+		<h1>{JSON.stringify(parse_markdown_v3("- this is a survey"))}</h1> -->
+		<Radio />
 	</main>
 </Layout>
