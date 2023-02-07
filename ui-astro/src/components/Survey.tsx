@@ -18,9 +18,10 @@ export default function Survey() {
 
     return (
         <>
+            <h2>Survey:</h2>
             <Radio
-            // radio_options={['a', 'b', 'c']}
+                radio_options={['a', 'b', 'c']}
             />
         </>
-    )
+    );
 }
