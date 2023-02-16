@@ -33,7 +33,7 @@ pub struct ServerState {
     db: Database,
 }
 
-#[derive(Deserialize, Serialize, sqlx::FromRow, Debug)]
+#[derive(Deserialize, Serialize, sqlx::FromRow, Debug, PartialEq, Eq)]
 pub struct CreateSurvey {
     id: String,
     plaintext: String,
@@ -85,22 +85,7 @@ struct ServerApplication {
 }
 
 impl ServerApplication {
-    async fn new(test: bool) -> ServerApplication {
-        // const V1: &str = "v1";
-
-        dotenvy::from_filename("dev.env").ok();
-        // initialize tracing
-        // tracing_subscriber::fmt::init();
-
-        tracing_subscriber::registry()
-            .with(
-                tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                    "example_parse_body_based_on_content_type=debug,tower_http=debug".into()
-                }),
-            )
-            .with(tracing_subscriber::fmt::layer())
-            .init();
-
+    async fn get_router(test: bool) -> Router {
         let db = Database::new(true).await.unwrap();
         // let ormdb = SqliteConnection::connect(":memory:").await?;
         // let state = Arc::new(ServerState { db: db });
@@ -133,36 +118,66 @@ impl ServerApplication {
             .layer(corslayer)
             .layer(TraceLayer::new_for_http());
 
+        return app;
+    }
+
+    async fn new(test: bool) -> ServerApplication {
+        // const V1: &str = "v1";
+
+        dotenvy::from_filename("dev.env").ok();
+        // initialize tracing
+        // tracing_subscriber::fmt::init();
+
+        tracing_subscriber::registry()
+            .with(
+                tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                    "example_parse_body_based_on_content_type=debug,tower_http=debug".into()
+                }),
+            )
+            .with(tracing_subscriber::fmt::layer())
+            .init();
+
+        let app = ServerApplication::get_router(test).await;
+
         // let app = configure_app().await;
         let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
         tracing::debug!("listening on {}", addr);
 
-        // let server = tokio::spawn(async move {
-        //     axum::Server::bind(&addr)
-        //         .serve(app.into_make_service())
-        //         .await
-        //         .unwrap();
-        // });
+        let server = tokio::spawn(async move {
+            println!("before axum.");
+            axum::Server::bind(&addr)
+                .serve(app.into_make_service())
+                .await
+                .unwrap();
+            println!("after axum.");
+        });
 
-        let server = tokio::spawn(async move {});
-        axum::Server::bind(&addr)
-            .serve(app.into_make_service())
-            .await
-            .unwrap();
+        // println!("before join");
+        // tokio::try_join!(server);
+        // print!("after join");
+        // let server = tokio::spawn(async move {});
+        // axum::Server::bind(&addr)
+        //     .serve(app.into_make_service())
+        //     .await
+        //     .unwrap();
 
         return ServerApplication {
             base_url: addr,
             server: server,
         };
     }
+
+    // async fn run(&self) {
+    //     let _ = tokio::try_join!(self.server);
+    // }
 }
 
-impl Drop for ServerApplication {
-    fn drop(&mut self) {
-        tracing::debug!("Dropping test server at {:?}", self.base_url);
-        self.server.abort()
-    }
-}
+// impl Drop for ServerApplication {
+//     fn drop(&mut self) {
+//         tracing::debug!("Dropping test server at {:?}", self.base_url);
+//         self.server.abort()
+//     }
+// }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -187,11 +202,14 @@ async fn main() -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use axum::{
         body::Body,
         http::{self, Request},
     };
     use mime::Mime;
+    use serde_json::json;
 
     use crate::{CreateSurvey, ServerApplication};
 
@@ -199,6 +217,7 @@ mod tests {
     async fn list_survey_test() {
         let app = ServerApplication::new(true).await;
 
+        tokio::time::sleep(Duration::from_secs(2)).await;
         // let get = Request::builder()
         //     .method(http::Method::GET)
         //     .uri("/surveys")
@@ -245,13 +264,19 @@ mod tests {
         // client.execute(Request::builder().body(body));
 
         println!("Response: {response:?}");
+        let results: CreateSurvey = response.json().await.unwrap();
+        println!("results: {results:?}");
+
         // let create_resp = serde_json::from_slice(response.into_body());
         // assert_eq!(response.status(), StatusCode::OK);
 
         // let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
         // let body: Value = serde_json::from_slice(&body).unwrap();
-
-        // assert_eq!(body, json!({ "data": [1, 2, 3, 4] }));
+        // serde_json::from_value(results);
+        assert_eq!(
+            serde_json::to_value(results).unwrap(),
+            json!({"test": "yo"})
+        );
     }
 
     #[tokio::test]
