@@ -10,6 +10,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use tokio::task::JoinHandle;
+use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
 use std::{net::SocketAddr, sync::Arc};
@@ -78,13 +79,6 @@ where
     (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    // cargo watch -- cargo run
-    ServerApplication::new(false).await;
-    Ok(())
-}
-
 struct ServerApplication {
     pub base_url: SocketAddr,
     server: JoinHandle<()>,
@@ -92,16 +86,43 @@ struct ServerApplication {
 
 impl ServerApplication {
     async fn new(test: bool) -> ServerApplication {
-        const V1: &str = "v1";
+        // const V1: &str = "v1";
 
         dotenvy::from_filename("dev.env").ok();
         // initialize tracing
-        tracing_subscriber::fmt::init();
+        // tracing_subscriber::fmt::init();
+
+        tracing_subscriber::registry()
+            .with(
+                tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                    "example_parse_body_based_on_content_type=debug,tower_http=debug".into()
+                }),
+            )
+            .with(tracing_subscriber::fmt::layer())
+            .init();
 
         let db = Database::new(true).await.unwrap();
         // let ormdb = SqliteConnection::connect(":memory:").await?;
         // let state = Arc::new(ServerState { db: db });
         let state = ServerState { db: db };
+
+        let corslayer = if !test {
+            println!("Not testing, adding CORS headers.");
+            CorsLayer::new()
+                .allow_methods([Method::POST, Method::GET])
+                .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
+                .allow_origin("http://127.0.0.1:8080/".parse::<HeaderValue>().unwrap())
+                .allow_origin("http://127.0.0.1:8080".parse::<HeaderValue>().unwrap())
+                .allow_origin("http://127.0.0.1:3001".parse::<HeaderValue>().unwrap())
+        } else {
+            println!("Testing, adding wildcard CORS headers.");
+            CorsLayer::new()
+                .allow_methods([Method::POST, Method::GET])
+                .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
+                .allow_origin("*".parse::<HeaderValue>().unwrap())
+        };
+
+        let corslayer = CorsLayer::new();
 
         // build our application with a route
         let app: Router = Router::new()
@@ -109,26 +130,25 @@ impl ServerApplication {
             .route("/surveys/:id", get(get_survey).post(answer_survey))
             // .layer(Extension(state))
             .with_state(state)
-            .layer(
-                CorsLayer::new()
-                    .allow_methods([Method::POST, Method::GET])
-                    .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
-                    .allow_origin("http://localhost:8080/".parse::<HeaderValue>().unwrap())
-                    .allow_origin("http://localhost:8080".parse::<HeaderValue>().unwrap())
-                    .allow_origin("http://localhost:3001".parse::<HeaderValue>().unwrap()),
-            )
+            .layer(corslayer)
             .layer(TraceLayer::new_for_http());
 
         // let app = configure_app().await;
         let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
         tracing::debug!("listening on {}", addr);
 
-        let server = tokio::spawn(async move {
-            axum::Server::bind(&addr)
-                .serve(app.into_make_service())
-                .await
-                .unwrap();
-        });
+        // let server = tokio::spawn(async move {
+        //     axum::Server::bind(&addr)
+        //         .serve(app.into_make_service())
+        //         .await
+        //         .unwrap();
+        // });
+
+        let server = tokio::spawn(async move {});
+        axum::Server::bind(&addr)
+            .serve(app.into_make_service())
+            .await
+            .unwrap();
 
         return ServerApplication {
             base_url: addr,
@@ -144,6 +164,27 @@ impl Drop for ServerApplication {
     }
 }
 
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // curl -X GET 127.0.0.1:3000/surveys
+    // curl -X GET https://127.0.0.1:3000/surveys
+    /*
+
+    curl -X POST http://localhost:3000/surveys \
+       -H 'Content-Type: application/json' \
+       -d '{"id": "test", "plaintext": "content"}'
+
+
+
+        */
+
+    // cargo watch -- cargo run
+    println!("Spinning up the server.");
+    ServerApplication::new(false).await;
+    println!("Server is running...");
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use axum::{
@@ -156,7 +197,7 @@ mod tests {
 
     #[tokio::test]
     async fn list_survey_test() {
-        let app = ServerApplication::new().await;
+        let app = ServerApplication::new(true).await;
 
         // let get = Request::builder()
         //     .method(http::Method::GET)
@@ -165,7 +206,6 @@ mod tests {
         //     .body(Body::from(serde_json::to_string("").unwrap()))
         //     .unwrap();
 
-        let mut headers = http::header::HeaderMap::new();
         // headers.insert(
         //     // "Content-Type",
         //     header::CONTENT_TYPE,
@@ -173,10 +213,9 @@ mod tests {
         // );
         // headers.insert(header::CONTENT_ENCODING,
         // header::)
-        headers.insert("", val);
 
         let client = reqwest::Client::builder()
-            .default_headers(headers)
+            // .default_headers(headers)
             .build()
             .unwrap();
 
@@ -218,7 +257,7 @@ mod tests {
     #[tokio::test]
     async fn create_survey_test() {
         // let app = configure_app().await;
-        let app = ServerApplication::new().await;
+        let app = ServerApplication::new(true).await;
         // let response = app.oneshot(get_create_survey_request()).await.unwrap();
 
         // println!("response: {response:?}");

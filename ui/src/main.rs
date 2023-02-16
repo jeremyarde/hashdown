@@ -134,7 +134,7 @@ fn Editor(cx: Scope) -> Element {
     let send_input = move |content: String| {
         log::info!("Recieved input: {content}");
         // let question = parse_markdown_blocks(content.clone());
-        let question = parse_markdown_v3(content.clone()).unwrap();
+        let question = parse_markdown_v3(content.clone());
         // log::info!("Questions: {question:#?}");
 
         question_state.modify(|curr| {
