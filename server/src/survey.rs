@@ -6,7 +6,7 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use markdownparser::{parse_markdown_v3, Question, Survey};
+use markdownparser::{markdown_to_form, parse_markdown_v3, Question, Survey};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::FromRow;
@@ -36,7 +36,7 @@ use crate::{internal_error, CreateSurvey, ServerState};
 impl SurveyModel {
     fn to_survey(survey: &SurveyModel) -> Survey {
         let survey = survey.clone();
-        let questions = vec![];
+        let questions = markdown_to_form(survey.plaintext.clone()).questions;
         return Survey {
             id: survey.id,
             plaintext: survey.plaintext,
