@@ -43,16 +43,16 @@ pub fn nanoid_gen(size: usize) -> String {
     }
 }
 
-#[wasm_bindgen]
-#[derive(Clone, Debug)]
-struct Survey {
-    id: String,
-    plaintext: String,
-    user_id: String,
-    created_at: String,
-    modified_at: String,
-    questions: Vec<Question>,
-    version: String,
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Survey {
+    pub id: String,
+    pub plaintext: String,
+    pub user_id: String,
+    pub created_at: String,
+    pub modified_at: String,
+    pub questions: Vec<Question>,
+    pub version: String,
+    pub parse_version: String,
 }
 
 // #[wasm_bindgen]
@@ -66,13 +66,6 @@ pub struct Question {
     pub modified_on: String,
 }
 
-// #[wasm_bindgen]
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub struct TestQ {
-    pub text: String,
-}
-
-// #[wasm_bindgen]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct QuestionOption {
     pub id: String,
@@ -86,14 +79,6 @@ pub enum QuestionType {
     Checkbox,
     Text,
 }
-
-#[derive(Debug, Clone)]
-pub struct PutSurveyRequest {
-    plaintext: String,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct PutSurveyResponse {}
 
 impl Question {
     fn from(q_text: &str, options: Vec<&str>) -> Self {
@@ -193,7 +178,7 @@ pub enum Types {
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub struct Questions {
     pub qs: Vec<Question>,
-}f
+}
 
 #[wasm_bindgen]
 impl Questions {
@@ -272,8 +257,19 @@ enum LineType {
     Nothing,
 }
 
+pub fn markdown_to_form(contents: String) -> Survey {
+    let survey = parse_markdown_v3(contents);
+    return survey;
+}
+
 #[wasm_bindgen]
-pub fn parse_markdown_v3(contents: String) -> JsValue {
+pub fn markdown_to_form_wasm(contents: String) -> JsValue {
+    let survey = parse_markdown_v3(contents);
+
+    return serde_wasm_bindgen::to_value(&survey).unwrap();
+}
+
+pub fn parse_markdown_v3(contents: String) -> Survey {
     // let mut questions = Questions::new();
     let mut questions = vec![];
     let mut curr_question_text: &str = "";
@@ -323,14 +319,23 @@ pub fn parse_markdown_v3(contents: String) -> JsValue {
     // adding the last question
     questions.push(Question::from(curr_question_text, curr_options.clone()));
 
-    let value = Questions { qs: questions };
+    // let value = Questions { qs: questions };
 
     // let newq = TestQ {
     //     text: "test".to_string(),
     // };
 
-    return serde_wasm_bindgen::to_value(&value).unwrap();
-
+    let survey = Survey {
+        id: nanoid_gen(NANOID_LEN),
+        plaintext: contents,
+        user_id: "".to_string(),
+        created_at: "".to_string(),
+        modified_at: "".to_string(),
+        questions: questions,
+        version: "0".to_string(),
+        parse_version: "0".to_string(),
+    };
+    return survey;
     // return JsValue::from(value);
 }
 

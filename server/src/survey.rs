@@ -6,7 +6,7 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use markdownparser::Question;
+use markdownparser::{parse_markdown_v3, Question, Survey};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::FromRow;
@@ -33,6 +33,35 @@ use crate::{internal_error, CreateSurvey, ServerState};
 //     }
 // }
 
+impl SurveyModel {
+    fn to_survey(survey: &SurveyModel) -> Survey {
+        let survey = survey.clone();
+        let questions = vec![];
+        return Survey {
+            id: survey.id,
+            plaintext: survey.plaintext,
+            user_id: survey.user_id,
+            created_at: survey.created_at,
+            modified_at: survey.modified_at,
+            questions: questions,
+            version: survey.version,
+            parse_version: survey.parse_version,
+        };
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
+pub struct SurveyModel {
+    pub id: String,
+    pub plaintext: String,
+    pub user_id: String,
+    pub created_at: String,
+    pub modified_at: String,
+    // pub questions: Option<Vec<Question>>,
+    pub version: String,
+    pub parse_version: String,
+}
+
 struct Form {
     id: String,
     views: i32,
@@ -57,10 +86,10 @@ struct Answers {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct CreateAnswers {
-    form_id: String,
-    start_time: String,
-    answers: HashMap<String, String>,
+pub struct AnswerRequest {
+    pub form_id: String,
+    pub start_time: String,
+    pub answers: HashMap<String, String>,
 }
 
 struct Answer {
@@ -69,37 +98,32 @@ struct Answer {
 }
 
 #[axum::debug_handler]
-pub async fn create_answers(
-    State(state): State<ServerState>,
-    extract::Json(payload): extract::Json<CreateAnswers>,
-) -> impl IntoResponse {
-    // Check for survey existence
-    let exists = sqlx::query("select (id) from surveys as s where s.id = $1")
-        .bind(payload.form_id)
-        .execute(&state.db.pool)
-        .await
-        .unwrap();
-
-    println!("exists: {exists:?}");
-
-    (StatusCode::CREATED, Json(true))
-}
-
-#[axum::debug_handler]
 pub async fn create_survey(
     State(state): State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurvey>,
 ) -> impl IntoResponse {
-    let survey = Survey::from(payload.plaintext.clone());
+    let survey = parse_markdown_v3(payload.plaintext.clone());
+    // let survey = Survey::from(payload.plaintext.clone());
+    let response_survey = survey.clone();
 
-    let res = sqlx::query("insert into surveys (id, plaintext) values ($1, $2)")
-        .bind(payload.id.clone())
-        .bind(payload.plaintext)
-        .execute(&state.db.pool)
-        .await
-        .unwrap();
+    let res = sqlx::query(
+        "insert into surveys (id, plaintext, user_id, created_at, modified_at, version, parse_version) 
+        values 
+        ($1, $2, $3, $4, $5, $6, $7)",
+    )
+    .bind(payload.id.clone())
+    .bind(payload.plaintext)
+    .bind(survey.user_id)
+    .bind(survey.created_at)
+    .bind(survey.modified_at)
+    // .bind(json!({"questions": survey.questions}))
+    .bind(survey.version)
+    .bind(survey.parse_version)
+    .execute(&state.db.pool)
+    .await
+    .unwrap();
 
-    (StatusCode::CREATED, Json(survey))
+    (StatusCode::CREATED, Json(response_survey))
 }
 
 #[axum::debug_handler]
@@ -113,15 +137,17 @@ pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse 
         .unwrap();
     println!("Survey count: {count:#?}");
 
-    let res: Vec<Survey> = sqlx::query_as::<_, Survey>("select * from surveys")
+    let res: Vec<SurveyModel> = sqlx::query_as::<_, SurveyModel>("select * from surveys")
         .fetch_all(&pool)
         .await
         .unwrap();
 
+    let surveys = res.iter().map(|x| SurveyModel::to_survey(x)).collect();
+
     // json!({ "surveys": res });
 
     println!("Survey: {res:#?}");
-    let listresp = ListSurveyResponse { surveys: res };
+    let listresp = ListSurveyResponse { surveys: surveys };
 
     // (StatusCode::OK, Json(json!({ "surveys": res })))
     (StatusCode::OK, Json(listresp))
@@ -146,7 +172,7 @@ pub async fn get_survey(
         .unwrap();
     println!("Survey count: {count:#?}");
 
-    let res = sqlx::query_as::<_, Survey>("select * from surveys as s where s.id = $1")
+    let res = sqlx::query_as::<_, SurveyModel>("select * from surveys as s where s.id = $1")
         .bind(params.get("id"))
         .fetch_one(&pool)
         .await

@@ -2,11 +2,11 @@
 CREATE TABLE surveys (
     id TEXT PRIMARY KEY,
     plaintext TEXT NOT NULL,
-    nanoid TEXT,
-    version TEXT,
     user_id TEXT,
     created_at TEXT,
-    modified_at TEXT
+    modified_at TEXT version TEXT,
+    version TEXT,
+    parse_version TEXT
 );
 CREATE TABLE users (
     id TEXT NOT NULL UNIQUE,

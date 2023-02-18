@@ -21,12 +21,14 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 use crate::{
     db::Database,
+    server::ServerApplication,
     survey::{create_survey, get_survey, list_survey},
 };
-mod survey;
-
-use anyhow;
+mod answer;
 mod db;
+mod server;
+mod survey;
+use anyhow;
 
 #[derive(Debug, Clone)]
 pub struct ServerState {
@@ -39,28 +41,26 @@ pub struct CreateSurvey {
     plaintext: String,
 }
 
-#[axum::debug_handler]
-async fn answer_survey(
-    State(state): State<ServerState>,
-    extract::Json(payload): extract::Json<AnswerSurveyRequest>,
-) -> impl IntoResponse {
-    /*
-    1. check for survey in database, with same version
-    2. check that questions are the same as expected
-    */
+// #[axum::debug_handler]
+// async fn answer_survey(
+//     State(state): State<ServerState>,
+//     extract::Json(payload): extract::Json<AnswerSurveyRequest>,
+// ) -> impl IntoResponse {
+//     /*
+//     1. check for survey in database, with same version
+//     2. check that questions are the same as expected
+//     */
+//     (StatusCode::ACCEPTED, Json("fakeid".to_string()))
+// }
 
-
-    (StatusCode::ACCEPTED, Json("fakeid".to_string()))
-}
-
-#[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
-struct AnswerSurveyRequest {
-    id: String,
-}
-#[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
-struct AnswerSurveyResponse {
-    id: String,
-}
+// #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
+// struct AnswerSurveyRequest {
+//     id: String,
+// }
+// #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
+// struct AnswerSurveyResponse {
+//     id: String,
+// }
 
 // #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 // struct Survey {
@@ -78,99 +78,6 @@ where
     E: std::error::Error,
 {
     (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
-}
-
-struct ServerApplication {
-    pub base_url: SocketAddr,
-    server: JoinHandle<()>,
-}
-
-impl ServerApplication {
-    async fn get_router(test: bool) -> Router {
-        let db = Database::new(true).await.unwrap();
-        // let ormdb = SqliteConnection::connect(":memory:").await?;
-        // let state = Arc::new(ServerState { db: db });
-        let state = ServerState { db: db };
-
-        let corslayer = if !test {
-            println!("Not testing, adding CORS headers.");
-            CorsLayer::new()
-                .allow_methods([Method::POST, Method::GET])
-                .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
-                .allow_origin("http://127.0.0.1:8080/".parse::<HeaderValue>().unwrap())
-                .allow_origin("http://127.0.0.1:8080".parse::<HeaderValue>().unwrap())
-                .allow_origin("http://127.0.0.1:3001".parse::<HeaderValue>().unwrap())
-        } else {
-            println!("Testing, adding wildcard CORS headers.");
-            CorsLayer::new()
-                .allow_methods([Method::POST, Method::GET])
-                .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
-                .allow_origin("*".parse::<HeaderValue>().unwrap())
-        };
-
-        let corslayer = CorsLayer::new();
-
-        // build our application with a route
-        let app: Router = Router::new()
-            .route(&format!("/surveys"), post(create_survey).get(list_survey))
-            .route("/surveys/:id", get(get_survey).post(answer_survey))
-            // .layer(Extension(state))
-            .with_state(state)
-            .layer(corslayer)
-            .layer(TraceLayer::new_for_http());
-
-        return app;
-    }
-
-    async fn new(test: bool) -> ServerApplication {
-        // const V1: &str = "v1";
-
-        dotenvy::from_filename("dev.env").ok();
-        // initialize tracing
-        // tracing_subscriber::fmt::init();
-
-        tracing_subscriber::registry()
-            .with(
-                tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                    "example_parse_body_based_on_content_type=debug,tower_http=debug".into()
-                }),
-            )
-            .with(tracing_subscriber::fmt::layer())
-            .init();
-
-        let app = ServerApplication::get_router(test).await;
-
-        // let app = configure_app().await;
-        let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-        tracing::debug!("listening on {}", addr);
-
-        let server = tokio::spawn(async move {
-            println!("before axum.");
-            axum::Server::bind(&addr)
-                .serve(app.into_make_service())
-                .await
-                .unwrap();
-            println!("after axum.");
-        });
-
-        // println!("before join");
-        // tokio::try_join!(server);
-        // print!("after join");
-        // let server = tokio::spawn(async move {});
-        // axum::Server::bind(&addr)
-        //     .serve(app.into_make_service())
-        //     .await
-        //     .unwrap();
-
-        return ServerApplication {
-            base_url: addr,
-            server: server,
-        };
-    }
-
-    // async fn run(&self) {
-    //     let _ = tokio::try_join!(self.server);
-    // }
 }
 
 // impl Drop for ServerApplication {
@@ -200,7 +107,7 @@ async fn main() -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
+    use std::{collections::HashMap, time::Duration};
 
     use axum::{
         body::Body,
@@ -211,7 +118,7 @@ mod tests {
     use tower::{Service, ServiceExt};
 
     use crate::{
-        survey::{ListSurveyResponse, Survey},
+        survey::{AnswerRequest, ListSurveyResponse},
         CreateSurvey, ServerApplication,
     };
 
@@ -278,5 +185,57 @@ mod tests {
         let results: CreateSurvey = response.json().await.unwrap();
 
         assert_eq!(results.plaintext, "- create\n - this one");
+    }
+
+    #[tokio::test]
+    async fn answer_survey_test() {
+        let app = ServerApplication::new(true).await;
+        let mut router = ServerApplication::get_router(true).await;
+        router.ready().await.unwrap();
+
+        let client = reqwest::Client::builder().build().unwrap();
+
+        let client_url = format!("http://{}{}", app.base_url.to_string(), "/surveys");
+        println!("Client sending to: {client_url}");
+
+        let response = client
+            .post(&client_url)
+            .json(&CreateSurvey {
+                id: "".to_string(),
+                plaintext: "- another\n - this one".to_string(),
+            })
+            .send()
+            .await
+            .unwrap();
+
+        let results: CreateSurvey = response.json().await.unwrap();
+
+        assert_eq!(results.plaintext, "- another\n - this one");
+
+        let listresponse = client.get(&client_url).send().await.unwrap();
+        let listresults: ListSurveyResponse = listresponse.json().await.unwrap();
+
+        assert_eq!(listresults.surveys.len(), 1);
+        assert_eq!(listresults.surveys[0].plaintext, "- another\n - this one");
+
+        let mut answers = HashMap::new();
+        answers.insert(
+            listresults.surveys[0].questions[0].id.clone(),
+            listresults.surveys[0].questions[0].options[0].text.clone(),
+        );
+        let answers_request = AnswerRequest {
+            form_id: listresults.surveys[0].id.clone(),
+            start_time: "".to_string(),
+            answers: answers,
+        };
+
+        let response = client
+            .post(&client_url)
+            .json(&answers_request)
+            .send()
+            .await
+            .unwrap();
+
+        println!("testing: {response:?}");
     }
 }
