@@ -114,7 +114,9 @@ mod tests {
         http::{self, Request},
     };
     use mime::Mime;
+    use reqwest::StatusCode;
     use serde_json::json;
+    use serial_test::serial;
     use tower::{Service, ServiceExt};
 
     use crate::{
@@ -122,6 +124,7 @@ mod tests {
         CreateSurvey, ServerApplication,
     };
 
+    #[serial]
     #[tokio::test]
     async fn list_survey_test() {
         let app = ServerApplication::new(true).await;
@@ -134,6 +137,8 @@ mod tests {
             .unwrap();
 
         let client_url = format!("http://{}{}", app.base_url.to_string(), "/surveys");
+        // let client_url = format!("/surveys");
+
         println!("Client sending to: {client_url}");
 
         let response = client
@@ -159,6 +164,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn create_survey_test() {
         let app = ServerApplication::new(true).await;
         let mut router = ServerApplication::get_router(true).await;
@@ -169,7 +175,9 @@ mod tests {
             .build()
             .unwrap();
 
-        let client_url = format!("http://{}{}", app.base_url.to_string(), "/surveys");
+        let client_url = format!("http://{}{}", "localhost:3000", "/surveys");
+        // let client_url = format!("/surveys");
+
         println!("Client sending to: {client_url}");
 
         let response = client
@@ -188,6 +196,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn answer_survey_test() {
         let app = ServerApplication::new(true).await;
         let mut router = ServerApplication::get_router(true).await;
@@ -195,7 +204,8 @@ mod tests {
 
         let client = reqwest::Client::builder().build().unwrap();
 
-        let client_url = format!("http://{}{}", app.base_url.to_string(), "/surveys");
+        let client_url = format!("http://{}{}", "localhost:3000", "/surveys");
+        // let client_url = format!("/surveys");
         println!("Client sending to: {client_url}");
 
         let response = client
@@ -230,12 +240,18 @@ mod tests {
         };
 
         let response = client
-            .post(&client_url)
+            .post(format!(
+                "{client_url}/{}/answers",
+                listresults.surveys[0].questions[0].id.clone()
+            ))
             .json(&answers_request)
             .send()
             .await
             .unwrap();
 
+        // let answer_repsonse: AnswerResponse = response.json().await.unwrap();
+
         println!("testing: {response:?}");
+        assert_eq!(response.status(), StatusCode::CREATED);
     }
 }
