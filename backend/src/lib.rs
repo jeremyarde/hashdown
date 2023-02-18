@@ -46,7 +46,7 @@ pub fn nanoid_gen(size: usize) -> String {
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
 struct Survey {
-    id: i32,
+    id: String,
     plaintext: String,
     user_id: String,
     created_at: String,
@@ -59,9 +59,11 @@ struct Survey {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Question {
     pub id: String,
-    pub text: String,
+    pub value: String,
     pub options: Vec<QuestionOption>,
-    pub qtype: QuestionType,
+    pub r#type: QuestionType,
+    pub created_on: String,
+    pub modified_on: String,
 }
 
 // #[wasm_bindgen]
@@ -98,7 +100,7 @@ impl Question {
         return Question {
             // id: nanoid!(NANOID_LEN, &NANOID_ALPHA, random),
             id: nanoid_gen(NANOID_LEN),
-            text: Question::parse_question_text(q_text).to_string(),
+            value: Question::parse_question_text(q_text).to_string(),
             options: options
                 .iter()
                 .map(|&o| QuestionOption {
@@ -106,7 +108,9 @@ impl Question {
                     text: Question::parse_question_text(o).to_string(),
                 })
                 .collect(),
-            qtype: Question::parse_question_type(q_text),
+            r#type: Question::parse_question_type(q_text),
+            created_on: "now".to_string(),
+            modified_on: "now".to_string(),
         };
     }
 
@@ -189,7 +193,7 @@ pub enum Types {
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub struct Questions {
     pub qs: Vec<Question>,
-}
+}f
 
 #[wasm_bindgen]
 impl Questions {

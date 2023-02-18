@@ -47,7 +47,8 @@ async fn answer_survey(
     /*
     1. check for survey in database, with same version
     2. check that questions are the same as expected
-     */
+    */
+
 
     (StatusCode::ACCEPTED, Json("fakeid".to_string()))
 }
@@ -188,9 +189,6 @@ async fn main() -> anyhow::Result<()> {
     curl -X POST http://localhost:3000/surveys \
        -H 'Content-Type: application/json' \
        -d '{"id": "test", "plaintext": "content"}'
-
-
-
         */
 
     // cargo watch -- cargo run
@@ -210,28 +208,18 @@ mod tests {
     };
     use mime::Mime;
     use serde_json::json;
+    use tower::{Service, ServiceExt};
 
-    use crate::{CreateSurvey, ServerApplication};
+    use crate::{
+        survey::{ListSurveyResponse, Survey},
+        CreateSurvey, ServerApplication,
+    };
 
     #[tokio::test]
     async fn list_survey_test() {
         let app = ServerApplication::new(true).await;
-
-        tokio::time::sleep(Duration::from_secs(2)).await;
-        // let get = Request::builder()
-        //     .method(http::Method::GET)
-        //     .uri("/surveys")
-        //     // .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-        //     .body(Body::from(serde_json::to_string("").unwrap()))
-        //     .unwrap();
-
-        // headers.insert(
-        //     // "Content-Type",
-        //     header::CONTENT_TYPE,
-        //     header::HeaderValue::from_static("application/json"),
-        // );
-        // headers.insert(header::CONTENT_ENCODING,
-        // header::)
+        let mut router = ServerApplication::get_router(true).await;
+        router.ready().await.unwrap();
 
         let client = reqwest::Client::builder()
             // .default_headers(headers)
@@ -242,70 +230,53 @@ mod tests {
         println!("Client sending to: {client_url}");
 
         let response = client
-            .post(client_url)
+            .post(&client_url)
             .json(&CreateSurvey {
-                id: "test".to_string(),
+                id: "".to_string(),
                 plaintext: "- another\n - this one".to_string(),
             })
             .send()
             .await
             .unwrap();
 
-        // client
-        // .post("http://localhost:3000/survey")
-        // .json(&CreateSurvey {
-        //     id,
-        //     plaintext: content,
-        // })
-        // .send()
-        // .await
-
-        // .body(json!({ "id": "test", "plaintext": "- header here\n  - this is a question" }));
-        // client.execute(Request::builder().body(body));
-
-        println!("Response: {response:?}");
         let results: CreateSurvey = response.json().await.unwrap();
-        println!("results: {results:?}");
 
-        // let create_resp = serde_json::from_slice(response.into_body());
-        // assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(results.plaintext, "- another\n - this one");
 
-        // let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-        // let body: Value = serde_json::from_slice(&body).unwrap();
-        // serde_json::from_value(results);
-        assert_eq!(
-            serde_json::to_value(results).unwrap(),
-            json!({"test": "yo"})
-        );
+        //call list
+        let listresponse = client.get(&client_url).send().await.unwrap();
+        let listresults: ListSurveyResponse = listresponse.json().await.unwrap();
+
+        assert_eq!(listresults.surveys.len(), 1);
+        assert_eq!(listresults.surveys[0].plaintext, "- another\n - this one");
     }
 
     #[tokio::test]
     async fn create_survey_test() {
-        // let app = configure_app().await;
         let app = ServerApplication::new(true).await;
-        // let response = app.oneshot(get_create_survey_request()).await.unwrap();
+        let mut router = ServerApplication::get_router(true).await;
+        router.ready().await.unwrap();
 
-        // println!("response: {response:?}");
-        // let create_resp = serde_json::from_slice(response.into_body());
-        // assert_eq!(response.status(), StatusCode::OK);
+        let client = reqwest::Client::builder()
+            // .default_headers(headers)
+            .build()
+            .unwrap();
 
-        // let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-        // let body: Survey = serde_json::from_slice(&body).unwrap();
+        let client_url = format!("http://{}{}", app.base_url.to_string(), "/surveys");
+        println!("Client sending to: {client_url}");
 
-        // println!("real response: {body:?}");
-        // assert_eq!(body, json!({ "data": [1, 2, 3, 4] }));
-    }
+        let response = client
+            .post(&client_url)
+            .json(&CreateSurvey {
+                id: "".to_string(),
+                plaintext: "- create\n - this one".to_string(),
+            })
+            .send()
+            .await
+            .unwrap();
 
-    fn get_create_survey_request() -> Request<Body> {
-        let create_request = CreateSurvey {
-            id: "test".to_string(),
-            plaintext: "- this is the titles\n  - option 1".to_string(),
-        };
-        Request::builder()
-            .method(http::Method::POST)
-            .uri("/surveys")
-            .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-            .body(Body::from(serde_json::to_string(&create_request).unwrap()))
-            .unwrap()
+        let results: CreateSurvey = response.json().await.unwrap();
+
+        assert_eq!(results.plaintext, "- create\n - this one");
     }
 }

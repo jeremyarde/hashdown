@@ -12,16 +12,16 @@ Form
 - modified on
 - id
 
-Questions
+Question
 - id
 - created_on
 - modified_on
+- type
+- value
 
-
-Question
-- 
-
-Answers (json?)
+Answer
+- id
+- question id
 - form id
 - submit date
 - question id: answer[]

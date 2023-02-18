@@ -101,3 +101,28 @@ Plans
   - 10k
 - basic
   - 750, 195 usd
+
+
+Tech details
+- /forms/{id}/start-submission
+  - request
+    - {"visit_response_id":"CR2191dXFa9S"}
+  - response
+    - {"signature":"20906d686f70356f35656c6c6164687562677535776d686f70356f357071616b636c34313339363936363463366336363533373434333536343134353337366237613339343233303664373236613737353935613431363436393336343833313336333733363336333133363335333433383135353032396564383237633432666462646462653531306439313237633062316436333730363739656366663266613162633234343563653533353535663631363736363136353438","submission":{"response_id":"mhop5o5elladhubgu5wmhop5o5pqakcl","type":"started","form_id":"U37VdiXX","landed_at":1676616548,"visit_response_id":"CR2191dXFa9S","metadata":{"user_agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0","platform":"other","referer":"https://59x90aj6oxz.typeform.com/to/U37VdiXX","network_id":"2ee3d5a245","ip":"207.244.142.79","browser":"default","client":"stakhanov","id_type":"form-id","source":"","medium":"","medium_version":"","embed_trigger_type":"","domain_type":"standard","subdomain_type":"custom"}}}
+- /forms/{id}/insights/events/v3/see
+  - request
+    - form_id=U37VdiXX&field_id=c2wmUoyJL91v&previous_seen_field_id=XUBWo6zbAUeY&response_id=CR2191dXFa9S&user_agent=Mozilla%2F5.0%20(Macintosh%3B%20Intel%20Mac%20OS%20X%2010.15%3B%20rv%3A109.0)%20Gecko%2F20100101%20Firefox%2F109.0&version=1
+  - response = None
+- https://59x90aj6oxz.typeform.com/forms/U37VdiXX/insights/events/v3/see
+  - request
+    - form_id=U37VdiXX&field_id=f7LpYTJowBDN&previous_seen_field_id=c2wmUoyJL91v&response_id=CR2191dXFa9S&user_agent=Mozilla%2F5.0%20(Macintosh%3B%20Intel%20Mac%20OS%20X%2010.15%3B%20rv%3A109.0)%20Gecko%2F20100101%20Firefox%2F109.0&version=1
+  - response
+    - none
+- https://59x90aj6oxz.typeform.com/forms/U37VdiXX/complete-submission
+  - request
+    - {"signature":"20906d686f70356f35656c6c6164687562677535776d686f70356f357071616b636c34313339363936363463366336363533373434333536343134353337366237613339343233303664373236613737353935613431363436393336343833313336333733363336333133363335333433383135353032396564383237633432666462646462653531306439313237633062316436333730363739656366663266613162633234343563653533353535663631363736363136353438","form_id":"U37VdiXX","landed_at":1676616548,"answers":[{"field":{"id":"XUBWo6zbAUeY","type":"short_text"},"type":"text","text":"testing"},{"field":{"id":"c2wmUoyJL91v","type":"multiple_choice"},"type":"choices","choices":[{"id":"YWpn4l8aOCzD","label":"Terrific!"}]},{"field":{"id":"0DINhphoifsc","type":"ranking"},"type":"choices","choices":[{"id":"MSZZ7grfALiF","label":"choice 1"}]}],"thankyou_screen_ref":"01GS3HPH9WNEWHH9SGCTHQ1346"}
+  - response
+    - {"response_id":"mhop5o5elladhubgu5wmhop5o5pqakcl","type":"completed","form_id":"U37VdiXX","landed_at":1676616548,"submitted_at":1676616593,"metadata":{"user_agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0","platform":"other","referer":"https://59x90aj6oxz.typeform.com/to/U37VdiXX","network_id":"2ee3d5a245","ip":"207.244.142.79","browser":"default","client":"stakhanov","id_type":"form-id","source":"","medium":"","medium_version":"","embed_trigger_type":"","domain_type":"standard","subdomain_type":"custom"},"answers":[{"type":"text","field":{"type":"short_text","id":"XUBWo6zbAUeY"},"text":"testing"},{"type":"choices","field":{"type":"multiple_choice","id":"c2wmUoyJL91v"},"choices":[{"id":"YWpn4l8aOCzD","label":"Terrific!","ref":"01GS3HPH9W00W8GBKARYB1ZACP"}]},{"type":"choices","field":{"type":"ranking","id":"0DINhphoifsc"},"choices":[{"id":"MSZZ7grfALiF","label":"choice 1","ref":"6574f825-1826-48e0-89a9-c16d27654328"}]}],"thankyou_screen_ref":"01GS3HPH9WNEWHH9SGCTHQ1346"}
+- https://59x90aj6oxz.typeform.com/forms/U37VdiXX/insights/events/v3/see
+  - request
+    - form_id=U37VdiXX&field_id=EndingID&previous_seen_field_id=0DINhphoifsc&response_id=CR2191dXFa9S&user_agent=Mozilla%2F5.0%20(Macintosh%3B%20Intel%20Mac%20OS%20X%2010.15%3B%20rv%3A109.0)%20Gecko%2F20100101%20Firefox%2F109.0&version=1

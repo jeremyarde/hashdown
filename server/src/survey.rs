@@ -6,32 +6,32 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use markdownparser::nanoid_gen;
+use markdownparser::Question;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::FromRow;
 
 use crate::{internal_error, CreateSurvey, ServerState};
 
-#[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
-pub struct Survey {
-    id: String,
-    // nanoid: String,
-    plaintext: String,
-    // user_id: String,
-    // created_at: String,
-    // modified_at: String,
-    // version: String,
-}
+// #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
+// pub struct Survey {
+//     pub id: String,
+//     // nanoid: String,
+//     pub plaintext: String,
+//     // user_id: String,
+//     // created_at: String,
+//     // modified_at: String,
+//     // version: String,
+// }
 
-impl Survey {
-    pub fn from(text: String) -> Survey {
-        return Survey {
-            id: nanoid_gen(10),
-            plaintext: text,
-        };
-    }
-}
+// impl Survey {
+//     pub fn from(text: String) -> Survey {
+//         return Survey {
+//             id: nanoid_gen(10),
+//             plaintext: text,
+//         };
+//     }
+// }
 
 struct Form {
     id: String,
@@ -47,17 +47,6 @@ struct CreateForm {
     text: String,
 }
 
-struct Question {
-    qtype: QuestionType,
-    text: String,
-}
-
-enum QuestionType {
-    Multi,
-    Radio,
-    Text,
-}
-
 #[derive(Debug, Deserialize, Serialize)]
 struct Answers {
     id: String,
@@ -66,11 +55,17 @@ struct Answers {
     submitted_on: String,
     answers: HashMap<String, String>,
 }
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateAnswers {
     form_id: String,
     start_time: String,
-    form: HashMap<String, String>,
+    answers: HashMap<String, String>,
+}
+
+struct Answer {
+    form_id: String,
+    value: String,
 }
 
 #[axum::debug_handler]
@@ -118,7 +113,7 @@ pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse 
         .unwrap();
     println!("Survey count: {count:#?}");
 
-    let res = sqlx::query_as::<_, Survey>("select * from surveys")
+    let res: Vec<Survey> = sqlx::query_as::<_, Survey>("select * from surveys")
         .fetch_all(&pool)
         .await
         .unwrap();
@@ -126,8 +121,15 @@ pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse 
     // json!({ "surveys": res });
 
     println!("Survey: {res:#?}");
+    let listresp = ListSurveyResponse { surveys: res };
 
-    (StatusCode::OK, Json(json!({ "surveys": res })))
+    // (StatusCode::OK, Json(json!({ "surveys": res })))
+    (StatusCode::OK, Json(listresp))
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ListSurveyResponse {
+    pub surveys: Vec<Survey>,
 }
 
 #[axum::debug_handler]
