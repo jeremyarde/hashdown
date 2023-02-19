@@ -16,3 +16,11 @@ CREATE TABLE users (
     created_at TEXT NOT NULL,
     modified_at TEXT NOT NULL
 );
+Create table answers (
+    id TEXT NOT NULL UNIQUE,
+    survey_id TEXT NOT NULL,
+    survey_version TEXT,
+    start_time TEXT,
+    end_time TEXT,
+    answers JSON
+)

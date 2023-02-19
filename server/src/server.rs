@@ -38,23 +38,34 @@ impl ServerApplication {
         // let state = Arc::new(ServerState { db: db });
         let state = ServerState { db: db };
 
-        let corslayer = if !test {
-            println!("Not testing, adding CORS headers.");
-            CorsLayer::new()
-                .allow_methods([Method::POST, Method::GET])
-                .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
-                .allow_origin("http://127.0.0.1:8080/".parse::<HeaderValue>().unwrap())
-                .allow_origin("http://127.0.0.1:8080".parse::<HeaderValue>().unwrap())
-                .allow_origin("http://127.0.0.1:3001".parse::<HeaderValue>().unwrap())
-        } else {
-            println!("Testing, adding wildcard CORS headers.");
-            CorsLayer::new()
-                .allow_methods([Method::POST, Method::GET])
-                .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
-                .allow_origin("*".parse::<HeaderValue>().unwrap())
-        };
+        // let corslayer = if !test {
+        //     println!("Not testing, adding CORS headers.");
+        //     CorsLayer::new()
+        //         .allow_methods([Method::POST, Method::GET])
+        //         .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
+        //         .allow_origin("http://127.0.0.1:8080/".parse::<HeaderValue>().unwrap())
+        //         .allow_origin("http://127.0.0.1:8080".parse::<HeaderValue>().unwrap())
+        //         .allow_origin("http://127.0.0.1:3001".parse::<HeaderValue>().unwrap())
+        // } else {
+        //     println!("Testing, adding wildcard CORS headers.");
+        //     // CorsLayer::new()
+        //     //     .allow_methods([Method::POST, Method::GET])
+        //     //     .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
+        //     // .allow_origin("*".parse::<HeaderValue>().unwrap())
+        //     CorsLayer::new()
+        //         .allow_methods([Method::POST, Method::GET])
+        //         .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
+        //         .allow_origin("http://127.0.0.1:8080/".parse::<HeaderValue>().unwrap())
+        //         .allow_origin("http://127.0.0.1:8080".parse::<HeaderValue>().unwrap())
+        //         .allow_origin("http://127.0.0.1:3001".parse::<HeaderValue>().unwrap())
+        // };
 
-        let corslayer = CorsLayer::new();
+        let corslayer = CorsLayer::new()
+            .allow_methods([Method::POST, Method::GET])
+            .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
+            .allow_origin("http://127.0.0.1:8080/".parse::<HeaderValue>().unwrap())
+            .allow_origin("http://127.0.0.1:8080".parse::<HeaderValue>().unwrap())
+            .allow_origin("http://127.0.0.1:3001".parse::<HeaderValue>().unwrap());
 
         // build our application with a route
         let app: Router = Router::new()
