@@ -41,36 +41,6 @@ pub struct CreateSurvey {
     plaintext: String,
 }
 
-// #[axum::debug_handler]
-// async fn answer_survey(
-//     State(state): State<ServerState>,
-//     extract::Json(payload): extract::Json<AnswerSurveyRequest>,
-// ) -> impl IntoResponse {
-//     /*
-//     1. check for survey in database, with same version
-//     2. check that questions are the same as expected
-//     */
-//     (StatusCode::ACCEPTED, Json("fakeid".to_string()))
-// }
-
-// #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
-// struct AnswerSurveyRequest {
-//     id: String,
-// }
-// #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
-// struct AnswerSurveyResponse {
-//     id: String,
-// }
-
-// #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
-// struct Survey {
-//     id: String,
-//     plaintext: String,
-//     user_id: String,
-//     created_at: String,
-//     modified_at: String,
-// }
-
 /// Utility function for mapping any error into a `500 Internal Server Error`
 /// response.
 fn internal_error<E>(err: E) -> (StatusCode, String)
@@ -79,13 +49,6 @@ where
 {
     (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
 }
-
-// impl Drop for ServerApplication {
-//     fn drop(&mut self) {
-//         tracing::debug!("Dropping test server at {:?}", self.base_url);
-//         self.server.abort()
-//     }
-// }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -120,6 +83,7 @@ mod tests {
     use tower::{Service, ServiceExt};
 
     use crate::{
+        answer::{CreateAnswersRequest, CreateAnswersResponse},
         survey::{AnswerRequest, ListSurveyResponse},
         CreateSurvey, ServerApplication,
     };
@@ -233,10 +197,11 @@ mod tests {
             listresults.surveys[0].questions[0].id.clone(),
             listresults.surveys[0].questions[0].options[0].text.clone(),
         );
-        let answers_request = AnswerRequest {
-            form_id: listresults.surveys[0].id.clone(),
+        let answers_request = CreateAnswersRequest {
+            survey_id: listresults.surveys[0].id.clone(),
             start_time: "".to_string(),
             answers: answers,
+            survey_version: listresults.surveys[0].version.clone(),
         };
 
         let response = client
@@ -249,9 +214,9 @@ mod tests {
             .await
             .unwrap();
 
-        // let answer_repsonse: AnswerResponse = response.json().await.unwrap();
-
-        println!("testing: {response:?}");
         assert_eq!(response.status(), StatusCode::CREATED);
+        let answer_response: CreateAnswersResponse = response.json().await.unwrap();
+
+        println!("Create answer response: {answer_response:?}");
     }
 }

@@ -121,7 +121,7 @@ impl Question {
             question_text = trimmed.split_once(". ").unwrap_or((line, "")).1;
         }
 
-        println!("parse: {question_text:?}");
+        // println!("parse: {question_text:?}");
         return question_text;
     }
 
@@ -279,7 +279,7 @@ pub fn parse_markdown_v3(contents: String) -> Survey {
     let mut question_num = 0;
 
     for line in contents.lines() {
-        println!("Curr line: {line}");
+        // println!("Curr line: {line}");
         match (find_line_type(line), &last_line_type) {
             (LineType::Question, LineType::Question) => {
                 // new question after question, push prev, clear old
