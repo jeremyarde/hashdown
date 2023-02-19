@@ -83,7 +83,7 @@ mod tests {
     use tower::{Service, ServiceExt};
 
     use crate::{
-        answer::{CreateAnswersRequest, CreateAnswersResponse},
+        answer::{AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse},
         survey::{AnswerRequest, ListSurveyResponse},
         CreateSurvey, ServerApplication,
     };
@@ -195,7 +195,14 @@ mod tests {
         let mut answers = HashMap::new();
         answers.insert(
             listresults.surveys[0].questions[0].id.clone(),
-            listresults.surveys[0].questions[0].options[0].text.clone(),
+            AnswerDetails {
+                r#type: AnswerType::String,
+                values: listresults.surveys[0].questions[0]
+                    .options
+                    .iter()
+                    .map(|x| x.text.clone())
+                    .collect(),
+            },
         );
         let answers_request = CreateAnswersRequest {
             survey_id: listresults.surveys[0].id.clone(),

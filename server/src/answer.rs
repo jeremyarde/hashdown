@@ -6,7 +6,7 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use markdownparser::nanoid_gen;
+use markdownparser::{nanoid_gen, QuestionType};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::FromRow;
@@ -27,7 +27,20 @@ pub struct CreateAnswersRequest {
     pub survey_id: String,
     pub survey_version: String,
     pub start_time: String,
-    pub answers: HashMap<String, String>,
+    pub answers: HashMap<String, AnswerDetails>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct AnswerDetails {
+    pub values: Vec<String>,
+    pub r#type: AnswerType,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum AnswerType {
+    Float,
+    String,
+    Integer,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -36,7 +49,7 @@ pub struct CreateAnswersResponse {
     survey_id: String,
     survey_version: String,
     start_time: String,
-    answers: HashMap<String, String>,
+    answers: HashMap<String, AnswerDetails>,
 }
 
 #[derive(Debug, Deserialize, Serialize, FromRow)]
@@ -94,7 +107,7 @@ pub async fn post_answers(
     .await
     .unwrap();
 
-    let answers: HashMap<String, String> = serde_json::from_str(&res.answers).unwrap();
+    let answers: HashMap<String, AnswerDetails> = serde_json::from_str(&res.answers).unwrap();
     let response = CreateAnswersResponse {
         id: res.id,
         survey_id: res.survey_id,
