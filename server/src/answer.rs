@@ -60,6 +60,7 @@ pub struct CreateAnswersModel {
     start_time: String,
     end_time: String,
     answers: String,
+    created_at: String,
 }
 
 impl CreateAnswersModel {
@@ -71,6 +72,7 @@ impl CreateAnswersModel {
             start_time: create_answer.start_time,
             end_time: "now".to_string(),
             answers: json!(create_answer.answers).to_string(),
+            created_at: "now".to_string(),
         }
     }
 }

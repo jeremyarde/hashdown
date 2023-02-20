@@ -22,5 +22,6 @@ Create table answers (
     survey_version TEXT,
     start_time TEXT,
     end_time TEXT,
-    answers TEXT
+    answers TEXT,
+    created_at TEXT
 )
