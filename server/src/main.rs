@@ -35,12 +35,6 @@ pub struct ServerState {
     db: Database,
 }
 
-#[derive(Deserialize, Serialize, sqlx::FromRow, Debug, PartialEq, Eq)]
-pub struct CreateSurvey {
-    id: String,
-    plaintext: String,
-}
-
 /// Utility function for mapping any error into a `500 Internal Server Error`
 /// response.
 fn internal_error<E>(err: E) -> (StatusCode, String)
@@ -86,8 +80,8 @@ mod tests {
 
     use crate::{
         answer::{AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse},
-        survey::{AnswerRequest, ListSurveyResponse},
-        CreateSurvey, ServerApplication,
+        survey::{AnswerRequest, CreateSurveyRequest, CreateSurveyResponse, ListSurveyResponse},
+        ServerApplication,
     };
 
     #[serial]
@@ -109,17 +103,16 @@ mod tests {
 
         let response = client
             .post(&client_url)
-            .json(&CreateSurvey {
-                id: "".to_string(),
+            .json(&CreateSurveyRequest {
                 plaintext: "- another\n - this one".to_string(),
             })
             .send()
             .await
             .unwrap();
 
-        let results: CreateSurvey = response.json().await.unwrap();
+        let results: CreateSurveyResponse = response.json().await.unwrap();
 
-        assert_eq!(results.plaintext, "- another\n - this one");
+        assert_eq!(results.survey.plaintext, "- another\n - this one");
 
         //call list
         let listresponse = client.get(&client_url).send().await.unwrap();
@@ -148,17 +141,16 @@ mod tests {
 
         let response = client
             .post(&client_url)
-            .json(&CreateSurvey {
-                id: "".to_string(),
+            .json(&CreateSurveyRequest {
                 plaintext: "- create\n - this one".to_string(),
             })
             .send()
             .await
             .unwrap();
 
-        let results: CreateSurvey = response.json().await.unwrap();
+        let results: CreateSurveyResponse = response.json().await.unwrap();
 
-        assert_eq!(results.plaintext, "- create\n - this one");
+        assert_eq!(results.survey.plaintext, "- create\n - this one");
     }
 
     #[tokio::test]
@@ -176,17 +168,16 @@ mod tests {
 
         let response = client
             .post(&client_url)
-            .json(&CreateSurvey {
-                id: "".to_string(),
+            .json(&CreateSurveyRequest {
                 plaintext: "- another\n - this one".to_string(),
             })
             .send()
             .await
             .unwrap();
 
-        let results: CreateSurvey = response.json().await.unwrap();
+        let results: CreateSurveyResponse = response.json().await.unwrap();
 
-        assert_eq!(results.plaintext, "- another\n - this one");
+        assert_eq!(results.survey.plaintext, "- another\n - this one");
 
         let listresponse = client.get(&client_url).send().await.unwrap();
         let listresults: ListSurveyResponse = listresponse.json().await.unwrap();

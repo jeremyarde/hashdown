@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::FromRow;
 
-use crate::{internal_error, CreateSurvey, ServerState};
+use crate::{internal_error, ServerState};
 
 // #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
 // pub struct Survey {
@@ -97,33 +97,49 @@ struct Answer {
     value: String,
 }
 
+#[derive(Deserialize, Serialize, sqlx::FromRow, Debug, PartialEq, Eq)]
+pub struct CreateSurveyRequest {
+    pub plaintext: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct CreateSurveyResponse {
+    pub survey: Survey,
+    pub metadata: SurveyModel,
+}
+
 #[axum::debug_handler]
 pub async fn create_survey(
     State(state): State<ServerState>,
-    extract::Json(payload): extract::Json<CreateSurvey>,
+    extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> impl IntoResponse {
     let survey = parse_markdown_v3(payload.plaintext.clone());
     // let survey = Survey::from(payload.plaintext.clone());
     let response_survey = survey.clone();
 
-    let res = sqlx::query(
+    let res: SurveyModel = sqlx::query_as::<_, SurveyModel>(
         "insert into surveys (id, plaintext, user_id, created_at, modified_at, version, parse_version) 
         values 
-        ($1, $2, $3, $4, $5, $6, $7)",
+        ($1, $2, $3, $4, $5, $6, $7)
+        returning *",
     )
-    .bind(payload.id.clone())
+    .bind(response_survey.id.clone())
     .bind(payload.plaintext)
     .bind(survey.user_id)
     .bind(survey.created_at)
     .bind(survey.modified_at)
     // .bind(json!({"questions": survey.questions}))
     .bind(survey.version)
-    .bind(survey.parse_version)
-    .execute(&state.db.pool)
+    .bind(survey.parse_version).fetch_one(&state.db.pool)
     .await
     .unwrap();
 
-    (StatusCode::CREATED, Json(response_survey))
+    let response = CreateSurveyResponse {
+        survey: Survey::from(response_survey),
+        metadata: res,
+    };
+
+    (StatusCode::CREATED, Json(response))
 }
 
 #[axum::debug_handler]
@@ -179,6 +195,11 @@ pub async fn get_survey(
         .unwrap();
 
     println!("Survey: {res:#?}");
+    let resp_survey = parse_markdown_v3(res.plaintext.clone());
+    let response = CreateSurveyResponse {
+        survey: resp_survey,
+        metadata: res,
+    };
 
-    (StatusCode::OK, Json(res))
+    (StatusCode::OK, Json(response))
 }
