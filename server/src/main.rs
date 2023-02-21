@@ -9,7 +9,7 @@ use axum::{
 // use ormlite::{model::ModelBuilder, Model};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use tokio::task::JoinHandle;
+use tokio::{task::JoinHandle, try_join};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
@@ -63,8 +63,10 @@ async fn main() -> anyhow::Result<()> {
 
     // cargo watch -- cargo run
     println!("Spinning up the server.");
-    ServerApplication::new(false).await;
+    let server_app = ServerApplication::new(false).await;
     println!("Server is running...");
+
+    try_join!(server_app.server).unwrap();
     Ok(())
 }
 

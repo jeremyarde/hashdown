@@ -9,7 +9,7 @@ use axum::{
 // use ormlite::{model::ModelBuilder, Model};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use tokio::task::JoinHandle;
+use tokio::{task::JoinHandle, try_join};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
@@ -28,7 +28,7 @@ use crate::{
 // use tower::http
 pub struct ServerApplication {
     pub base_url: SocketAddr,
-    server: JoinHandle<()>,
+    pub server: JoinHandle<()>,
 }
 
 impl ServerApplication {
@@ -116,8 +116,4 @@ impl ServerApplication {
             server: server,
         };
     }
-
-    // async fn run(&self) {
-    //     let _ = tokio::try_join!(self.server);
-    // }
 }
