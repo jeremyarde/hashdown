@@ -139,7 +139,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let client_url = format!("http://{}{}", "localhost:3000", "/surveys");
+        let client_url = format!("http://{}{}", "localhost:8080", "/surveys");
         // let client_url = format!("/surveys");
 
         println!("Client sending to: {client_url}");
@@ -168,7 +168,7 @@ mod tests {
 
         let client = reqwest::Client::builder().build().unwrap();
 
-        let client_url = format!("http://{}{}", "localhost:3000", "/surveys");
+        let client_url = format!("http://{}{}", "localhost:8080", "/surveys");
         // let client_url = format!("/surveys");
         println!("Client sending to: {client_url}");
 

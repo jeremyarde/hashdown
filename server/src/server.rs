@@ -65,7 +65,7 @@ impl ServerApplication {
             .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
             .allow_origin("http://127.0.0.1:8080/".parse::<HeaderValue>().unwrap())
             .allow_origin("http://127.0.0.1:8080".parse::<HeaderValue>().unwrap())
-            .allow_origin("http://127.0.0.1:3001".parse::<HeaderValue>().unwrap());
+            .allow_origin("http://127.0.0.1:3000".parse::<HeaderValue>().unwrap());
 
         // build our application with a route
         let app: Router = Router::new()
@@ -99,7 +99,7 @@ impl ServerApplication {
         let app = ServerApplication::get_router(test).await;
 
         // let app = configure_app().await;
-        let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+        let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
         tracing::debug!("listening on {}", addr);
 
         let server = tokio::spawn(async move {
