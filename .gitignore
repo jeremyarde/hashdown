@@ -1,4 +1,4 @@
-/target
+target/
 *.wasm
 dist/*
 ui2/dist/assets/dioxus/ui2.js
@@ -7,3 +7,5 @@ ui2/dist/output.css
 ui2/dist/assets/dioxus/ui2_bg.wasm
 ui2/dist/assets/dioxus/ui2.js
 ui2/public/output.css
+server/target/
+

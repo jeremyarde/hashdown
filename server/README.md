@@ -7,3 +7,10 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 cd server
 cargo build
 cargo run
+
+
+#### Generate TS bindings
+
+// from server folder:
+cargo test && 
+

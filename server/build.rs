@@ -6,6 +6,8 @@ fn main() {
 
     // let _child = Command::new("cargo")
     //     .arg("test")
+    //     .arg("--target-dir")
+    //     .arg("../targetnew")
     //     .spawn()
     //     .expect("Failed to generate bindings");
     // cargo test --package server --bin server -- tests --nocapture

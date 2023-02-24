@@ -1,11 +1,14 @@
 import React from 'react';
 import { nanoid_gen, parse_markdown_v3 } from "../../../backend/pkg";
+import { CreateSurveyRequest } from "../../../server/bindings/CreateSurveyRequest";
 
 export default function Editor() {
     const [editor, setEditor] = React.useState('');
     const [survey, setSurvey] = React.useState('');
 
-    console.log(`THIS IS BROKEN`)
+    console.log(`THIS IS BROKEN`);
+    // let createSurveyReq = { };
+
 
     return (
         <>
