@@ -10,6 +10,7 @@ use markdownparser::{markdown_to_form, parse_markdown_v3, Question, Survey};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::FromRow;
+use ts_rs::TS;
 
 use crate::{internal_error, ServerState};
 
@@ -97,7 +98,8 @@ struct Answer {
     value: String,
 }
 
-#[derive(Deserialize, Serialize, sqlx::FromRow, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, sqlx::FromRow, Debug, PartialEq, Eq, TS)]
+#[ts(export)]
 pub struct CreateSurveyRequest {
     pub plaintext: String,
 }

@@ -5,7 +5,7 @@ export default function Editor() {
     const [editor, setEditor] = React.useState('');
     const [survey, setSurvey] = React.useState('');
 
-
+    console.log(`THIS IS BROKEN`)
 
     return (
         <>
