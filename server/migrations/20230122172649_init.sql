@@ -10,8 +10,8 @@ CREATE TABLE surveys (
 );
 CREATE TABLE users (
     id TEXT NOT NULL UNIQUE,
-    firstname TEXT,
-    lastname TEXT,
+    username TEXT,
+    password TEXT,
     email TEXT NOT NULL,
     created_at TEXT NOT NULL,
     modified_at TEXT NOT NULL

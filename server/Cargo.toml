@@ -24,6 +24,7 @@ uuid = { version = "1.2.2", features = ["serde"] }
 mime = "0.3.16"
 serde_json = "1.0.93"
 ts-rs = "6.2.1"
+oauth2 = "4.3.0"
 # hyper = "0.14.24"
 
 

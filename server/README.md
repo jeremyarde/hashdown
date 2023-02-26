@@ -12,5 +12,5 @@ cargo run
 #### Generate TS bindings
 
 // from server folder:
-cargo test && 
+cargo test
 

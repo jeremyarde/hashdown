@@ -9,3 +9,5 @@ ui2/dist/assets/dioxus/ui2.js
 ui2/public/output.css
 server/target/
 
+ui-astro/.env.*
+server/dev.env

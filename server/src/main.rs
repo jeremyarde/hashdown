@@ -86,6 +86,13 @@ mod tests {
 
     #[serial]
     #[tokio::test]
+    async fn test_supabase() {
+        let url = "https://uhfivxaprdgdcahfqrzx.supabase.co";
+        
+    }
+
+    #[serial]
+    #[tokio::test]
     async fn list_survey_test() {
         let app = ServerApplication::new(true).await;
         let mut router = ServerApplication::get_router(true).await;

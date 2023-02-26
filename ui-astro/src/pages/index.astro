@@ -5,10 +5,17 @@ import Survey from "../components/Survey";
 
 import { nanoid_gen, parse_markdown_v3 } from "../../../backend/pkg";
 import Radio from "../components/Radio";
----
 
+import { supabase } from "../supabase";
+import Login from "../components/Login";
+
+---
+<p>signup <a href="/signup">about</a> Astro!</p>
+<p>Login <a href="/login">about</a> Astro!</p>
+<p>Check login<a href="/authenticated">about</a> Astro!</p>
 <Layout title="Welcome. Create your survey now">
 	<main>
+		<!-- <Login /> -->
 		<!-- <Editor parser={parse_markdown_v3} /> -->
 		<Survey />
 		<!-- <!-- <h1>{nanoid_gen(10)}</h1> -->
