@@ -1,0 +1,13 @@
+{
+  "name": "markdownparser",
+  "version": "0.1.0",
+  "files": [
+    "markdownparser_bg.wasm",
+    "markdownparser.js",
+    "markdownparser_bg.js",
+    "markdownparser.d.ts"
+  ],
+  "module": "markdownparser.js",
+  "types": "markdownparser.d.ts",
+  "sideEffects": false
+}

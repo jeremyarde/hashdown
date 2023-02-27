@@ -1,5 +1,10 @@
 # Market research
 
+## competitors
+1. Typeform
+2. reform
+3. tally
+
 ## Typeform
 
 Form Types
