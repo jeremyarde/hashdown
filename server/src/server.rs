@@ -1,3 +1,4 @@
+use askama::Template;
 use axum::{
     extract::{self, State},
     http::{self, HeaderValue, Method, StatusCode},
@@ -30,7 +31,19 @@ use crate::{
 pub struct ServerApplication {
     pub base_url: SocketAddr,
     pub server: JoinHandle<()>,
-    pub oauth_client: BasicClient,
+    pub oauth_client: Option<BasicClient>,
+}
+
+#[derive(Template)]
+#[template(path = "form.html")]
+struct FormTemplate {}
+
+async fn get_form() -> FormTemplate {
+    FormTemplate {}
+}
+
+async fn hello() -> impl IntoResponse {
+    return "Yo this is great";
 }
 
 impl ServerApplication {
@@ -53,6 +66,8 @@ impl ServerApplication {
             .route("/surveys/:id", get(get_survey))
             .route("/surveys/:id/answers", post(post_answers))
             // .layer(Extension(state))
+            .route("/template", get(get_form))
+            .route("/", get(hello))
             .with_state(state)
             .layer(corslayer)
             .layer(TraceLayer::new_for_http());
@@ -69,9 +84,8 @@ impl ServerApplication {
 
         tracing_subscriber::registry()
             .with(
-                tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                    "example_parse_body_based_on_content_type=debug,tower_http=debug".into()
-                }),
+                tracing_subscriber::EnvFilter::try_from_default_env()
+                    .unwrap_or_else(|_| "tower_http=debug".into()),
             )
             .with(tracing_subscriber::fmt::layer())
             .try_init()
@@ -84,50 +98,49 @@ impl ServerApplication {
         tracing::debug!("listening on {}", addr);
 
         let server = tokio::spawn(async move {
-            println!("before axum.");
+            println!("Server address: {addr}");
             axum::Server::bind(&addr)
                 .serve(app.into_make_service())
-                .await
-                .unwrap();
+                .await;
             println!("after axum.");
         });
-        let oauth_client = oauth_client();
+        // let oauth_client = oauth_client();
 
         return ServerApplication {
             base_url: addr,
             server: server,
-            oauth_client: oauth_client,
+            oauth_client: None,
         };
     }
 }
 
-fn oauth_client() -> BasicClient {
-    // Environment variables (* = required):
-    // *"CLIENT_ID"     "REPLACE_ME";
-    // *"CLIENT_SECRET" "REPLACE_ME";
-    //  "REDIRECT_URL"  "http://127.0.0.1:3000/auth/authorized";
-    //  "AUTH_URL"      "https://discord.com/api/oauth2/authorize?response_type=code";
-    //  "TOKEN_URL"     "https://discord.com/api/oauth2/token";
+// fn oauth_client() -> BasicClient {
+//     // Environment variables (* = required):
+//     // *"CLIENT_ID"     "REPLACE_ME";
+//     // *"CLIENT_SECRET" "REPLACE_ME";
+//     //  "REDIRECT_URL"  "http://127.0.0.1:3000/auth/authorized";
+//     //  "AUTH_URL"      "https://discord.com/api/oauth2/authorize?response_type=code";
+//     //  "TOKEN_URL"     "https://discord.com/api/oauth2/token";
 
-    // client id: 662612831867-q8ppdr4tc2gti8qgcmdbaff4b394774j.apps.googleusercontent.com
+//     // client id: 662612831867-q8ppdr4tc2gti8qgcmdbaff4b394774j.apps.googleusercontent.com
 
-    let client_id = env::var("CLIENT_ID").expect("Missing CLIENT_ID!");
-    let client_secret = env::var("CLIENT_SECRET").expect("Missing CLIENT_SECRET!");
-    let redirect_url = env::var("REDIRECT_URL")
-        .unwrap_or_else(|_| "http://127.0.0.1:3000/auth/authorized".to_string());
+//     let client_id = env::var("CLIENT_ID").expect("Missing CLIENT_ID!");
+//     let client_secret = env::var("CLIENT_SECRET").expect("Missing CLIENT_SECRET!");
+//     let redirect_url = env::var("REDIRECT_URL")
+//         .unwrap_or_else(|_| "http://127.0.0.1:3000/auth/authorized".to_string());
 
-    let auth_url = env::var("AUTH_URL").unwrap_or_else(|_| {
-        "https://discord.com/api/oauth2/authorize?response_type=code".to_string()
-    });
+//     let auth_url = env::var("AUTH_URL").unwrap_or_else(|_| {
+//         "https://discord.com/api/oauth2/authorize?response_type=code".to_string()
+//     });
 
-    let token_url = env::var("TOKEN_URL")
-        .unwrap_or_else(|_| "https://discord.com/api/oauth2/token".to_string());
+//     let token_url = env::var("TOKEN_URL")
+//         .unwrap_or_else(|_| "https://discord.com/api/oauth2/token".to_string());
 
-    BasicClient::new(
-        ClientId::new(client_id),
-        Some(ClientSecret::new(client_secret)),
-        AuthUrl::new(auth_url).unwrap(),
-        Some(TokenUrl::new(token_url).unwrap()),
-    )
-    .set_redirect_uri(RedirectUrl::new(redirect_url).unwrap())
-}
+//     BasicClient::new(
+//         ClientId::new(client_id),
+//         Some(ClientSecret::new(client_secret)),
+//         AuthUrl::new(auth_url).unwrap(),
+//         Some(TokenUrl::new(token_url).unwrap()),
+//     )
+//     .set_redirect_uri(RedirectUrl::new(redirect_url).unwrap())
+// }

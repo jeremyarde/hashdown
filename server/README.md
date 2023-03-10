@@ -14,3 +14,4 @@ cargo run
 // from server folder:
 cargo test
 
+cargo watch run
