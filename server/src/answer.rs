@@ -6,7 +6,7 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use markdownparser::{nanoid_gen, QuestionType};
+use markdownparser::{nanoid_gen};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::FromRow;

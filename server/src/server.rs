@@ -1,21 +1,19 @@
 use askama::Template;
 use axum::{
-    extract::{self, State},
-    http::{self, HeaderValue, Method, StatusCode},
+    http::{self, HeaderValue, Method},
     response::IntoResponse,
-    routing::{get, post},
-    Extension, Json, Router,
+    routing::{get, post}, Router,
 };
-use oauth2::{basic::BasicClient, AuthUrl, ClientId, ClientSecret, RedirectUrl, TokenUrl};
+use oauth2::{basic::BasicClient};
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
-use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
-use tokio::{task::JoinHandle, try_join};
+
+
+use tokio::{task::JoinHandle};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
-use std::{env, net::SocketAddr, sync::Arc};
+use std::{net::SocketAddr};
 // use tower_http::http::cors::CorsLayer;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
@@ -47,7 +45,7 @@ async fn hello() -> impl IntoResponse {
 }
 
 impl ServerApplication {
-    pub async fn get_router(test: bool) -> Router {
+    pub async fn get_router(_test: bool) -> Router {
         let db = Database::new(true).await.unwrap();
         // let ormdb = SqliteConnection::connect(":memory:").await?;
         // let state = Arc::new(ServerState { db: db });

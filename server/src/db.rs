@@ -1,17 +1,10 @@
-use std::{
-    collections::HashSet,
-    env,
-    path::PathBuf,
-    ptr::null,
-    sync::{Arc, RwLock},
-};
+
 
 use anyhow;
 
 // use chrono::Local;
 use sqlx::{
-    database, migrate::MigrateDatabase, sqlite::SqliteConnectOptions, ConnectOptions, Connection,
-    Execute, Pool, QueryBuilder, Sqlite, SqliteConnection, SqlitePool,
+    sqlite::SqliteConnectOptions, ConnectOptions, Connection, SqlitePool,
 };
 use tracing::info;
 
@@ -44,7 +37,7 @@ impl Database {
     pub async fn new(in_memory: bool) -> anyhow::Result<Self> {
         // let database_url = dotenvy::var("DATABASE_URL")?.as_str();
         // let pool = PgPool::connect(&database_url).await?;
-        let mut pool = match in_memory {
+        let pool = match in_memory {
             true => {
                 info!("Creating in-memory database");
                 SqlitePool::connect("sqlite::memory:").await?

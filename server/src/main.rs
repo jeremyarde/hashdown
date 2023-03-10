@@ -1,28 +1,23 @@
 use axum::{
-    extract::{self, State},
-    http::{self, HeaderValue, Method, StatusCode},
-    response::IntoResponse,
-    routing::{get, post},
-    Extension, Json, Router,
+    http::{StatusCode},
 };
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
-use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
-use tokio::{task::JoinHandle, try_join};
-use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
+
+
+use tokio::{try_join};
+
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
-use std::{net::SocketAddr, sync::Arc};
+
 // use tower_http::http::cors::CorsLayer;
-use tower_http::{cors::CorsLayer, trace::TraceLayer};
+
 // use tower_http::trace::TraceLayer;
 // use tower::http
 
 use crate::{
     db::Database,
     server::ServerApplication,
-    survey::{create_survey, get_survey, list_survey},
 };
 mod answer;
 mod db;
@@ -66,28 +61,25 @@ async fn main() -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashMap, time::Duration};
+    use std::{collections::HashMap};
 
-    use axum::{
-        body::Body,
-        http::{self, Request},
-    };
-    use mime::Mime;
+    
+    
     use reqwest::StatusCode;
-    use serde_json::json;
+    
     use serial_test::serial;
-    use tower::{Service, ServiceExt};
+    use tower::{ServiceExt};
 
     use crate::{
         answer::{AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse},
-        survey::{AnswerRequest, CreateSurveyRequest, CreateSurveyResponse, ListSurveyResponse},
+        survey::{CreateSurveyRequest, CreateSurveyResponse, ListSurveyResponse},
         ServerApplication,
     };
 
     #[serial]
     #[tokio::test]
     async fn test_supabase() {
-        let url = "https://uhfivxaprdgdcahfqrzx.supabase.co";
+        let _url = "https://uhfivxaprdgdcahfqrzx.supabase.co";
         
     }
 
@@ -132,7 +124,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn create_survey_test() {
-        let app = ServerApplication::new(true).await;
+        let _app = ServerApplication::new(true).await;
         let mut router = ServerApplication::get_router(true).await;
         router.ready().await.unwrap();
 
@@ -163,7 +155,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn answer_survey_test() {
-        let app = ServerApplication::new(true).await;
+        let _app = ServerApplication::new(true).await;
         let mut router = ServerApplication::get_router(true).await;
         router.ready().await.unwrap();
 
