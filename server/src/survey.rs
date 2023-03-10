@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use askama::Template;
 use axum::{
     extract::{self, Path, State},
     http::StatusCode,
@@ -8,7 +9,6 @@ use axum::{
 };
 use markdownparser::{markdown_to_form, parse_markdown_v3, Survey};
 use serde::{Deserialize, Serialize};
-
 
 use ts_rs::TS;
 
@@ -179,7 +179,7 @@ pub struct ListSurveyResponse {
 #[axum::debug_handler]
 pub async fn get_survey(
     State(state): State<ServerState>,
-    Path(params): Path<HashMap<String, String>>,
+    Path(survey_id): Path<String>,
 ) -> impl IntoResponse {
     let pool = state.db.pool;
 
@@ -191,7 +191,7 @@ pub async fn get_survey(
     println!("Survey count: {count:#?}");
 
     let res = sqlx::query_as::<_, SurveyModel>("select * from surveys as s where s.id = $1")
-        .bind(params.get("id"))
+        .bind(survey_id)
         .fetch_one(&pool)
         .await
         .unwrap();
@@ -203,5 +203,35 @@ pub async fn get_survey(
         metadata: res,
     };
 
-    (StatusCode::OK, Json(response))
+    let template = FormTemplate {
+        survey_id: response.survey.id,
+    };
+
+    return (StatusCode::OK, template);
+}
+
+#[derive(Template)]
+#[template(path = "form.html")]
+struct FormTemplate {
+    survey_id: String,
+}
+
+pub async fn get_form(
+    State(state): State<ServerState>,
+    Path(survey_id): Path<String>,
+) -> FormTemplate {
+    FormTemplate {
+        survey_id: survey_id,
+    }
+}
+
+#[derive(Template)]
+#[template(path = "create_survey.html")]
+struct CreateSurveyTemplate {
+    // survey_value: String,
+}
+
+#[axum::debug_handler]
+pub async fn create_survey_form(State(state): State<ServerState>) -> impl IntoResponse {
+    CreateSurveyTemplate {}
 }

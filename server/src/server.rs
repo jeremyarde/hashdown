@@ -2,18 +2,18 @@ use askama::Template;
 use axum::{
     http::{self, HeaderValue, Method},
     response::IntoResponse,
-    routing::{get, post}, Router,
+    routing::{get, post},
+    Router,
 };
-use oauth2::{basic::BasicClient};
+use oauth2::basic::BasicClient;
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
 
-
-use tokio::{task::JoinHandle};
+use tokio::task::JoinHandle;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
-use std::{net::SocketAddr};
+use std::net::SocketAddr;
 // use tower_http::http::cors::CorsLayer;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
@@ -21,7 +21,7 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use crate::{
     answer::post_answers,
     db::Database,
-    survey::{create_survey, get_survey, list_survey},
+    survey::{create_survey, create_survey_form, get_survey, list_survey},
     ServerState,
 };
 // use tower_http::trace::TraceLayer;
@@ -30,14 +30,6 @@ pub struct ServerApplication {
     pub base_url: SocketAddr,
     pub server: JoinHandle<()>,
     pub oauth_client: Option<BasicClient>,
-}
-
-#[derive(Template)]
-#[template(path = "form.html")]
-struct FormTemplate {}
-
-async fn get_form() -> FormTemplate {
-    FormTemplate {}
 }
 
 async fn hello() -> impl IntoResponse {
@@ -60,11 +52,12 @@ impl ServerApplication {
 
         // build our application with a route
         let app: Router = Router::new()
+            .route("/surveys/new", get(create_survey_form))
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
-            .route("/surveys/:id", get(get_survey))
+            .route("/surveys/:id", get(get_survey).post(post_answers))
             .route("/surveys/:id/answers", post(post_answers))
             // .layer(Extension(state))
-            .route("/template", get(get_form))
+            .route("/template", get(post_answers))
             .route("/", get(hello))
             .with_state(state)
             .layer(corslayer)
