@@ -21,36 +21,9 @@ use crate::ServerState;
 //     (StatusCode::CREATED, ())
 // }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CreateAnswersRequest {
-    // id: String,
-    pub survey_id: String,
-    pub survey_version: String,
-    pub start_time: String,
-    pub answers: HashMap<String, AnswerDetails>,
-}
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct AnswerDetails {
-    pub values: Vec<String>,
-    pub r#type: AnswerType,
-}
 
-#[derive(Debug, Deserialize, Serialize)]
-pub enum AnswerType {
-    Float,
-    String,
-    Integer,
-}
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CreateAnswersResponse {
-    id: String,
-    survey_id: String,
-    survey_version: String,
-    start_time: String,
-    answers: HashMap<String, AnswerDetails>,
-}
 
 
 

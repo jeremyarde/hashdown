@@ -8,7 +8,15 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
-// mod db;
+
+
+use std::collections::hash_map::RandomState;
+use std::hash::{BuildHasher, Hasher};
+
+fn rand64() -> u64 {
+    RandomState::new().build_hasher().finish()
+}
+
 
 const NANOID_LEN: usize = 12;
 // const NANOID_ALPHA: [char; 36] = [

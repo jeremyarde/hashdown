@@ -1,11 +1,11 @@
 use anyhow;
 
-use models::CreateAnswersModel;
+// use models::CreateAnswersModel;
 // use chrono::Local;
-use sqlx::{ConnectOptions, Connection, PgPool, SqlitePool};
+use sqlx::{ConnectOptions, Connection, PgPool};
 use tracing::info;
 
-mod models;
+// mod models;
 
 #[derive(Debug, Clone)]
 pub struct Database {
@@ -32,7 +32,7 @@ impl Settings {
 
 impl Database {
     pub async fn test() {
-        CreateAnswersModel;
+        // CreateAnswersModel;
     }
 
     pub async fn new(in_memory: bool) -> anyhow::Result<Self> {
