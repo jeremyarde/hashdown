@@ -1,21 +1,15 @@
-
-
 use anyhow;
 
 // use chrono::Local;
-use sqlx::{
-    sqlite::SqliteConnectOptions, ConnectOptions, Connection, SqlitePool,
-};
+use sqlx::{sqlite::SqliteConnectOptions, ConnectOptions, Connection, PgPool, SqlitePool};
 use tracing::info;
-
-// use crate::todo::{self, TodoModel};
 
 #[derive(Debug, Clone)]
 pub struct Database {
     // data: Arc<RwLock<TodoModel>>,
-    // pool: PgPool,
+    pool: PgPool,
     // pool: SqliteConnection,
-    pub pool: SqlitePool,
+    // pub pool: SqlitePool,
     // options: Option<DatabaseOptions>,
     pub settings: Settings,
 }
@@ -35,20 +29,22 @@ impl Settings {
 
 impl Database {
     pub async fn new(in_memory: bool) -> anyhow::Result<Self> {
-        // let database_url = dotenvy::var("DATABASE_URL")?.as_str();
-        // let pool = PgPool::connect(&database_url).await?;
+        let database_url = dotenvy::var("DATABASE_URL")?;
+
         let pool = match in_memory {
             true => {
                 info!("Creating in-memory database");
-                SqlitePool::connect("sqlite::memory:").await?
+                // SqlitePool::connect("sqlite::memory:").await?
+                PgPool::connect(&database_url);
             }
             false => {
                 info!("Creating new database");
-                let connection_options = SqliteConnectOptions::new()
-                    .create_if_missing(true)
-                    // .filename("~/Library/todowatcher_data.db"); // maybe try to save state in a common location
-                    .filename("./surveyapp.db");
-                SqlitePool::connect_with(connection_options).await?
+                // let connection_options = SqliteConnectOptions::new()
+                //     .create_if_missing(true)
+                //     // .filename("~/Library/todowatcher_data.db"); // maybe try to save state in a common location
+                //     .filename(database_url);
+                // SqlitePool::connect_with(connection_options).await?
+                PgPool::connect(&database_url);
             }
         };
 
