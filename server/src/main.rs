@@ -1,11 +1,8 @@
-use axum::{
-    http::{StatusCode},
-};
+use axum::http::StatusCode;
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
 
-
-use tokio::{try_join};
+use tokio::try_join;
 
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
@@ -15,15 +12,14 @@ use tokio::{try_join};
 // use tower_http::trace::TraceLayer;
 // use tower::http
 
-use crate::{
-    db::Database,
-    server::ServerApplication,
-};
+use crate::server::ServerApplication;
 mod answer;
-mod db;
+// mod db;
 mod server;
 mod survey;
 use anyhow;
+use db::{self, Database};
+use markdownparser;
 
 #[derive(Debug, Clone)]
 pub struct ServerState {
@@ -61,14 +57,12 @@ async fn main() -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashMap};
+    use std::collections::HashMap;
 
-    
-    
     use reqwest::StatusCode;
-    
+
     use serial_test::serial;
-    use tower::{ServiceExt};
+    use tower::ServiceExt;
 
     use crate::{
         answer::{AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse},
@@ -80,7 +74,6 @@ mod tests {
     #[tokio::test]
     async fn test_supabase() {
         let _url = "https://uhfivxaprdgdcahfqrzx.supabase.co";
-        
     }
 
     #[serial]

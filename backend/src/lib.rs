@@ -6,7 +6,6 @@ use anyhow::{anyhow, Result};
 use getrandom::getrandom;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-// use sqlx::{QueryBuilder, Sqlite, SqlitePool};
 use tracing::info;
 
 // mod db;

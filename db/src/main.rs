@@ -1,6 +1,6 @@
 use ormlite::model::*;
 
-use db::Database;
+use lib::Database;
 
 #[derive(Model, Debug)]
 pub struct TestingPerson {
@@ -9,19 +9,19 @@ pub struct TestingPerson {
     pub age: i32,
 }
 
-mod db;
+mod lib;
 // use db;
 
 #[tokio::main]
 async fn main() {
-    let database = Database::new(false).await?;
+    let database = Database::new(false).await.unwrap();
 
-    let results = TestingPerson::builder()
-        .id(11)
-        .name("tom")
-        .age(111)
-        .insert(&database.pool)
-        .await;
+    // let results = TestingPerson::builder()
+    //     .id(11)
+    //     .name("tom")
+    //     .age(111)
+    //     .insert(&database.pool)
+    //     .await;
 
-    println!("{:?}", results);
+    // println!("{:?}", results);
 }

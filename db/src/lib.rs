@@ -1,13 +1,16 @@
 use anyhow;
 
+use models::CreateAnswersModel;
 // use chrono::Local;
-use sqlx::{sqlite::SqliteConnectOptions, ConnectOptions, Connection, PgPool, SqlitePool};
+use sqlx::{ConnectOptions, Connection, PgPool, SqlitePool};
 use tracing::info;
+
+mod models;
 
 #[derive(Debug, Clone)]
 pub struct Database {
     // data: Arc<RwLock<TodoModel>>,
-    pool: PgPool,
+    pub pool: PgPool,
     // pool: SqliteConnection,
     // pub pool: SqlitePool,
     // options: Option<DatabaseOptions>,
@@ -28,6 +31,10 @@ impl Settings {
 // pub type InsertTodosRequest = Vec<todo::TodoModel>;
 
 impl Database {
+    pub async fn test() {
+        CreateAnswersModel;
+    }
+
     pub async fn new(in_memory: bool) -> anyhow::Result<Self> {
         let database_url = dotenvy::var("DATABASE_URL")?;
 
@@ -35,7 +42,7 @@ impl Database {
             true => {
                 info!("Creating in-memory database");
                 // SqlitePool::connect("sqlite::memory:").await?
-                PgPool::connect(&database_url);
+                PgPool::connect(&database_url).await?
             }
             false => {
                 info!("Creating new database");
@@ -44,7 +51,7 @@ impl Database {
                 //     // .filename("~/Library/todowatcher_data.db"); // maybe try to save state in a common location
                 //     .filename(database_url);
                 // SqlitePool::connect_with(connection_options).await?
-                PgPool::connect(&database_url);
+                PgPool::connect(&database_url).await?
             }
         };
 
@@ -58,21 +65,6 @@ impl Database {
             pool: pool,
             settings: Settings::default(),
         })
-    }
-
-    // pub async fn create_settings(&mut self, folder: String) -> anyhow::Result<Settings> {
-    //     let res = sqlx::query_as::<_, Settings>(
-    //         "insert into settings (base_path) values ($1) returning *",
-    //     )
-    //     .bind(folder)
-    //     .fetch_one(&mut self.pool)
-    //     .await?;
-
-    //     Ok(res)
-    // }
-
-    pub fn get_home(&self) -> Option<String> {
-        return self.settings.base_path.clone();
     }
 }
 
