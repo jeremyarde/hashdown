@@ -19,9 +19,9 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 // use crate::answer::post_answer;
 use crate::{
-    answer::post_answers,
-    db::Database,
-    survey::{create_survey, create_survey_form, get_survey, list_survey},
+    db::db::answer::post_answers,
+    db::db::models::survey::{create_survey, create_survey_form, get_survey, list_survey},
+    db::db::Database,
     ServerState,
 };
 // use tower_http::trace::TraceLayer;

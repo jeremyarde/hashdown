@@ -13,12 +13,12 @@ use tokio::try_join;
 // use tower::http
 
 use crate::server::ServerApplication;
-mod answer;
+// mod answer;
 // mod db;
 mod server;
-mod survey;
+// mod survey;
 use anyhow;
-use db::{self, Database};
+use db::db::Database;
 use markdownparser;
 
 #[derive(Debug, Clone)]
@@ -59,16 +59,13 @@ async fn main() -> anyhow::Result<()> {
 mod tests {
     use std::collections::HashMap;
 
+    use db::models::{AnswerDetails, AnswerType, CreateAnswersRequest, CreateSurveyResponse};
     use reqwest::StatusCode;
 
     use serial_test::serial;
     use tower::ServiceExt;
 
-    use crate::{
-        answer::{AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse},
-        survey::{CreateSurveyRequest, CreateSurveyResponse, ListSurveyResponse},
-        ServerApplication,
-    };
+    use crate::ServerApplication;
 
     #[serial]
     #[tokio::test]
@@ -95,7 +92,7 @@ mod tests {
 
         let response = client
             .post(&client_url)
-            .json(&CreateSurveyRequest {
+            .json(&db::models::CreateSurveyRequest {
                 plaintext: "- another\n - this one".to_string(),
             })
             .send()
@@ -189,7 +186,8 @@ mod tests {
                     .collect(),
             },
         );
-        let answers_request = CreateAnswersRequest {
+        let answers_request = db::models::CreateAnswersRequest {
+            id: "test".to_string(),
             survey_id: listresults.surveys[0].id.clone(),
             start_time: "".to_string(),
             answers: answers,

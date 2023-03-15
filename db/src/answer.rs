@@ -6,10 +6,11 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use markdownparser::{nanoid_gen};
+use db::models::{CreateAnswersModel, CreateAnswersRequest};
+use markdownparser::nanoid_gen;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use sqlx::FromRow;
+// use sqlx::FromRow;
 
 use crate::ServerState;
 
@@ -21,11 +22,7 @@ use crate::ServerState;
 //     (StatusCode::CREATED, ())
 // }
 
-
-
-
-
-
+use crate::db;
 
 #[axum::debug_handler]
 pub async fn post_answers(
@@ -41,7 +38,6 @@ pub async fn post_answers(
     println!("exists: {exists:?}");
 
     let create_answer_model = CreateAnswersModel::from(payload);
-
 
     // Create a survey
     let res = sqlx::query_as::<_, CreateAnswersModel>(
@@ -59,11 +55,6 @@ pub async fn post_answers(
     .fetch_one(&state.db.pool)
     .await
     .unwrap();
-
-
-
-
-
 
     let answers: HashMap<String, AnswerDetails> = serde_json::from_str(&res.answers).unwrap();
     let response = CreateAnswersResponse {
