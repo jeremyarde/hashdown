@@ -1,12 +1,12 @@
 use wasm_bindgen::prelude::*;
 
-use anyhow::{anyhow, Result};
+
 
 // use nanoid::nanoid;
 use getrandom::getrandom;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use tracing::info;
+
 
 
 
@@ -197,7 +197,7 @@ impl Questions {
 pub fn parse_markdown_blocks(markdown: String) -> Questions {
     // let markdown = include_str!("../test_file.md").to_string();
     let questions = Regex::new(r"(?m)^(\d). (.*)$").unwrap();
-    let locations = questions.captures_iter(&markdown);
+    let _locations = questions.captures_iter(&markdown);
     // for x in locations {
     //     println!("{:#?}", x);
     // }
@@ -216,7 +216,7 @@ pub fn parse_markdown_blocks(markdown: String) -> Questions {
     };
 
     loop {
-        let mut q_num = format!("{}. ", current);
+        let q_num = format!("{}. ", current);
         println!("{}", currline);
         // Is a question
         if currline.starts_with(q_num.as_str()) {
@@ -281,9 +281,9 @@ pub fn parse_markdown_v3(contents: String) -> Survey {
     let mut questions = vec![];
     let mut curr_question_text: &str = "";
     let mut curr_options: Vec<&str> = vec![];
-    let mut in_question = false;
+    let _in_question = false;
     let mut last_line_type: LineType = LineType::Nothing;
-    let mut question_num = 0;
+    let _question_num = 0;
 
     for line in contents.lines() {
         // println!("Curr line: {line}");

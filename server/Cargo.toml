@@ -27,6 +27,11 @@ ts-rs = "6.2.1"
 oauth2 = "4.3.0"
 askama = { version = "0.12.0", features = ["with-axum", "mime", "mime_guess"] }
 askama_axum = "0.3.0"
+sqlx = { version = "0.7.0-alpha.1", features = [
+    "runtime-tokio",
+    "tls-rustls",
+    "sqlite",
+] }
 # hyper = "0.14.24"
 
 

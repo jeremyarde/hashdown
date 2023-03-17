@@ -1,107 +1,77 @@
-use axum::extract::{self, State};
-use axum::response::IntoResponse;
+// use axum::extract::{self, State};
+// use axum::response::IntoResponse;
 
-use db::models::{CreateSurveyRequest, CreateSurveyResponse};
-use markdownparser::parse_markdown_v3;
+// use db::models::{CreateSurveyRequest, CreateSurveyResponse};
+// use markdownparser::parse_markdown_v3;
 
-use crate::ServerState;
+// use crate::ServerState;
 
-#[axum::debug_handler]
-pub async fn create_survey(
-    State(state): State<ServerState>,
-    extract::Json(payload): extract::Json<CreateSurveyRequest>,
-) -> impl IntoResponse {
-    let survey = parse_markdown_v3(payload.plaintext.clone());
-    // let survey = Survey::from(payload.plaintext.clone());
-    let response_survey = survey.clone();
+// use std::collections::HashMap;
 
-    let res: SurveyModel = sqlx::query_as::<_, SurveyModel>(
-        "insert into surveys (id, plaintext, user_id, created_at, modified_at, version, parse_version) 
-        values 
-        ($1, $2, $3, $4, $5, $6, $7)
-        returning *",
-    )
-    .bind(response_survey.id.clone())
-    .bind(payload.plaintext)
-    .bind(survey.user_id)
-    .bind(survey.created_at)
-    .bind(survey.modified_at)
-    // .bind(json!({"questions": survey.questions}))
-    .bind(survey.version)
-    .bind(survey.parse_version).fetch_one(&state.db.pool)
-    .await
-    .unwrap();
+// use axum::{
+//     extract::{self, State},
+//     http::StatusCode,
+//     response::IntoResponse,
+//     Json,
+// };
+// use db::models::{CreateAnswersModel, CreateAnswersRequest};
+// use markdownparser::nanoid_gen;
+// use serde::{Deserialize, Serialize};
+// use serde_json::json;
+// // use sqlx::FromRow;
 
-    let response = CreateSurveyResponse {
-        survey: Survey::from(response_survey),
-        metadata: res,
-    };
+// use crate::ServerState;
 
-    (StatusCode::CREATED, Json(response))
-}
+// // #[axum::debug_handler]
+// // pub async fn post_answer(
+// //     State(state): State<ServerState>,
+// //     extract::Json(payload): extract::Json<CreateAnswers>,
+// // ) -> impl IntoResponse {
+// //     (StatusCode::CREATED, ())
+// // }
 
-#[axum::debug_handler]
-pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse {
-    let pool = state.db.pool;
+// use crate::db;
 
-    let count: i64 = sqlx::query_scalar("select count(id) from surveys")
-        .fetch_one(&pool)
-        .await
-        .map_err(internal_error)
-        .unwrap();
-    println!("Survey count: {count:#?}");
+// #[axum::debug_handler]
+// pub async fn post_answers(
+//     State(state): State<ServerState>,
+//     extract::Json(payload): extract::Json<CreateAnswersRequest>,
+// ) -> impl IntoResponse {
+//     // Check for survey existence
+//     let exists = sqlx::query("select (id) from surveys as s where s.id = $1")
+//         .bind(payload.survey_id.clone())
+//         .execute(&state.db.pool)
+//         .await
+//         .unwrap();
+//     println!("exists: {exists:?}");
 
-    let res: Vec<SurveyModel> = sqlx::query_as::<_, SurveyModel>("select * from surveys")
-        .fetch_all(&pool)
-        .await
-        .unwrap();
+//     let create_answer_model = CreateAnswersModel::from(payload);
 
-    let surveys = res.iter().map(|x| SurveyModel::to_survey(x)).collect();
+//     // Create a survey
+//     let res = sqlx::query_as::<_, CreateAnswersModel>(
+//         "insert into answers (id, survey_id, survey_version, start_time, end_time, answers)
+//             values
+//             ($1, $2, $3, $4, $5, $6)
+//             returning *",
+//     )
+//     .bind(create_answer_model.id)
+//     .bind(create_answer_model.survey_id)
+//     .bind(create_answer_model.survey_version)
+//     .bind(create_answer_model.start_time)
+//     .bind(create_answer_model.end_time)
+//     .bind(json!(create_answer_model.answers).as_str())
+//     .fetch_one(&state.db.pool)
+//     .await
+//     .unwrap();
 
-    // json!({ "surveys": res });
+//     let answers: HashMap<String, AnswerDetails> = serde_json::from_str(&res.answers).unwrap();
+//     let response = CreateAnswersResponse {
+//         id: res.id,
+//         survey_id: res.survey_id,
+//         survey_version: res.survey_version,
+//         start_time: res.start_time,
+//         answers: answers,
+//     };
 
-    println!("Survey: {res:#?}");
-    let listresp = ListSurveyResponse { surveys: surveys };
-
-    // (StatusCode::OK, Json(json!({ "surveys": res })))
-    (StatusCode::OK, Json(listresp))
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct ListSurveyResponse {
-    pub surveys: Vec<Survey>,
-}
-
-#[axum::debug_handler]
-pub async fn get_survey(
-    State(state): State<ServerState>,
-    Path(survey_id): Path<String>,
-) -> impl IntoResponse {
-    let pool = state.db.pool;
-
-    let count: i64 = sqlx::query_scalar("select count(id) from surveys")
-        .fetch_one(&pool)
-        .await
-        .map_err(internal_error)
-        .unwrap();
-    println!("Survey count: {count:#?}");
-
-    let res = sqlx::query_as::<_, SurveyModel>("select * from surveys as s where s.id = $1")
-        .bind(survey_id)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
-
-    println!("Survey: {res:#?}");
-    let resp_survey = parse_markdown_v3(res.plaintext.clone());
-    let response = CreateSurveyResponse {
-        survey: resp_survey,
-        metadata: res,
-    };
-
-    let template = FormTemplate {
-        survey_id: response.survey.id,
-    };
-
-    return (StatusCode::OK, template);
-}
+//     (StatusCode::CREATED, Json(response))
+// }

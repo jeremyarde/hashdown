@@ -21,7 +21,6 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 // use crate::answer::post_answer;
 use crate::ServerState;
 
-use self::handlers::{create_survey, get_survey, list_survey};
 // use tower_http::trace::TraceLayer;
 // use tower::http
 pub struct ServerApplication {
@@ -53,12 +52,13 @@ impl ServerApplication {
 
         // build our application with a route
         let app: Router = Router::new()
-            .route("/surveys/new", get(create_survey_form))
-            .route(&format!("/surveys"), post(create_survey).get(list_survey))
-            .route("/surveys/:id", get(get_survey).post(post_answers))
-            .route("/surveys/:id/answers", post(post_answers))
+            .merge(survey::get_router())
+            // .route("/surveys/new", get(create_survey_form))
+            // .route(&format!("/surveys"), post(create_survey).get(list_survey))
+            // .route("/surveys/:id", get(get_survey).post(post_answers))
+            // .route("/surveys/:id/answers", post(post_answers))
             // .layer(Extension(state))
-            .route("/template", get(post_answers))
+            // .route("/template", get(post_answers))
             .route("/", get(hello))
             .with_state(state)
             .layer(corslayer)

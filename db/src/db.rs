@@ -68,6 +68,11 @@ impl Database {
     }
 }
 
+
+trait API {
+    
+}
+
 #[cfg(test)]
 mod tests {
     // use dotenvy::dotenv;
