@@ -14,16 +14,7 @@ use ts_rs::TS;
 
 use crate::{internal_error, ServerState};
 
-// #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
-// pub struct Survey {
-//     pub id: String,
-//     // nanoid: String,
-//     pub plaintext: String,
-//     // user_id: String,
-//     // created_at: String,
-//     // modified_at: String,
-//     // version: String,
-// }
+
 
 // impl Survey {
 //     pub fn from(text: String) -> Survey {
@@ -171,10 +162,6 @@ pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse 
     (StatusCode::OK, Json(listresp))
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct ListSurveyResponse {
-    pub surveys: Vec<Survey>,
-}
 
 #[axum::debug_handler]
 pub async fn get_survey(

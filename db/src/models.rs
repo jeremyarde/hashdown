@@ -2,6 +2,7 @@
 use rand::{thread_rng, Rng};
 use serde::{self, Deserialize, Serialize};
 use serde_json::json;
+use sqlx::FromRow;
 use std::collections::HashMap;
 const NANOID_LEN: usize = 12;
 
@@ -79,6 +80,22 @@ pub struct CreateAnswersResponse {
     answers: HashMap<String, AnswerDetails>,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ListSurveyResponse {
+    pub surveys: Vec<Survey>,
+}
+
+#[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
+pub struct Survey {
+    pub id: String,
+    // nanoid: String,
+    pub plaintext: String,
+    // user_id: String,
+    // created_at: String,
+    // modified_at: String,
+    // version: String,
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateSurveyRequest {
     plaintext: String,
@@ -86,7 +103,7 @@ pub struct CreateSurveyRequest {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateSurveyResponse {
-    survey: Survey,
+    pub survey: Survey,
 }
 
 #[cfg(test)]

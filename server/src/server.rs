@@ -5,6 +5,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use db::db::Database;
 use oauth2::basic::BasicClient;
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
@@ -18,12 +19,7 @@ use std::net::SocketAddr;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 // use crate::answer::post_answer;
-use crate::{
-    db::db::answer::post_answers,
-    db::db::models::survey::{create_survey, create_survey_form, get_survey, list_survey},
-    db::db::Database,
-    ServerState,
-};
+use crate::ServerState;
 // use tower_http::trace::TraceLayer;
 // use tower::http
 pub struct ServerApplication {
@@ -78,9 +74,7 @@ impl ServerApplication {
                 tracing_subscriber::EnvFilter::try_from_default_env()
                     .unwrap_or_else(|_| "tower_http=debug".into()),
             )
-            .with(tracing_subscriber::fmt::layer())
-            .try_init()
-            .unwrap();
+            .with(tracing_subscriber::fmt::layer());
 
         let app = ServerApplication::get_router(test).await;
 

@@ -59,7 +59,11 @@ async fn main() -> anyhow::Result<()> {
 mod tests {
     use std::collections::HashMap;
 
-    use db::models::{AnswerDetails, AnswerType, CreateAnswersRequest, CreateSurveyResponse};
+    use db::models::{
+        AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse,
+        CreateSurveyRequest, CreateSurveyResponse, ListSurveyResponse,
+    };
+    use markdownparser::{markdown_to_form, markdown_to_form_wasm};
     use reqwest::StatusCode;
 
     use serial_test::serial;
@@ -175,11 +179,14 @@ mod tests {
         assert_eq!(listresults.surveys[0].plaintext, "- another\n - this one");
 
         let mut answers = HashMap::new();
+
+        let actualsurvey = markdown_to_form(results.survey.plaintext);
+
         answers.insert(
-            listresults.surveys[0].questions[0].id.clone(),
+            actualsurvey.questions[0].id.clone(),
             AnswerDetails {
                 r#type: AnswerType::String,
-                values: listresults.surveys[0].questions[0]
+                values: actualsurvey.questions[0]
                     .options
                     .iter()
                     .map(|x| x.text.clone())
@@ -191,13 +198,13 @@ mod tests {
             survey_id: listresults.surveys[0].id.clone(),
             start_time: "".to_string(),
             answers: answers,
-            survey_version: listresults.surveys[0].version.clone(),
+            survey_version: actualsurvey.version.clone(),
         };
 
         let response = client
             .post(format!(
                 "{client_url}/{}/answers",
-                listresults.surveys[0].questions[0].id.clone()
+                actualsurvey.questions[0].id.clone()
             ))
             .json(&answers_request)
             .send()
