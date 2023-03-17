@@ -20,6 +20,8 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 // use crate::answer::post_answer;
 use crate::ServerState;
+
+use self::handlers::{create_survey, get_survey, list_survey};
 // use tower_http::trace::TraceLayer;
 // use tower::http
 pub struct ServerApplication {
@@ -31,6 +33,9 @@ pub struct ServerApplication {
 async fn hello() -> impl IntoResponse {
     return "Yo this is great";
 }
+
+mod handlers;
+// use handlers;
 
 impl ServerApplication {
     pub async fn get_router(_test: bool) -> Router {
