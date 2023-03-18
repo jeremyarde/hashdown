@@ -10,6 +10,7 @@ use oauth2::basic::BasicClient;
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
 
+use sqlx::FromRow;
 use tokio::task::JoinHandle;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 // use uuid::Uuid;
@@ -19,7 +20,7 @@ use std::net::SocketAddr;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 // use crate::answer::post_answer;
-use crate::ServerState;
+use crate::{internal_error, ServerState};
 
 // use tower_http::trace::TraceLayer;
 // use tower::http
@@ -49,7 +50,8 @@ impl ServerApplication {
 
         // build our application with a route
         let app: Router = Router::new()
-            .merge(survey::get_router())
+            // .merge(setup_routes())
+            .route(&format!("/surveys"), post(create_survey).get(list_survey))
             // .route("/surveys/new", get(create_survey_form))
             // .route(&format!("/surveys"), post(create_survey).get(list_survey))
             // .route("/surveys/:id", get(get_survey).post(post_answers))
@@ -145,7 +147,6 @@ pub async fn create_survey(
         "insert into surveys (id, plaintext, user_id, created_at, modified_at, version, parse_version) 
         values 
         ($1, $2, $3, $4, $5, $6, $7)
-        // returning * 
         ",
     )
     .bind(response_survey.id.clone())
@@ -161,7 +162,7 @@ pub async fn create_survey(
 
     let response = CreateSurveyResponse {
         survey: Survey::from(response_survey),
-        metadata: res,
+        // metadata: res,
     };
 
     (StatusCode::CREATED, Json(response))
@@ -223,7 +224,7 @@ pub async fn get_survey(
     let resp_survey = parse_markdown_v3(res.plaintext.clone());
     let response = CreateSurveyResponse {
         survey: resp_survey,
-        metadata: res,
+        // metadata: res,
     };
 
     let template = FormTemplate {
@@ -233,28 +234,16 @@ pub async fn get_survey(
     return (StatusCode::OK, template);
 }
 
-fn setup_routes() {
-    let router: Router = Router::new()
-        // .route("/surveys/new", get(create_survey_form))
-        .route(&format!("/surveys"), post(create_survey).get(list_survey));
-    return router;
-}
-
-#[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
-pub struct Survey {
-    pub id: String,
-    // nanoid: String,
-    pub plaintext: String,
-    // user_id: String,
-    // created_at: String,
-    // modified_at: String,
-    // version: String,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct ListSurveyResponse {
-    pub surveys: Vec<Survey>,
-}
+// #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
+// pub struct Survey {
+//     pub id: String,
+//     nanoid: String,
+//     pub plaintext: String,
+//     user_id: String,
+//     created_at: String,
+//     modified_at: String,
+//     version: String,
+// }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateSurveyRequest {
@@ -268,11 +257,9 @@ pub struct CreateSurveyResponse {
 
 use std::collections::HashMap;
 
-use askama::Template;
 use axum::{
     extract::{self, Path, State},
     http::StatusCode,
-    response::IntoResponse,
     Json,
 };
 use markdownparser::{markdown_to_form, parse_markdown_v3, Survey};
@@ -280,9 +267,7 @@ use serde::{Deserialize, Serialize};
 
 // use ts_rs::TS;
 
-use crate::answer;
-use crate::survey;
-use crate::{internal_error, ServerState};
+// use crate::{internal_error, ServerState};
 
 // #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
 // pub struct Survey {
@@ -366,18 +351,6 @@ pub struct AnswerRequest {
 struct Answer {
     form_id: String,
     value: String,
-}
-
-#[derive(Deserialize, Serialize, sqlx::FromRow, Debug, PartialEq, Eq, TS)]
-#[ts(export)]
-pub struct CreateSurveyRequest {
-    pub plaintext: String,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct CreateSurveyResponse {
-    pub survey: Survey,
-    pub metadata: SurveyModel,
 }
 
 #[derive(Template)]
