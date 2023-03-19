@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 markdownparser = { path = "../backend" }
 db = { path = "../db" }
+ui = { path = "../ui" }
 
 tower-http = { version = "0.3.5", features = ["full"] }
 anyhow = "1.0.68"

@@ -43,7 +43,7 @@ where
 async fn main() -> anyhow::Result<()> {
     // tracing_subscriber::fmt::init();
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::TRACE)
+        .with_max_level(tracing::Level::INFO)
         .init();
 
     println!("{:?}", std::env::current_dir());

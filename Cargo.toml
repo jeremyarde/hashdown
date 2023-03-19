@@ -4,6 +4,7 @@ members = [
     # "ui", 
     "server",
     "db",
+    "ui",
 ]
 
 resolver = "2"

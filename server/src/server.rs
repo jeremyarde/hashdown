@@ -1,12 +1,13 @@
 use askama::Template;
 use axum::{
     http::{self, HeaderValue, Method},
-    response::IntoResponse,
+    response::{Html, IntoResponse},
     routing::{get, post},
     Router,
 };
 use db::db::Database;
 use oauth2::basic::BasicClient;
+use ui::mainapp;
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
 
@@ -33,6 +34,10 @@ async fn hello() -> impl IntoResponse {
     return "Yo this is great";
 }
 
+async fn uiapp() -> impl IntoResponse {
+    Html(mainapp::server_side())
+}
+
 impl ServerApplication {
     pub async fn get_router() -> Router {
         let db = Database::new(true).await.unwrap();
@@ -52,12 +57,13 @@ impl ServerApplication {
             // .merge(setup_routes())
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             // .route("/surveys/new", get(create_survey_form))
+            // .route("/surveys/new", get())
             // .route(&format!("/surveys"), post(create_survey).get(list_survey))
             // .route("/surveys/:id", get(get_survey).post(post_answers))
             // .route("/surveys/:id/answers", post(post_answers))
             // .layer(Extension(state))
             // .route("/template", get(post_answers))
-            .route("/", get(hello))
+            .route("/", get(uiapp))
             .with_state(state)
             .layer(corslayer)
             .layer(TraceLayer::new_for_http());
