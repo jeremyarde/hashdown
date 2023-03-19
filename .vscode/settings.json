@@ -19,5 +19,13 @@
         "strings": true
     },
     "css.validate": false,
-    "rust-analyzer.cargo.loadOutDirsFromCheck": true
+    "rust-analyzer.cargo.loadOutDirsFromCheck": true,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "database": "${workspaceFolder:markdownparser}/server/surveyapp.sqlite",
+            "name": "database"
+        }
+    ]
 }

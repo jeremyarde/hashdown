@@ -15,7 +15,7 @@ use tokio::task::JoinHandle;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
-use std::net::SocketAddr;
+use std::{net::SocketAddr, time};
 // use tower_http::http::cors::CorsLayer;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
@@ -133,6 +133,7 @@ impl ServerApplication {
 //     )
 //     .set_redirect_uri(RedirectUrl::new(redirect_url).unwrap())
 // }
+use chrono::{offset::Utc, DateTime};
 
 #[axum::debug_handler]
 pub async fn create_survey(
@@ -142,23 +143,21 @@ pub async fn create_survey(
     let survey = parse_markdown_v3(payload.plaintext.clone());
     // let survey = Survey::from(payload.plaintext.clone());
     let response_survey = survey.clone();
-
+    let now = chrono::offset::Utc::now();
+    let nowstr = now.to_string();
     let res = sqlx::query!(
-        "insert into surveys (id, plaintext, user_id, created_at, modified_at, version, parse_version) 
+        r#"insert into surveys (id, plaintext, user_id, created_at, modified_at, version, parse_version)
         values 
         ($1, $2, $3, $4, $5, $6, $7)
-        ",
-    )
-    .bind(response_survey.id.clone())
-    .bind(payload.plaintext)
-    .bind(survey.user_id)
-    .bind(survey.created_at)
-    .bind(survey.modified_at)
-    // .bind(json!({"questions": survey.questions}))
-    .bind(survey.version)
-    .bind(survey.parse_version).fetch_one(&state.db.pool)
-    .await
-    .unwrap();
+        "#,
+        response_survey.id,
+        payload.plaintext,
+        survey.user_id,
+        survey.created_at,
+        survey.modified_at,
+        "1",
+        nowstr
+    );
 
     let response = CreateSurveyResponse {
         survey: Survey::from(response_survey),

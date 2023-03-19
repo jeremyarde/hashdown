@@ -59,10 +59,7 @@ async fn main() -> anyhow::Result<()> {
 mod tests {
     use std::collections::HashMap;
 
-    use db::models::{
-        AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse,
-        CreateSurveyRequest, CreateSurveyResponse, ListSurveyResponse,
-    };
+    use db::models::{AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse};
     use markdownparser::{markdown_to_form, markdown_to_form_wasm};
     use reqwest::StatusCode;
 
@@ -96,7 +93,7 @@ mod tests {
 
         let response = client
             .post(&client_url)
-            .json(&db::models::CreateSurveyRequest {
+            .json(&CreateSurveyRequest {
                 plaintext: "- another\n - this one".to_string(),
             })
             .send()

@@ -51,7 +51,7 @@ impl CreateAnswersModel {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateAnswersRequest {
-    id: String,
+    pub id: String,
     pub survey_id: String,
     pub survey_version: String,
     pub start_time: String,
@@ -79,7 +79,6 @@ pub struct CreateAnswersResponse {
     start_time: String,
     answers: HashMap<String, AnswerDetails>,
 }
-
 
 #[cfg(test)]
 mod tests {
