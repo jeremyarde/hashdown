@@ -10,12 +10,11 @@ use oauth2::basic::BasicClient;
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
 
-use sqlx::FromRow;
 use tokio::task::JoinHandle;
-use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
+use tracing::log::info;
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
-use std::{net::SocketAddr, time};
+use std::net::SocketAddr;
 // use tower_http::http::cors::CorsLayer;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
@@ -35,7 +34,7 @@ async fn hello() -> impl IntoResponse {
 }
 
 impl ServerApplication {
-    pub async fn get_router(_test: bool) -> Router {
+    pub async fn get_router() -> Router {
         let db = Database::new(true).await.unwrap();
         // let ormdb = SqliteConnection::connect(":memory:").await?;
         // let state = Arc::new(ServerState { db: db });
@@ -66,32 +65,33 @@ impl ServerApplication {
         return app;
     }
 
-    pub async fn new(test: bool) -> ServerApplication {
+    pub async fn new() -> ServerApplication {
         // const V1: &str = "v1";
 
-        dotenvy::from_filename("dev.env").ok();
+        // dotenvy::from_filename("dev.env").ok();
         // initialize tracing
         // tracing_subscriber::fmt::init();
 
-        tracing_subscriber::registry()
-            .with(
-                tracing_subscriber::EnvFilter::try_from_default_env()
-                    .unwrap_or_else(|_| "tower_http=debug".into()),
-            )
-            .with(tracing_subscriber::fmt::layer());
+        // tracing_subscriber::registry()
+        //     .with(
+        //         tracing_subscriber::EnvFilter::try_from_default_env()
+        //             .unwrap_or_else(|_| "tower_http=debug".into()),
+        //     )
+        //     .with(tracing_subscriber::fmt::layer());
 
-        let app = ServerApplication::get_router(test).await;
+        let app = ServerApplication::get_router().await;
 
         // let app = configure_app().await;
         let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
         tracing::debug!("listening on {}", addr);
 
         let server = tokio::spawn(async move {
-            println!("Server address: {addr}");
+            info!("Server address: {addr}");
             axum::Server::bind(&addr)
                 .serve(app.into_make_service())
-                .await;
-            println!("after axum.");
+                .await
+                .unwrap();
+            info!("after axum.");
         });
         // let oauth_client = oauth_client();
 
@@ -133,11 +133,10 @@ impl ServerApplication {
 //     )
 //     .set_redirect_uri(RedirectUrl::new(redirect_url).unwrap())
 // }
-use chrono::{offset::Utc, DateTime};
 
 #[axum::debug_handler]
 pub async fn create_survey(
-    State(state): State<ServerState>,
+    State(_state): State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> impl IntoResponse {
     let survey = parse_markdown_v3(payload.plaintext.clone());
@@ -145,7 +144,7 @@ pub async fn create_survey(
     let response_survey = survey.clone();
     let now = chrono::offset::Utc::now();
     let nowstr = now.to_string();
-    let res = sqlx::query!(
+    let _res = sqlx::query!(
         r#"insert into surveys (id, plaintext, user_id, created_at, modified_at, version, parse_version)
         values 
         ($1, $2, $3, $4, $5, $6, $7)
@@ -171,7 +170,7 @@ pub async fn create_survey(
 pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse {
     let pool = state.db.pool;
 
-    let count: i64 = sqlx::query_scalar("select count(id) from surveys")
+    let count: i64 = sqlx::query_scalar("select count(*) from surveys")
         .fetch_one(&pool)
         .await
         .map_err(internal_error)
@@ -359,7 +358,7 @@ struct FormTemplate {
 }
 
 pub async fn get_form(
-    State(state): State<ServerState>,
+    State(_state): State<ServerState>,
     Path(survey_id): Path<String>,
 ) -> FormTemplate {
     FormTemplate {
@@ -374,6 +373,6 @@ struct CreateSurveyTemplate {
 }
 
 #[axum::debug_handler]
-pub async fn create_survey_form(State(state): State<ServerState>) -> impl IntoResponse {
+pub async fn create_survey_form(State(_state): State<ServerState>) -> impl IntoResponse {
     CreateSurveyTemplate {}
 }

@@ -1,9 +1,14 @@
+use std::str::FromStr;
+
 use anyhow;
 
 // use models::CreateAnswersModel;
 // use chrono::Local;
-use sqlx::{sqlite::SqliteConnectOptions, SqlitePool};
-use tracing::info;
+use sqlx::{
+    sqlite::{SqliteConnectOptions, SqliteJournalMode},
+    ConnectOptions, SqliteConnection, SqlitePool,
+};
+use tracing::{info, instrument};
 
 // mod models;
 
@@ -31,26 +36,39 @@ impl Settings {
 // pub type InsertTodosRequest = Vec<todo::TodoModel>;
 
 impl Database {
-    pub async fn test() {
-        // CreateAnswersModel;
-    }
-
+    #[instrument]
     pub async fn new(in_memory: bool) -> anyhow::Result<Self> {
         let database_url = dotenvy::var("DATABASE_URL")?;
 
-        let pool = match in_memory {
+        let mut pool = match in_memory {
             true => {
                 info!("Creating in-memory database");
-                SqlitePool::connect("sqlite::memory:").await?
+
+                let conn = SqliteConnectOptions::from_str("sqlite::memory:")?
+                    .journal_mode(SqliteJournalMode::Wal)
+                    .read_only(false)
+                    .create_if_missing(true);
+                SqlitePool::connect_with(conn).await?
+
+                // let connection_options = SqliteConnectOptions::new()
+                //     .create_if_missing(true)
+                //     // .filename("~/Library/todowatcher_data.db"); // maybe try to save state in a common location
+                //     .filename(database_url);
                 // PgPool::connect(&database_url).await?
             }
             false => {
                 info!("Creating new database");
-                let connection_options = SqliteConnectOptions::new()
-                    .create_if_missing(true)
-                    // .filename("~/Library/todowatcher_data.db"); // maybe try to save state in a common location
-                    .filename(database_url);
-                SqlitePool::connect_with(connection_options).await?
+                let conn = SqliteConnectOptions::from_str(database_url.as_str())?
+                    .journal_mode(SqliteJournalMode::Wal)
+                    .read_only(false)
+                    .create_if_missing(true);
+                SqlitePool::connect_with(conn).await?
+
+                // let connection_options = SqliteConnectOptions::new()
+                //     .create_if_missing(true)
+                //     // .filename("~/Library/todowatcher_data.db"); // maybe try to save state in a common location
+                //     .filename(database_url);
+                // SqlitePool::connect_with(connection_options).await?
                 // PgPool::connect(&database_url).await?
             }
         };
@@ -66,11 +84,6 @@ impl Database {
             settings: Settings::default(),
         })
     }
-}
-
-
-trait API {
-    
 }
 
 #[cfg(test)]

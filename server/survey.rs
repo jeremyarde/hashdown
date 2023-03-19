@@ -102,6 +102,7 @@ pub struct CreateSurveyResponse {
 }
 
 #[axum::debug_handler]
+#[instrument]
 pub async fn create_survey(
     State(state): State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
@@ -136,6 +137,7 @@ pub async fn create_survey(
 }
 
 #[axum::debug_handler]
+#[instrument]
 pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse {
     let pool = state.db.pool;
 
@@ -164,6 +166,7 @@ pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse 
 
 
 #[axum::debug_handler]
+#[instrument]
 pub async fn get_survey(
     State(state): State<ServerState>,
     Path(survey_id): Path<String>,
@@ -203,6 +206,7 @@ struct FormTemplate {
     survey_id: String,
 }
 
+#[instrument]
 pub async fn get_form(
     State(state): State<ServerState>,
     Path(survey_id): Path<String>,
@@ -219,6 +223,7 @@ struct CreateSurveyTemplate {
 }
 
 #[axum::debug_handler]
+#[instrument]
 pub async fn create_survey_form(State(state): State<ServerState>) -> impl IntoResponse {
     CreateSurveyTemplate {}
 }
