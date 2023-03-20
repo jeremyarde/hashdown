@@ -1,14 +1,10 @@
-use wasm_bindgen::prelude::*;
+// use wasm_bindgen::prelude::*;
 
-
-
+use rand::{thread_rng, Rng};
 // use nanoid::nanoid;
-use getrandom::getrandom;
+// use getrandom::getrandom;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-
-
-
 
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hasher};
@@ -16,7 +12,6 @@ use std::hash::{BuildHasher, Hasher};
 fn rand64() -> u64 {
     RandomState::new().build_hasher().finish()
 }
-
 
 const NANOID_LEN: usize = 12;
 // const NANOID_ALPHA: [char; 36] = [
@@ -28,27 +23,33 @@ const NANOID_ALPHA: [char; 34] = [
     'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-#[wasm_bindgen]
-pub fn nanoid_gen(size: usize) -> String {
-    let mask = NANOID_ALPHA.len().next_power_of_two() - 1;
-
-    let mut res = String::new();
-    let mut random: [u8; 32] = [0; 32];
-
-    loop {
-        getrandom(&mut random).unwrap();
-
-        for &byte in random.iter() {
-            let masked = byte as usize & mask;
-            if masked < NANOID_ALPHA.len() {
-                res.push(NANOID_ALPHA[masked]);
-            }
-            if res.len() == size {
-                return res;
-            }
-        }
-    }
+pub fn nanoid_gen() -> String {
+    let random =
+        [(); NANOID_LEN].map(|_| NANOID_ALPHA[thread_rng().gen_range(0..NANOID_ALPHA.len())]);
+    return String::from_iter(random.iter());
 }
+
+// #[wasm_bindgen]
+// pub fn nanoid_gen(size: usize) -> String {
+//     let mask = NANOID_ALPHA.len().next_power_of_two() - 1;
+
+//     let mut res = String::new();
+//     let mut random: [u8; 32] = [0; 32];
+
+//     loop {
+//         getrandom(&mut random).unwrap();
+
+//         for &byte in random.iter() {
+//             let masked = byte as usize & mask;
+//             if masked < NANOID_ALPHA.len() {
+//                 res.push(NANOID_ALPHA[masked]);
+//             }
+//             if res.len() == size {
+//                 return res;
+//             }
+//         }
+//     }
+// }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Survey {
@@ -79,7 +80,7 @@ pub struct QuestionOption {
     pub text: String,
 }
 
-#[wasm_bindgen]
+// #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum QuestionType {
     Radio,
@@ -91,12 +92,12 @@ impl Question {
     fn from(q_text: &str, options: Vec<&str>) -> Self {
         return Question {
             // id: nanoid!(NANOID_LEN, &NANOID_ALPHA, random),
-            id: nanoid_gen(NANOID_LEN),
+            id: nanoid_gen(),
             value: Question::parse_question_text(q_text).to_string(),
             options: options
                 .iter()
                 .map(|&o| QuestionOption {
-                    id: nanoid_gen(NANOID_LEN),
+                    id: nanoid_gen(),
                     text: Question::parse_question_text(o).to_string(),
                 })
                 .collect(),
@@ -173,7 +174,7 @@ struct Answer {
     answer: String,
 }
 
-#[wasm_bindgen]
+// #[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub enum Types {
     checkbox,
@@ -187,7 +188,7 @@ pub struct Questions {
     pub qs: Vec<Question>,
 }
 
-#[wasm_bindgen]
+// #[wasm_bindgen]
 impl Questions {
     fn new() -> Self {
         Questions { qs: vec![] }
@@ -269,12 +270,12 @@ pub fn markdown_to_form(contents: String) -> Survey {
     return survey;
 }
 
-#[wasm_bindgen]
-pub fn markdown_to_form_wasm(contents: String) -> JsValue {
-    let survey = parse_markdown_v3(contents);
+// #[wasm_bindgen]
+// pub fn markdown_to_form_wasm(contents: String) -> JsValue {
+//     let survey = parse_markdown_v3(contents);
 
-    return serde_wasm_bindgen::to_value(&survey).unwrap();
-}
+//     return serde_wasm_bindgen::to_value(&survey).unwrap();
+// }
 
 pub fn parse_markdown_v3(contents: String) -> Survey {
     // let mut questions = Questions::new();
@@ -333,7 +334,7 @@ pub fn parse_markdown_v3(contents: String) -> Survey {
     // };
 
     let survey = Survey {
-        id: nanoid_gen(NANOID_LEN),
+        id: nanoid_gen(),
         plaintext: contents,
         user_id: "".to_string(),
         created_at: "".to_string(),
@@ -418,7 +419,7 @@ mod tests {
 
     #[test]
     fn test_nanoid_gen() {
-        let nanoid = nanoid_gen(10);
+        let nanoid = nanoid_gen();
         println!("nanoid: {nanoid:?}");
     }
 
