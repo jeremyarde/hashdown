@@ -7,6 +7,7 @@ use axum::{
 };
 use db::db::Database;
 use oauth2::basic::BasicClient;
+use sqlx::FromRow;
 use ui::mainapp;
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
@@ -30,12 +31,9 @@ pub struct ServerApplication {
     pub oauth_client: Option<BasicClient>,
 }
 
-async fn hello() -> impl IntoResponse {
-    return "Yo this is great";
-}
-
 async fn uiapp() -> impl IntoResponse {
     Html(mainapp::server_side())
+    // Html("This is great")
 }
 
 impl ServerApplication {
@@ -63,7 +61,7 @@ impl ServerApplication {
             // .route("/surveys/:id/answers", post(post_answers))
             // .layer(Extension(state))
             // .route("/template", get(post_answers))
-            .route("/", get(uiapp))
+            .route("/app", get(uiapp))
             .with_state(state)
             .layer(corslayer)
             .layer(TraceLayer::new_for_http());
@@ -238,16 +236,17 @@ pub async fn get_survey(
     return (StatusCode::OK, template);
 }
 
-// #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
-// pub struct Survey {
-//     pub id: String,
-//     nanoid: String,
-//     pub plaintext: String,
-//     user_id: String,
-//     created_at: String,
-//     modified_at: String,
-//     version: String,
-// }
+#[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
+pub struct Survey {
+    pub id: String,
+    nanoid: String,
+    pub plaintext: String,
+    // questions: Question,
+    user_id: String,
+    created_at: String,
+    modified_at: String,
+    version: String,
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateSurveyRequest {
@@ -266,7 +265,7 @@ use axum::{
     http::StatusCode,
     Json,
 };
-use markdownparser::{markdown_to_form, parse_markdown_v3, Survey};
+// use markdownparser::{markdown_to_form, parse_markdown_v3, Survey};
 use serde::{Deserialize, Serialize};
 
 // use ts_rs::TS;

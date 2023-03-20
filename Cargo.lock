@@ -1001,12 +1001,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ba569491c70ec8471e34aa7e9c0b9e82bb5d2464c0398442d17d3c4af814e5a"
 
 [[package]]
-name = "externref_polyfill"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd600a1142026fb5a49bc130be89858a6e1b1a5e4bcb5c6b58064bb390810436"
-
-[[package]]
 name = "fallible-iterator"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1244,15 +1238,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "globals"
-version = "1.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e61b01f582f35f964c4dcdf9ff4cb7e0215885d2e13d02d39517f84ff7ddef55"
-dependencies = [
- "spin 0.9.6",
-]
-
-[[package]]
 name = "globset"
 version = "0.4.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1380,12 +1365,6 @@ checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
  "digest",
 ]
-
-[[package]]
-name = "html_color"
-version = "0.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8777025fb1b6f012d0ae9aeba4639cc463cc509a74bf36b80bfe70e9a5bba23e"
 
 [[package]]
 name = "http"
@@ -1675,17 +1654,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "453ad9f582a441959e5f0d088b02ce04cfe8d51a8eaf077f12ac6d3e94164ca6"
 
 [[package]]
-name = "js"
-version = "0.5.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f6bd8c9a32ec8bc37732491a50afbfbf81b5f5ef305a87e269e14b2048faca8"
-dependencies = [
- "externref_polyfill",
- "no-std-compat",
- "spin 0.9.6",
-]
-
-[[package]]
 name = "js-sys"
 version = "0.3.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1811,14 +1779,9 @@ name = "markdownparser"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "getrandom",
  "regex",
  "serde",
- "serde-wasm-bindgen",
- "tower",
- "tower-http",
  "tracing",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -1911,12 +1874,6 @@ dependencies = [
  "security-framework-sys",
  "tempfile",
 ]
-
-[[package]]
-name = "no-std-compat"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b93853da6d84c2e3c7d730d6473e8817692dd89be387eb01b94d7f108ecb5b8c"
 
 [[package]]
 name = "nom"
@@ -2697,7 +2654,6 @@ dependencies = [
  "chrono",
  "db",
  "dotenvy",
- "markdownparser",
  "mime",
  "oauth2",
  "reqwest",
@@ -3478,18 +3434,13 @@ version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
  "dioxus",
- "dioxus-html",
  "dioxus-router",
  "dioxus-ssr",
  "dioxus-web",
  "fermi",
  "gloo-timers",
- "log",
- "markdownparser",
  "reqwest",
  "serde",
- "wasm-logger",
- "web",
 ]
 
 [[package]]
@@ -3697,32 +3648,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0046fef7e28c3804e5e38bfa31ea2a0f73905319b677e57ebe37e49358989b5d"
 
 [[package]]
-name = "wasm-logger"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "074649a66bb306c8f2068c9016395fa65d8e08d2affcbf95acf3c24c3ab19718"
-dependencies = [
- "log",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
-name = "web"
-version = "0.2.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4616adcd1bbd20eef4e3a78d1a184affd57d5e8dedc33ed049c1cde1eb55a4e3"
-dependencies = [
- "globals",
- "html_color",
- "js",
- "once_cell",
- "spin 0.9.6",
- "web_macro",
- "woke",
-]
-
-[[package]]
 name = "web-sys"
 version = "0.3.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3730,16 +3655,6 @@ checksum = "e33b99f4b23ba3eec1a53ac264e35a755f00e966e0065077d6027c0f575b0b97"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "web_macro"
-version = "0.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22919f5267e54985af7054be44b262cd665e0c486aff5c9b9d9a729254026ae0"
-dependencies = [
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -3887,12 +3802,6 @@ checksum = "80d0f4e272c85def139476380b12f9ac60926689dd2e01d4923222f40580869d"
 dependencies = [
  "winapi",
 ]
-
-[[package]]
-name = "woke"
-version = "0.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f84a0acf95762131790eb4f458d5b9c8ae90dc521f8c5901906203764b261b0b"
 
 [[package]]
 name = "zeroize"

@@ -10,27 +10,28 @@ pub mod mainapp {
     use dioxus_router::{Link, Route, Router};
     use dioxus_ssr::render_lazy;
     use fermi::{use_atom_state, use_read, Atom, AtomRoot};
-    use gloo_timers::future::TimeoutFuture;
+    // use gloo_timers::future::TimeoutFuture;
     // use gloo_timers::future::TimeoutFuture;
     // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
-    use markdownparser::{
-        nanoid_gen, parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions,
-    };
+    // use markdownparser::{
+    //     nanoid_gen, parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions,
+    // };
 
     // mod types;
     // use types::SurveyDto;
 
+    use gloo_timers::future::TimeoutFuture;
     use reqwest::{header, Client};
     use serde::{Deserialize, Serialize};
 
     static APP: Atom<AppState> = |_| AppState::new();
 
     #[derive(Serialize)]
-    struct CreateSurvey(String, String);
+    struct CreateSurvey(String);
 
     #[derive(Debug)]
     struct AppState {
-        questions: Questions,
+        // questions: Questions,
         input_text: String,
         client: Client,
         // surveys: Vec<Survey>,
@@ -105,7 +106,7 @@ pub mod mainapp {
                 .build()
                 .unwrap();
             AppState {
-                questions: Questions { qs: vec![] },
+                // questions: Questions { qs: vec![] },
                 input_text: String::from(""),
                 client: client,
                 surveys: vec![],
@@ -136,14 +137,14 @@ pub mod mainapp {
         let question_state = use_atom_state(&cx, APP);
 
         let send_input = move |content: String| {
-            log::info!("Recieved input: {content}");
+            // println!("Recieved input: {content}");
             // let question = parse_markdown_blocks(content.clone());
-            let question = parse_markdown_v3(content.clone());
-            // log::info!("Questions: {question:#?}");
+            // let question = parse_markdown_v3(content.clone());
+            // println!("Questions: {question:#?}");
 
             question_state.modify(|curr| {
                 AppState {
-                    questions: Questions { qs: vec![] },
+                    // questions: Questions { qs: vec![] },
                     input_text: curr.input_text.clone(),
                     client: curr.client.clone(),
                     surveys: vec![],
@@ -160,7 +161,7 @@ pub mod mainapp {
             form {
                 prevent_default: "onclick",
                 oninput: move |e| {
-                    log::info!("form event: {e:#?}");
+                    println!("form event: {e:#?}");
                     let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
                     send_input(formvalue);
                 },
@@ -190,8 +191,8 @@ pub mod mainapp {
         let toast_visible = use_atom_state(&cx, TOAST);
 
         // let post_questions = move || {
-        //     log::info!("Attempting to save questions...");
-        //     log::info!("Questions save: {:?}", question_state);
+        //     println!("Attempting to save questions...");
+        //     println!("Questions save: {:?}", question_state);
         //     app_state
         //         .client
         //         .post("localhost:3000/survey")
@@ -201,25 +202,23 @@ pub mod mainapp {
         // };
 
         let post_questions = move |content, client: Client| {
-            let id = nanoid_gen(12);
-
             cx.spawn({
                 to_owned![toast_visible];
                 async move {
-                    log::info!("Attempting to save questions...");
-                    // log::info!("Questions save: {:?}", question_state);
+                    println!("Attempting to save questions...");
+                    // println!("Questions save: {:?}", question_state);
                     match client
                         .post("http://localhost:3000/survey")
-                        .json(&CreateSurvey(id, content))
+                        .json(&CreateSurvey(content))
                         .send()
                         .await
                     {
                         Ok(x) => {
-                            log::info!("success: {x:?}");
-                            log::info!("should show toast now");
+                            // info!("success: {x:?}");
+                            println!("should show toast now");
                             toast_visible.set(true);
                         }
-                        Err(x) => log::info!("error: {x:?}"),
+                        Err(x) => println!("error: {x:?}"),
                     };
                 }
             })
@@ -230,7 +229,7 @@ pub mod mainapp {
                 prevent_default: "onclick",
                 class: "hover:bg-violet-600 w-full text-blue-500 bg-blue-200 rounded p-2",
                 onclick: move |evt| {
-                    log::info!("Pushed publish :)");
+                    println!("Pushed publish :)");
                     post_questions("test".to_string(), app_state.client.clone());
                     evt.stop_propagation();
                 },
@@ -252,24 +251,11 @@ pub mod mainapp {
                 class: "container p-6",
                 div {
                     // self::navbar {}
-                    self::ListSurveyButton {},
-                    self::Editor {}
-                    self::RenderSurvey { survey_to_render: &app_state.curr_survey }
+                    // self::ListSurveyButton {},
+                    self::Editor {},
+                    self::RenderSurvey { survey_to_render: &app_state.curr_survey },
                     // SurveysComponent { survey: &app_state.curr_survey }
-                    self::Toast {}
-                }
-            }
-        })
-    }
-
-    fn ListSurveyButton(cx: Scope) -> Element {
-        cx.render(rsx! {
-            div{
-                class: "bg-red-500",
-                ul {
-                    Link { to: "/surveys", "Go to all Surveys" }
-                    br {}
-                    Link { to: "/", "Home"}
+                    self::Toast {},
                 }
             }
         })
@@ -317,10 +303,10 @@ pub mod mainapp {
                     //     toast_visible.set(false);
                     // })
                     // .forget();
-                    log::info!("before timeout");
+                    println!("before timeout");
                     TimeoutFuture::new(7000).await;
                     toast_visible.set(false);
-                    log::info!("after timeout");
+                    println!("after timeout");
                 }
             });
             rsx!{
@@ -342,92 +328,57 @@ pub mod mainapp {
     })
     }
 
-    fn User(cx: Scope) -> Element {
-        // let post = dioxus_router::use_route(cx).last_segment().unwrap();
-        let post = "example post";
-        // let query = dioxus_router::use_route(cx)
-        //     .query::<Query>()
-        //     .unwrap_or(Query { bold: false });
-
-        cx.render(rsx! {
-            div {
-                h1 { "Reading blog post: {post}" }
-                p { "example blog post" }
-
-                // if query.bold {
-                //     rsx!{ b { "bold" } }
-                // } else {
-                //     rsx!{ i { "italic" } }
-                // }
-            }
-        })
-    }
-
-    fn Releases<'a>(cx: Scope) -> Element {
-        cx.render(rsx! {
-            h1 { "Releases" },
-        })
-    }
-
     #[inline_props]
     fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a SurveyDto) -> Element {
-        // let surveyspage = use_atom_state(&cx, SURVEYS_PAGE);
-        // let questions = &surveyspage.surveys.get(0).unwrap().questions;
-        // let all_questions = surveyspage
-        //     .surveys
-        //     .iter()
-        //     .map(|s| parse_markdown_v3(s.plaintext.clone()).unwrap())
-        //     .collect::<Vec<Questions>>();
-        let questions = parse_markdown_v3(survey_to_render.plaintext.clone()).questions;
+        // let questions = parse_markdown_v3(survey_to_render.plaintext.clone()).questions;
 
         // let questions = all_questions.get(0).unwrap();
         cx.render(rsx! {
                 // questions.iter().map(|q|
-            div {
-                class: "outline-1 outline-red-400 bg-blue-600",
-                h1 {"this is the render survey comopnent"},
-                form {
-                prevent_default: "onclick",
-                questions.iter().map(|q: &Question| rsx!{
-                // app_state.questions.qs.iter().map(|q: &Question| rsx!{
-                    // surveyspage.get().surveys.into_iter().map(|s| s.questions.into_iter().map(|q| rsx! {
-                    // .iter().map(|q: &Question| rsx!{
-                    fieldset {
-                        legend {
-                            class: "text-base mt-5 font-medium text-gray-900",
-                            "{q.value} - {q.r#type:?}"
-                        }
-                        {
-                            q.options.iter().map(|option| {
-                                let qtype = match q.r#type {
-                                    QuestionType::Radio => "radio",
-                                    QuestionType::Checkbox => "checkbox",
-                                    QuestionType::Text => "textarea",
-                                };
+            // div {
+            //     class: "outline-1 outline-red-400 bg-blue-600",
+            //     form {
+            //     prevent_default: "onclick",
+            //     questions.iter().map(|q: &Question| rsx!{
+            //     // app_state.questions.qs.iter().map(|q: &Question| rsx!{
+            //         // surveyspage.get().surveys.into_iter().map(|s| s.questions.into_iter().map(|q| rsx! {
+            //         // .iter().map(|q: &Question| rsx!{
+            //         fieldset {
+            //             legend {
+            //                 class: "",
+            //                 "{q.value} - {q.r#type:?}"
+            //             }
+            //             {
+            //                 q.options.iter().map(|option| {
+            //                     let qtype = match q.r#type {
+            //                         QuestionType::Radio => "radio",
+            //                         QuestionType::Checkbox => "checkbox",
+            //                         QuestionType::Text => "textarea",
+            //                     };
 
-                                rsx!{
-                                    div{
-                                        key: "{option.id}",
-                                        class: "flex items-center",
-                                        input {
-                                            id: "{option.id}",
-                                            name: "{q.id}",
-                                            r#type: "{qtype}",
-                                            class: " m-3 border border-gray-400"
-                                        }
-                                        label {
-                                            r#for: "{option.id}",
-                                            class: " text-gray-700 font-medium",
-                                            "{option.text}"
-                                        }
-                                    }
-                                }
-                            })
-                        }
-                    }
-                })
-            }
-        }
+            //                     rsx!{
+            //                         div{
+            //                             key: "{option.id}",
+            //                             class: "flex items-center",
+            //                             input {
+            //                                 id: "{option.id}",
+            //                                 name: "{q.id}",
+            //                                 r#type: "{qtype}",
+            //                                 class: " m-3 border border-gray-400"
+            //                             }
+            //                             label {
+            //                                 r#for: "{option.id}",
+            //                                 class: " text-gray-700 font-medium",
+            //                                 "{option.text}"
+            //                             }
+            //                         }
+            //                     }
+            //                 })
+            //             }
+            //         }
+            //     })
+            // }
+            "Temporary, this is survey render area"
         })
     }
 
@@ -439,10 +390,11 @@ pub mod mainapp {
     // use fermi::use_atom_state;
 
     use fermi::use_init_atom_root;
+    // use ui::mainapp::app;
 
     fn ListSurveysComponent(cx: Scope) -> Element {
         let app_state = use_atom_state(&cx, APP);
-        log::info!("In list survey components");
+        println!("In list survey components");
         // let thing = move || {
         //     cx.spawn(async move {
         //         to_owned![app_state];
@@ -462,8 +414,8 @@ pub mod mainapp {
         //     cx.spawn({
         //         to_owned![toast_visible];
         //         async move {
-        //             log::info!("Attempting to save questions...");
-        //             // log::info!("Questions save: {:?}", question_state);
+        //             println!("Attempting to save questions...");
+        //             // println!("Questions save: {:?}", question_state);
         //             match client
         //                 .post("http://localhost:3000/survey")
         //                 .json(&CreateSurvey {
@@ -474,11 +426,11 @@ pub mod mainapp {
         //                 .await
         //             {
         //                 Ok(x) => {
-        //                     log::info!("success: {x:?}");
-        //                     log::info!("should show toast now");
+        //                     println!("success: {x:?}");
+        //                     println!("should show toast now");
         //                     toast_visible.set(true);
         //                 }
-        //                 Err(x) => log::info!("error: {x:?}"),
+        //                 Err(x) => println!("error: {x:?}"),
         //             };
         //         }
         //     })
@@ -490,7 +442,7 @@ pub mod mainapp {
                 async move {
                     let surveys = list_surveys(&client).await;
                     app_state.modify(|curr| AppState {
-                        questions: curr.questions.clone(),
+                        // questions: curr.questions.clone(),
                         input_text: curr.input_text.clone(),
                         client: curr.client.clone(),
                         surveys: surveys,
@@ -500,7 +452,7 @@ pub mod mainapp {
             })
         };
 
-        log::info!("list survey component");
+        println!("list survey component");
 
         cx.render(rsx! {
             div {
@@ -520,87 +472,20 @@ pub mod mainapp {
     async fn list_surveys(client: &Client) -> Vec<SurveyDto> {
         match client.get("http://localhost:3000/survey").send().await {
             Ok(x) => {
-                log::info!("successfully listing surveys: {x:?}");
+                println!("successfully listing surveys: {x:?}");
                 return x
                     .json::<Vec<SurveyDto>>()
                     .await
                     .expect("Could not parse json surveys");
             }
             Err(x) => {
-                log::info!("error listing surveys: {x:?}");
+                println!("error listing surveys: {x:?}");
                 return vec![];
             }
         }
     }
 
-    // #[inline_props]
-    // fn SurveysComponent(cx: Scope, survey: SurveyDto) -> Element {
-    //     // let surveyspage = use_atom_state(&cx, SURVEYS_PAGE);
-    //     let app_state = use_atom_state(&cx, APP);
-
-    //     let get_surveys = move || {
-    //         cx.spawn({
-    //             // to_owned![toast_visible];
-    //             to_owned![app_state];
-    //             async move {
-    //                 log::info!("Attempting to retrieve all questions...");
-    //                 // log::info!("Questions save: {:?}", question_state);
-    //                 match app_state
-    //                     .client
-    //                     .get("http://localhost:3000/survey")
-    //                     .send()
-    //                     .await
-    //                 {
-    //                     Ok(x) => {
-    //                         log::info!("success: {x:?}");
-    //                         let val = x.json::<Vec<SurveyDto>>().await.unwrap();
-    //                         // let test = x.json::<Survey>().await.unwrap();
-
-    //                         // app_state.set(AppState {
-    //                         //     questions: app_state.questions,
-    //                         //     input_text: app_state.input_text,
-    //                         //     client: app_state.client,
-    //                         //     surveys: x.json::<Vec<Survey>>().await.unwrap(),
-    //                         // });
-    //                         // app_state.modify(|curr| {
-    //                         //     return AppState {
-    //                         //         questions: curr.questions.clone(),
-    //                         //         input_text: curr.input_text.clone(),
-    //                         //         client: curr.client.clone(),
-    //                         //         surveys: val.clone(),
-    //                         //         curr_survey: curr.curr_survey.clone(),
-    //                         //     };
-    //                         // });
-    //                         log::info!("surveys: {val:?}");
-    //                         // surveyspage.modify(|curr| SurveyComponent {
-    //                         //     visible: true,
-    //                         //     surveys: val,
-    //                         // });
-    //                     }
-    //                     Err(x) => {
-    //                         log::info!("error: {x:?}");
-    //                     }
-    //                 };
-    //             }
-    //         })
-    //     };
-
-    //     cx.render(rsx! {
-    //         h1 {
-    //             class: "outline-1 outline-red-400 bg-red-600",
-    //             // button {
-    //             //     onclick: move |_| {
-    //             //         get_surveys();
-    //             //     },
-    //             //     "Click me for all surveys"
-    //             // }
-    //             Link { to: "/surveys", "Go to all Surveys" }
-    //         }
-    //         // RenderSurvey { survey_to_render: survey }
-    //     })
-    // }
-
-    pub fn app(cx: Scope) -> Element {
+    pub fn App(cx: Scope) -> Element {
         use_init_atom_root(cx);
 
         let set_app = use_atom_state(cx, APP);
@@ -608,7 +493,6 @@ pub mod mainapp {
 
         cx.render(rsx!(
             // Route { to: "/", Home {}}
-
                 Router {
                     // ul {
                     //     Link { to: "/" li {"home"}}
@@ -620,12 +504,6 @@ pub mod mainapp {
                     //     Releases { },
                     // },
                     Route { to: "", Home {}}
-                    Route { to: "/surveys", ListSurveysComponent {}}
-                    // Redirect {from: "", to: "/"}
-                    // Route { to: "/surveys", ListSurveysComponent { }},
-                    Route { to: "/users", "User list" },
-                    // Route { to: "/users/:name", User {} },
-                    Route { to: "", "Err 404 Route Not Found" }
                 },
             // Home {}
             // Editor {}
@@ -633,6 +511,10 @@ pub mod mainapp {
     }
 
     pub fn server_side() -> String {
-        dioxus_ssr::render_lazy(rsx! {div{"test"}})
+        dioxus_ssr::render_lazy(rsx! {
+            // div{"test"},
+            App {}
+
+        })
     }
 }

@@ -658,6 +658,6 @@ fn main() {
     //     println!("Panic: {}", info);
     // }));
 
-    dioxus_web::launch(mainapp::app);
+    dioxus_web::launch(mainapp::App);
     // dioxus::web::launch_cfg(app, |c| c.into());
 }

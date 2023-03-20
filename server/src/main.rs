@@ -41,6 +41,8 @@ where
 #[tokio::main]
 #[instrument]
 async fn main() -> anyhow::Result<()> {
+    // cargo watch -d 1.5 -- cargo run
+
     // tracing_subscriber::fmt::init();
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
@@ -60,13 +62,11 @@ async fn main() -> anyhow::Result<()> {
     curl -X POST http://localhost:3000/surveys \
        -H 'Content-Type: application/json' \
        -d '{"id": "test", "plaintext": "content"}'
-        */
+       */
 
-    // cargo watch -- cargo run
     info!("Spinning up the server.");
     let server_app = ServerApplication::new().await;
     info!("Server is running...");
-
     try_join!(server_app.server).unwrap();
     Ok(())
 }
