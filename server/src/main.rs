@@ -76,7 +76,7 @@ mod tests {
     use std::collections::HashMap;
 
     use db::models::{AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse};
-    use markdownparser::{markdown_to_form, markdown_to_form_wasm};
+    // use markdownparser::{markdown_to_form, markdown_to_form_wasm};
     use reqwest::StatusCode;
 
     use serial_test::serial;
@@ -90,8 +90,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn list_survey_test() {
-        let app = ServerApplication::new(true).await;
-        let mut router = ServerApplication::get_router(true).await;
+        let app = ServerApplication::new().await;
+        let mut router = ServerApplication::get_router().await;
         router.ready().await.unwrap();
 
         let client = reqwest::Client::builder()
@@ -128,8 +128,8 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn create_survey_test() {
-        let _app = ServerApplication::new(true).await;
-        let mut router = ServerApplication::get_router(true).await;
+        let _app = ServerApplication::new().await;
+        let mut router = ServerApplication::get_router().await;
         router.ready().await.unwrap();
 
         let client = reqwest::Client::builder()

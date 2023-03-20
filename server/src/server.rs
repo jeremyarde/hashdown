@@ -6,6 +6,7 @@ use axum::{
     Router,
 };
 use db::db::Database;
+use markdownparser::{markdown_to_form, parse_markdown_v3, Survey};
 use oauth2::basic::BasicClient;
 use sqlx::FromRow;
 use ui::mainapp;
@@ -18,7 +19,7 @@ use tracing::log::info;
 // use sqlx::{Sqlite, SqlitePool};
 use std::net::SocketAddr;
 // use tower_http::http::cors::CorsLayer;
-use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use tower_http::{cors::CorsLayer, services::ServeDir, trace::TraceLayer};
 
 // use crate::answer::post_answer;
 use crate::{internal_error, ServerState};
@@ -50,6 +51,8 @@ impl ServerApplication {
             .allow_origin("http://127.0.0.1:8080".parse::<HeaderValue>().unwrap())
             .allow_origin("http://127.0.0.1:3000".parse::<HeaderValue>().unwrap());
 
+        let assets_dir = ServeDir::new("path");
+        // let cssfile = include_str!("../ui/public/out.css");
         // build our application with a route
         let app: Router = Router::new()
             // .merge(setup_routes())
@@ -61,6 +64,7 @@ impl ServerApplication {
             // .route("/surveys/:id/answers", post(post_answers))
             // .layer(Extension(state))
             // .route("/template", get(post_answers))
+            // .route("/static/*path", get(static_path))
             .route("/app", get(uiapp))
             .with_state(state)
             .layer(corslayer)
@@ -236,17 +240,17 @@ pub async fn get_survey(
     return (StatusCode::OK, template);
 }
 
-#[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
-pub struct Survey {
-    pub id: String,
-    nanoid: String,
-    pub plaintext: String,
-    // questions: Question,
-    user_id: String,
-    created_at: String,
-    modified_at: String,
-    version: String,
-}
+// #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
+// pub struct Survey {
+//     pub id: String,
+//     nanoid: String,
+//     pub plaintext: String,
+//     // questions: Question,
+//     user_id: String,
+//     created_at: String,
+//     modified_at: String,
+//     version: String,
+// }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateSurveyRequest {
@@ -302,9 +306,12 @@ impl SurveyModel {
             user_id: survey.user_id,
             created_at: survey.created_at,
             modified_at: survey.modified_at,
-            questions: questions,
+            // questions: questions,
             version: survey.version,
-            parse_version: survey.parse_version,
+            questions,
+            parse_version: "0".to_string(),
+            // nanoid: markdownparser::nanoid_gen(),
+            // parse_version: survey.parse_version,
         };
     }
 }

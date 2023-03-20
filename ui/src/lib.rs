@@ -7,7 +7,7 @@ pub mod mainapp {
     use dioxus::prelude::*;
 
     // use dioxus_router::{Link, Route, Router};
-    use dioxus_router::{Link, Route, Router};
+    // use dioxus_router::{Link, Route, Router};
     use dioxus_ssr::render_lazy;
     use fermi::{use_atom_state, use_read, Atom, AtomRoot};
     // use gloo_timers::future::TimeoutFuture;
@@ -20,7 +20,7 @@ pub mod mainapp {
     // mod types;
     // use types::SurveyDto;
 
-    use gloo_timers::future::TimeoutFuture;
+    // use gloo_timers::future::TimeoutFuture;
     use reqwest::{header, Client};
     use serde::{Deserialize, Serialize};
 
@@ -304,7 +304,7 @@ pub mod mainapp {
                     // })
                     // .forget();
                     println!("before timeout");
-                    TimeoutFuture::new(7000).await;
+                    // TimeoutFuture::new(7000).await;
                     toast_visible.set(false);
                     println!("after timeout");
                 }
@@ -492,19 +492,21 @@ pub mod mainapp {
         let editor_state = use_atom_state(cx, EDITOR);
 
         cx.render(rsx!(
+            "This is the App",
+            Home {},
             // Route { to: "/", Home {}}
-                Router {
-                    // ul {
-                    //     Link { to: "/" li {"home"}}
-                    //     Link {to: "/surveys", li {"list surveys"}}
-                    // }
-                    // Route { to: "", self::Home {}},
-                    // Route {
-                    //     to: "/releases",
-                    //     Releases { },
-                    // },
-                    Route { to: "", Home {}}
-                },
+            // Router {
+            //     // ul {
+            //     //     Link { to: "/" li {"home"}}
+            //     //     Link {to: "/surveys", li {"list surveys"}}
+            //     // }
+            //     // Route { to: "", self::Home {}},
+            //     // Route {
+            //     //     to: "/releases",
+            //     //     Releases { },
+            //     // },
+            //     Route { to: "", Home {}}
+            // },
             // Home {}
             // Editor {}
         ))
@@ -512,8 +514,16 @@ pub mod mainapp {
 
     pub fn server_side() -> String {
         dioxus_ssr::render_lazy(rsx! {
-            // div{"test"},
-            App {}
+            style {
+                include_str!("../public/output.css")
+            },
+            // link {
+            //     rel: "stylesheet",
+            //     href: "ui/public/output.css",
+            //     r#type: "text/css"
+            // },
+            div{ "test"},
+            App {},
 
         })
     }
