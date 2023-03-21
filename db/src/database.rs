@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use anyhow;
 
+use markdownparser::{parse_markdown_v3, Survey};
 // use models::CreateAnswersModel;
 // use chrono::Local;
 use sqlx::{
@@ -9,6 +10,8 @@ use sqlx::{
     ConnectOptions, SqliteConnection, SqlitePool,
 };
 use tracing::{info, instrument};
+
+use crate::models::{self, nanoid_gen, CreateSurveyRequest, CreateSurveyResponse, SurveyModel};
 
 // mod models;
 
@@ -82,6 +85,44 @@ impl Database {
         Ok(Database {
             pool: pool,
             settings: Settings::default(),
+        })
+    }
+}
+
+impl Database {
+    pub async fn create_survey(&self, payload: CreateSurveyRequest) -> anyhow::Result<SurveyModel> {
+        let survey = parse_markdown_v3(payload.plaintext.clone());
+        // let survey = Survey::from(payload.plaintext.clone());
+        let response_survey = survey.clone();
+        let now = chrono::offset::Utc::now();
+        let nowstr = now.to_string();
+        let _res = sqlx::query!(
+            r#"insert into surveys (id, plaintext, user_id, created_at, modified_at, version, parse_version)
+            values 
+            ($1, $2, $3, $4, $5, $6, $7)
+            "#,
+            response_survey.id,
+            payload.plaintext,
+            survey.user_id,
+            survey.created_at,
+            survey.modified_at,
+            "1",
+            nowstr
+        ).execute(&self.pool).await?;
+
+        // let response = CreateSurveyResponse {
+        //     survey: Survey::from(response_survey),
+        //     // metadata: res,
+        // };
+
+        Ok(SurveyModel {
+            id: nanoid_gen(),
+            plaintext: payload.plaintext,
+            user_id: String::from("something"),
+            created_at: now.to_string(),
+            modified_at: now.to_string(),
+            version: String::from("versionhere"),
+            parse_version: String::from("parseversion"),
         })
     }
 }

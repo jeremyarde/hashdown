@@ -22,7 +22,7 @@ use crate::server::ServerApplication;
 mod server;
 // mod survey;
 use anyhow;
-use db::db::Database;
+use db::database::Database;
 
 #[derive(Debug, Clone)]
 pub struct ServerState {
@@ -75,17 +75,17 @@ async fn main() -> anyhow::Result<()> {
 mod tests {
     use std::collections::HashMap;
 
-    use db::models::{AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse};
+    use db::models::{
+        AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse,
+        CreateSurveyRequest, CreateSurveyResponse,
+    };
     // use markdownparser::{markdown_to_form, markdown_to_form_wasm};
     use reqwest::StatusCode;
 
     use serial_test::serial;
     use tower::ServiceExt;
 
-    use crate::{
-        server::{CreateSurveyRequest, CreateSurveyResponse, ListSurveyResponse},
-        ServerApplication,
-    };
+    use crate::{server::ListSurveyResponse, ServerApplication};
 
     #[serial]
     #[tokio::test]

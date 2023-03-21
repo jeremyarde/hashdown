@@ -646,7 +646,7 @@ fn main() {
     // css
     // npx tailwindcss -i ./input.css -o ./public/output.css --watch
 
-    // cargo watch -- dioxus serve
+    // cargo watch -d 1 -- cargo run
     // kill hot reload
     // sudo lsof -i :8080
     // kill -9 PID

@@ -80,6 +80,39 @@ pub struct CreateAnswersResponse {
     answers: HashMap<String, AnswerDetails>,
 }
 
+#[derive(Deserialize, Serialize, sqlx::FromRow, Debug, PartialEq, Eq)]
+pub struct CreateSurveyRequest {
+    pub plaintext: String,
+}
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CreateSurveyResponse {
+    pub survey: Survey,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Survey {
+    pub id: String,
+    pub plaintext: String,
+    pub user_id: String,
+    pub created_at: String,
+    pub modified_at: String,
+    // pub questions: Vec<Question>,
+    pub version: String,
+    pub parse_version: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
+pub struct SurveyModel {
+    pub id: String,
+    pub plaintext: String,
+    pub user_id: String,
+    pub created_at: String,
+    pub modified_at: String,
+    // pub questions: Option<Vec<Question>>,
+    pub version: String,
+    pub parse_version: String,
+}
+
 #[cfg(test)]
 mod tests {
     use crate::models::nanoid_gen;

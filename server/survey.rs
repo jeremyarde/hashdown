@@ -14,8 +14,6 @@ use ts_rs::TS;
 
 use crate::{internal_error, ServerState};
 
-
-
 // impl Survey {
 //     pub fn from(text: String) -> Survey {
 //         return Survey {
@@ -42,17 +40,17 @@ impl SurveyModel {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
-pub struct SurveyModel {
-    pub id: String,
-    pub plaintext: String,
-    pub user_id: String,
-    pub created_at: String,
-    pub modified_at: String,
-    // pub questions: Option<Vec<Question>>,
-    pub version: String,
-    pub parse_version: String,
-}
+// #[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
+// pub struct SurveyModel {
+//     pub id: String,
+//     pub plaintext: String,
+//     pub user_id: String,
+//     pub created_at: String,
+//     pub modified_at: String,
+//     // pub questions: Option<Vec<Question>>,
+//     pub version: String,
+//     pub parse_version: String,
+// }
 
 struct Form {
     id: String,
@@ -89,11 +87,11 @@ struct Answer {
     value: String,
 }
 
-#[derive(Deserialize, Serialize, sqlx::FromRow, Debug, PartialEq, Eq, TS)]
-#[ts(export)]
-pub struct CreateSurveyRequest {
-    pub plaintext: String,
-}
+// #[derive(Deserialize, Serialize, sqlx::FromRow, Debug, PartialEq, Eq, TS)]
+// #[ts(export)]
+// pub struct CreateSurveyRequest {
+//     pub plaintext: String,
+// }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct CreateSurveyResponse {
@@ -163,7 +161,6 @@ pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse 
     // (StatusCode::OK, Json(json!({ "surveys": res })))
     (StatusCode::OK, Json(listresp))
 }
-
 
 #[axum::debug_handler]
 #[instrument]
