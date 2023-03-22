@@ -76,16 +76,20 @@ mod tests {
     use std::collections::HashMap;
 
     use db::models::{
-        AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse,
-        CreateSurveyRequest, CreateSurveyResponse,
+        AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
     };
+    use dotenvy::dotenv;
     // use markdownparser::{markdown_to_form, markdown_to_form_wasm};
     use reqwest::StatusCode;
 
     use serial_test::serial;
     use tower::ServiceExt;
 
-    use crate::{server::ListSurveyResponse, ServerApplication};
+    use crate::{
+        internal_error,
+        server::{CreateSurveyResponse, ListSurveyResponse},
+        ServerApplication,
+    };
 
     #[serial]
     #[tokio::test]
@@ -128,6 +132,8 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn create_survey_test() {
+        dotenvy::from_filename("./server/.env").unwrap();
+
         let _app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
         router.ready().await.unwrap();
@@ -152,6 +158,8 @@ mod tests {
             .unwrap();
 
         let results: CreateSurveyResponse = response.json().await.unwrap();
+
+        println!("Results: {results:?}");
 
         assert_eq!(results.survey.plaintext, "- create\n - this one");
     }

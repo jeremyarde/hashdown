@@ -11,7 +11,7 @@ use sqlx::{
 };
 use tracing::{info, instrument};
 
-use crate::models::{self, nanoid_gen, CreateSurveyRequest, CreateSurveyResponse, SurveyModel};
+use crate::models::{self, nanoid_gen, CreateSurveyRequest};
 
 // mod models;
 
@@ -90,7 +90,7 @@ impl Database {
 }
 
 impl Database {
-    pub async fn create_survey(&self, payload: CreateSurveyRequest) -> anyhow::Result<SurveyModel> {
+    pub async fn create_survey(&self, payload: CreateSurveyRequest) -> anyhow::Result<Survey> {
         let survey = parse_markdown_v3(payload.plaintext.clone());
         // let survey = Survey::from(payload.plaintext.clone());
         let response_survey = survey.clone();
@@ -115,15 +115,17 @@ impl Database {
         //     // metadata: res,
         // };
 
-        Ok(SurveyModel {
-            id: nanoid_gen(),
-            plaintext: payload.plaintext,
-            user_id: String::from("something"),
-            created_at: now.to_string(),
-            modified_at: now.to_string(),
-            version: String::from("versionhere"),
-            parse_version: String::from("parseversion"),
-        })
+        // Ok(Survey {
+        //     id: nanoid_gen(),
+        //     plaintext: payload.plaintext,
+        //     user_id: String::from("something"),
+        //     created_at: now.to_string(),
+        //     modified_at: now.to_string(),
+        //     version: String::from("versionhere"),
+        //     parse_version: String::from("parseversion"),
+        //     questions: vec![],
+        // })
+        Ok(survey)
     }
 }
 

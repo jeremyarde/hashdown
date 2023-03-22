@@ -5,10 +5,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use db::{
-    database::Database,
-    models::{CreateSurveyRequest, CreateSurveyResponse},
-};
+use db::{database::Database, models::CreateSurveyRequest};
 use markdownparser::{markdown_to_form, parse_markdown_v3, Survey};
 use oauth2::basic::BasicClient;
 use sqlx::FromRow;
@@ -145,13 +142,24 @@ impl ServerApplication {
 //     .set_redirect_uri(RedirectUrl::new(redirect_url).unwrap())
 // }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CreateSurveyResponse {
+    pub survey: Survey,
+}
+
+impl CreateSurveyResponse {
+    fn from(survey: Survey) -> Self {
+        CreateSurveyResponse { survey: survey }
+    }
+}
+
 #[axum::debug_handler]
 pub async fn create_survey(
     State(_state): State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> impl IntoResponse {
-    let response = _state.db.create_survey(payload).await.unwrap();
-
+    let insert_result = _state.db.create_survey(payload).await.unwrap();
+    let response = CreateSurveyResponse::from(insert_result);
     (StatusCode::CREATED, Json(response))
 }
 
