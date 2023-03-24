@@ -43,10 +43,9 @@ where
 async fn main() -> anyhow::Result<()> {
     // cargo watch -d 1.5 -- cargo run
 
-    // tracing_subscriber::fmt::init();
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        .init();
+    // tracing_subscriber::fmt()
+    //     .with_max_level(tracing::Level::DEBUG)
+    //     .init();
 
     println!("{:?}", std::env::current_dir());
     // env::set_current_dir("./server").unwrap();

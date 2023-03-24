@@ -5,6 +5,7 @@ members = [
     "server",
     "db",
     "ui",
+    "yewui",
 ]
 
 resolver = "2"

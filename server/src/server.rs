@@ -14,7 +14,7 @@ use oauth2::basic::BasicClient;
 // use reqwest::header;
 use sqlx::FromRow;
 use tower::ServiceExt;
-use ui::mainapp;
+use ui::mainapp::{self, dioxusapp};
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
 
@@ -45,7 +45,8 @@ async fn hello() -> impl IntoResponse {
 }
 
 async fn uiapp(State(_state): State<ServerState>) -> impl IntoResponse {
-    println!("Rendering ui app, state: {_state:?}");
+    println!("Rendering ui app, curr state: {_state:?}");
+
     Html(mainapp::server_side())
     // Html("This is great")
 }
@@ -83,7 +84,8 @@ impl ServerApplication {
             // .layer(Extension(state))
             // .route("/template", get(post_answers))
             // .route("/static/*path", get(static_path))
-            // .route("/app", get(uiapp))
+            .route("/app", get(uiapp))
+            .route("/app2", get(dioxusapp))
             // .route("/*path", get(static_path))
             // .route("/", get(hello))
             // .fallback(get(move |req| async move {

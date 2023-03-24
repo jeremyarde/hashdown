@@ -1,11 +1,14 @@
 #![allow(non_snake_case)]
+
 // #![feature(async_closure)]
 pub mod mainapp {
+    // use console_log::log;
+    use log;
     // use db::database::Database;
 
     // use std::{thread::sleep, time::Duration};
 
-    use dioxus::prelude::*;
+    use dioxus::{html::button, prelude::*};
 
     // use dioxus_router::{Link, Route, Router};
     // use dioxus_router::{Link, Route, Router};
@@ -153,7 +156,7 @@ pub mod mainapp {
                         .await
                     {
                         Ok(x) => {
-                            // info!("success: {x:?}");
+                            info!("success: {x:?}");
                             app_state.modify(|curr| {
                                 AppState {
                                     // questions: Questions { qs: vec![] },
@@ -169,7 +172,7 @@ pub mod mainapp {
                             // println!("should show toast now");
                             // toast_visible.set(true);
                         }
-                        Err(x) => println!("error: {x:?}"),
+                        Err(x) => info!("error: {x:?}"),
                     }
                 }
             })
@@ -233,7 +236,7 @@ pub mod mainapp {
                         .await
                     {
                         Ok(x) => {
-                            // info!("success: {x:?}");
+                            info!("success: {x:?}");
                             println!("should show toast now");
                             toast_visible.set(true);
                         }
@@ -413,6 +416,8 @@ pub mod mainapp {
     // use fermi::use_atom_state;
 
     use fermi::use_init_atom_root;
+    use tracing::info;
+    // use tracing::log::info;
     // use ui::mainapp::app;
 
     fn ListSurveysComponent(cx: Scope) -> Element {
@@ -515,6 +520,16 @@ pub mod mainapp {
         let editor_state = use_atom_state(cx, EDITOR);
 
         cx.render(rsx!(
+            button {
+                style: "width:200px;height:100px;",
+                class: "bg-blue-100",
+                onclick: move |evt| {
+                    info!("Pushed publish :)");
+                    // post_questions("test".to_string(), app_state.client.clone());
+                    evt.stop_propagation();
+                },
+                "server button, click me",
+            }
             "This is the App",
             Home {},
             // Route { to: "/", Home {}}
@@ -536,6 +551,9 @@ pub mod mainapp {
     }
 
     pub fn server_side() -> String {
+        // wasm_logger::init(wasm_logger::Config::default());
+        console_log::init().unwrap();
+
         dioxus_ssr::render_lazy(rsx! {
             style {
                 include_str!("../public/output.css")
@@ -548,5 +566,24 @@ pub mod mainapp {
             div{ "test"},
             App {},
         })
+    }
+
+    pub async fn dioxusapp() -> String {
+        fn dioxusapp(cx: Scope) -> Element {
+            cx.render(rsx!(
+                head {
+                    link { rel: "stylesheet", href: "https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" }
+                }
+                body {
+                    div {
+                        
+                        App {}
+                    }
+                }
+            ))
+        }
+        let mut app = VirtualDom::new(dioxusapp);
+        let _ = app.rebuild();
+        return dioxus_ssr::render(&app);
     }
 }

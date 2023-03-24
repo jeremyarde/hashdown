@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { nanoid_gen, markdown_to_form_wasm } from "../../../backend/pkg";
 import { CreateSurveyRequest } from "../../../server/bindings/CreateSurveyRequest";
 
@@ -27,6 +28,9 @@ import { CreateSurveyRequest } from "../../../server/bindings/CreateSurveyReques
 
 
 export default function Editor({ editor, setEditor, setSurvey }) {
+    const { register, handleSubmit, watch, formState: { errors } } = useForm();
+    const onSubmit = data => console.log(data);
+    console.log(watch("example")); // watch input value by passing the name of it
     // const [editor, setEditor] = React.useState('');
 
     // const timeout = useRef<any>();
@@ -35,7 +39,6 @@ export default function Editor({ editor, setEditor, setSurvey }) {
 
     // const [survey, setSurvey] = React.useState('');
 
-    console.log(`THIS IS BROKEN`);
     // let createSurveyReq = { };
     useEffect(() => {
         console.log('setting survey soon...');
@@ -84,6 +87,25 @@ export default function Editor({ editor, setEditor, setSurvey }) {
                             Publish
                         </button>
                         {/* <p>{survey}</p> */}
+                    </form>
+                </div>
+                <br></br>
+                <div className="grid grid-cols-1 gap-2">
+                    <div>
+                        "another item"
+                    </div>
+                    {"other form"}
+                    /* "handleSubmit" will validate your inputs before invoking "onSubmit" */
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        {/* register your input into the hook by invoking the "register" function */}
+                        <input defaultValue="test" {...register("example")} />
+
+                        {/* include validation with required or other standard HTML validation rules */}
+                        <input {...register("exampleRequired", { required: true })} />
+                        {/* errors will return when field validation fails  */}
+                        {errors.exampleRequired && <span>This field is required</span>}
+
+                        <input type="submit" />
                     </form>
                 </div>
             </React.StrictMode>
