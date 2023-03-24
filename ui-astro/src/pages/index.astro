@@ -8,6 +8,7 @@ import Radio from "../components/Radio";
 import { supabase } from "../supabase";
 import Login from "../components/Login";
 import React from "react";
+import App from "../components/App";
 ---
 
 <p>signup <a href="/signup">about</a> Astro!</p>
@@ -15,12 +16,12 @@ import React from "react";
 <p>Check login<a href="/authenticated">about</a> Astro!</p>
 <Layout title="Welcome. Create your survey now">
 	<main>
-		<React.StrictMode>
-			<!-- <Login /> -->
-			<!-- <Editor parser={parse_markdown_v3} /> -->
-			<Survey />
-			<!-- <!-- <h1>{nanoid_gen(10)}</h1> -->
-			<Editor client:only />
-		</React.StrictMode>
+		<!-- <React.StrictMode> -->
+		<!-- <Login /> -->
+		<!-- <Editor parser={parse_markdown_v3} /> -->
+		<!-- <Survey /> -->
+		<!-- <!-- <h1>{nanoid_gen(10)}</h1> -->
+		<!-- </React.StrictMode> -->
+		<App client:only />
 	</main>
 </Layout>

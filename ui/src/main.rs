@@ -642,6 +642,8 @@
 // mod lib;
 // use lib::mainapp;
 
+use ui::mainapp::{self, server_side};
+
 fn main() {
     // css
     // npx tailwindcss -i ./input.css -o ./public/output.css --watch
@@ -652,12 +654,13 @@ fn main() {
     // kill -9 PID
 
     // init debug tool for WebAssembly
-    wasm_logger::init(wasm_logger::Config::default());
+    // wasm_logger::init(wasm_logger::Config::default());
     console_error_panic_hook::set_once();
     // std::panic::set_hook(Box::new(|info| {
     //     println!("Panic: {}", info);
     // }));
 
     dioxus_web::launch(mainapp::App);
+    // server_side()
     // dioxus::web::launch_cfg(app, |c| c.into());
 }

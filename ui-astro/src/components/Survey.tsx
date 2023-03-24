@@ -22,71 +22,79 @@ const initialToppings = {
     tomatoes: false,
 }
 // test.nanoid_gen(2);
-export default function Survey() {
-    const [survey, setSurvey] = React.useState('');
-    const [id, setId] = React.useState('');
-    const [checkbox, setCheckbox] = React.useState({ 'thing': false });
-    const [
-        pizzaToppings,
-        setPizzaToppings
-    ] = React.useState(initialToppings);
+export default function Survey({ survey }) {
+    // const [survey, setSurvey] = React.useState('');
+    // const [id, setId] = React.useState('');
+    // const [checkbox, setCheckbox] = React.useState({ 'thing': false });
+    // const [
+    //     pizzaToppings,
+    //     setPizzaToppings
+    // ] = React.useState(initialToppings);
 
     // Get a list of all toppings.
     // ['anchovies', 'chicken', 'tomato'];
-    const toppingsList = Object.keys(initialToppings);
-
+    // const toppingsList = Object.keys(initialToppings);
     return (
         <>
-            <h2>Survey:</h2>
-            <Radio
-                radio_options={['a', 'b', 'c']}
-            />
-            <Checkbox
-            // options={checkboxDict}
-            // options={checkbox}
-            // setOptinos={setCheckbox}
-            />
-
-
-            <>
-                <form>
-                    <fieldset>
-                        <legend>
-                            Select toppings:
-                        </legend>
-
-                        {/*
-            Iterate over those toppings, and
-            create a checkbox for each one:
-          */}
-                        {toppingsList.map(option => (
-                            <div key={option}>
-                                <input
-                                    type="checkbox"
-                                    id={option}
-                                    value={option}
-                                    checked={pizzaToppings[option] === true}
-                                    onChange={event => {
-                                        setPizzaToppings({
-                                            ...pizzaToppings,
-                                            [option]: event.target.checked,
-                                        })
-                                    }}
-                                />
-                                <label htmlFor={option}>
-                                    {option}
-                                </label>
-                            </div>
-                        ))}
-                    </fieldset>
-                </form>
-                <p>
-                    <strong>Stored state:</strong>
-                </p>
-                <p className="output">
-                    {JSON.stringify(pizzaToppings, null, 2)}
-                </p>
-            </>
+            <div>
+                {"this is the survey component"}
+                <br></br>
+                {survey?.id ? survey.id : 'no survey set'}
+            </div>
         </>
-    );
+    )
+    // return (
+    //     <>
+    //         <h2>Survey:</h2>
+    //         <Radio
+    //             radio_options={['a', 'b', 'c']}
+    //         />
+    //         <Checkbox
+    //         // options={checkboxDict}
+    //         // options={checkbox}
+    //         // setOptinos={setCheckbox}
+    //         />
+
+
+    //         <>
+    //             <form>
+    //                 <fieldset>
+    //                     <legend>
+    //                         Select toppings:
+    //                     </legend>
+
+    //                     {/*
+    //         Iterate over those toppings, and
+    //         create a checkbox for each one:
+    //       */}
+    //                     {toppingsList.map(option => (
+    //                         <div key={option}>
+    //                             <input
+    //                                 type="checkbox"
+    //                                 id={option}
+    //                                 value={option}
+    //                                 checked={pizzaToppings[option] === true}
+    //                                 onChange={event => {
+    //                                     setPizzaToppings({
+    //                                         ...pizzaToppings,
+    //                                         [option]: event.target.checked,
+    //                                     })
+    //                                 }}
+    //                             />
+    //                             <label htmlFor={option}>
+    //                                 {option}
+    //                             </label>
+    //                         </div>
+    //                     ))}
+    //                 </fieldset>
+    //             </form>
+    //             <p>
+    //                 <strong>Stored state:</strong>
+    //             </p>
+    //             <p className="output">
+    //                 {JSON.stringify(pizzaToppings, null, 2)}
+    //             </p>
+    //         </>
+    //     </>
+    // );
 }

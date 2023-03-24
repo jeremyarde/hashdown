@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 // #![feature(async_closure)]
 pub mod mainapp {
+    // use db::database::Database;
 
     // use std::{thread::sleep, time::Duration};
 
@@ -92,6 +93,8 @@ pub mod mainapp {
 
     impl AppState {
         fn new() -> Self {
+            // let db = Database::new(false).;
+
             let mut headers = header::HeaderMap::new();
             // headers.insert(
             //     // "Content-Type",
@@ -134,26 +137,42 @@ pub mod mainapp {
 
     fn Editor(cx: Scope) -> Element {
         let editor_state = use_atom_state(&cx, EDITOR);
-        let question_state = use_atom_state(&cx, APP);
+        // let question_state = use_atom_state(&cx, APP);
+        let app_state = use_atom_state(&cx, APP);
 
-        let send_input = move |content: String| {
-            // println!("Recieved input: {content}");
-            // let question = parse_markdown_blocks(content.clone());
-            // let question = parse_markdown_v3(content.clone());
-            // println!("Questions: {question:#?}");
-
-            question_state.modify(|curr| {
-                AppState {
-                    // questions: Questions { qs: vec![] },
-                    input_text: curr.input_text.clone(),
-                    client: curr.client.clone(),
-                    surveys: vec![],
-                    curr_survey: SurveyDto::from(content.clone()),
+        let create_survey = move |content: String, client: Client| {
+            cx.spawn({
+                to_owned![editor_state, app_state];
+                async move {
+                    println!("Attempting to save questions...");
+                    // println!("Questions save: {:?}", question_state);
+                    match client
+                        .post("http://localhost:3000/survey")
+                        .json(&CreateSurvey(editor_state.get().clone()))
+                        .send()
+                        .await
+                    {
+                        Ok(x) => {
+                            // info!("success: {x:?}");
+                            app_state.modify(|curr| {
+                                AppState {
+                                    // questions: Questions { qs: vec![] },
+                                    input_text: curr.input_text.clone(),
+                                    client: curr.client.clone(),
+                                    surveys: vec![],
+                                    curr_survey: SurveyDto::from(content.clone()),
+                                }
+                                // curr.questions = question;
+                            });
+                            // let _x = &set_app.get().questions;
+                            editor_state.set(content);
+                            // println!("should show toast now");
+                            // toast_visible.set(true);
+                        }
+                        Err(x) => println!("error: {x:?}"),
+                    }
                 }
-                // curr.questions = question;
-            });
-            // let _x = &set_app.get().questions;
-            editor_state.set(content);
+            })
         };
 
         cx.render(rsx! {
@@ -163,7 +182,7 @@ pub mod mainapp {
                 oninput: move |e| {
                     println!("form event: {e:#?}");
                     let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
-                    send_input(formvalue);
+                    create_survey(formvalue, app_state.client.clone());
                 },
                 div { class: "p-4 rounded-xl bg-white dark:bg-gray-800 focus:ring-red-500",
                     id: "editor",
@@ -331,54 +350,58 @@ pub mod mainapp {
     #[inline_props]
     fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a SurveyDto) -> Element {
         // let questions = parse_markdown_v3(survey_to_render.plaintext.clone()).questions;
-
         // let questions = all_questions.get(0).unwrap();
+        // let questions: Vec<Question> = vec![];
         cx.render(rsx! {
-                // questions.iter().map(|q|
-            // div {
-            //     class: "outline-1 outline-red-400 bg-blue-600",
-            //     form {
-            //     prevent_default: "onclick",
-            //     questions.iter().map(|q: &Question| rsx!{
-            //     // app_state.questions.qs.iter().map(|q: &Question| rsx!{
-            //         // surveyspage.get().surveys.into_iter().map(|s| s.questions.into_iter().map(|q| rsx! {
-            //         // .iter().map(|q: &Question| rsx!{
-            //         fieldset {
-            //             legend {
-            //                 class: "",
-            //                 "{q.value} - {q.r#type:?}"
-            //             }
-            //             {
-            //                 q.options.iter().map(|option| {
-            //                     let qtype = match q.r#type {
-            //                         QuestionType::Radio => "radio",
-            //                         QuestionType::Checkbox => "checkbox",
-            //                         QuestionType::Text => "textarea",
-            //                     };
+            "render survey"
+            // questions.iter().map(|q|
+            //     rsx!{
+            //         div {
+            //             class: "outline-1 outline-red-400 bg-blue-600",
+            //             form {
+            //                 prevent_default: "onclick",
+            //                 questions.iter().map(|q: &Question| rsx!{
+            //                 // app_state.questions.qs.iter().map(|q: &Question| rsx!{
+            //                     // surveyspage.get().surveys.into_iter().map(|s| s.questions.into_iter().map(|q| rsx! {
+            //                     // .iter().map(|q: &Question| rsx!{
+            //                     fieldset {
+            //                         legend {
+            //                             class: "",
+            //                             "{q.value} - {q.r#type:?}"
+            //                         }
+            //                         {
+            //                             q.options.iter().map(|option| {
+            //                                 let qtype = match q.r#type {
+            //                                     QuestionType::Radio => "radio",
+            //                                     QuestionType::Checkbox => "checkbox",
+            //                                     QuestionType::Text => "textarea",
+            //                                 };
 
-            //                     rsx!{
-            //                         div{
-            //                             key: "{option.id}",
-            //                             class: "flex items-center",
-            //                             input {
-            //                                 id: "{option.id}",
-            //                                 name: "{q.id}",
-            //                                 r#type: "{qtype}",
-            //                                 class: " m-3 border border-gray-400"
-            //                             }
-            //                             label {
-            //                                 r#for: "{option.id}",
-            //                                 class: " text-gray-700 font-medium",
-            //                                 "{option.text}"
-            //                             }
+            //                                 rsx!{
+            //                                     div{
+            //                                         key: "{option.id}",
+            //                                         class: "flex items-center",
+            //                                         input {
+            //                                             id: "{option.id}",
+            //                                             name: "{q.id}",
+            //                                             r#type: "{qtype}",
+            //                                             class: " m-3 border border-gray-400"
+            //                                         }
+            //                                         label {
+            //                                             r#for: "{option.id}",
+            //                                             class: " text-gray-700 font-medium",
+            //                                             "{option.text}"
+            //                                         }
+            //                                     }
+            //                                 }
+            //                             })
             //                         }
             //                     }
             //                 })
             //             }
             //         }
-            //     })
-            // }
-            "Temporary, this is survey render area"
+            //     }
+            // )
         })
     }
 
@@ -524,7 +547,6 @@ pub mod mainapp {
             // },
             div{ "test"},
             App {},
-
         })
     }
 }

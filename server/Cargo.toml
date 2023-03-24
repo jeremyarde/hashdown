@@ -34,6 +34,8 @@ sqlx = { version = "0.7.0-alpha.1", features = [
     "sqlite",
 ] }
 chrono = "0.4.24"
+include_dir = "0.7.3"
+mime_guess = "2.0.4"
 # hyper = "0.14.24"
 
 

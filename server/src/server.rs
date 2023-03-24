@@ -1,6 +1,9 @@
+use std::path::PathBuf;
+
 use askama::Template;
 use axum::{
-    http::{self, HeaderValue, Method},
+    body::{self, boxed, Body, Empty, Full},
+    http::{self, HeaderValue, Method, Response},
     response::{Html, IntoResponse},
     routing::{get, post},
     Router,
@@ -8,18 +11,23 @@ use axum::{
 use db::{database::Database, models::CreateSurveyRequest};
 use markdownparser::{markdown_to_form, parse_markdown_v3, Survey};
 use oauth2::basic::BasicClient;
+// use reqwest::header;
 use sqlx::FromRow;
+use tower::ServiceExt;
 use ui::mainapp;
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
 
-use tokio::task::JoinHandle;
+use tokio::{fs, task::JoinHandle};
 use tracing::log::info;
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
-use std::net::SocketAddr;
 // use tower_http::http::cors::CorsLayer;
-use tower_http::{cors::CorsLayer, services::ServeDir, trace::TraceLayer};
+use tower_http::{
+    cors::{Any, CorsLayer},
+    services::ServeDir,
+    trace::TraceLayer,
+};
 
 // use crate::answer::post_answer;
 use crate::{internal_error, ServerState};
@@ -32,10 +40,18 @@ pub struct ServerApplication {
     pub oauth_client: Option<BasicClient>,
 }
 
-async fn uiapp() -> impl IntoResponse {
+async fn hello() -> impl IntoResponse {
+    "hello from server!"
+}
+
+async fn uiapp(State(_state): State<ServerState>) -> impl IntoResponse {
+    println!("Rendering ui app, state: {_state:?}");
     Html(mainapp::server_side())
     // Html("This is great")
 }
+// use include_dir::{include_dir, Dir};
+
+// static STATIC_DIR: Dir<'_> = include_dir!("./ui/public");
 
 impl ServerApplication {
     pub async fn get_router() -> Router {
@@ -47,12 +63,14 @@ impl ServerApplication {
         let corslayer = CorsLayer::new()
             .allow_methods([Method::POST, Method::GET])
             .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
-            .allow_origin("http://127.0.0.1:8080/".parse::<HeaderValue>().unwrap())
-            .allow_origin("http://127.0.0.1:8080".parse::<HeaderValue>().unwrap())
-            .allow_origin("http://127.0.0.1:3000".parse::<HeaderValue>().unwrap());
+            .allow_origin(Any);
+        // .allow_origin("http://127.0.0.1:8080/".parse::<HeaderValue>().unwrap())
+        // .allow_origin("http://127.0.0.1:8080".parse::<HeaderValue>().unwrap())
+        // .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
+        // .allow_origin("http://127.0.0.1:3000".parse::<HeaderValue>().unwrap());
 
-        let assets_dir = ServeDir::new("path");
-        // let cssfile = include_str!("../ui/public/out.css");
+        // let static_dir = "./dist";
+
         // build our application with a route
         let app: Router = Router::new()
             // .merge(setup_routes())
@@ -65,7 +83,41 @@ impl ServerApplication {
             // .layer(Extension(state))
             // .route("/template", get(post_answers))
             // .route("/static/*path", get(static_path))
-            .route("/app", get(uiapp))
+            // .route("/app", get(uiapp))
+            // .route("/*path", get(static_path))
+            // .route("/", get(hello))
+            // .fallback(get(move |req| async move {
+            //     match ServeDir::new(&static_dir).oneshot(req).await {
+            //         Ok(res) => {
+            //             let status = res.status();
+            //             match status {
+            //                 StatusCode::NOT_FOUND => {
+            //                     let index_path = PathBuf::from(&static_dir).join("index.html");
+            //                     let index_content = match fs::read_to_string(index_path).await {
+            //                         Err(_) => {
+            //                             return Response::builder()
+            //                                 .status(StatusCode::NOT_FOUND)
+            //                                 .body(boxed(Body::from("index file not found")))
+            //                                 .unwrap()
+            //                         }
+            //                         Ok(index_content) => index_content,
+            //                     };
+            //                     Response::builder()
+            //                         .status(StatusCode::OK)
+            //                         .body(boxed(Body::from(index_content)))
+            //                         .unwrap()
+            //                 }
+            //                 _ => res.map(boxed),
+            //             }
+            //         }
+            //         Err(err) => {
+            //             let er = Response::builder()
+            //                 .status(StatusCode::INTERNAL_SERVER_ERROR)
+            //                 .body(boxed(Body::from(format!("error: {err}"))));
+            //             return er.unwrap();
+            //         }
+            //     }
+            // }))
             .with_state(state)
             .layer(corslayer)
             .layer(TraceLayer::new_for_http());
@@ -251,7 +303,7 @@ pub struct ListSurveyResponse {
 //     pub survey: Survey,
 // }
 
-use std::collections::HashMap;
+use std::{collections::HashMap, net::SocketAddr};
 
 use axum::{
     extract::{self, Path, State},
