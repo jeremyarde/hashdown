@@ -28,6 +28,7 @@ use tower_http::{
     services::ServeDir,
     trace::TraceLayer,
 };
+// use yewui::runapp;
 
 // use crate::answer::post_answer;
 use crate::{internal_error, ServerState};
@@ -47,12 +48,16 @@ async fn hello() -> impl IntoResponse {
 async fn uiapp(State(_state): State<ServerState>) -> impl IntoResponse {
     println!("Rendering ui app, curr state: {_state:?}");
 
-    Html(mainapp::server_side())
+    Html(mainapp::dioxusapp().await)
     // Html("This is great")
 }
 // use include_dir::{include_dir, Dir};
 
 // static STATIC_DIR: Dir<'_> = include_dir!("./ui/public");
+
+// async fn runyew() -> impl IntoResponse {
+//     Html(runapp().await)
+// }
 
 impl ServerApplication {
     pub async fn get_router() -> Router {
@@ -84,8 +89,8 @@ impl ServerApplication {
             // .layer(Extension(state))
             // .route("/template", get(post_answers))
             // .route("/static/*path", get(static_path))
-            .route("/app", get(uiapp))
-            .route("/app2", get(dioxusapp))
+            // .route("/app", get(uiapp))
+            // .route("/yew", get(runyew))
             // .route("/*path", get(static_path))
             // .route("/", get(hello))
             // .fallback(get(move |req| async move {

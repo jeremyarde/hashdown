@@ -576,7 +576,6 @@ pub mod mainapp {
                 }
                 body {
                     div {
-                        
                         App {}
                     }
                 }
