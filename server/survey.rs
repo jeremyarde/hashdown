@@ -136,6 +136,24 @@ pub async fn create_survey(
 
 #[axum::debug_handler]
 #[instrument]
+pub async fn test_survey(
+    // State(state): State<ServerState>,
+    extract::Json(payload): extract::Json<CreateSurveyRequest>,
+) -> impl IntoResponse {
+    let survey = parse_markdown_v3(payload.plaintext.clone());
+    // let survey = Survey::from(payload.plaintext.clone());
+    let response_survey = survey.clone();
+
+    let response = CreateSurveyResponse {
+        survey: Survey::from(response_survey),
+        metadata: res,
+    };
+
+    (StatusCode::OK, Json(response))
+}
+
+#[axum::debug_handler]
+#[instrument]
 pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse {
     let pool = state.db.pool;
 

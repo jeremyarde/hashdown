@@ -14,7 +14,7 @@ use oauth2::basic::BasicClient;
 // use reqwest::header;
 use sqlx::FromRow;
 use tower::ServiceExt;
-use ui::mainapp::{self, dioxusapp};
+// use ui::mainapp::{self, dioxusapp};
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
 
@@ -45,12 +45,12 @@ async fn hello() -> impl IntoResponse {
     "hello from server!"
 }
 
-async fn uiapp(State(_state): State<ServerState>) -> impl IntoResponse {
-    println!("Rendering ui app, curr state: {_state:?}");
+// async fn uiapp(State(_state): State<ServerState>) -> impl IntoResponse {
+//     println!("Rendering ui app, curr state: {_state:?}");
 
-    Html(mainapp::dioxusapp().await)
-    // Html("This is great")
-}
+//     Html(mainapp::dioxusapp().await)
+//     // Html("This is great")
+// }
 // use include_dir::{include_dir, Dir};
 
 // static STATIC_DIR: Dir<'_> = include_dir!("./ui/public");
@@ -81,6 +81,7 @@ impl ServerApplication {
         let app: Router = Router::new()
             // .merge(setup_routes())
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
+            .route(&format!("/surveys/test"), post(test_survey))
             // .route("/surveys/new", get(create_survey_form))
             // .route("/surveys/new", get())
             // .route(&format!("/surveys"), post(create_survey).get(list_survey))
@@ -149,7 +150,7 @@ impl ServerApplication {
         let app = ServerApplication::get_router().await;
 
         // let app = configure_app().await;
-        let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+        let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
         tracing::debug!("listening on {}", addr);
 
         let server = tokio::spawn(async move {
@@ -220,6 +221,16 @@ pub async fn create_survey(
     let insert_result = _state.db.create_survey(payload).await.unwrap();
     let response = CreateSurveyResponse::from(insert_result);
     (StatusCode::CREATED, Json(response))
+}
+
+#[axum::debug_handler]
+pub async fn test_survey(
+    State(_state): State<ServerState>,
+    extract::Json(payload): extract::Json<CreateSurveyRequest>,
+) -> impl IntoResponse {
+    let insert_result = _state.db.test_survey(payload).await.unwrap();
+    let response = CreateSurveyResponse::from(insert_result);
+    (StatusCode::OK, Json(response))
 }
 
 #[axum::debug_handler]
@@ -411,28 +422,28 @@ struct Answer {
     value: String,
 }
 
-#[derive(Template)]
-#[template(path = "form.html")]
-struct FormTemplate {
-    survey_id: String,
-}
+// #[derive(Template)]
+// #[template(path = "form.html")]
+// struct FormTemplate {
+//     survey_id: String,
+// }
 
-pub async fn get_form(
-    State(_state): State<ServerState>,
-    Path(survey_id): Path<String>,
-) -> FormTemplate {
-    FormTemplate {
-        survey_id: survey_id,
-    }
-}
+// pub async fn get_form(
+//     State(_state): State<ServerState>,
+//     Path(survey_id): Path<String>,
+// ) -> FormTemplate {
+//     FormTemplate {
+//         survey_id: survey_id,
+//     }
+// }
 
-#[derive(Template)]
-#[template(path = "create_survey.html")]
-struct CreateSurveyTemplate {
-    // survey_value: String,
-}
+// #[derive(Template)]
+// #[template(path = "create_survey.html")]
+// struct CreateSurveyTemplate {
+//     // survey_value: String,
+// }
 
-#[axum::debug_handler]
-pub async fn create_survey_form(State(_state): State<ServerState>) -> impl IntoResponse {
-    CreateSurveyTemplate {}
-}
+// #[axum::debug_handler]
+// pub async fn create_survey_form(State(_state): State<ServerState>) -> impl IntoResponse {
+//     CreateSurveyTemplate {}
+// }

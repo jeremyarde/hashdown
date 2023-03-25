@@ -127,6 +127,32 @@ impl Database {
         // })
         Ok(survey)
     }
+
+    pub async fn test_survey(&self, payload: CreateSurveyRequest) -> anyhow::Result<Survey> {
+        let survey = parse_markdown_v3(payload.plaintext.clone());
+        // let survey = Survey::from(payload.plaintext.clone());
+        let response_survey = survey.clone();
+        let now = chrono::offset::Utc::now();
+        let nowstr = now.to_string();
+
+        // let response = CreateSurveyResponse {
+        //     survey: Survey::from(response_survey),
+        //     // metadata: res,
+        // };
+
+        // Ok(Survey {
+        //     id: nanoid_gen(),
+        //     plaintext: payload.plaintext,
+        //     user_id: String::from("something"),
+        //     created_at: now.to_string(),
+        //     modified_at: now.to_string(),
+        //     version: String::from("versionhere"),
+        //     parse_version: String::from("parseversion"),
+        //     questions: vec![],
+        // })
+
+        Ok(survey)
+    }
 }
 
 #[cfg(test)]

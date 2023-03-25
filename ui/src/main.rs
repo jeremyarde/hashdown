@@ -642,7 +642,9 @@
 // mod lib;
 // use lib::mainapp;
 
-use ui::mainapp::{self, server_side};
+// use ui::mainapp::{self, server_side};
+
+use ui::mainapp;
 
 fn main() {
     // css
@@ -654,11 +656,11 @@ fn main() {
     // kill -9 PID
 
     // init debug tool for WebAssembly
-    // wasm_logger::init(wasm_logger::Config::default());
+    wasm_logger::init(wasm_logger::Config::default());
     console_error_panic_hook::set_once();
-    // std::panic::set_hook(Box::new(|info| {
-    //     println!("Panic: {}", info);
-    // }));
+    std::panic::set_hook(Box::new(|info| {
+        println!("Panic: {}", info);
+    }));
 
     dioxus_web::launch(mainapp::App);
     // server_side()
