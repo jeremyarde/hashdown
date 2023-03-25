@@ -42,7 +42,7 @@ export default function Editor({ editor, setEditor, setSurvey }) {
     // let createSurveyReq = { };
     useEffect(() => {
         console.log('setting survey soon...');
-        let result = fetch("http://127.0.0.1:8080/surveys", {
+        let result = fetch("http://127.0.0.1:8080/surveys/test", {
             method: "POST",
             body: JSON.stringify({
                 plaintext: editor
