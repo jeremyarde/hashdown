@@ -1,47 +1,69 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Checkbox from './Checkbox';
 import Radio from './Radio';
 import { useForm, SubmitHandler } from "react-hook-form";
 
-// import init, { nanoid_gen } from 'markdownparser';
-// import * as test from "markdownparser";
 
-// WebAssembly.instantiate("/markdownparser_bg.wasm");
-
-// async function getData() {
-//     const data = await fetch('http://localhost:3000/surveys').then((response) => response.json());
-//     return data;
-// }
-// const wasm = await WebAssembly.instantiateStreaming(fetch('/markdownparser_bg.wasm'));
-// let checkboxlist = ['r', 't', 'y']
-// const checkboxDict = {};
-// checkboxlist.forEach((opt) => {
-//     checkboxDict[opt] = false;
-// });
-const initialToppings = {
-    anchovies: false,
-    chicken: false,
-    tomatoes: false,
-}
-// test.nanoid_gen(2);
 export default function Survey({ survey }) {
-    // const [survey, setSurvey] = React.useState('');
-    // const [id, setId] = React.useState('');
-    // const [checkbox, setCheckbox] = React.useState({ 'thing': false });
-    // const [
-    //     pizzaToppings,
-    //     setPizzaToppings
-    // ] = React.useState(initialToppings);
+    const [formstate, setformstate] = useState(null);
+    // const { register, handleSubmit, watch, formState: { errors } } = useForm();
+    const onSubmit = data => {
+        console.log('submitted data:')
+        console.log(data);
+    }
 
-    // Get a list of all toppings.
-    // ['anchovies', 'chicken', 'tomato'];
-    // const toppingsList = Object.keys(initialToppings);
+    const form_content = survey?.questions.map((question) => {
+
+        let newOptions = {};
+        let options = question?.options.map((option) => {
+            // newOptions[option.id] = '';
+            return (
+                <>
+                    <label key={option.id}>
+                        {/* <input key={option.id} type={question.type} {...register(option.id, { required: true })} /> */}
+
+                        <input key={option.id} type={question.type} name={option.id} />
+                        {option.text}
+                    </label>
+                </>
+            )
+        });
+        console.log('options:');
+        console.log(options);
+
+        return (
+            <>
+                <label key={question.id}>{question.value}</label>
+                {/* <input type={question.type} {...register(question.id, { required: true, })}></input> */}
+                {options}
+            </>
+        )
+    });
+
+
     return (
         <>
-            <div>
+            <div className='flex flex-col'>
                 {"this is the survey component"}
                 <br></br>
-                {survey?.id ? survey.id : 'no survey set'}
+                {survey?.id ?
+                    <form
+                        className='flex flex-col'
+                        onSubmit={onSubmit}
+                        action={`http://localhost:8080/surveys/${survey?.id}`}
+                        method="POST"
+                    >
+                        {form_content}
+                        <input
+                            type="submit"
+                            // onClick={(event) => {
+                            //     event.preventDefault();
+                            //     // alert();
+                            // }}
+                            value="submit" className={'hover:bg-violet-600 w-20  bg-red-200 rounded p-2'}
+
+                        />
+                    </form> : 'no survey set'}
             </div>
         </>
     )

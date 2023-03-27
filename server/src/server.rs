@@ -1,8 +1,9 @@
-use std::path::PathBuf;
+use std::{hash::Hash, path::PathBuf};
 
 use askama::Template;
 use axum::{
     body::{self, boxed, Body, Empty, Full},
+    extract::Multipart,
     http::{self, HeaderValue, Method, Response},
     response::{Html, IntoResponse},
     routing::{get, post},
@@ -62,18 +63,12 @@ async fn hello() -> impl IntoResponse {
 impl ServerApplication {
     pub async fn get_router() -> Router {
         let db = Database::new(true).await.unwrap();
-        // let ormdb = SqliteConnection::connect(":memory:").await?;
-        // let state = Arc::new(ServerState { db: db });
         let state = ServerState { db: db };
 
         let corslayer = CorsLayer::new()
             .allow_methods([Method::POST, Method::GET])
             .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
             .allow_origin(Any);
-        // .allow_origin("http://127.0.0.1:8080/".parse::<HeaderValue>().unwrap())
-        // .allow_origin("http://127.0.0.1:8080".parse::<HeaderValue>().unwrap())
-        // .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
-        // .allow_origin("http://127.0.0.1:3000".parse::<HeaderValue>().unwrap());
 
         // let static_dir = "./dist";
 
@@ -82,50 +77,7 @@ impl ServerApplication {
             // .merge(setup_routes())
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             .route(&format!("/surveys/test"), post(test_survey))
-            // .route("/surveys/new", get(create_survey_form))
-            // .route("/surveys/new", get())
-            // .route(&format!("/surveys"), post(create_survey).get(list_survey))
-            // .route("/surveys/:id", get(get_survey).post(post_answers))
-            // .route("/surveys/:id/answers", post(post_answers))
-            // .layer(Extension(state))
-            // .route("/template", get(post_answers))
-            // .route("/static/*path", get(static_path))
-            // .route("/app", get(uiapp))
-            // .route("/yew", get(runyew))
-            // .route("/*path", get(static_path))
-            // .route("/", get(hello))
-            // .fallback(get(move |req| async move {
-            //     match ServeDir::new(&static_dir).oneshot(req).await {
-            //         Ok(res) => {
-            //             let status = res.status();
-            //             match status {
-            //                 StatusCode::NOT_FOUND => {
-            //                     let index_path = PathBuf::from(&static_dir).join("index.html");
-            //                     let index_content = match fs::read_to_string(index_path).await {
-            //                         Err(_) => {
-            //                             return Response::builder()
-            //                                 .status(StatusCode::NOT_FOUND)
-            //                                 .body(boxed(Body::from("index file not found")))
-            //                                 .unwrap()
-            //                         }
-            //                         Ok(index_content) => index_content,
-            //                     };
-            //                     Response::builder()
-            //                         .status(StatusCode::OK)
-            //                         .body(boxed(Body::from(index_content)))
-            //                         .unwrap()
-            //                 }
-            //                 _ => res.map(boxed),
-            //             }
-            //         }
-            //         Err(err) => {
-            //             let er = Response::builder()
-            //                 .status(StatusCode::INTERNAL_SERVER_ERROR)
-            //                 .body(boxed(Body::from(format!("error: {err}"))));
-            //             return er.unwrap();
-            //         }
-            //     }
-            // }))
+            .route(&format!("/surveys/:id"), post(submit_survey))
             .with_state(state)
             .layer(corslayer)
             .layer(TraceLayer::new_for_http());
@@ -138,7 +90,7 @@ impl ServerApplication {
 
         // dotenvy::from_filename("dev.env").ok();
         // initialize tracing
-        // tracing_subscriber::fmt::init();
+        tracing_subscriber::fmt::init();
 
         // tracing_subscriber::registry()
         //     .with(
@@ -171,37 +123,6 @@ impl ServerApplication {
     }
 }
 
-// fn oauth_client() -> BasicClient {
-//     // Environment variables (* = required):
-//     // *"CLIENT_ID"     "REPLACE_ME";
-//     // *"CLIENT_SECRET" "REPLACE_ME";
-//     //  "REDIRECT_URL"  "http://127.0.0.1:3000/auth/authorized";
-//     //  "AUTH_URL"      "https://discord.com/api/oauth2/authorize?response_type=code";
-//     //  "TOKEN_URL"     "https://discord.com/api/oauth2/token";
-
-//     // client id: 662612831867-q8ppdr4tc2gti8qgcmdbaff4b394774j.apps.googleusercontent.com
-
-//     let client_id = env::var("CLIENT_ID").expect("Missing CLIENT_ID!");
-//     let client_secret = env::var("CLIENT_SECRET").expect("Missing CLIENT_SECRET!");
-//     let redirect_url = env::var("REDIRECT_URL")
-//         .unwrap_or_else(|_| "http://127.0.0.1:3000/auth/authorized".to_string());
-
-//     let auth_url = env::var("AUTH_URL").unwrap_or_else(|_| {
-//         "https://discord.com/api/oauth2/authorize?response_type=code".to_string()
-//     });
-
-//     let token_url = env::var("TOKEN_URL")
-//         .unwrap_or_else(|_| "https://discord.com/api/oauth2/token".to_string());
-
-//     BasicClient::new(
-//         ClientId::new(client_id),
-//         Some(ClientSecret::new(client_secret)),
-//         AuthUrl::new(auth_url).unwrap(),
-//         Some(TokenUrl::new(token_url).unwrap()),
-//     )
-//     .set_redirect_uri(RedirectUrl::new(redirect_url).unwrap())
-// }
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateSurveyResponse {
     pub survey: Survey,
@@ -213,6 +134,7 @@ impl CreateSurveyResponse {
     }
 }
 
+#[tracing::instrument]
 #[axum::debug_handler]
 pub async fn create_survey(
     State(_state): State<ServerState>,
@@ -223,6 +145,27 @@ pub async fn create_survey(
     (StatusCode::CREATED, Json(response))
 }
 
+#[tracing::instrument]
+#[axum::debug_handler]
+pub async fn submit_survey(
+    State(_state): State<ServerState>,
+    mut multipart: Multipart,
+) -> impl IntoResponse {
+    // let insert_result = _state.db.create_survey(payload).await.unwrap();
+    // let response = CreateSurveyResponse::from(insert_result);
+    let mut dict: HashMap<String, String> = HashMap::new();
+    while let Some(mut field) = multipart.next_field().await.unwrap() {
+        let name = field.name().unwrap().to_string();
+        let data = field.text().await.unwrap();
+
+        println!("Length of `{}` is {} bytes", name, data.len());
+        dict.insert(name, data);
+
+    }
+    (StatusCode::CREATED, Json(dict))
+}
+
+#[tracing::instrument]
 #[axum::debug_handler]
 pub async fn test_survey(
     State(_state): State<ServerState>,
@@ -233,6 +176,7 @@ pub async fn test_survey(
     (StatusCode::OK, Json(response))
 }
 
+#[tracing::instrument]
 #[axum::debug_handler]
 pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse {
     let pool = state.db.pool;
