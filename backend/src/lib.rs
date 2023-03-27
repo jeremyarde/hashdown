@@ -166,14 +166,6 @@ impl Question {
     // }
 }
 
-#[derive(Clone, Debug)]
-struct Answer {
-    survey_id: i32,
-    name: String,
-    question_number: i32,
-    answer: String,
-}
-
 // #[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub enum Types {

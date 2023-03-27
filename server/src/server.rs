@@ -12,6 +12,7 @@ use axum::{
 use db::{database::Database, models::CreateSurveyRequest};
 use markdownparser::{markdown_to_form, parse_markdown_v3, Survey};
 use oauth2::basic::BasicClient;
+use serde_json::json;
 // use reqwest::header;
 use sqlx::FromRow;
 use tower::ServiceExt;
@@ -77,7 +78,7 @@ impl ServerApplication {
             // .merge(setup_routes())
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             .route(&format!("/surveys/test"), post(test_survey))
-            .route(&format!("/surveys/:id"), post(submit_survey))
+            .route(&format!("/surveys/:id/submit"), post(submit_survey))
             .with_state(state)
             .layer(corslayer)
             .layer(TraceLayer::new_for_http());
@@ -160,7 +161,6 @@ pub async fn submit_survey(
 
         println!("Length of `{}` is {} bytes", name, data.len());
         dict.insert(name, data);
-
     }
     (StatusCode::CREATED, Json(dict))
 }
@@ -171,9 +171,13 @@ pub async fn test_survey(
     State(_state): State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> impl IntoResponse {
-    let insert_result = _state.db.test_survey(payload).await.unwrap();
+    let (insert_result, expected_answers) = _state.db.test_survey(payload).await.unwrap();
     let response = CreateSurveyResponse::from(insert_result);
-    (StatusCode::OK, Json(response))
+
+    (
+        StatusCode::OK,
+        Json(json!({"survey": response, "expect": expected_answers})),
+    )
 }
 
 #[tracing::instrument]
@@ -354,12 +358,7 @@ struct Answers {
     answers: HashMap<String, String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct AnswerRequest {
-    pub form_id: String,
-    pub start_time: String,
-    pub answers: HashMap<String, String>,
-}
+
 
 struct Answer {
     form_id: String,
@@ -391,3 +390,5 @@ struct Answer {
 // pub async fn create_survey_form(State(_state): State<ServerState>) -> impl IntoResponse {
 //     CreateSurveyTemplate {}
 // }
+
+

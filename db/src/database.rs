@@ -1,8 +1,9 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use anyhow;
 
 use markdownparser::{parse_markdown_v3, Survey};
+use serde::{Deserialize, Serialize};
 // use models::CreateAnswersModel;
 // use chrono::Local;
 use sqlx::{
@@ -89,6 +90,26 @@ impl Database {
     }
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct AnswerRequest {
+    pub form_id: String,
+    pub start_time: String,
+    pub answers: QuestionAnswers,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct QuestionAnswers {
+    pub answers: Vec<Answer>,
+    // pub question_id: String,
+    // pub answers: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Answer {
+    pub question_id: String,
+    pub answers: Vec<String>,
+}
+
 impl Database {
     pub async fn create_survey(&self, payload: CreateSurveyRequest) -> anyhow::Result<Survey> {
         let survey = parse_markdown_v3(payload.plaintext.clone());
@@ -128,13 +149,31 @@ impl Database {
         Ok(survey)
     }
 
-    pub async fn test_survey(&self, payload: CreateSurveyRequest) -> anyhow::Result<Survey> {
+    pub async fn test_survey(
+        &self,
+        payload: CreateSurveyRequest,
+    ) -> anyhow::Result<(Survey, AnswerRequest)> {
         let survey = parse_markdown_v3(payload.plaintext.clone());
         // let survey = Survey::from(payload.plaintext.clone());
         let response_survey = survey.clone();
         let now = chrono::offset::Utc::now();
         let nowstr = now.to_string();
 
+        let mut answers = vec![];
+        for q in response_survey.questions {
+            answers.push(Answer {
+                question_id: q.id,
+                answers: vec![],
+            })
+        }
+
+        let expected_answers = QuestionAnswers { answers: answers };
+
+        let ar = AnswerRequest {
+            form_id: survey.id.clone(),
+            start_time: nowstr,
+            answers: expected_answers,
+        };
         // let response = CreateSurveyResponse {
         //     survey: Survey::from(response_survey),
         //     // metadata: res,
@@ -151,7 +190,7 @@ impl Database {
         //     questions: vec![],
         // })
 
-        Ok(survey)
+        Ok((survey, ar))
     }
 }
 
@@ -159,6 +198,18 @@ impl Database {
 mod tests {
     // use dotenvy::dotenv;
 
+    #[tokio::test]
+    async fn test_survey_test() {
+        let payload = CreateSurveyRequest {
+            plaintext: "- this is one\n - another\n- second q\n - option 1\n - option 2"
+                .to_string(),
+        };
+        let db = Database::new(true).await.unwrap();
+        let (insert_result, expected_answers) = db.test_survey(payload).await.unwrap();
+
+        println!("{insert_result:#?}");
+        println!("{expected_answers:#?}");
+    }
     // use crate::{database::Database, todo};
 
     // #[tokio::test]
@@ -180,4 +231,8 @@ mod tests {
     //     println!("query result: {:?}", todos);
     //     Ok(())
     // }
+
+    // use db::{database::Database, models::CreateSurveyRequest};
+
+    use crate::{database::Database, models::CreateSurveyRequest};
 }

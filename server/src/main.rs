@@ -158,10 +158,11 @@ mod tests {
 
         let results: CreateSurveyResponse = response.json().await.unwrap();
 
-        println!("Results: {results:?}");
+        println!("Results: {results:#?}");
 
         assert_eq!(results.survey.plaintext, "- create\n - this one");
     }
+
 
     // #[tokio::test]
     // #[serial]
