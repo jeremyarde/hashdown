@@ -4,11 +4,12 @@ use anyhow;
 
 use markdownparser::{parse_markdown_v3, Survey};
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 // use models::CreateAnswersModel;
 // use chrono::Local;
 use sqlx::{
     sqlite::{SqliteConnectOptions, SqliteJournalMode},
-    ConnectOptions, SqliteConnection, SqlitePool,
+    ConnectOptions, Row, SqliteConnection, SqlitePool,
 };
 use tracing::{info, instrument};
 
@@ -111,6 +112,16 @@ pub struct Answer {
 }
 
 impl Database {
+    pub async fn get_survey(&self, survey_id: String) -> anyhow::Result<Survey> {
+        let result = sqlx::query("select * from surveys where surveys.id = $1")
+            .bind(survey_id)
+            .fetch_one(&self.pool)
+            .await?;
+        let survey = parse_markdown_v3(result.get("plaintext"));
+
+        Ok(survey)
+    }
+
     pub async fn create_survey(&self, payload: CreateSurveyRequest) -> anyhow::Result<Survey> {
         let survey = parse_markdown_v3(payload.plaintext.clone());
         // let survey = Survey::from(payload.plaintext.clone());
@@ -174,21 +185,6 @@ impl Database {
             start_time: nowstr,
             answers: expected_answers,
         };
-        // let response = CreateSurveyResponse {
-        //     survey: Survey::from(response_survey),
-        //     // metadata: res,
-        // };
-
-        // Ok(Survey {
-        //     id: nanoid_gen(),
-        //     plaintext: payload.plaintext,
-        //     user_id: String::from("something"),
-        //     created_at: now.to_string(),
-        //     modified_at: now.to_string(),
-        //     version: String::from("versionhere"),
-        //     parse_version: String::from("parseversion"),
-        //     questions: vec![],
-        // })
 
         Ok((survey, ar))
     }

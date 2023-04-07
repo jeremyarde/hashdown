@@ -78,6 +78,7 @@ impl ServerApplication {
             // .merge(setup_routes())
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             .route(&format!("/surveys/test"), post(test_survey))
+            .route(&format!("/surveys/:id"), get(get_survey))
             .route(&format!("/surveys/:id/submit"), post(submit_survey))
             .with_state(state)
             .layer(corslayer)
@@ -163,6 +164,17 @@ pub async fn submit_survey(
         dict.insert(name, data);
     }
     (StatusCode::CREATED, Json(dict))
+}
+
+#[tracing::instrument]
+#[axum::debug_handler]
+pub async fn get_survey(
+    State(_state): State<ServerState>,
+    Path(survey_id): Path<String>,
+) -> impl IntoResponse {
+    let (db_response) = _state.db.get_survey(survey_id).await.unwrap();
+    // let response = CreateSurveyResponse::from(insert_result);
+    (StatusCode::OK, Json(db_response))
 }
 
 #[tracing::instrument]
@@ -358,8 +370,6 @@ struct Answers {
     answers: HashMap<String, String>,
 }
 
-
-
 struct Answer {
     form_id: String,
     value: String,
@@ -390,5 +400,3 @@ struct Answer {
 // pub async fn create_survey_form(State(_state): State<ServerState>) -> impl IntoResponse {
 //     CreateSurveyTemplate {}
 // }
-
-
