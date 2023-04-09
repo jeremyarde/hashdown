@@ -3,7 +3,7 @@ use std::{hash::Hash, path::PathBuf};
 use askama::Template;
 use axum::{
     body::{self, boxed, Body, Empty, Full},
-    extract::Multipart,
+    extract::{DefaultBodyLimit, Multipart, Query},
     http::{self, HeaderValue, Method, Response},
     response::{Html, IntoResponse},
     routing::{get, post},
@@ -27,6 +27,7 @@ use tracing::log::info;
 // use tower_http::http::cors::CorsLayer;
 use tower_http::{
     cors::{Any, CorsLayer},
+    limit::RequestBodyLimitLayer,
     services::ServeDir,
     trace::TraceLayer,
 };
@@ -79,9 +80,11 @@ impl ServerApplication {
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             .route(&format!("/surveys/test"), post(test_survey))
             .route(&format!("/surveys/:id"), get(get_survey))
-            .route(&format!("/surveys/:id/submit"), post(submit_survey))
+            .route(&format!("/submit"), post(submit_survey))
             .with_state(state)
             .layer(corslayer)
+            .layer(DefaultBodyLimit::disable())
+            .layer(RequestBodyLimitLayer::new(1 * 1024 * 1024 /* 250mb */))
             .layer(TraceLayer::new_for_http());
 
         return app;
@@ -153,6 +156,10 @@ pub async fn submit_survey(
     State(_state): State<ServerState>,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
+    // let content_type_header = req.headers().get(CONTENT_TYPE);
+    // let content_type = content_type_header.and_then(|value| value.to_str().ok());
+
+    info!("submit survey called");
     // let insert_result = _state.db.create_survey(payload).await.unwrap();
     // let response = CreateSurveyResponse::from(insert_result);
     let mut dict: HashMap<String, String> = HashMap::new();
@@ -166,14 +173,31 @@ pub async fn submit_survey(
     (StatusCode::CREATED, Json(dict))
 }
 
-#[tracing::instrument]
+#[derive(Deserialize, Debug)]
+pub struct GetSurveyQuery {
+    pub format: SurveyFormat,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum SurveyFormat {
+    Html,
+    Json,
+}
+
+// #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn get_survey(
     State(_state): State<ServerState>,
     Path(survey_id): Path<String>,
+    Query(query): Query<GetSurveyQuery>,
 ) -> impl IntoResponse {
-    let (db_response) = _state.db.get_survey(survey_id).await.unwrap();
+    let db_response = _state.db.get_survey(survey_id).await.unwrap();
     // let response = CreateSurveyResponse::from(insert_result);
+    info!("query: {query:#?}");
+    println!("query: {query:#?}");
+
+    // let results = transform_response(db_response, query);
     (StatusCode::OK, Json(db_response))
 }
 

@@ -119,12 +119,12 @@ impl Question {
     }
 
     fn parse_question_text(line: &str) -> &str {
-        let trimmed = line.clone().trim_start();
         let mut question_text = match line.trim_start().split_once("- ") {
             Some(x) => x.1,
             None => line,
         };
 
+        let trimmed = line.clone().trim_start();
         if trimmed.starts_with(char::is_numeric) {
             question_text = trimmed.split_once(". ").unwrap_or((line, "")).1;
         }
@@ -341,12 +341,12 @@ pub fn parse_markdown_v3(contents: String) -> Survey {
 
 fn find_line_type(line: &str) -> LineType {
     let linetype: LineType;
-    if !line.starts_with(" ") && line.starts_with(|c: char| c.eq(&'-') || c.is_digit(10)) {
+    if !line.starts_with(' ') && line.starts_with(|c: char| c.eq(&'-') || c.is_ascii_digit()) {
         linetype = LineType::Question
     } else if line.starts_with(" ")
         && line
             .trim_start()
-            .starts_with(|c: char| c.eq(&'-') || c.is_digit(10))
+            .starts_with(|c: char| c.eq(&'-') || c.is_ascii_digit())
     {
         linetype = LineType::Option
     } else {

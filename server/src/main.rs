@@ -46,8 +46,6 @@ async fn main() -> anyhow::Result<()> {
     // tracing_subscriber::fmt()
     //     .with_max_level(tracing::Level::DEBUG)
     //     .init();
-
-    println!("{:?}", std::env::current_dir());
     // env::set_current_dir("./server").unwrap();
     info!("{:?}", std::env::current_dir());
 
@@ -162,7 +160,6 @@ mod tests {
 
         assert_eq!(results.survey.plaintext, "- create\n - this one");
     }
-
 
     // #[tokio::test]
     // #[serial]
