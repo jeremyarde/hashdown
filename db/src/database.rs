@@ -13,7 +13,7 @@ use sqlx::{
 };
 use tracing::{info, instrument};
 
-use crate::models::{self, nanoid_gen, CreateSurveyRequest};
+use crate::models::{self, CreateSurveyRequest, SurveyModel};
 
 // mod models;
 
@@ -112,81 +112,39 @@ pub struct Answer {
 }
 
 impl Database {
-    pub async fn get_survey(&self, survey_id: String) -> anyhow::Result<Survey> {
-        let result = sqlx::query("select * from surveys where surveys.id = $1")
-            .bind(survey_id)
-            .fetch_one(&self.pool)
-            .await?;
-        let survey = parse_markdown_v3(result.get("plaintext"));
+    pub async fn get_survey(&self, survey_id: &String) -> anyhow::Result<SurveyModel> {
+        let result =
+            sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.id = $1")
+                .bind(survey_id)
+                .fetch_one(&self.pool)
+                .await?;
+        // let survey = parse_markdown_v3(result.plaintext);
 
-        Ok(survey)
+        Ok(result)
     }
 
-    pub async fn create_survey(&self, payload: CreateSurveyRequest) -> anyhow::Result<Survey> {
-        let survey = parse_markdown_v3(payload.plaintext.clone());
-        // let survey = Survey::from(payload.plaintext.clone());
-        let response_survey = survey.clone();
-        let now = chrono::offset::Utc::now();
-        let nowstr = now.to_string();
+    pub async fn create_survey(&self, survey: SurveyModel) -> anyhow::Result<SurveyModel> {
+        // let partial_survey = parse_markdown_v3(payload.plaintext.clone());
+        // // let survey = Survey::from(partial_survey);
+        // // let survey = Survey::from(payload.plaintext.clone());
+        // // let response_survey = survey.clone();
+        // let now = chrono::offset::Utc::now();
+        // let nowstr = now.to_string();
         let _res = sqlx::query!(
             r#"insert into surveys (id, plaintext, user_id, created_at, modified_at, version, parse_version)
             values 
             ($1, $2, $3, $4, $5, $6, $7)
             "#,
-            response_survey.id,
-            payload.plaintext,
+            survey.id,
+            survey.plaintext,
             survey.user_id,
             survey.created_at,
             survey.modified_at,
-            "1",
-            nowstr
+            survey.version,
+            survey.parse_version
         ).execute(&self.pool).await?;
 
-        // let response = CreateSurveyResponse {
-        //     survey: Survey::from(response_survey),
-        //     // metadata: res,
-        // };
-
-        // Ok(Survey {
-        //     id: nanoid_gen(),
-        //     plaintext: payload.plaintext,
-        //     user_id: String::from("something"),
-        //     created_at: now.to_string(),
-        //     modified_at: now.to_string(),
-        //     version: String::from("versionhere"),
-        //     parse_version: String::from("parseversion"),
-        //     questions: vec![],
-        // })
         Ok(survey)
-    }
-
-    pub async fn test_survey(
-        &self,
-        payload: CreateSurveyRequest,
-    ) -> anyhow::Result<(Survey, AnswerRequest)> {
-        let survey = parse_markdown_v3(payload.plaintext.clone());
-        // let survey = Survey::from(payload.plaintext.clone());
-        let response_survey = survey.clone();
-        let now = chrono::offset::Utc::now();
-        let nowstr = now.to_string();
-
-        let mut answers = vec![];
-        for q in response_survey.questions {
-            answers.push(Answer {
-                question_id: q.id,
-                answers: vec![],
-            })
-        }
-
-        let expected_answers = QuestionAnswers { answers: answers };
-
-        let ar = AnswerRequest {
-            form_id: survey.id.clone(),
-            start_time: nowstr,
-            answers: expected_answers,
-        };
-
-        Ok((survey, ar))
     }
 }
 
@@ -194,18 +152,6 @@ impl Database {
 mod tests {
     // use dotenvy::dotenv;
 
-    #[tokio::test]
-    async fn test_survey_test() {
-        let payload = CreateSurveyRequest {
-            plaintext: "- this is one\n - another\n- second q\n - option 1\n - option 2"
-                .to_string(),
-        };
-        let db = Database::new(true).await.unwrap();
-        let (insert_result, expected_answers) = db.test_survey(payload).await.unwrap();
-
-        println!("{insert_result:#?}");
-        println!("{expected_answers:#?}");
-    }
     // use crate::{database::Database, todo};
 
     // #[tokio::test]

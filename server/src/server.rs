@@ -9,8 +9,11 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use db::{database::Database, models::CreateSurveyRequest};
-use markdownparser::{markdown_to_form, parse_markdown_v3, Survey};
+use db::{
+    database::Database,
+    models::{CreateSurveyRequest, SurveyModelBuilder},
+};
+use markdownparser::{parse_markdown_v3, MetadataBuilder, Survey, SurveyBuilder};
 use oauth2::basic::BasicClient;
 use serde_json::json;
 // use reqwest::header;
@@ -145,15 +148,40 @@ pub async fn create_survey(
     State(_state): State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> impl IntoResponse {
-    let insert_result = _state.db.create_survey(payload).await.unwrap();
-    let response = CreateSurveyResponse::from(insert_result);
+    // Check user + type, can they make surveys?
+    let user_id = "001".to_string();
+    // Check that the survey is Ok
+    let parsed_survey = parse_markdown_v3(payload.plaintext);
+
+    let metadata = MetadataBuilder::default().build().unwrap();
+
+    let survey_model = SurveyModelBuilder::default()
+        .id(metadata.id.clone())
+        .plaintext(parsed_survey.plaintext.clone())
+        .parse_version(parsed_survey.parse_version.clone())
+        .user_id(user_id.clone())
+        .created_at(metadata.created_at.clone())
+        .modified_at(metadata.modified_at.clone())
+        .version(metadata.version.clone())
+        .build()
+        .unwrap();
+
+    let new_survey = SurveyBuilder::default()
+        .metadata(metadata)
+        .survey(parsed_survey)
+        .user_id(user_id)
+        .build()
+        .unwrap();
+
+    let insert_result = _state.db.create_survey(survey_model).await.unwrap();
+    let response = CreateSurveyResponse::from(new_survey);
     (StatusCode::CREATED, Json(response))
 }
 
 #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn submit_survey(
-    State(_state): State<ServerState>,
+    State(state): State<ServerState>,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
     // let content_type_header = req.headers().get(CONTENT_TYPE);
@@ -170,7 +198,18 @@ pub async fn submit_survey(
         println!("Length of `{}` is {} bytes", name, data.len());
         dict.insert(name, data);
     }
-    (StatusCode::CREATED, Json(dict))
+
+    // todo!("Check that fields are present, have valid choices/responses");
+    /*
+    check survey id exists in database
+     */
+    let submitted_survey_id = match dict.get("survey_id") {
+        Some(x) => x,
+        None => return (StatusCode::NOT_FOUND, Json(json!("Survey not available"))),
+    };
+    let survey = state.db.get_survey(submitted_survey_id).await.unwrap();
+
+    (StatusCode::CREATED, Json(json!(survey)))
 }
 
 #[derive(Deserialize, Debug)]
@@ -192,7 +231,7 @@ pub async fn get_survey(
     Path(survey_id): Path<String>,
     Query(query): Query<GetSurveyQuery>,
 ) -> impl IntoResponse {
-    let db_response = _state.db.get_survey(survey_id).await.unwrap();
+    let db_response = _state.db.get_survey(&survey_id).await.unwrap();
     // let response = CreateSurveyResponse::from(insert_result);
     info!("query: {query:#?}");
     println!("query: {query:#?}");
@@ -204,16 +243,11 @@ pub async fn get_survey(
 #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn test_survey(
-    State(_state): State<ServerState>,
+    // State(_state): State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> impl IntoResponse {
-    let (insert_result, expected_answers) = _state.db.test_survey(payload).await.unwrap();
-    let response = CreateSurveyResponse::from(insert_result);
-
-    (
-        StatusCode::OK,
-        Json(json!({"survey": response, "expect": expected_answers})),
-    )
+    let survey = parse_markdown_v3(payload.plaintext.clone());
+    (StatusCode::OK, Json(survey))
 }
 
 #[tracing::instrument]
@@ -233,15 +267,7 @@ pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse 
         .await
         .unwrap();
 
-    let surveys = res.iter().map(|x| SurveyModel::to_survey(x)).collect();
-
-    // json!({ "surveys": res });
-
-    println!("Survey: {res:#?}");
-    let listresp = ListSurveyResponse { surveys: surveys };
-
-    // (StatusCode::OK, Json(json!({ "surveys": res })))
-    (StatusCode::OK, Json(listresp))
+    (StatusCode::OK, Json(json!(res)))
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -339,25 +365,19 @@ use serde::{Deserialize, Serialize};
 //     }
 // }
 
-impl SurveyModel {
-    fn to_survey(survey: &SurveyModel) -> Survey {
-        let survey = survey.clone();
-        let questions = markdown_to_form(survey.plaintext.clone()).questions;
-        return Survey {
-            id: survey.id,
-            plaintext: survey.plaintext,
-            user_id: survey.user_id,
-            created_at: survey.created_at,
-            modified_at: survey.modified_at,
-            // questions: questions,
-            version: survey.version,
-            questions,
-            parse_version: "0".to_string(),
-            // nanoid: markdownparser::nanoid_gen(),
-            // parse_version: survey.parse_version,
-        };
-    }
-}
+// impl SurveyModel {
+//     fn to_survey(survey: &SurveyModel) -> Survey {
+//         let survey = survey.clone();
+//         let questions = markdown_to_form(survey.plaintext.clone()).questions;
+//         return Survey {
+//             survey: todo!(),
+//             metadata: todo!(),
+//             UserInfo: todo!(),
+//             // nanoid: markdownparser::nanoid_gen(),
+//             // parse_version: survey.parse_version,
+//         };
+//     }
+// }
 
 #[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct SurveyModel {

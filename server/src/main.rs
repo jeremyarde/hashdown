@@ -116,14 +116,17 @@ mod tests {
 
         let results: CreateSurveyResponse = response.json().await.unwrap();
 
-        assert_eq!(results.survey.plaintext, "- another\n - this one");
+        assert_eq!(results.survey.survey.plaintext, "- another\n - this one");
 
         //call list
         let listresponse = client.get(&client_url).send().await.unwrap();
         let listresults: ListSurveyResponse = listresponse.json().await.unwrap();
 
         assert_eq!(listresults.surveys.len(), 1);
-        assert_eq!(listresults.surveys[0].plaintext, "- another\n - this one");
+        assert_eq!(
+            listresults.surveys[0].survey.plaintext,
+            "- another\n - this one"
+        );
     }
 
     #[tokio::test]
@@ -158,7 +161,7 @@ mod tests {
 
         println!("Results: {results:#?}");
 
-        assert_eq!(results.survey.plaintext, "- create\n - this one");
+        assert_eq!(results.survey.survey.plaintext, "- create\n - this one");
     }
 
     // #[tokio::test]

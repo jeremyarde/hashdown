@@ -1,3 +1,4 @@
+use derive_builder::Builder;
 // use ormlite::Model;
 use rand::{thread_rng, Rng};
 use serde::{self, Deserialize, Serialize};
@@ -10,16 +11,16 @@ const NANOID_LEN: usize = 12;
 //     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
 //     'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 // ];
-const NANOID_ALPHA: [char; 34] = [
-    '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-    'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-];
+// const NANOID_ALPHA: [char; 34] = [
+//     '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+//     'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+// ];
 
-pub fn nanoid_gen() -> String {
-    let random =
-        [(); NANOID_LEN].map(|_| NANOID_ALPHA[thread_rng().gen_range(0..NANOID_ALPHA.len())]);
-    return String::from_iter(random.iter());
-}
+// pub fn nanoid_gen() -> String {
+//     let random =
+//         [(); NANOID_LEN].map(|_| NANOID_ALPHA[thread_rng().gen_range(0..NANOID_ALPHA.len())]);
+//     return String::from_iter(random.iter());
+// }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateAnswersModel {
@@ -33,21 +34,21 @@ pub struct CreateAnswersModel {
     created_at: String,
 }
 
-impl CreateAnswersModel {
-    pub fn from(create_answer: CreateAnswersRequest) -> CreateAnswersModel {
-        CreateAnswersModel {
-            id: nanoid_gen(),
-            // id: "test".to_string(),
-            external_id: nanoid_gen(),
-            survey_id: create_answer.survey_id,
-            survey_version: create_answer.survey_version,
-            start_time: create_answer.start_time,
-            end_time: "now".to_string(),
-            answers: json!(create_answer.answers).to_string(),
-            created_at: "now".to_string(),
-        }
-    }
-}
+// impl CreateAnswersModel {
+//     pub fn from(create_answer: CreateAnswersRequest) -> CreateAnswersModel {
+//         CreateAnswersModel {
+//             id: nanoid_gen(),
+//             // id: "test".to_string(),
+//             external_id: nanoid_gen(),
+//             survey_id: create_answer.survey_id,
+//             survey_version: create_answer.survey_version,
+//             start_time: create_answer.start_time,
+//             end_time: "now".to_string(),
+//             answers: json!(create_answer.answers).to_string(),
+//             created_at: "now".to_string(),
+//         }
+//     }
+// }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateAnswersRequest {
@@ -107,25 +108,19 @@ pub struct Survey {
     pub parse_version: String,
 }
 
-// #[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
-// pub struct SurveyModel {
-//     pub id: String,
-//     pub plaintext: String,
-//     pub user_id: String,
-//     pub created_at: String,
-//     pub modified_at: String,
-//     // pub questions: Option<Vec<Question>>,
-//     pub version: String,
-//     pub parse_version: String,
-// }
+#[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow, Builder)]
+pub struct SurveyModel {
+    pub id: String,
+    pub plaintext: String,
+    pub user_id: String,
+    pub created_at: String,
+    pub modified_at: String,
+    // pub questions: Option<Vec<Question>>,
+    pub version: String,
+    pub parse_version: String,
+}
 
 #[cfg(test)]
 mod tests {
-    use crate::models::nanoid_gen;
-
-    #[test]
-    fn testing_random() {
-        let res = nanoid_gen();
-        println!("{res}");
-    }
+    // use crate::models::nanoid_gen;
 }

@@ -1,5 +1,6 @@
 // use wasm_bindgen::prelude::*;
 
+use derive_builder::Builder;
 use rand::{thread_rng, Rng};
 // use nanoid::nanoid;
 // use getrandom::getrandom;
@@ -52,16 +53,73 @@ pub fn nanoid_gen() -> String {
 // }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Survey {
-    pub id: String,
-    pub plaintext: String,
-    pub user_id: String,
+struct UserInfo {
+    user_id: String,
+}
+
+impl UserInfo {
+    fn new(user_id: String) -> Self {
+        return UserInfo { user_id: user_id };
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Builder)]
+#[builder(default)]
+pub struct Metadata {
     pub created_at: String,
     pub modified_at: String,
-    pub questions: Vec<Question>,
     pub version: String,
-    pub parse_version: String,
+    pub id: String,
 }
+
+impl Default for Metadata {
+    fn default() -> Self {
+        Self {
+            created_at: chrono::offset::Utc::now().to_string(),
+            modified_at: chrono::offset::Utc::now().to_string(),
+            version: "0".to_string(),
+            id: nanoid_gen(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Builder)]
+pub struct Survey {
+    #[serde(flatten)]
+    pub survey: ParsedSurvey,
+    // pub id: String,
+    // pub plaintext: String,
+    // pub user_id: String,
+    // pub created_at: String,
+    // pub modified_at: String,
+    // pub questions: Vec<Question>,
+    // pub version: String,
+    // pub parse_version: String,
+    #[serde(flatten)]
+    pub metadata: Metadata,
+    // #[serde(flatten)]
+    // pub UserInfo: UserInfo,
+    pub user_id: String,
+}
+
+// impl Survey {
+//     fn from(partial_survey: ParsedSurvey, user_id: String) -> Survey {
+//         return Survey {
+//             // plaintext: partial_survey.plaintext,
+//             metadata: Metadata::new(),
+//             user_id,
+//             survey: partial_survey,
+//         };
+//     }
+
+//     pub fn new(plaintext: String) -> Survey {
+//         Survey {
+//             survey: ParsedSurvey::from(plaintext),
+//             metadata: Metadata::new(),
+//             user_id: ,
+//         }
+//     }
+// }
 
 // #[wasm_bindgen]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -257,7 +315,7 @@ enum LineType {
     Nothing,
 }
 
-pub fn markdown_to_form(contents: String) -> Survey {
+pub fn markdown_to_form(contents: String) -> ParsedSurvey {
     let survey = parse_markdown_v3(contents);
     return survey;
 }
@@ -269,8 +327,9 @@ pub fn markdown_to_form(contents: String) -> Survey {
 //     return serde_wasm_bindgen::to_value(&survey).unwrap();
 // }
 
-pub fn parse_markdown_v3(contents: String) -> Survey {
-    // let mut questions = Questions::new();
+pub fn parse_markdown_v3(contents: String) -> ParsedSurvey {
+    const VERSION: &str = "0";
+
     let mut questions = vec![];
     let mut curr_question_text: &str = "";
     let mut curr_options: Vec<&str> = vec![];
@@ -325,18 +384,32 @@ pub fn parse_markdown_v3(contents: String) -> Survey {
     //     text: "test".to_string(),
     // };
 
-    let survey = Survey {
-        id: nanoid_gen(),
+    let survey = ParsedSurvey {
+        // id: nanoid_gen(),
         plaintext: contents,
-        user_id: "".to_string(),
-        created_at: "".to_string(),
-        modified_at: "".to_string(),
+        // user_id: "".to_string(),
+        // created_at: "".to_string(),
+        // modified_at: "".to_string(),
         questions: questions,
-        version: "0".to_string(),
+        // version: "0".to_string(),
         parse_version: "0".to_string(),
     };
+
     return survey;
     // return JsValue::from(value);
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ParsedSurvey {
+    pub plaintext: String,
+    pub questions: Vec<Question>,
+    pub parse_version: String,
+}
+
+impl ParsedSurvey {
+    fn from(plaintext: String) -> ParsedSurvey {
+        return parse_markdown_v3(plaintext);
+    }
 }
 
 fn find_line_type(line: &str) -> LineType {
