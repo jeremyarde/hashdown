@@ -1,13 +1,12 @@
-use std::{hash::Hash, path::PathBuf};
+use std::str::FromStr;
 
-use askama::Template;
+// use askama::Template;
 use axum::{
-    body::{self, boxed, Body, Empty, Full},
     extract::{DefaultBodyLimit, Multipart, Query},
-    http::{self, HeaderValue, Method, Response},
-    response::{Html, IntoResponse},
+    http::{self, HeaderMap, HeaderName, HeaderValue, Method},
+    response::IntoResponse,
     routing::{get, post},
-    Router,
+    RequestPartsExt, Router,
 };
 use db::{
     database::Database,
@@ -72,8 +71,15 @@ impl ServerApplication {
 
         let corslayer = CorsLayer::new()
             .allow_methods([Method::POST, Method::GET])
-            .allow_headers([http::header::CONTENT_TYPE, http::header::ACCEPT])
+            // .allow_headers([
+            //     http::header::CONTENT_TYPE,
+            //     http::header::ACCEPT,
+            //     HeaderName::from_str("x-user-id").unwrap(),
+            // ])
+            .allow_headers(Any)
             .allow_origin(Any);
+
+        // let corslayer = CorsLayer::new().allow_headers(Any);
 
         // let static_dir = "./dist";
 
@@ -98,7 +104,8 @@ impl ServerApplication {
 
         // dotenvy::from_filename("dev.env").ok();
         // initialize tracing
-        tracing_subscriber::fmt::init();
+        // tracing_subscriber::fmt::init();
+        tracing_subscriber::fmt::try_init();
 
         // tracing_subscriber::registry()
         //     .with(
@@ -145,11 +152,19 @@ impl CreateSurveyResponse {
 #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn create_survey(
+    headers: HeaderMap,
     State(_state): State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> impl IntoResponse {
     // Check user + type, can they make surveys?
-    let user_id = "001".to_string();
+    let testuser = HeaderValue::from_str("").unwrap();
+    let user_id = headers
+        .get("x-user-id")
+        .unwrap_or(&testuser)
+        .to_str()
+        .unwrap();
+
+    println!("Creating new survey for user={user_id:?}");
     // Check that the survey is Ok
     let parsed_survey = parse_markdown_v3(payload.plaintext);
 
@@ -159,7 +174,7 @@ pub async fn create_survey(
         .id(metadata.id.clone())
         .plaintext(parsed_survey.plaintext.clone())
         .parse_version(parsed_survey.parse_version.clone())
-        .user_id(user_id.clone())
+        .user_id(user_id.to_string())
         .created_at(metadata.created_at.clone())
         .modified_at(metadata.modified_at.clone())
         .version(metadata.version.clone())
@@ -169,7 +184,7 @@ pub async fn create_survey(
     let new_survey = SurveyBuilder::default()
         .metadata(metadata)
         .survey(parsed_survey)
-        .user_id(user_id)
+        .user_id(user_id.to_string())
         .build()
         .unwrap();
 
@@ -252,27 +267,44 @@ pub async fn test_survey(
 
 #[tracing::instrument]
 #[axum::debug_handler]
-pub async fn list_survey(State(state): State<ServerState>) -> impl IntoResponse {
+pub async fn list_survey(
+    State(state): State<ServerState>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    println!("Recieved headers={headers:#?}");
+    let testuser = HeaderValue::from_str("").unwrap();
+    let user_id = headers
+        .get("x-user-id")
+        .unwrap_or(&testuser)
+        .to_str()
+        .unwrap();
+
+    println!("Getting surveys for user={user_id}");
     let pool = state.db.pool;
 
-    let count: i64 = sqlx::query_scalar("select count(*) from surveys")
-        .fetch_one(&pool)
-        .await
-        .map_err(internal_error)
-        .unwrap();
-    println!("Survey count: {count:#?}");
+    // let count: i64 = sqlx::query_scalar("select count(*) from surveys where surveys.id = $1")
+    //     .bind(user_id)
+    //     .fetch_one(&pool)
+    //     .await
+    //     .map_err(internal_error)
+    //     .unwrap();
+    // println!("Survey count: {count:#?}");
 
-    let res: Vec<SurveyModel> = sqlx::query_as::<_, SurveyModel>("select * from surveys")
-        .fetch_all(&pool)
-        .await
-        .unwrap();
+    let res: Vec<SurveyModel> =
+        sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.user_id = $1")
+            .bind(user_id)
+            .fetch_all(&pool)
+            .await
+            .unwrap();
 
-    (StatusCode::OK, Json(json!(res)))
+    let resp = ListSurveyResponse { surveys: res };
+
+    (StatusCode::OK, Json(resp))
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ListSurveyResponse {
-    pub surveys: Vec<Survey>,
+    pub surveys: Vec<SurveyModel>,
 }
 
 // #[axum::debug_handler]

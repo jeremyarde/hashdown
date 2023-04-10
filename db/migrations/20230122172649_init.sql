@@ -25,5 +25,9 @@ Create table answers (
     answers TEXT,
     created_at TEXT
 );
-insert into surveys (id, plaintext) 
-values ('testid', '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer')
+insert into surveys (id, plaintext, user_id)
+values (
+        'testid',
+        '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
+        'statictestuser'
+    )

@@ -144,6 +144,9 @@ impl Database {
             survey.parse_version
         ).execute(&self.pool).await?;
 
+        let rows = _res.rows_affected();
+        println!("create survey rows affected={rows}");
+
         Ok(survey)
     }
 }

@@ -72,12 +72,13 @@ async fn main() -> anyhow::Result<()> {
 mod tests {
     use std::collections::HashMap;
 
+    use axum::http::{HeaderMap, HeaderValue};
     use db::models::{
         AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
     };
     use dotenvy::dotenv;
     // use markdownparser::{markdown_to_form, markdown_to_form_wasm};
-    use reqwest::StatusCode;
+    use reqwest::{header::CONTENT_TYPE, StatusCode};
 
     use serial_test::serial;
     use tower::ServiceExt;
@@ -95,8 +96,15 @@ mod tests {
         let mut router = ServerApplication::get_router().await;
         router.ready().await.unwrap();
 
+        // let mut test_headers = HeaderMap::new();
+        // test_headers.insert("test", HeaderValue::from_str("yo").unwrap());
+
+        let mut headers = HeaderMap::new();
+        headers.insert("x-user-id", HeaderValue::from_static("testuser"));
+        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+
         let client = reqwest::Client::builder()
-            // .default_headers(headers)
+            .default_headers(headers)
             .build()
             .unwrap();
 
@@ -105,14 +113,20 @@ mod tests {
 
         println!("Client sending to: {client_url}");
 
-        let response = client
+        // TODO! Send issues to request for headers???
+        let request = client
             .post(&client_url)
+            // .headers(headers)
+            // .header("x-user-id", "testuser")
+            .header("duringbuildnotworking", "custom")
             .json(&CreateSurveyRequest {
                 plaintext: "- another\n - this one".to_string(),
             })
-            .send()
-            .await
+            .build()
             .unwrap();
+        println!("Sending request={request:#?}");
+
+        let response = client.execute(request).await.unwrap();
 
         let results: CreateSurveyResponse = response.json().await.unwrap();
 
@@ -123,10 +137,7 @@ mod tests {
         let listresults: ListSurveyResponse = listresponse.json().await.unwrap();
 
         assert_eq!(listresults.surveys.len(), 1);
-        assert_eq!(
-            listresults.surveys[0].survey.plaintext,
-            "- another\n - this one"
-        );
+        assert_eq!(listresults.surveys[0].plaintext, "- another\n - this one");
     }
 
     #[tokio::test]
