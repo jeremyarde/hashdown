@@ -77,8 +77,9 @@ mod tests {
         AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
     };
     use dotenvy::dotenv;
+    use markdownparser::ParsedSurvey;
     // use markdownparser::{markdown_to_form, markdown_to_form_wasm};
-    use reqwest::{header::CONTENT_TYPE, StatusCode};
+    use reqwest::{header::CONTENT_TYPE, Client, StatusCode};
 
     use serial_test::serial;
     use tower::ServiceExt;
@@ -88,6 +89,18 @@ mod tests {
         server::{CreateSurveyResponse, ListSurveyResponse},
         ServerApplication,
     };
+
+    async fn get_client() -> Client {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-user-id", HeaderValue::from_static("testuser"));
+        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+
+        let client = reqwest::Client::builder()
+            .default_headers(headers)
+            .build()
+            .unwrap();
+        return client;
+    }
 
     #[serial]
     #[tokio::test]
@@ -99,17 +112,9 @@ mod tests {
         // let mut test_headers = HeaderMap::new();
         // test_headers.insert("test", HeaderValue::from_str("yo").unwrap());
 
-        let mut headers = HeaderMap::new();
-        headers.insert("x-user-id", HeaderValue::from_static("testuser"));
-        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-
-        let client = reqwest::Client::builder()
-            .default_headers(headers)
-            .build()
-            .unwrap();
+        let client = get_client().await;
 
         let client_url = format!("http://{}{}", app.base_url.to_string(), "/surveys");
-        // let client_url = format!("/surveys");
 
         println!("Client sending to: {client_url}");
 
@@ -175,6 +180,33 @@ mod tests {
         assert_eq!(results.survey.survey.plaintext, "- create\n - this one");
     }
 
+    #[tokio::test]
+    #[serial]
+    async fn test_survey_test() {
+        let _app = ServerApplication::new().await;
+        let mut router = ServerApplication::get_router().await;
+        router.ready().await.unwrap();
+
+        let client = get_client().await;
+        let client_url = format!("http://{}{}", "localhost:8080", "/surveys/test");
+
+        println!("Client sending to: {client_url}");
+
+        let request_test = "- test question\n - this one";
+        let response = client
+            .post(&client_url)
+            .json(&CreateSurveyRequest {
+                plaintext: request_test.to_string(),
+            })
+            .send()
+            .await
+            .unwrap();
+
+        let results: ParsedSurvey = response.json().await.unwrap();
+
+        assert_eq!(results.plaintext, request_test);
+        assert_eq!(results.questions[0].value, "test question");
+    }
     // #[tokio::test]
     // #[serial]
     // async fn answer_survey_test() {
