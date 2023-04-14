@@ -11,3 +11,4 @@ server/target/
 ui-astro/.env.*
 server/dev.env
 
+server/surveyapp.db-*
