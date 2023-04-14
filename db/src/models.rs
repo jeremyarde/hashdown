@@ -24,14 +24,14 @@ const NANOID_LEN: usize = 12;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateAnswersModel {
-    id: String,
-    external_id: String,
-    survey_id: String,
-    survey_version: String,
-    start_time: String,
-    end_time: String,
-    answers: String,
-    created_at: String,
+    pub id: String,
+    pub external_id: String,
+    pub survey_id: String,
+    pub survey_version: String,
+    pub start_time: String,
+    pub end_time: String,
+    pub answers: String,
+    pub created_at: String,
 }
 
 // impl CreateAnswersModel {
@@ -56,7 +56,7 @@ pub struct CreateAnswersRequest {
     pub survey_id: String,
     pub survey_version: String,
     pub start_time: String,
-    pub answers: HashMap<String, AnswerDetails>,
+    pub answers: HashMap<String, String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

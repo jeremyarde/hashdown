@@ -10,7 +10,7 @@ use axum::{
 };
 use db::{
     database::Database,
-    models::{CreateSurveyRequest, SurveyModelBuilder},
+    models::{CreateAnswersModel, CreateSurveyRequest, SurveyModelBuilder},
 };
 use markdownparser::{parse_markdown_v3, MetadataBuilder, Survey, SurveyBuilder};
 use oauth2::basic::BasicClient;
@@ -214,15 +214,37 @@ pub async fn submit_survey(
         dict.insert(name, data);
     }
 
-    // todo!("Check that fields are present, have valid choices/responses");
     /*
     check survey id exists in database
      */
     let submitted_survey_id = match dict.get("survey_id") {
         Some(x) => x,
+        None => {
+            return (
+                StatusCode::NOT_FOUND,
+                Json(json!("Did not find survey Id in request")),
+            )
+        }
+    };
+    let survey = match state.db.get_survey(submitted_survey_id).await.unwrap() {
+        Some(x) => x,
         None => return (StatusCode::NOT_FOUND, Json(json!("Survey not available"))),
     };
-    let survey = state.db.get_survey(submitted_survey_id).await.unwrap();
+
+    let create_answer_model: CreateAnswersModel = CreateAnswersModel {
+        id: "".to_string(),
+        external_id: "".to_string(),
+        survey_id: submitted_survey_id.to_owned(),
+        survey_version: "".to_string(),
+        start_time: chrono::Local::now().to_string(),
+        end_time: "".to_string(),
+        answers: json!(dict).to_string(),
+        created_at: "".to_string(),
+    };
+
+    let answer_result = state.db.create_answer(create_answer_model).await.unwrap();
+
+    info!("completed survey submit");
 
     (StatusCode::CREATED, Json(json!(survey)))
 }

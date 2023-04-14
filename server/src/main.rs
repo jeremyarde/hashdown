@@ -207,6 +207,39 @@ mod tests {
         assert_eq!(results.plaintext, request_test);
         assert_eq!(results.questions[0].value, "test question");
     }
+
+    #[tokio::test]
+    #[serial]
+    async fn create_answer_test() {
+        let _app = ServerApplication::new().await;
+        let mut router = ServerApplication::get_router().await;
+        router.ready().await.unwrap();
+
+        let client = get_client().await;
+        let client_url = format!("http://{}{}", "localhost:8080", "/answer");
+
+        println!("Client sending to: {client_url}");
+
+        let request = CreateAnswersRequest {
+            id: "1".to_string(),
+            survey_id: "testid".to_string(),
+            survey_version: "0".to_string(),
+            start_time: "now()".to_string(),
+            answers: HashMap::new(),
+        };
+
+        let request_test = "- test question\n - this one";
+        let response = client
+            .post(&client_url)
+            .json(&request)
+            .send()
+            .await
+            .unwrap();
+
+        println!("{:?}", response);
+        // let results = response.json().await.unwrap();
+
+    }
     // #[tokio::test]
     // #[serial]
     // async fn answer_survey_test() {

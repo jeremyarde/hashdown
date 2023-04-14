@@ -13,7 +13,7 @@ use sqlx::{
 };
 use tracing::{info, instrument};
 
-use crate::models::{self, CreateSurveyRequest, SurveyModel};
+use crate::models::{self, CreateAnswersModel, CreateSurveyRequest, SurveyModel};
 
 // mod models;
 
@@ -112,7 +112,7 @@ pub struct Answer {
 }
 
 impl Database {
-    pub async fn get_survey(&self, survey_id: &String) -> anyhow::Result<SurveyModel> {
+    pub async fn get_survey(&self, survey_id: &String) -> anyhow::Result<Option<SurveyModel>> {
         let result =
             sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.id = $1")
                 .bind(survey_id)
@@ -120,7 +120,7 @@ impl Database {
                 .await?;
         // let survey = parse_markdown_v3(result.plaintext);
 
-        Ok(result)
+        Ok(Some(result))
     }
 
     pub async fn create_survey(&self, survey: SurveyModel) -> anyhow::Result<SurveyModel> {
@@ -148,6 +148,28 @@ impl Database {
         println!("create survey rows affected={rows}");
 
         Ok(survey)
+    }
+
+    pub async fn create_answer(&self, answer: CreateAnswersModel) -> anyhow::Result<()> {
+        info!("Creating answers in database");
+
+        let res = sqlx::query(
+            r#"insert into answers (id, survey_id, survey_version, answers, created_at)
+        values
+        ($1, $2, $3, $4, $5)
+        "#,
+        )
+        .bind(answer.id)
+        .bind(answer.survey_id)
+        .bind(answer.survey_version)
+        .bind(answer.answers)
+        .bind(answer.start_time)
+        .execute(&self.pool)
+        .await
+        .unwrap();
+
+        info!("created rows={}", res.rows_affected());
+        return Ok(());
     }
 }
 
