@@ -18,6 +18,7 @@ CREATE TABLE users (
 );
 Create table answers (
     id TEXT NOT NULL UNIQUE,
+    answer_id TEXT NOT NULL,
     survey_id TEXT NOT NULL,
     survey_version TEXT,
     start_time TEXT,

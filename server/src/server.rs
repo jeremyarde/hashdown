@@ -3,17 +3,18 @@ use std::str::FromStr;
 // use askama::Template;
 use axum::{
     extract::{DefaultBodyLimit, Multipart, Query},
-    http::{self, HeaderMap, HeaderName, HeaderValue, Method},
+    http::{self, HeaderMap, HeaderName, HeaderValue, Method, Response},
     response::IntoResponse,
     routing::{get, post},
     RequestPartsExt, Router,
 };
 use db::{
     database::Database,
-    models::{CreateAnswersModel, CreateSurveyRequest, SurveyModelBuilder},
+    models::{CreateAnswersModel, CreateAnswersResponse, CreateSurveyRequest, SurveyModelBuilder},
 };
-use markdownparser::{parse_markdown_v3, MetadataBuilder, Survey, SurveyBuilder};
+use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey, SurveyBuilder};
 use oauth2::basic::BasicClient;
+// use reqwest::Response;
 use serde_json::json;
 // use reqwest::header;
 use sqlx::FromRow;
@@ -153,9 +154,11 @@ impl CreateSurveyResponse {
 #[axum::debug_handler]
 pub async fn create_survey(
     headers: HeaderMap,
-    State(_state): State<ServerState>,
+    State(state): State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> impl IntoResponse {
+    info!("Called create survey");
+
     // Check user + type, can they make surveys?
     let testuser = HeaderValue::from_str("").unwrap();
     let user_id = headers
@@ -188,7 +191,7 @@ pub async fn create_survey(
         .build()
         .unwrap();
 
-    let insert_result = _state.db.create_survey(survey_model).await.unwrap();
+    let insert_result = state.db.create_survey(survey_model).await.unwrap();
     let response = CreateSurveyResponse::from(new_survey);
     (StatusCode::CREATED, Json(response))
 }
@@ -198,11 +201,11 @@ pub async fn create_survey(
 pub async fn submit_survey(
     State(state): State<ServerState>,
     mut multipart: Multipart,
-) -> impl IntoResponse {
+) -> Result<Json<CreateAnswersResponse>, CustomError> {
     // let content_type_header = req.headers().get(CONTENT_TYPE);
-    // let content_type = content_type_header.and_then(|value| value.to_str().ok());
+    // let content_type => content_type_header.and_then(|value| value.to_str().ok());
 
-    info!("submit survey called");
+    info!("Called submit survey");
     // let insert_result = _state.db.create_survey(payload).await.unwrap();
     // let response = CreateSurveyResponse::from(insert_result);
     let mut dict: HashMap<String, String> = HashMap::new();
@@ -214,25 +217,32 @@ pub async fn submit_survey(
         dict.insert(name, data);
     }
 
+    info!("Turned survey into dict");
+
     /*
     check survey id exists in database
      */
     let submitted_survey_id = match dict.get("survey_id") {
         Some(x) => x,
         None => {
-            return (
-                StatusCode::NOT_FOUND,
-                Json(json!("Did not find survey Id in request")),
-            )
+            return Err(CustomError::BadRequest("Issue found".to_string()));
         }
     };
+
+    info!("Found survey_id in request");
+
     let survey = match state.db.get_survey(submitted_survey_id).await.unwrap() {
         Some(x) => x,
-        None => return (StatusCode::NOT_FOUND, Json(json!("Survey not available"))),
+        None => return Err(CustomError::BadRequest("another issue".to_string())),
     };
-
+    info!("Found survey_id in database");
+    let answer_id = nanoid_gen();
+    let response = CreateAnswersResponse {
+        answer_id: answer_id.clone(),
+    };
     let create_answer_model: CreateAnswersModel = CreateAnswersModel {
-        id: "".to_string(),
+        id: None,
+        answer_id: answer_id,
         external_id: "".to_string(),
         survey_id: submitted_survey_id.to_owned(),
         survey_version: "".to_string(),
@@ -246,7 +256,28 @@ pub async fn submit_survey(
 
     info!("completed survey submit");
 
-    (StatusCode::CREATED, Json(json!(survey)))
+    return Ok(Json(response));
+}
+
+fn try_thing() -> Result<(), anyhow::Error> {
+    anyhow::bail!("it failed!")
+}
+#[derive(Debug, Deserialize)]
+pub enum CustomError {
+    BadRequest(String),
+    Database(String),
+}
+
+// So that errors get printed to the browser?
+impl IntoResponse for CustomError {
+    fn into_response(self) -> axum::response::Response {
+        let (status, error_message) = match self {
+            CustomError::Database(message) => (StatusCode::UNPROCESSABLE_ENTITY, message),
+            CustomError::BadRequest(message) => (StatusCode::UNPROCESSABLE_ENTITY, message),
+        };
+
+        format!("status = {}, message = {}", status, error_message).into_response()
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -498,3 +529,20 @@ struct Answer {
 // pub async fn create_survey_form(State(_state): State<ServerState>) -> impl IntoResponse {
 //     CreateSurveyTemplate {}
 // }
+
+mod test {
+    use std::collections::HashMap;
+
+    use axum::extract::{multipart, Multipart};
+    use db::database::Database;
+
+    use crate::ServerState;
+
+    // #[tokio::test]
+    // async fn test_create_answer() {
+    //     let db = Database::new(true).await.unwrap();
+    //     let state = ServerState { db: db };
+    //     let mp = Multipart;
+    //     let res = submit_survey(state, mp);
+    // }
+}

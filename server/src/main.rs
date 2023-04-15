@@ -81,12 +81,14 @@ mod tests {
     // use markdownparser::{markdown_to_form, markdown_to_form_wasm};
     use reqwest::{header::CONTENT_TYPE, Client, StatusCode};
 
+    use serde_json::Value;
     use serial_test::serial;
     use tower::ServiceExt;
+    use tracing::info;
 
     use crate::{
         internal_error,
-        server::{CreateSurveyResponse, ListSurveyResponse},
+        server::{CreateSurveyResponse, CustomError, ListSurveyResponse},
         ServerApplication,
     };
 
@@ -216,7 +218,7 @@ mod tests {
         router.ready().await.unwrap();
 
         let client = get_client().await;
-        let client_url = format!("http://{}{}", "localhost:8080", "/answer");
+        let client_url = format!("http://{}{}", "localhost:8080", "/submit");
 
         println!("Client sending to: {client_url}");
 
@@ -228,17 +230,25 @@ mod tests {
             answers: HashMap::new(),
         };
 
-        let request_test = "- test question\n - this one";
+        // let request_test = "- test question\n - this one";
         let response = client
             .post(&client_url)
             .json(&request)
             .send()
             .await
-            .unwrap();
+            .expect("Should recieve repsonse from app");
 
-        println!("{:?}", response);
+        // let json: Value = response.json().await.unwrap();
+        println!("{:?}", response.text().await);
+        //         .json::<Result<CreateAnswersResponse, CustomError>>()
+        //         .await
+        // );
+        // println!("{:?}", response.json::<CreateAnswersResponse>().await);
         // let results = response.json().await.unwrap();
+        // assert!(json.get("answer_id") != None);
+        // assert!(json.get("answer_id").unwrap() != "");
 
+        // assert!();
     }
     // #[tokio::test]
     // #[serial]

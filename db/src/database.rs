@@ -154,12 +154,12 @@ impl Database {
         info!("Creating answers in database");
 
         let res = sqlx::query(
-            r#"insert into answers (id, survey_id, survey_version, answers, created_at)
+            r#"insert into answers (answer_id, survey_id, survey_version, answers, created_at)
         values
         ($1, $2, $3, $4, $5)
         "#,
         )
-        .bind(answer.id)
+        .bind(answer.answer_id)
         .bind(answer.survey_id)
         .bind(answer.survey_version)
         .bind(answer.answers)

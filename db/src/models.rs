@@ -24,7 +24,8 @@ const NANOID_LEN: usize = 12;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateAnswersModel {
-    pub id: String,
+    pub id: Option<String>,
+    pub answer_id: String,
     pub external_id: String,
     pub survey_id: String,
     pub survey_version: String,
@@ -74,11 +75,12 @@ pub enum AnswerType {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateAnswersResponse {
-    id: String,
-    survey_id: String,
-    survey_version: String,
-    start_time: String,
-    answers: HashMap<String, AnswerDetails>,
+    // id: String,
+    // survey_id: String,
+    // survey_version: String,
+    // start_time: String,
+    // answers: HashMap<String, AnswerDetails>,
+    pub answer_id: String,
 }
 
 #[derive(Deserialize, Serialize, sqlx::FromRow, Debug, PartialEq, Eq)]
