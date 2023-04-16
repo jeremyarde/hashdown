@@ -27,5 +27,8 @@
             "database": "${workspaceFolder:markdownparser}/server/surveyapp.sqlite",
             "name": "database"
         }
+    ],
+    "rust-analyzer.linkedProjects": [
+        "./server/Cargo.toml"
     ]
 }

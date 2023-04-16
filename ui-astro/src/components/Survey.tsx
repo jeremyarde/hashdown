@@ -44,13 +44,12 @@ export default function Survey({ survey }) {
     return (
         <>
             <div className='flex flex-col'>
-                {"this is the survey component"}
                 <br></br>
-                {survey?.id ?
+                {survey?.questions ?
                     <form
                         className='flex flex-col'
                         onSubmit={onSubmit}
-                        action={`http://localhost:8080/surveys/${survey?.id}`}
+                        action={`http://localhost:8080/surveys/`}
                         method="POST"
                     >
                         {form_content}

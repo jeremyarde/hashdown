@@ -162,7 +162,7 @@ impl Database {
         .bind(answer.answer_id)
         .bind(answer.survey_id)
         .bind(answer.survey_version)
-        .bind(answer.answers)
+        .bind(json!(answer.answers))
         .bind(answer.start_time)
         .execute(&self.pool)
         .await

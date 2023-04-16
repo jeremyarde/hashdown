@@ -24,6 +24,11 @@ mod server;
 use anyhow;
 use db::database::Database;
 
+mod error;
+mod routes;
+
+pub use self::{error::CustomError, routes::*};
+
 #[derive(Debug, Clone)]
 pub struct ServerState {
     db: Database,
@@ -81,7 +86,7 @@ mod tests {
     // use markdownparser::{markdown_to_form, markdown_to_form_wasm};
     use reqwest::{header::CONTENT_TYPE, Client, StatusCode};
 
-    use serde_json::Value;
+    use serde_json::{json, Value};
     use serial_test::serial;
     use tower::ServiceExt;
     use tracing::info;
@@ -229,11 +234,12 @@ mod tests {
             start_time: "now()".to_string(),
             answers: HashMap::new(),
         };
-
+        let exjson = json!({"first": "answer"});
         // let request_test = "- test question\n - this one";
         let response = client
             .post(&client_url)
-            .json(&request)
+            // .json(&request)
+            .json(&exjson)
             .send()
             .await
             .expect("Should recieve repsonse from app");

@@ -8,7 +8,10 @@ export default function App() {
     return (
         <>
             <Editor editor={editor} setEditor={setEditor} setSurvey={setSurvey} />
-            <Survey survey={survey}></Survey>
+            <div className="border bg-slate-500">
+                <h2 className="text-lg">Survey below</h2>
+                <Survey survey={survey}></Survey>
+            </div>
         </>
     )
 }

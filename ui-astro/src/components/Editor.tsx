@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+// import { SubmitHandler, useForm } from 'react-hook-form';
 
 // import { nanoid_gen, markdown_to_form_wasm } from "../../../backend/pkg";
 import { CreateSurveyRequest } from "../../../server/bindings/CreateSurveyRequest";
@@ -43,9 +43,27 @@ export function useDebouncedCallback<A extends any[]>(
 
 
 export default function Editor({ editor, setEditor, setSurvey }) {
-    const { register, handleSubmit, watch, formState: { errors } } = useForm();
-    const onSubmit = data => console.log(data);
-    console.log(watch("example")); // watch input value by passing the name of it
+    // const { register, handleSubmit, watch, formState: { errors } } = useForm();
+    // const onSubmit = data => console.log(data);
+    // console.log(watch("example")); // watch input value by passing the name of it
+
+    function onSubmit(event) {
+        event.preventDefault();
+        console.log('setting survey soon...');
+        let result = fetch("http://127.0.0.1:8080/surveys", {
+            method: "POST",
+            body: JSON.stringify({
+                plaintext: editor
+            }),
+            headers: {
+                "Content-type": "application/json"
+            }
+        }).then(async (response) => {
+            let resp = await response.json();
+            console.log('inside promise: ' + JSON.stringify(resp));
+            setSurvey(resp);
+        });
+    };
 
     function sendSurveyTestRequest() {
         console.log('setting survey soon...');
@@ -60,10 +78,9 @@ export default function Editor({ editor, setEditor, setSurvey }) {
         }).then(async (response) => {
             let resp = await response.json();
 
-            console.log(resp);
-            setSurvey(resp.survey);
+            console.log('inside promise: ' + JSON.stringify(resp));
+            setSurvey(resp);
         });
-        console.log(result);
     }
 
     const handleEditorChange = useDebouncedCallback(() => {
@@ -79,7 +96,7 @@ export default function Editor({ editor, setEditor, setSurvey }) {
         <>
             <React.StrictMode>
                 <div className={"m-5 p-3 rounded-xl bg-white dark:bg-gray-800 "}>
-                    <form onSubmit={handleSubmit(onSubmit)}>
+                    <form onSubmit={(event) => onSubmit(event)}>
                         <label htmlFor="editor-field" className='sr-only'>
                             Create your survey
                         </label>
@@ -104,7 +121,7 @@ export default function Editor({ editor, setEditor, setSurvey }) {
                     </form>
                 </div>
                 <br></br>
-                {errors && <span>This field is required</span>}
+                {/* {errors && <span>This field is required</span>} */}
 
             </React.StrictMode>
         </>

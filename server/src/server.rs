@@ -1,27 +1,19 @@
-use std::str::FromStr;
-
-// use askama::Template;
 use axum::{
     extract::{DefaultBodyLimit, Multipart, Query},
     http::{self, HeaderMap, HeaderName, HeaderValue, Method, Response},
     response::IntoResponse,
-    routing::{get, post},
-    RequestPartsExt, Router,
+    routing::{get, get_service, post},
+    Router,
 };
 use db::{
     database::Database,
-    models::{CreateAnswersModel, CreateAnswersResponse, CreateSurveyRequest, SurveyModelBuilder},
+    models::{
+        CreateAnswersModel, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
+        SurveyModelBuilder,
+    },
 };
 use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey, SurveyBuilder};
 use oauth2::basic::BasicClient;
-// use reqwest::Response;
-use serde_json::json;
-// use reqwest::header;
-use sqlx::FromRow;
-use tower::ServiceExt;
-// use ui::mainapp::{self, dioxusapp};
-// use ormlite::FromRow;
-// use ormlite::{model::ModelBuilder, Model};
 
 use tokio::{fs, task::JoinHandle};
 use tracing::log::info;
@@ -37,7 +29,8 @@ use tower_http::{
 // use yewui::runapp;
 
 // use crate::answer::post_answer;
-use crate::{internal_error, ServerState};
+use crate::ServerState;
+
 
 // use tower_http::trace::TraceLayer;
 // use tower::http
@@ -64,6 +57,8 @@ async fn hello() -> impl IntoResponse {
 // async fn runyew() -> impl IntoResponse {
 //     Html(runapp().await)
 // }
+// use self::routes;
+// mod routes;
 
 impl ServerApplication {
     pub async fn get_router() -> Router {
@@ -91,10 +86,11 @@ impl ServerApplication {
             .route(&format!("/surveys/test"), post(test_survey))
             .route(&format!("/surveys/:id"), get(get_survey))
             .route(&format!("/submit"), post(submit_survey))
+            .fallback_service(routes_static())
             .with_state(state)
             .layer(corslayer)
             .layer(DefaultBodyLimit::disable())
-            .layer(RequestBodyLimitLayer::new(1 * 1024 * 1024 /* 250mb */))
+            // .layer(RequestBodyLimitLayer::new(1 * 1024 * 1024 /* 250mb */))
             .layer(TraceLayer::new_for_http());
 
         return app;
@@ -148,216 +144,6 @@ impl CreateSurveyResponse {
     fn from(survey: Survey) -> Self {
         CreateSurveyResponse { survey: survey }
     }
-}
-
-#[tracing::instrument]
-#[axum::debug_handler]
-pub async fn create_survey(
-    headers: HeaderMap,
-    State(state): State<ServerState>,
-    extract::Json(payload): extract::Json<CreateSurveyRequest>,
-) -> impl IntoResponse {
-    info!("Called create survey");
-
-    // Check user + type, can they make surveys?
-    let testuser = HeaderValue::from_str("").unwrap();
-    let user_id = headers
-        .get("x-user-id")
-        .unwrap_or(&testuser)
-        .to_str()
-        .unwrap();
-
-    println!("Creating new survey for user={user_id:?}");
-    // Check that the survey is Ok
-    let parsed_survey = parse_markdown_v3(payload.plaintext);
-
-    let metadata = MetadataBuilder::default().build().unwrap();
-
-    let survey_model = SurveyModelBuilder::default()
-        .id(metadata.id.clone())
-        .plaintext(parsed_survey.plaintext.clone())
-        .parse_version(parsed_survey.parse_version.clone())
-        .user_id(user_id.to_string())
-        .created_at(metadata.created_at.clone())
-        .modified_at(metadata.modified_at.clone())
-        .version(metadata.version.clone())
-        .build()
-        .unwrap();
-
-    let new_survey = SurveyBuilder::default()
-        .metadata(metadata)
-        .survey(parsed_survey)
-        .user_id(user_id.to_string())
-        .build()
-        .unwrap();
-
-    let insert_result = state.db.create_survey(survey_model).await.unwrap();
-    let response = CreateSurveyResponse::from(new_survey);
-    (StatusCode::CREATED, Json(response))
-}
-
-#[tracing::instrument]
-#[axum::debug_handler]
-pub async fn submit_survey(
-    State(state): State<ServerState>,
-    mut multipart: Multipart,
-) -> Result<Json<CreateAnswersResponse>, CustomError> {
-    // let content_type_header = req.headers().get(CONTENT_TYPE);
-    // let content_type => content_type_header.and_then(|value| value.to_str().ok());
-
-    info!("Called submit survey");
-    // let insert_result = _state.db.create_survey(payload).await.unwrap();
-    // let response = CreateSurveyResponse::from(insert_result);
-    let mut dict: HashMap<String, String> = HashMap::new();
-    while let Some(mut field) = multipart.next_field().await.unwrap() {
-        let name = field.name().unwrap().to_string();
-        let data = field.text().await.unwrap();
-
-        println!("Length of `{}` is {} bytes", name, data.len());
-        dict.insert(name, data);
-    }
-
-    info!("Turned survey into dict");
-
-    /*
-    check survey id exists in database
-     */
-    let submitted_survey_id = match dict.get("survey_id") {
-        Some(x) => x,
-        None => {
-            return Err(CustomError::BadRequest("Issue found".to_string()));
-        }
-    };
-
-    info!("Found survey_id in request");
-
-    let survey = match state.db.get_survey(submitted_survey_id).await.unwrap() {
-        Some(x) => x,
-        None => return Err(CustomError::BadRequest("another issue".to_string())),
-    };
-    info!("Found survey_id in database");
-    let answer_id = nanoid_gen();
-    let response = CreateAnswersResponse {
-        answer_id: answer_id.clone(),
-    };
-    let create_answer_model: CreateAnswersModel = CreateAnswersModel {
-        id: None,
-        answer_id: answer_id,
-        external_id: "".to_string(),
-        survey_id: submitted_survey_id.to_owned(),
-        survey_version: "".to_string(),
-        start_time: chrono::Local::now().to_string(),
-        end_time: "".to_string(),
-        answers: json!(dict).to_string(),
-        created_at: "".to_string(),
-    };
-
-    let answer_result = state.db.create_answer(create_answer_model).await.unwrap();
-
-    info!("completed survey submit");
-
-    return Ok(Json(response));
-}
-
-fn try_thing() -> Result<(), anyhow::Error> {
-    anyhow::bail!("it failed!")
-}
-#[derive(Debug, Deserialize)]
-pub enum CustomError {
-    BadRequest(String),
-    Database(String),
-}
-
-// So that errors get printed to the browser?
-impl IntoResponse for CustomError {
-    fn into_response(self) -> axum::response::Response {
-        let (status, error_message) = match self {
-            CustomError::Database(message) => (StatusCode::UNPROCESSABLE_ENTITY, message),
-            CustomError::BadRequest(message) => (StatusCode::UNPROCESSABLE_ENTITY, message),
-        };
-
-        format!("status = {}, message = {}", status, error_message).into_response()
-    }
-}
-
-#[derive(Deserialize, Debug)]
-pub struct GetSurveyQuery {
-    pub format: SurveyFormat,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "lowercase")]
-pub enum SurveyFormat {
-    Html,
-    Json,
-}
-
-// #[tracing::instrument]
-#[axum::debug_handler]
-pub async fn get_survey(
-    State(_state): State<ServerState>,
-    Path(survey_id): Path<String>,
-    Query(query): Query<GetSurveyQuery>,
-) -> impl IntoResponse {
-    let db_response = _state.db.get_survey(&survey_id).await.unwrap();
-    // let response = CreateSurveyResponse::from(insert_result);
-    info!("query: {query:#?}");
-    println!("query: {query:#?}");
-
-    // let results = transform_response(db_response, query);
-    (StatusCode::OK, Json(db_response))
-}
-
-#[tracing::instrument]
-#[axum::debug_handler]
-pub async fn test_survey(
-    // State(_state): State<ServerState>,
-    extract::Json(payload): extract::Json<CreateSurveyRequest>,
-) -> impl IntoResponse {
-    let survey = parse_markdown_v3(payload.plaintext.clone());
-    (StatusCode::OK, Json(survey))
-}
-
-#[tracing::instrument]
-#[axum::debug_handler]
-pub async fn list_survey(
-    State(state): State<ServerState>,
-    headers: HeaderMap,
-) -> impl IntoResponse {
-    println!("Recieved headers={headers:#?}");
-    let testuser = HeaderValue::from_str("").unwrap();
-    let user_id = headers
-        .get("x-user-id")
-        .unwrap_or(&testuser)
-        .to_str()
-        .unwrap();
-
-    println!("Getting surveys for user={user_id}");
-    let pool = state.db.pool;
-
-    // let count: i64 = sqlx::query_scalar("select count(*) from surveys where surveys.id = $1")
-    //     .bind(user_id)
-    //     .fetch_one(&pool)
-    //     .await
-    //     .map_err(internal_error)
-    //     .unwrap();
-    // println!("Survey count: {count:#?}");
-
-    let res: Vec<SurveyModel> =
-        sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.user_id = $1")
-            .bind(user_id)
-            .fetch_all(&pool)
-            .await
-            .unwrap();
-
-    let resp = ListSurveyResponse { surveys: res };
-
-    (StatusCode::OK, Json(resp))
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct ListSurveyResponse {
-    pub surveys: Vec<SurveyModel>,
 }
 
 // #[axum::debug_handler]

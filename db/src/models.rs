@@ -31,7 +31,7 @@ pub struct CreateAnswersModel {
     pub survey_version: String,
     pub start_time: String,
     pub end_time: String,
-    pub answers: String,
+    pub answers: HashMap<String, String>,
     pub created_at: String,
 }
 

@@ -23,7 +23,7 @@ Create table answers (
     survey_version TEXT,
     start_time TEXT,
     end_time TEXT,
-    answers TEXT,
+    answers JSON,
     created_at TEXT
 );
 insert into surveys (id, plaintext, user_id)
