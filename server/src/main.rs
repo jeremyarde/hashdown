@@ -1,5 +1,3 @@
-use std::env;
-
 use axum::http::StatusCode;
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
@@ -93,7 +91,8 @@ mod tests {
 
     use crate::{
         internal_error,
-        server::{CreateSurveyResponse, CustomError, ListSurveyResponse},
+        routes::routes::{ListSurveyResponse, LoginPayload},
+        server::CreateSurveyResponse,
         ServerApplication,
     };
 
@@ -256,74 +255,38 @@ mod tests {
 
         // assert!();
     }
-    // #[tokio::test]
-    // #[serial]
-    // async fn answer_survey_test() {
-    //     let _app = ServerApplication::new(true).await;
-    //     let mut router = ServerApplication::get_router(true).await;
-    //     router.ready().await.unwrap();
+    #[tokio::test]
+    #[serial]
+    async fn login_test() {
+        let _app = ServerApplication::new().await;
+        let mut router = ServerApplication::get_router().await;
+        router.ready().await.unwrap();
 
-    //     let client = reqwest::Client::builder().build().unwrap();
+        let url = "/login";
+        let client = get_client().await;
+        let client_url = format!("http://{}{}", "localhost:8080", url);
 
-    //     let client_url = format!("http://{}{}", "localhost:8080", "/surveys");
-    //     // let client_url = format!("/surveys");
-    //     println!("Client sending to: {client_url}");
+        println!("Sending req to: {client_url}");
 
-    //     let response = client
-    //         .post(&client_url)
-    //         .json(&CreateSurveyRequest {
-    //             plaintext: "- another\n - this one".to_string(),
-    //         })
-    //         .send()
-    //         .await
-    //         .unwrap();
-
-    //     let results: CreateSurveyResponse = response.json().await.unwrap();
-
-    //     assert_eq!(results.survey.plaintext, "- another\n - this one");
-
-    //     let listresponse = client.get(&client_url).send().await.unwrap();
-    //     let listresults: ListSurveyResponse = listresponse.json().await.unwrap();
-
-    //     assert_eq!(listresults.surveys.len(), 1);
-    //     assert_eq!(listresults.surveys[0].plaintext, "- another\n - this one");
-
-    //     let mut answers = HashMap::new();
-
-    //     let actualsurvey = markdown_to_form(results.survey.plaintext);
-
-    //     answers.insert(
-    //         actualsurvey.questions[0].id.clone(),
-    //         AnswerDetails {
-    //             r#type: AnswerType::String,
-    //             values: actualsurvey.questions[0]
-    //                 .options
-    //                 .iter()
-    //                 .map(|x| x.text.clone())
-    //                 .collect(),
-    //         },
-    //     );
-    //     let answers_request = db::models::CreateAnswersRequest {
-    //         id: "test".to_string(),
-    //         survey_id: listresults.surveys[0].id.clone(),
-    //         start_time: "".to_string(),
-    //         answers: answers,
-    //         survey_version: actualsurvey.version.clone(),
-    //     };
-
-    //     let response = client
-    //         .post(format!(
-    //             "{client_url}/{}/answers",
-    //             actualsurvey.questions[0].id.clone()
-    //         ))
-    //         .json(&answers_request)
-    //         .send()
-    //         .await
-    //         .unwrap();
-
-    //     assert_eq!(response.status(), StatusCode::CREATED);
-    //     let answer_response: CreateAnswersResponse = response.json().await.unwrap();
-
-    //     println!("Create answer response: {answer_response:?}");
-    // }
+        let request = LoginPayload {
+            username: "jere".to_string(),
+            password: "plaintextpassword".to_string(),
+        };
+        // let exjson = json!({"first": "answer"});
+        // let request_test = "- test question\n - this one";
+        let response = client
+            .post(&client_url)
+            // .json(&request)
+            .json(&request)
+            .send()
+            .await
+            .expect("Should recieve repsonse from app");
+        println!("Got response");
+        let results = response.json::<Value>().await;
+        println!("{results:?}");
+        // assert_eq!(
+        //     &response.json::<Value>().await.unwrap(),
+        //     json!({"result": false}).get("result").unwrap()
+        // )
+    }
 }

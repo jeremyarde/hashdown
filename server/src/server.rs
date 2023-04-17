@@ -1,47 +1,39 @@
 use axum::{
     extract::{DefaultBodyLimit, Multipart, Query},
     http::{self, HeaderMap, HeaderName, HeaderValue, Method, Response},
+    middleware,
     response::IntoResponse,
-    routing::{get, get_service, post},
-    Router,
+    Extension, Router,
 };
-use db::{
-    database::Database,
-    models::{
-        CreateAnswersModel, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
-        SurveyModelBuilder,
-    },
-};
+use db::database::Database;
 use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey, SurveyBuilder};
-use oauth2::basic::BasicClient;
 
 use tokio::{fs, task::JoinHandle};
+use tower_cookies::CookieManagerLayer;
 use tracing::log::info;
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
 // use tower_http::http::cors::CorsLayer;
 use tower_http::{
     cors::{Any, CorsLayer},
-    limit::RequestBodyLimitLayer,
-    services::ServeDir,
     trace::TraceLayer,
 };
 // use yewui::runapp;
 
 // use crate::answer::post_answer;
-use crate::ServerState;
-
+use crate::{
+    routes::routes::{
+        api_login, create_survey, get_routes, get_survey, list_survey, submit_survey, test_survey,
+    },
+    ServerState,
+};
 
 // use tower_http::trace::TraceLayer;
 // use tower::http
 pub struct ServerApplication {
     pub base_url: SocketAddr,
     pub server: JoinHandle<()>,
-    pub oauth_client: Option<BasicClient>,
-}
-
-async fn hello() -> impl IntoResponse {
-    "hello from server!"
+    // pub oauth_client: Option<BasicClient>,
 }
 
 // async fn uiapp(State(_state): State<ServerState>) -> impl IntoResponse {
@@ -62,7 +54,9 @@ async fn hello() -> impl IntoResponse {
 
 impl ServerApplication {
     pub async fn get_router() -> Router {
-        let db = Database::new(true).await.unwrap();
+        let db = Database::new(true)
+            .await
+            .expect("Database was not created.");
         let state = ServerState { db: db };
 
         let corslayer = CorsLayer::new()
@@ -80,18 +74,24 @@ impl ServerApplication {
         // let static_dir = "./dist";
 
         // build our application with a route
-        let app: Router = Router::new()
-            // .merge(setup_routes())
-            .route(&format!("/surveys"), post(create_survey).get(list_survey))
-            .route(&format!("/surveys/test"), post(test_survey))
-            .route(&format!("/surveys/:id"), get(get_survey))
-            .route(&format!("/submit"), post(submit_survey))
-            .fallback_service(routes_static())
-            .with_state(state)
+        let app = Router::new()
+            // .route(&format!("/surveys"), post(create_survey).get(list_survey))
+            // .with_state(state.clone())
+            // .merge(get_routes(state.clone()))
+            .merge(get_routes(state))
+            // .layer(Extension(state))
             .layer(corslayer)
-            .layer(DefaultBodyLimit::disable())
+            // .layer(middleware::map_response(main_response_mapper))
+            .layer(CookieManagerLayer::new())
+            // .with_state(state)
+            // .route(&format!("/surveys/test"), post(test_survey))
+            // .route(&format!("/surveys/:id"), get(get_survey))
+            // .route(&format!("/submit"), post(submit_survey))
+            // .route("login", post(api_login))
+            // .layer(DefaultBodyLimit::disable())
             // .layer(RequestBodyLimitLayer::new(1 * 1024 * 1024 /* 250mb */))
             .layer(TraceLayer::new_for_http());
+        // let app = app.merge(routes_static());
 
         return app;
     }
@@ -130,10 +130,15 @@ impl ServerApplication {
         return ServerApplication {
             base_url: addr,
             server: server,
-            oauth_client: None,
+            // oauth_client: None,
         };
     }
 }
+
+// pub fn routes_static() -> Router {
+//     let router = Router::new().nest_service("/", get_service(ServeDir::new("./")));
+//     return router;
+// }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateSurveyResponse {
@@ -145,6 +150,11 @@ impl CreateSurveyResponse {
         CreateSurveyResponse { survey: survey }
     }
 }
+
+// async fn main_response_mapper(res: Response) -> Response {
+//     println!("main_response_mapper - res={:?}", res);
+//     res
+// }
 
 // #[axum::debug_handler]
 // pub async fn get_survey(

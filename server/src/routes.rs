@@ -1,13 +1,70 @@
 pub mod routes {
     use axum::{
-        extract::{self, State},
+        extract::{DefaultBodyLimit, Multipart, Path, Query},
+        http::{self, HeaderMap, HeaderName, HeaderValue, Method, Response},
         response::IntoResponse,
+        routing::{get, get_service, post, MethodRouter},
+        Extension, Router,
     };
-    use db::models::{SurveyModelBuilder, CreateSurveyRequest};
-    use markdownparser::parse_markdown_v3;
-    use tracing::info;
+    use db::{
+        database::Database,
+        models::{
+            CreateAnswersModel, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
+            SurveyModel, SurveyModelBuilder,
+        },
+    };
+    use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey, SurveyBuilder};
+    // use oauth2::basic::BasicClient;
 
-    use crate::ServerState;
+    use serde::{Deserialize, Serialize};
+    use serde_json::{json, Value};
+    use tower_cookies::{Cookie, Cookies};
+    use tracing::log::info;
+    // use uuid::Uuid;
+    // use sqlx::{Sqlite, SqlitePool};
+    // use tower_http::http::cors::CorsLayer;
+    use axum::{
+        extract::{self, State},
+        http::StatusCode,
+        Json,
+    };
+    use tower_http::{
+        cors::{Any, CorsLayer},
+        limit::RequestBodyLimitLayer,
+        services::ServeDir,
+        trace::TraceLayer,
+    };
+
+    // use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, SurveyBuilder};
+
+    use crate::{server::CreateSurveyResponse, CustomError, ServerState};
+
+    // pub fn get_routes(state: ServerState) -> Router {
+    //     let t = Router::new()
+    //         // .layer(Extension(state))
+    //         .route(&format!("/surveys"), post(create_survey).get(list_survey))
+    //         .route(&format!("/surveys/test"), post(test_survey))
+    //         .route(&format!("/surveys/:id"), get(get_survey))
+    //         .route(&format!("/submit"), post(submit_survey))
+    //         .route(&format!("login"), post(api_login))
+    //         .with_state(state);
+    //     return t;
+    // }
+
+    pub fn get_routes(state: ServerState) -> Router {
+        let t = Router::new()
+            // .layer(Extension(state))
+            .route(&format!("/surveys"), post(create_survey).get(list_survey))
+            .route(&format!("/surveys/test"), post(test_survey))
+            .route(&format!("/surveys/:id"), get(get_survey))
+            .route(&format!("/submit"), post(submit_survey))
+            .route(&format!("/login"), post(api_login))
+            .with_state(state);
+        // .layer(Extension(state));
+        // .with_state(state);
+
+        return t;
+    }
 
     #[tracing::instrument]
     #[axum::debug_handler]
@@ -51,7 +108,7 @@ pub mod routes {
             .unwrap();
 
         let insert_result = state.db.create_survey(survey_model).await.unwrap();
-        let response = CreateSurveyResponse::from(new_survey);
+        let response = CreateSurveyResponse { survey: new_survey };
         (StatusCode::CREATED, Json(response))
     }
 
@@ -142,7 +199,8 @@ pub mod routes {
     #[tracing::instrument]
     #[axum::debug_handler]
     pub async fn list_survey(
-        State(state): State<ServerState>,
+        state: Extension<ServerState>,
+        // State(state): State<ServerState>,
         headers: HeaderMap,
     ) -> impl IntoResponse {
         println!("Recieved headers={headers:#?}");
@@ -154,7 +212,7 @@ pub mod routes {
             .unwrap();
 
         println!("Getting surveys for user={user_id}");
-        let pool = state.db.pool;
+        let pool = &state.db.pool;
 
         // let count: i64 = sqlx::query_scalar("select count(*) from surveys where surveys.id = $1")
         //     .bind(user_id)
@@ -167,7 +225,7 @@ pub mod routes {
         let res: Vec<SurveyModel> =
             sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.user_id = $1")
                 .bind(user_id)
-                .fetch_all(&pool)
+                .fetch_all(pool)
                 .await
                 .unwrap();
 
@@ -181,8 +239,24 @@ pub mod routes {
         pub surveys: Vec<SurveyModel>,
     }
 
-    fn routes_static() -> Router {
-        let router = Router::new().nest_service("/", get_service(ServeDir::new("./")));
-        return router;
+    #[derive(Deserialize, Debug, Serialize)]
+    pub struct LoginPayload {
+        pub username: String,
+        pub password: String,
+    }
+    pub async fn api_login(
+        cookies: Cookies,
+        payload: Json<LoginPayload>,
+    ) -> Result<Json<Value>, CustomError> {
+        info!("api_login");
+        // TODO: real db auth
+
+        // TODO: set cookies
+        cookies.add(Cookie::new("auth-token", "user-1.exp.sign"));
+
+        // TODO: create success body
+        let username = payload.username.clone();
+        let logged_in = true;
+        Ok(Json(json!({"result": logged_in, "username": username})))
     }
 }

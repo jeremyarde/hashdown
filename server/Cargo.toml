@@ -11,13 +11,14 @@ db = { path = "../db" }
 ui = { path = "../ui" }
 # yewui = { path = "../yewui", features = [] }
 
-tower-http = { version = "0.3.5", features = ["full"] }
+tower-http = { version = "0.3.5", features = ["full", "fs"] }
 anyhow = "1.0.68"
 axum = { version = "0.6.3", features = ["json", "macros", "multipart"] }
 serde = { version = "1.0.152", features = ["derive"] }
 # sqlx = { version = "0.6.2", features = ["sqlite", 'runtime-tokio-rustls'] }
-tokio = { version = "1.24.2", features = ["macros"] }
+tokio = { version = "1.24.2", features = ["macros", "full"] }
 tower = "0.4.13"
+
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
 dotenvy = "0.15.6"
@@ -37,6 +38,7 @@ sqlx = { version = "0.7.0-alpha.1", features = [
 chrono = "0.4.24"
 # include_dir = "0.7.3"
 mime_guess = "2.0.4"
+tower-cookies = "0.9.0"
 # hyper = "0.14.24"
 
 
