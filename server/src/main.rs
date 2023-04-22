@@ -17,6 +17,7 @@ use tracing::{instrument, log::info};
 use crate::server::ServerApplication;
 // mod answer;
 // mod db;
+mod mware;
 mod server;
 // mod survey;
 use anyhow;
@@ -30,15 +31,6 @@ pub use self::{error::CustomError, routes::*};
 #[derive(Debug, Clone)]
 pub struct ServerState {
     db: Database,
-}
-
-/// Utility function for mapping any error into a `500 Internal Server Error`
-/// response.
-fn internal_error<E>(err: E) -> (StatusCode, String)
-where
-    E: std::error::Error,
-{
-    (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
 }
 
 #[tokio::main]
@@ -90,7 +82,6 @@ mod tests {
     use tracing::info;
 
     use crate::{
-        internal_error,
         routes::routes::{ListSurveyResponse, LoginPayload},
         server::CreateSurveyResponse,
         ServerApplication,
@@ -281,6 +272,8 @@ mod tests {
             .send()
             .await
             .expect("Should recieve repsonse from app");
+
+        
         println!("Got response");
         let results = response.json::<Value>().await;
         println!("{results:?}");

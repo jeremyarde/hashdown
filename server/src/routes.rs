@@ -1,8 +1,10 @@
 pub mod routes {
     use axum::{
         extract::{DefaultBodyLimit, Multipart, Path, Query},
-        http::{self, HeaderMap, HeaderName, HeaderValue, Method, Response},
+        http::{self, HeaderMap, HeaderName, HeaderValue, Method, Uri},
+        middleware,
         response::IntoResponse,
+        response::Response,
         routing::{get, get_service, post, MethodRouter},
         Extension, Router,
     };
@@ -34,10 +36,18 @@ pub mod routes {
         services::ServeDir,
         trace::TraceLayer,
     };
+    use uuid::Uuid;
 
     // use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, SurveyBuilder};
 
-    use crate::{server::CreateSurveyResponse, CustomError, ServerState};
+    use crate::{
+        mware::{
+            self,
+            ctext::{mw_ctx_resolver, Ctext},
+        },
+        server::CreateSurveyResponse,
+        CustomError, ServerState,
+    };
 
     // pub fn get_routes(state: ServerState) -> Router {
     //     let t = Router::new()
@@ -50,20 +60,78 @@ pub mod routes {
     //         .with_state(state);
     //     return t;
     // }
+    // use mware::middleware_require_auth;
 
     pub fn get_routes(state: ServerState) -> Router {
+        let survey_routes: Router = Router::new()
+            .route(&format!("/surveys/:id"), get(get_survey))
+            .route(&format!("/submit"), post(submit_survey))
+            .with_state(state.clone())
+            .route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                mw_ctx_resolver,
+            ));
+
         let t = Router::new()
             // .layer(Extension(state))
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             .route(&format!("/surveys/test"), post(test_survey))
-            .route(&format!("/surveys/:id"), get(get_survey))
-            .route(&format!("/submit"), post(submit_survey))
             .route(&format!("/login"), post(api_login))
-            .with_state(state);
+            .layer(middleware::map_response(main_response_mapper))
+            .with_state(state.clone());
         // .layer(Extension(state));
         // .with_state(state);
 
         return t;
+    }
+
+    async fn main_response_mapper(
+        ctx: Option<Ctext>,
+        uri: Uri,
+        req_method: Method,
+        res: Response,
+    ) -> Response {
+        println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
+        let uuid = Uuid::new_v4();
+
+        // -- Get the eventual response error.
+        let service_error = res.extensions().get::<CustomError>();
+        let client_status_error = service_error.map(|se| se.client_status_and_error());
+
+        // -- If client error, build the new reponse.
+        let error_response = client_status_error
+            .as_ref()
+            .map(|(status_code, client_error)| {
+                let client_error_body = json!({
+                    "error": {
+                        "type": client_error.as_ref(),
+                        "req_uuid": uuid.to_string(),
+                    }
+                });
+
+                println!("    ->> client_error_body: {client_error_body}");
+
+                // Build the new response from the client_error_body
+                (*status_code, Json(client_error_body)).into_response()
+            });
+
+        // Build and log the server log line.
+        let client_error = client_status_error.unzip().1;
+        log_request(uuid, req_method, uri, ctx, service_error, client_error).await;
+
+        println!();
+        error_response.unwrap_or(res)
+    }
+
+    async fn log_request(
+        uuid: Uuid,
+        req_method: Method,
+        uri: Uri,
+        ctx: Option<Ctext>,
+        service_error: Option<&CustomError>,
+        client_error: Option<crate::error::ClientError>,
+    ) {
+        println!("logging request...");
     }
 
     #[tracing::instrument]
@@ -200,6 +268,7 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn list_survey(
         state: Extension<ServerState>,
+        ctx: Result<Ctext, CustomError>,
         // State(state): State<ServerState>,
         headers: HeaderMap,
     ) -> impl IntoResponse {
@@ -244,15 +313,41 @@ pub mod routes {
         pub username: String,
         pub password: String,
     }
+    use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+    #[derive(Debug, Serialize, Deserialize)]
+    struct Claims {
+        sub: String,
+        company: String,
+        exp: usize,
+    }
+
     pub async fn api_login(
         cookies: Cookies,
+        // ctx: Result<Ctext, CustomError>,
+        state: ServerState,
         payload: Json<LoginPayload>,
     ) -> Result<Json<Value>, CustomError> {
         info!("api_login");
+
+        // println!("ctx in login: {ctx:?}");
         // TODO: real db auth
+        let claim = Claims {
+            sub: payload.username.clone(),
+            company: "audience".to_string(),
+            exp: 1,
+        };
+
+        let jwt = match encode(&Header::default(), &claim, &EncodingKey::from_secret(key)) {
+            Ok(t) => t,
+            Err(_) => {
+                return Err(CustomError::BadRequest(
+                    "yo this request is messed".to_string(),
+                ))
+            }
+        };
 
         // TODO: set cookies
-        cookies.add(Cookie::new("auth-token", "user-1.exp.sign"));
+        cookies.add(Cookie::new("x-auth-token", jwt));
 
         // TODO: create success body
         let username = payload.username.clone();

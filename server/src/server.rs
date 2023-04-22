@@ -1,8 +1,8 @@
 use axum::{
     extract::{DefaultBodyLimit, Multipart, Query},
-    http::{self, HeaderMap, HeaderName, HeaderValue, Method, Response},
+    http::{self, HeaderMap, HeaderName, HeaderValue, Method},
     middleware,
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     Extension, Router,
 };
 use db::database::Database;

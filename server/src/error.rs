@@ -7,6 +7,7 @@ pub enum CustomError {
     BadRequest(String),
     Database(String),
     LoginFail,
+    AuthFailNoTokenCookie,
 }
 
 // So that errors get printed to the browser?
@@ -16,8 +17,38 @@ impl IntoResponse for CustomError {
             CustomError::Database(message) => (StatusCode::UNPROCESSABLE_ENTITY, message),
             CustomError::BadRequest(message) => (StatusCode::UNPROCESSABLE_ENTITY, message),
             CustomError::LoginFail => (StatusCode::OK, "logged in message I geuss".to_string()),
+            CustomError::AuthFailNoTokenCookie => {
+                (StatusCode::FORBIDDEN, "Authentication failed".to_string())
+            }
         };
 
         format!("status = {}, message = {}", status, error_message).into_response()
     }
+}
+
+impl CustomError {
+    pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
+        match self {
+            CustomError::BadRequest(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ClientError::SERVICE_ERROR,
+            ),
+            // CustomError::Database(_) => ,
+            // CustomError::LoginFail => todo!(),
+            // CustomError::AuthFailNoTokenCookie => todo!(),
+            _ => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ClientError::SERVICE_ERROR,
+            ),
+        }
+    }
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, strum_macros::AsRefStr)]
+pub enum ClientError {
+    LOGIN_FAIL,
+    NO_AUTH,
+    INVALID_PARAMS,
+    SERVICE_ERROR,
 }
