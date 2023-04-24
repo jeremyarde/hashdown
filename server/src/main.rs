@@ -288,6 +288,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn signup_test() {
+        println!("=== Signup testing");
         let _app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
         router.ready().await.unwrap();
@@ -299,7 +300,7 @@ mod tests {
 
         println!("Sending req to: {client_url}");
 
-        let request = LoginPayload {
+        let request: LoginPayload = LoginPayload {
             email: "jere".to_string(),
             password: "mypassword".to_string(),
         };
@@ -336,7 +337,8 @@ mod tests {
             .send()
             .await
             .expect("Should recieve repsonse from app");
-        println!("Headers after login:");
+
+        println!("Headers after first login attempt:");
         dbg!(&response);
 
         let results = response.text().await;
@@ -355,7 +357,8 @@ mod tests {
             .send()
             .await
             .expect("Should recieve repsonse from app");
-
+        println!("Headers after second login attempt:");
+        dbg!(response.headers());
         let results = response.text().await;
         dbg!(results);
     }
