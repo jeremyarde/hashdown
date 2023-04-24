@@ -274,7 +274,7 @@ mod tests {
             .await
             .expect("Should recieve repsonse from app");
 
-        dbg!(response.headers());
+        // dbg!(response.headers());
 
         let results = response.text().await;
         // let results = response.json::<Value>().await;

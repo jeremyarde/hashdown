@@ -1,6 +1,6 @@
 use std::{collections::HashMap, str::FromStr};
 
-use anyhow;
+use anyhow::{self, Context};
 
 use markdownparser::{parse_markdown_v3, Survey};
 use serde::{Deserialize, Serialize};
@@ -119,8 +119,8 @@ pub struct UserModel {
 }
 
 pub struct CreateUserRequest {
-    email: String,
-    password_hash: String,
+    pub email: String,
+    pub password_hash: String,
 }
 
 impl Database {

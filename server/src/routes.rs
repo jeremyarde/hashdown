@@ -1,4 +1,5 @@
 pub mod routes {
+    use anyhow::Context;
     use argon2::{
         password_hash::{rand_core::OsRng, SaltString},
         Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
@@ -13,7 +14,7 @@ pub mod routes {
         Extension, Router,
     };
     use db::{
-        database::Database,
+        database::{CreateUserRequest, Database},
         models::{
             CreateAnswersModel, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
             SurveyModel, SurveyModelBuilder,
@@ -82,6 +83,7 @@ pub mod routes {
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             .route(&format!("/surveys/test"), post(test_survey))
             .route(&format!("/login"), post(api_login))
+            .route("/signup", post(signup))
             .layer(middleware::map_response(main_response_mapper))
             .with_state(state.clone());
         // .layer(Extension(state));
@@ -332,19 +334,60 @@ pub mod routes {
                      // role: String, // custom - role of the user
     }
 
+    pub async fn signup(
+        cookies: Cookies,
+        // ctx: Result<Ctext, CustomError>,
+        state: State<ServerState>,
+        payload: Json<LoginPayload>,
+    ) -> anyhow::Result<Json<Value>, ServerError> {
+        info!("signup");
+
+        let argon2 = argon2::Argon2::default();
+        let salt = SaltString::generate(OsRng);
+        let hash = argon2
+            .hash_password(payload.password.as_bytes(), &salt)
+            .unwrap();
+        let password_hash_string = hash.to_string();
+
+        let user = match state
+            .db
+            .create_user(CreateUserRequest {
+                email: payload.email.clone(),
+                password_hash: hash.to_string(),
+            })
+            .await
+        {
+            Ok(user) => user,
+            Err(_) => {
+                println!("Could not create user, error in database");
+                return Err(ServerError::LoginFail);
+            }
+        };
+
+        return Ok(Json(json!(user.email)));
+    }
+
     pub async fn api_login(
         cookies: Cookies,
         // ctx: Result<Ctext, CustomError>,
         state: State<ServerState>,
         payload: Json<LoginPayload>,
-    ) -> Result<Json<Value>, ServerError> {
+    ) -> anyhow::Result<Json<Value>, ServerError> {
         let key = b"privatekey";
         info!("api_login");
 
         // look for email in database
-        let user = match state.db.get_user_by_email(payload.email.clone()).await {
+        let user = match state
+            .db
+            .get_user_by_email(payload.email.clone())
+            .await
+            .with_context(|| "Could not get find user by email")
+        {
             Ok(x) => x,
-            Err(_) => return Err(ServerError::LoginFail),
+            Err(_) => {
+                println!("Did not find user in database");
+                return Err(ServerError::LoginFail);
+            }
         };
 
         let password = "mypassword";
@@ -366,7 +409,11 @@ pub mod routes {
 
         // start building token
         let nowutc = chrono::Utc::now();
-        let now: usize = match nowutc.timestamp().try_into() {
+        let now: usize = match nowutc
+            .timestamp()
+            .try_into()
+            .with_context(|| "Could not turn time into timestamp")
+        {
             Ok(x) => x,
             Err(e) => return Err(ServerError::LoginFail),
         };
