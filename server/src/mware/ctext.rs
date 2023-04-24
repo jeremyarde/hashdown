@@ -9,14 +9,14 @@ use axum::{
 use tower_cookies::{Cookie, Cookies};
 use tower_http::auth;
 
-use crate::{CustomError, ServerState};
+use crate::{ServerError, ServerState};
 
 pub async fn mw_ctx_resolver<B>(
     _state: State<ServerState>,
     cookies: Cookies,
     mut req: Request<B>,
     next: Next<B>,
-) -> Result<Response, CustomError> {
+) -> Result<Response, ServerError> {
     println!("->> {:<12} - mw_ctx_resolver", "MIDDLEWARE");
 
     const AUTH_TOKEN: &str = "authtoken";
@@ -24,14 +24,14 @@ pub async fn mw_ctx_resolver<B>(
 
     // todo: actually validate the auth token
     let result_ctx = match auth_token
-        .ok_or(CustomError::AuthFailNoTokenCookie)
+        .ok_or(ServerError::AuthFailNoTokenCookie)
         .and_then(parse_token)
     {
         Ok((user_id)) => Ok(Ctext::new(user_id)),
         Err(e) => Err(e),
     };
     // Remove the cookie if something went wrong other than NoAuthTokenCookie.
-    if result_ctx.is_err() && !matches!(result_ctx, Err(CustomError::AuthFailNoTokenCookie)) {
+    if result_ctx.is_err() && !matches!(result_ctx, Err(ServerError::AuthFailNoTokenCookie)) {
         cookies.remove(Cookie::named(AUTH_TOKEN))
     }
 
@@ -43,25 +43,25 @@ pub async fn mw_ctx_resolver<B>(
 
 #[async_trait]
 impl<S: Send + Sync> FromRequestParts<S> for Ctext {
-    type Rejection = CustomError;
+    type Rejection = ServerError;
 
     async fn from_request_parts(
         parts: &mut axum::http::request::Parts,
         _state: &S,
-    ) -> Result<Self, CustomError> {
+    ) -> Result<Self, ServerError> {
         let cookies = parts.extract::<Cookies>().await.unwrap();
         let auth_token = cookies.get("authtoken").map(|c| c.value().to_string());
-        let user_id = auth_token.ok_or(CustomError::AuthFailNoTokenCookie)?;
+        let user_id = auth_token.ok_or(ServerError::AuthFailNoTokenCookie)?;
 
         Ok(Ctext::new(user_id))
     }
 }
 
-fn parse_token(token: String) -> Result<String, CustomError> {
+fn parse_token(token: String) -> Result<String, ServerError> {
     let user_id = token.split("user_id=").nth(0);
     match user_id {
         Some(x) => return Ok(x.to_string()),
-        None => return Err(CustomError::AuthFailNoTokenCookie),
+        None => return Err(ServerError::AuthFailNoTokenCookie),
     }
 }
 

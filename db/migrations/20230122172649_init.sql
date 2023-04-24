@@ -26,6 +26,8 @@ Create table answers (
     answers JSON,
     created_at TEXT
 );
+
+
 insert into surveys (id, plaintext, user_id)
 values (
         'testid',

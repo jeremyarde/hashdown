@@ -3,33 +3,39 @@ use axum::response::IntoResponse;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub enum CustomError {
+pub enum ServerError {
+    SurveyFail(String),
     BadRequest(String),
     Database(String),
     LoginFail,
     AuthFailNoTokenCookie,
+    PasswordDoesNotMatch,
 }
 
 // So that errors get printed to the browser?
-impl IntoResponse for CustomError {
+impl IntoResponse for ServerError {
     fn into_response(self) -> axum::response::Response {
-        let (status, error_message) = match self {
-            CustomError::Database(message) => (StatusCode::UNPROCESSABLE_ENTITY, message),
-            CustomError::BadRequest(message) => (StatusCode::UNPROCESSABLE_ENTITY, message),
-            CustomError::LoginFail => (StatusCode::OK, "logged in message I geuss".to_string()),
-            CustomError::AuthFailNoTokenCookie => {
-                (StatusCode::FORBIDDEN, "Authentication failed".to_string())
-            }
-        };
+        // let (status, error_message) = match self {
+        //     CustomError::Database(message) => (StatusCode::UNPROCESSABLE_ENTITY, message),
+        //     CustomError::BadRequest(message) => (StatusCode::UNPROCESSABLE_ENTITY, message),
+        //     CustomError::LoginFail => (StatusCode::OK, "logged in message I geuss".to_string()),
+        //     CustomError::AuthFailNoTokenCookie => {
+        //         (StatusCode::FORBIDDEN, "Authentication failed".to_string())
+        //     }
+        // };
 
-        format!("status = {}, message = {}", status, error_message).into_response()
+        // format!("status = {}, message = {}", status, error_message).into_response()
+        println!("->> {:<12} - {self:?}", "INTO_RES");
+        let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        response.extensions_mut().insert(self);
+        return response;
     }
 }
 
-impl CustomError {
+impl ServerError {
     pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
         match self {
-            CustomError::BadRequest(_) => (
+            ServerError::BadRequest(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ClientError::SERVICE_ERROR,
             ),

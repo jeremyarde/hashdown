@@ -1,4 +1,8 @@
 pub mod routes {
+    use argon2::{
+        password_hash::{rand_core::OsRng, SaltString},
+        Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
+    };
     use axum::{
         extract::{DefaultBodyLimit, Multipart, Path, Query},
         http::{self, HeaderMap, HeaderName, HeaderValue, Method, Uri},
@@ -41,12 +45,13 @@ pub mod routes {
     // use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, SurveyBuilder};
 
     use crate::{
+        auth::{validate_credentials, AuthError},
         mware::{
             self,
             ctext::{mw_ctx_resolver, Ctext},
         },
         server::CreateSurveyResponse,
-        CustomError, ServerState,
+        ServerError, ServerState,
     };
 
     // pub fn get_routes(state: ServerState) -> Router {
@@ -95,7 +100,7 @@ pub mod routes {
         let uuid = Uuid::new_v4();
 
         // -- Get the eventual response error.
-        let service_error = res.extensions().get::<CustomError>();
+        let service_error = res.extensions().get::<ServerError>();
         let client_status_error = service_error.map(|se| se.client_status_and_error());
 
         // -- If client error, build the new reponse.
@@ -128,7 +133,7 @@ pub mod routes {
         req_method: Method,
         uri: Uri,
         ctx: Option<Ctext>,
-        service_error: Option<&CustomError>,
+        service_error: Option<&ServerError>,
         client_error: Option<crate::error::ClientError>,
     ) {
         println!("logging request...");
@@ -186,7 +191,7 @@ pub mod routes {
         State(state): State<ServerState>,
         // mut multipart: Multipart,
         extract::Json(payload): extract::Json<CreateAnswersRequest>,
-    ) -> Result<Json<CreateAnswersResponse>, CustomError> {
+    ) -> Result<Json<CreateAnswersResponse>, ServerError> {
         // let content_type_header = req.headers().get(CONTENT_TYPE);
         // let content_type => content_type_header.and_then(|value| value.to_str().ok());
 
@@ -196,7 +201,7 @@ pub mod routes {
 
         let survey = match state.db.get_survey(&payload.survey_id).await.unwrap() {
             Some(x) => x,
-            None => return Err(CustomError::BadRequest("another issue".to_string())),
+            None => return Err(ServerError::BadRequest("another issue".to_string())),
         };
         info!("Found survey_id in database");
         let answer_id = nanoid_gen();
@@ -267,8 +272,8 @@ pub mod routes {
     #[tracing::instrument]
     #[axum::debug_handler]
     pub async fn list_survey(
-        state: Extension<ServerState>,
-        ctx: Result<Ctext, CustomError>,
+        state: State<ServerState>,
+        ctx: Result<Ctext, ServerError>,
         // State(state): State<ServerState>,
         headers: HeaderMap,
     ) -> impl IntoResponse {
@@ -310,37 +315,81 @@ pub mod routes {
 
     #[derive(Deserialize, Debug, Serialize)]
     pub struct LoginPayload {
-        pub username: String,
+        pub email: String,
         pub password: String,
     }
+
     use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+
     #[derive(Debug, Serialize, Deserialize)]
     struct Claims {
-        sub: String,
-        company: String,
-        exp: usize,
+        sub: String, // subject
+        exp: usize,  // expire
+        iat: usize,  // issued at
+        // iss: String, // issuer
+        // aud: String, // audience
+        uid: String, // customer - user_id
+                     // role: String, // custom - role of the user
     }
 
     pub async fn api_login(
         cookies: Cookies,
         // ctx: Result<Ctext, CustomError>,
-        state: ServerState,
+        state: State<ServerState>,
         payload: Json<LoginPayload>,
-    ) -> Result<Json<Value>, CustomError> {
+    ) -> Result<Json<Value>, ServerError> {
+        let key = b"privatekey";
         info!("api_login");
 
-        // println!("ctx in login: {ctx:?}");
+        // look for email in database
+        let user = match state.db.get_user_by_email(payload.email.clone()).await {
+            Ok(x) => x,
+            Err(_) => return Err(ServerError::LoginFail),
+        };
+
+        let password = "mypassword";
+        let argon2 = argon2::Argon2::default();
+        let salt = SaltString::generate(OsRng);
+        let hash = argon2.hash_password(password.as_bytes(), &salt).unwrap();
+        let password_hash_string = hash.to_string();
+        // PasswordHash::generate(phf, password, salt)
+
+        // let hash = PasswordHash::new(&password_hash_string).unwrap();
+        let hash = PasswordHash::new(&user.password_hash).unwrap();
+        let is_correct = match argon2.verify_password(&payload.password.as_bytes(), &hash) {
+            Ok(_) => true,
+            Err(_) => return Err(ServerError::AuthFailNoTokenCookie),
+        };
+        println!("password matches={is_correct}");
+        // login and check database
+        // match validate_credentials("passwordhash", payload.password) {};
+
+        // start building token
+        let nowutc = chrono::Utc::now();
+        let now: usize = match nowutc.timestamp().try_into() {
+            Ok(x) => x,
+            Err(e) => return Err(ServerError::LoginFail),
+        };
+        let expire: usize = match (nowutc + chrono::Duration::minutes(5))
+            .timestamp()
+            .try_into()
+        {
+            Ok(x) => x,
+            Err(e) => return Err(ServerError::LoginFail),
+        };
+
         // TODO: real db auth
         let claim = Claims {
-            sub: payload.username.clone(),
-            company: "audience".to_string(),
-            exp: 1,
+            sub: payload.email.clone(),
+            exp: expire,
+            iat: now,
+            uid: "useridfromdatabase".to_string(),
         };
 
         let jwt = match encode(&Header::default(), &claim, &EncodingKey::from_secret(key)) {
             Ok(t) => t,
             Err(_) => {
-                return Err(CustomError::BadRequest(
+                return Err(ServerError::BadRequest(
                     "yo this request is messed".to_string(),
                 ))
             }
@@ -350,7 +399,7 @@ pub mod routes {
         cookies.add(Cookie::new("x-auth-token", jwt));
 
         // TODO: create success body
-        let username = payload.username.clone();
+        let username = payload.email.clone();
         let logged_in = true;
         Ok(Json(json!({"result": logged_in, "username": username})))
     }

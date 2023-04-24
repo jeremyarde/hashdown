@@ -9,7 +9,7 @@ use serde_json::{json, Value};
 // use chrono::Local;
 use sqlx::{
     sqlite::{SqliteConnectOptions, SqliteJournalMode},
-    ConnectOptions, Row, SqliteConnection, SqlitePool,
+    ConnectOptions, FromRow, Row, SqliteConnection, SqlitePool,
 };
 use tracing::{info, instrument};
 
@@ -111,7 +111,41 @@ pub struct Answer {
     pub answers: Vec<String>,
 }
 
+#[derive(Debug, FromRow, Serialize, Deserialize)]
+pub struct UserModel {
+    pub email: String,
+    pub password_hash: String,
+    // pub user_id: String,
+}
+
+pub struct CreateUserRequest {
+    email: String,
+    password_hash: String,
+}
+
 impl Database {
+    pub async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel> {
+        let result = sqlx::query_as::<_, UserModel>(
+            "insert into users (password_hash) from users where users.email = $1",
+        )
+        .bind(request.email)
+        .fetch_one(&self.pool)
+        .await?;
+
+        return Ok(result);
+    }
+
+    pub async fn get_user_by_email(&self, email: String) -> anyhow::Result<UserModel> {
+        let result = sqlx::query_as::<_, UserModel>(
+            "select email, password_hash from users where users.email = $1",
+        )
+        .bind(email)
+        .fetch_one(&self.pool)
+        .await?;
+
+        return Ok(result);
+    }
+
     pub async fn get_survey(&self, survey_id: &String) -> anyhow::Result<Option<SurveyModel>> {
         let result =
             sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.id = $1")

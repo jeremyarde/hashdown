@@ -17,6 +17,7 @@ use tracing::{instrument, log::info};
 use crate::server::ServerApplication;
 // mod answer;
 // mod db;
+mod auth;
 mod mware;
 mod server;
 // mod survey;
@@ -26,7 +27,7 @@ use db::database::Database;
 mod error;
 mod routes;
 
-pub use self::{error::CustomError, routes::*};
+pub use self::{error::ServerError, routes::*};
 
 #[derive(Debug, Clone)]
 pub struct ServerState {
@@ -260,8 +261,8 @@ mod tests {
         println!("Sending req to: {client_url}");
 
         let request = LoginPayload {
-            username: "jere".to_string(),
-            password: "plaintextpassword".to_string(),
+            email: "jere".to_string(),
+            password: "mypassword".to_string(),
         };
         // let exjson = json!({"first": "answer"});
         // let request_test = "- test question\n - this one";
@@ -273,10 +274,11 @@ mod tests {
             .await
             .expect("Should recieve repsonse from app");
 
-        
-        println!("Got response");
-        let results = response.json::<Value>().await;
-        println!("{results:?}");
+        dbg!(response.headers());
+
+        let results = response.text().await;
+        // let results = response.json::<Value>().await;
+        dbg!(results);
         // assert_eq!(
         //     &response.json::<Value>().await.unwrap(),
         //     json!({"result": false}).get("result").unwrap()
