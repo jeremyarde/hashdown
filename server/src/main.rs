@@ -284,4 +284,79 @@ mod tests {
         //     json!({"result": false}).get("result").unwrap()
         // )
     }
+
+    #[tokio::test]
+    #[serial]
+    async fn signup_test() {
+        let _app = ServerApplication::new().await;
+        let mut router = ServerApplication::get_router().await;
+        router.ready().await.unwrap();
+
+        let client = get_client().await;
+
+        let url = "/signup";
+        let client_url = format!("http://{}{}", "localhost:8080", url);
+
+        println!("Sending req to: {client_url}");
+
+        let request = LoginPayload {
+            email: "jere".to_string(),
+            password: "mypassword".to_string(),
+        };
+
+        let response = client
+            .post(&client_url)
+            .json(&request)
+            .send()
+            .await
+            .expect("Should recieve repsonse from app");
+
+        let results = response.text().await;
+        // let results = response.json::<Value>().await;
+        dbg!(results);
+        // assert_eq!(
+        //     &response.json::<Value>().await.unwrap(),
+        //     json!({"result": false}).get("result").unwrap()
+        // )
+
+        // attempt to login
+        let url = "/login";
+        let client_url = format!("http://{}{}", "localhost:8080", url);
+
+        println!("Sending req to: {client_url}");
+
+        let request = LoginPayload {
+            email: "jere".to_string(),
+            password: "failpassword".to_string(),
+        };
+
+        let response = client
+            .post(&client_url)
+            .json(&request)
+            .send()
+            .await
+            .expect("Should recieve repsonse from app");
+        println!("Headers after login:");
+        dbg!(&response);
+
+        let results = response.text().await;
+        dbg!(results);
+
+        println!("Sending req to: {client_url}");
+
+        let request = LoginPayload {
+            email: "jere".to_string(),
+            password: "mypassword".to_string(),
+        };
+
+        let response = client
+            .post(&client_url)
+            .json(&request)
+            .send()
+            .await
+            .expect("Should recieve repsonse from app");
+
+        let results = response.text().await;
+        dbg!(results);
+    }
 }

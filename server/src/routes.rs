@@ -358,11 +358,18 @@ pub mod routes {
             .await
         {
             Ok(user) => user,
-            Err(_) => {
-                println!("Could not create user, error in database");
+            Err(e) => {
+                println!("Could not create user, error in database: {e}");
                 return Err(ServerError::LoginFail);
             }
         };
+
+        let key = b"privatekey";
+        let jwt = match get_jwt_claim(&payload, key) {
+            Ok(x) => x,
+            Err(e) => return Err(ServerError::AuthFailNoTokenCookie),
+        };
+        cookies.add(Cookie::new("x-auth-token", jwt));
 
         return Ok(Json(json!(user.email)));
     }
@@ -408,38 +415,9 @@ pub mod routes {
         // match validate_credentials("passwordhash", payload.password) {};
 
         // start building token
-        let nowutc = chrono::Utc::now();
-        let now: usize = match nowutc
-            .timestamp()
-            .try_into()
-            .with_context(|| "Could not turn time into timestamp")
-        {
-            Ok(x) => x,
-            Err(e) => return Err(ServerError::LoginFail),
-        };
-        let expire: usize = match (nowutc + chrono::Duration::minutes(5))
-            .timestamp()
-            .try_into()
-        {
-            Ok(x) => x,
-            Err(e) => return Err(ServerError::LoginFail),
-        };
-
-        // TODO: real db auth
-        let claim = Claims {
-            sub: payload.email.clone(),
-            exp: expire,
-            iat: now,
-            uid: "useridfromdatabase".to_string(),
-        };
-
-        let jwt = match encode(&Header::default(), &claim, &EncodingKey::from_secret(key)) {
-            Ok(t) => t,
-            Err(_) => {
-                return Err(ServerError::BadRequest(
-                    "yo this request is messed".to_string(),
-                ))
-            }
+        let jwt = match get_jwt_claim(&payload, key) {
+            Ok(value) => value,
+            Err(value) => return value,
         };
 
         // TODO: set cookies
@@ -449,5 +427,42 @@ pub mod routes {
         let username = payload.email.clone();
         let logged_in = true;
         Ok(Json(json!({"result": logged_in, "username": username})))
+    }
+
+    fn get_jwt_claim(
+        payload: &Json<LoginPayload>,
+        key: &[u8; 10],
+    ) -> Result<String, Result<Json<Value>, ServerError>> {
+        let nowutc = chrono::Utc::now();
+        let now: usize = match nowutc
+            .timestamp()
+            .try_into()
+            .with_context(|| "Could not turn time into timestamp")
+        {
+            Ok(x) => x,
+            Err(e) => return Err(Err(ServerError::LoginFail)),
+        };
+        let expire: usize = match (nowutc + chrono::Duration::minutes(5))
+            .timestamp()
+            .try_into()
+        {
+            Ok(x) => x,
+            Err(e) => return Err(Err(ServerError::LoginFail)),
+        };
+        let claim = Claims {
+            sub: payload.email.clone(),
+            exp: expire,
+            iat: now,
+            uid: "useridfromdatabase".to_string(),
+        };
+        let jwt = match encode(&Header::default(), &claim, &EncodingKey::from_secret(key)) {
+            Ok(t) => t,
+            Err(_) => {
+                return Err(Err(ServerError::BadRequest(
+                    "yo this request is messed".to_string(),
+                )))
+            }
+        };
+        Ok(jwt)
     }
 }

@@ -2,7 +2,7 @@ use std::{collections::HashMap, str::FromStr};
 
 use anyhow::{self, Context};
 
-use markdownparser::{parse_markdown_v3, Survey};
+use markdownparser::{nanoid_gen, parse_markdown_v3, Survey};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 // use models::CreateAnswersModel;
@@ -125,10 +125,15 @@ pub struct CreateUserRequest {
 
 impl Database {
     pub async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel> {
+        println!("->> create_user");
         let result = sqlx::query_as::<_, UserModel>(
-            "insert into users (password_hash) from users where users.email = $1",
+            "insert into users (id, password_hash, email, created_at, modified_at) values($1, $2, $3, $4, $5) returning *",
         )
+        .bind(nanoid_gen())
+        .bind(request.password_hash)
         .bind(request.email)
+        .bind(chrono::Utc::now().to_string())
+        .bind(chrono::Utc::now().to_string())
         .fetch_one(&self.pool)
         .await?;
 

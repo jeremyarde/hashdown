@@ -11,10 +11,10 @@ CREATE TABLE surveys (
 CREATE TABLE users (
     id TEXT NOT NULL UNIQUE,
     username TEXT,
-    password TEXT,
+    password_hash TEXT NOT NULL,
     email TEXT NOT NULL,
     created_at TEXT NOT NULL,
-    modified_at TEXT NOT NULL
+    modified_at TEXT
 );
 Create table answers (
     id TEXT NOT NULL UNIQUE,
