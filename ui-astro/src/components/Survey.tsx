@@ -5,7 +5,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 
 
 export default function Survey({ survey }) {
-    const [formstate, setformstate] = useState(null);
+    const [formstate, setformstate] = useState('');
     // const { register, handleSubmit, watch, formState: { errors } } = useForm();
     const onSubmit = data => {
         console.log('submitted data:')

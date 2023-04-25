@@ -288,6 +288,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn signup_test() {
+        // for debug, tests run in workspace folder, so dotenvy does not work
         match std::env::current_dir().unwrap().ends_with("server") {
             true => {}
             false => {
