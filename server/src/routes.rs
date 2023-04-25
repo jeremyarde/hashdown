@@ -192,12 +192,14 @@ pub mod routes {
     pub async fn submit_survey(
         State(state): State<ServerState>,
         // mut multipart: Multipart,
+        ctx: Option<Ctext>,
         extract::Json(payload): extract::Json<CreateAnswersRequest>,
     ) -> Result<Json<CreateAnswersResponse>, ServerError> {
         // let content_type_header = req.headers().get(CONTENT_TYPE);
         // let content_type => content_type_header.and_then(|value| value.to_str().ok());
 
         info!("Called submit survey");
+        // check
 
         info!("Found survey_id in request");
 
@@ -249,6 +251,7 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn get_survey(
         State(_state): State<ServerState>,
+        ctx: Option<Ctext>,
         Path(survey_id): Path<String>,
         Query(query): Query<GetSurveyQuery>,
     ) -> impl IntoResponse {

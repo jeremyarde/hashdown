@@ -68,6 +68,7 @@ fn parse_token(token: String) -> Result<String, ServerError> {
 #[derive(Clone, Debug)]
 pub struct Ctext {
     user_id: String,
+    // parse cookies in here?
 }
 
 impl Ctext {
