@@ -10,6 +10,7 @@ pub enum ServerError {
     Database(String),
 
     // Auth
+    UserAlreadyExists,
     LoginFail,
     AuthPasswordsDoNotMatch,
     AuthFailNoTokenCookie,

@@ -342,6 +342,16 @@ pub mod routes {
     ) -> anyhow::Result<Json<Value>, ServerError> {
         info!("signup");
 
+        match state
+            .db
+            .get_user_by_email(payload.email.clone())
+            .await
+            .with_context(|| "Checking if user already exists")
+        {
+            Ok(_) => return Err(ServerError::UserAlreadyExists),
+            Err(_) => {}
+        };
+
         let argon2 = argon2::Argon2::default();
         let salt = SaltString::generate(OsRng);
         let hash = argon2
