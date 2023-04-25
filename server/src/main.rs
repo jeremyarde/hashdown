@@ -288,6 +288,12 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn signup_test() {
+        match std::env::current_dir().unwrap().ends_with("server") {
+            true => {}
+            false => {
+                std::env::set_current_dir("./server").unwrap();
+            }
+        }
         println!("=== Signup testing");
         let _app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
@@ -337,9 +343,8 @@ mod tests {
             .send()
             .await
             .expect("Should recieve repsonse from app");
-
-        println!("Headers after first login attempt:");
         dbg!(&response);
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 
         let results = response.text().await;
         dbg!(results);
@@ -357,8 +362,7 @@ mod tests {
             .send()
             .await
             .expect("Should recieve repsonse from app");
-        println!("Headers after second login attempt:");
-        dbg!(response.headers());
+        dbg!(&response);
         let results = response.text().await;
         dbg!(results);
     }

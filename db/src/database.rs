@@ -43,6 +43,7 @@ impl Settings {
 impl Database {
     #[instrument]
     pub async fn new(in_memory: bool) -> anyhow::Result<Self> {
+        println!("{:?}", std::env::current_dir()); //Ok("/Users/jarde/Documents/code/markdownparser/server")
         let database_url = dotenvy::var("DATABASE_URL")?;
 
         let mut pool = match in_memory {

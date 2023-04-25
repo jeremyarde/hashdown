@@ -1,5 +1,6 @@
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
+use axum::Server;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -7,7 +8,10 @@ pub enum ServerError {
     SurveyFail(String),
     BadRequest(String),
     Database(String),
+
+    // Auth
     LoginFail,
+    AuthPasswordsDoNotMatch,
     AuthFailNoTokenCookie,
     PasswordDoesNotMatch,
 }
@@ -39,6 +43,9 @@ impl ServerError {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ClientError::SERVICE_ERROR,
             ),
+            ServerError::AuthPasswordsDoNotMatch => {
+                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL)
+            }
             // CustomError::Database(_) => ,
             // CustomError::LoginFail => todo!(),
             // CustomError::AuthFailNoTokenCookie => todo!(),

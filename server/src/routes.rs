@@ -408,7 +408,7 @@ pub mod routes {
         let hash = PasswordHash::new(&user.password_hash).unwrap();
         let is_correct = match argon2.verify_password(&payload.password.as_bytes(), &hash) {
             Ok(_) => true,
-            Err(_) => return Err(ServerError::AuthFailNoTokenCookie),
+            Err(_) => return Err(ServerError::AuthPasswordsDoNotMatch),
         };
         println!("password matches={is_correct}");
         // login and check database
