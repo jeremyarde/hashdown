@@ -47,6 +47,7 @@ pub mod routes {
 
     use crate::{
         auth::{validate_credentials, AuthError},
+        log::log_request,
         mware::{
             self,
             ctext::{mw_ctx_resolver, Ctext},
@@ -130,16 +131,16 @@ pub mod routes {
         error_response.unwrap_or(res)
     }
 
-    async fn log_request(
-        uuid: Uuid,
-        req_method: Method,
-        uri: Uri,
-        ctx: Option<Ctext>,
-        service_error: Option<&ServerError>,
-        client_error: Option<crate::error::ClientError>,
-    ) {
-        println!("logging request...");
-    }
+    // async fn log_request(
+    //     uuid: Uuid,
+    //     req_method: Method,
+    //     uri: Uri,
+    //     ctx: Option<Ctext>,
+    //     service_error: Option<&ServerError>,
+    //     client_error: Option<crate::error::ClientError>,
+    // ) {
+    //     println!("logging request...");
+    // }
 
     #[tracing::instrument]
     #[axum::debug_handler]

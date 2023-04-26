@@ -1,9 +1,10 @@
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Server;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, strum_macros::AsRefStr, Serialize)]
+#[serde(tag = "type", content = "data")]
 pub enum ServerError {
     SurveyFail(String),
     BadRequest(String),
@@ -46,6 +47,9 @@ impl ServerError {
             ),
             ServerError::AuthPasswordsDoNotMatch => {
                 (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL)
+            }
+            ServerError::UserAlreadyExists => {
+                (StatusCode::UNPROCESSABLE_ENTITY, ClientError::LOGIN_FAIL)
             }
             // CustomError::Database(_) => ,
             // CustomError::LoginFail => todo!(),

@@ -18,6 +18,7 @@ use crate::server::ServerApplication;
 // mod answer;
 // mod db;
 mod auth;
+mod log;
 mod mware;
 mod server;
 // mod survey;

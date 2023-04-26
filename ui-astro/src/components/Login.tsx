@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 export default function Login() {
     // const [email, setEmail] = useState('');
     // const [password, setPassword] = useState('');
-    // const [loggedin, setLoggedIn] = useState(false);
+    const [loggedin, setLoggedIn] = useState(false);
 
     // const handleEmailChange = (event) => {
     //     setEmail(event.target.value);
@@ -81,8 +81,9 @@ export default function Login() {
 
     return (
         <>
-            <h2>{"SIGNUP"}</h2>
-            <form onSubmit={(event) => handleSubmit(event)}>
+            <form onSubmit={(event) => {
+                handleSubmit(event);
+            }}>
                 <div>
                     <label>Email:</label>
                     <input type="email" name="email" />
@@ -92,13 +93,9 @@ export default function Login() {
                     <input type="password" name="password" />
                 </div>
                 <div>
-                    <button id='login' type="submit">Login</button>
-                </div>
-                <div>
-                    <button id='signup' type="submit">signup</button>
+                    <button id='signup' type="submit" className='border bg-gray-400 rounded-md px-4 py-2 m-2'>signup</button>
                 </div>
             </form>
-            <h2>LOGIN</h2>
             <form onSubmit={(event) => login(event)}>
                 <div>
                     <label>Email:</label>
@@ -109,10 +106,7 @@ export default function Login() {
                     <input type="password" name="password" />
                 </div>
                 <div>
-                    <button id='login' type="submit">Login</button>
-                </div>
-                <div>
-                    <button id='signup' type="submit">signup</button>
+                    <button id='login' type="submit" className='border bg-gray-400 rounded-md px-4 py-2 m-2'>Login</button>
                 </div>
             </form>
         </>
