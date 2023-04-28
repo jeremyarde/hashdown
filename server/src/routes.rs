@@ -70,16 +70,17 @@ pub mod routes {
     // use mware::middleware_require_auth;
 
     pub fn get_routes(state: ServerState) -> Router {
-        let survey_routes: Router = Router::new()
-            .route(&format!("/surveys/:id"), get(get_survey))
-            .route(&format!("/submit"), post(submit_survey))
-            .with_state(state.clone())
-            .route_layer(middleware::from_fn_with_state(
-                state.clone(),
-                mw_ctx_resolver,
-            ));
+        // let survey_routes: Router = Router::new()
+        //     .route(&format!("/surveys/:id"), get(get_survey))
+        //     .route(&format!("/submit"), post(submit_survey))
+        //     .with_state(state.clone())
+        //     .route_layer(middleware::from_fn_with_state(
+        //         state.clone(),
+        //         mw_ctx_resolver,
+        //     ));
 
         let t = Router::new()
+            // .merge(survey_routes)
             // .layer(Extension(state))
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             .route(&format!("/surveys/test"), post(test_survey))
