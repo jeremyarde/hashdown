@@ -123,6 +123,9 @@ mod tests {
             .await
             .expect("Should recieve repsonse from app");
 
+        println!("Response after logging in:");
+        dbg!(&response);
+
         let cookie = response
             .headers()
             .get("set-cookie")
@@ -161,7 +164,13 @@ mod tests {
         assert_eq!(results.survey.survey.plaintext, "- another\n - this one");
 
         // call list
-        let listresponse = client.get(&client_url).send().await.unwrap();
+        let listresponse = client
+            .get(&client_url)
+            .header("Cookie", format!("x-auth-token={auth_token}"))
+            .send()
+            .await
+            .unwrap();
+    
         let listresults: ListSurveyResponse = listresponse
             .json()
             .await

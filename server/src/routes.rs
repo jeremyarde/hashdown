@@ -290,22 +290,24 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn list_survey(
         state: State<ServerState>,
-        ctx: Result<Ctext, ServerError>,
+        ctx: Option<Ctext>,
         // State(state): State<ServerState>,
         headers: HeaderMap,
     ) -> anyhow::Result<Json<Value>, ServerError> {
         println!("context: {:?}", ctx);
-        if ctx.is_err() {
-            return Err(ctx.err().unwrap());
+
+        if ctx.is_none() {
+            return Err(ServerError::AuthFailNoTokenCookie);
         }
 
-        println!("Recieved headers={headers:#?}");
-        let testuser = HeaderValue::from_str("").unwrap();
-        let user_id = headers
-            .get("x-user-id")
-            .unwrap_or(&testuser)
-            .to_str()
-            .unwrap();
+        // println!("Recieved headers={headers:#?}");
+        // let testuser = HeaderValue::from_str("").unwrap();
+        // let user_id = headers
+        //     .get("x-user-id")
+        //     .unwrap_or(&testuser)
+        //     .to_str()
+        //     .unwrap();
+        let user_id = &ctx.expect("Context should be available").user_id().clone();
 
         println!("Getting surveys for user={user_id}");
         let pool = &state.db.pool;
@@ -342,7 +344,7 @@ pub mod routes {
     }
 
     pub async fn signup(
-        // cookies: Cookies,
+        cookies: Cookies,
         ctx: Option<Ctext>,
         state: State<ServerState>,
         payload: Json<LoginPayload>,
@@ -381,14 +383,14 @@ pub mod routes {
             }
         };
 
-        let jwt = create_jwt_claim(user.email.clone(), "somerole-pleasechange");
+        let jwt = create_jwt_claim(user.email.clone(), "somerole-pleasechange")?;
 
         // let key = b"privatekey";
         // let jwt = match get_jwt_claim(&payload, key) {
         //     Ok(x) => x,
         //     Err(e) => return Err(ServerError::AuthFailNoTokenCookie),
         // };
-        // cookies.add(Cookie::new("x-auth-token", jwt));
+        cookies.add(Cookie::new("x-auth-token", jwt));
 
         return Ok(Json(json!(user.email)));
     }
