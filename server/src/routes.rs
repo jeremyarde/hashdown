@@ -53,7 +53,7 @@ pub mod routes {
         log::log_request,
         mware::{
             self,
-            ctext::{mw_ctx_resolver, Ctext},
+            ctext::{create_jwt_claim, mw_ctx_resolver, Ctext},
         },
         server::CreateSurveyResponse,
         ServerError, ServerState,
@@ -341,7 +341,6 @@ pub mod routes {
         pub password: String,
     }
 
-
     pub async fn signup(
         // cookies: Cookies,
         ctx: Option<Ctext>,
@@ -382,12 +381,14 @@ pub mod routes {
             }
         };
 
-        let key = b"privatekey";
-        let jwt = match get_jwt_claim(&payload, key) {
-            Ok(x) => x,
-            Err(e) => return Err(ServerError::AuthFailNoTokenCookie),
-        };
-        cookies.add(Cookie::new("x-auth-token", jwt));
+        let jwt = create_jwt_claim(user.email.clone(), "somerole-pleasechange");
+
+        // let key = b"privatekey";
+        // let jwt = match get_jwt_claim(&payload, key) {
+        //     Ok(x) => x,
+        //     Err(e) => return Err(ServerError::AuthFailNoTokenCookie),
+        // };
+        // cookies.add(Cookie::new("x-auth-token", jwt));
 
         return Ok(Json(json!(user.email)));
     }
@@ -432,10 +433,7 @@ pub mod routes {
         // match validate_credentials("passwordhash", payload.password) {};
 
         // start building token
-        let jwt = match get_jwt_claim(&payload, key) {
-            Ok(value) => value,
-            Err(value) => return value,
-        };
+        let jwt = create_jwt_claim(user.email, "randomrole- please update")?;
 
         // TODO: set cookies
         cookies.add(Cookie::new("x-auth-token", jwt));
@@ -445,5 +443,4 @@ pub mod routes {
         let logged_in = true;
         Ok(Json(json!({"result": logged_in, "username": username})))
     }
-
 }

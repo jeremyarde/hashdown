@@ -30,16 +30,18 @@ pub async fn mw_ctx_resolver<B>(
         .ok_or(ServerError::AuthFailNoTokenCookie)
         .and_then(parse_token)
     {
-        Ok((user_id)) => Ok(Ctext::new(user_id)),
+        Ok(token) => validate_jwt_claim(token),
         Err(e) => Err(e),
     };
+
     // Remove the cookie if something went wrong other than NoAuthTokenCookie.
     if result_ctx.is_err() && !matches!(result_ctx, Err(ServerError::AuthFailNoTokenCookie)) {
         cookies.remove(Cookie::named(AUTH_TOKEN))
     }
 
     // Store the ctx_result in the request extension.
-    req.extensions_mut().insert(result_ctx);
+    req.extensions_mut()
+        .insert(result_ctx.expect("Inserting claim into extensions"));
 
     Ok(next.run(req).await)
 }
@@ -55,7 +57,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctext {
         let cookies = parts.extract::<Cookies>().await.unwrap();
         let auth_token = cookies.get("x-auth-token").map(|c| c.value().to_string());
         let jwt = auth_token.ok_or(ServerError::AuthFailNoTokenCookie)?;
-        let jwt_claim = get_jwt_claim(jwt)?;
+        let jwt_claim = validate_jwt_claim(jwt)?;
 
         Ok(Ctext::new(jwt_claim.uid))
     }
@@ -76,13 +78,13 @@ struct Claims {
     iat: usize,  // issued at
     // iss: String, // issuer
     // aud: String, // audience
-    uid: String, // customer - user_id
-    // role: String, // custom - role of the user
-    nbf: usize, // not before
+    uid: String,  // customer - user_id
+    role: String, // custom - role of the user
+    nbf: usize,   // not before
     tenant: String,
 }
 
-fn get_jwt_claim(
+fn validate_jwt_claim(
     // payload: &Json<LoginPayload>,
     // key: &[u8; 10],
     jwt_token: String,
@@ -97,9 +99,11 @@ fn get_jwt_claim(
     return Ok(decode_result);
 }
 
-fn create_jwt_claim(// payload: &Json<LoginPayload>,
+pub fn create_jwt_claim(
+    // payload: &Json<LoginPayload>,
     // key: &[u8; 10],
-    // jwt_token: String,
+    user_id: String,
+    role: &str, // jwt_token: String,
 ) -> anyhow::Result<String, ServerError> {
     let key = b"privatekey";
     // let decode_key = DecodingKey::from_secret(key);
@@ -130,9 +134,10 @@ fn create_jwt_claim(// payload: &Json<LoginPayload>,
         sub: "myemailsub@email.com".to_string(),
         exp: expire,
         iat: now,
-        uid: "useridfromdatabase".to_string(),
+        uid: user_id.to_string(),
         nbf: now,
         tenant: "tenant".to_string(),
+        role: role.to_string(),
     };
 
     let jwt = match encode(&Header::default(), &claim, &EncodingKey::from_secret(key)) {
