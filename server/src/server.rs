@@ -78,7 +78,7 @@ impl ServerApplication {
             // .route(&format!("/surveys"), post(create_survey).get(list_survey))
             // .with_state(state.clone())
             // .merge(get_routes(state.clone()))
-            .merge(get_routes(state))
+            .merge(get_routes(state).unwrap())
             // .layer(Extension(state))
             .layer(corslayer)
             // .layer(middleware::map_response(main_response_mapper))

@@ -4,7 +4,10 @@ pub mod routes {
         password_hash::{rand_core::OsRng, SaltString},
         Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
     };
+    use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+
     use axum::{
+        body::Body,
         extract::{DefaultBodyLimit, Multipart, Path, Query},
         http::{self, HeaderMap, HeaderName, HeaderValue, Method, Uri},
         middleware,
@@ -69,7 +72,7 @@ pub mod routes {
     // }
     // use mware::middleware_require_auth;
 
-    pub fn get_routes(state: ServerState) -> Router {
+    pub fn get_routes(state: ServerState) -> anyhow::Result<Router> {
         // let survey_routes: Router = Router::new()
         //     .route(&format!("/surveys/:id"), get(get_survey))
         //     .route(&format!("/submit"), post(submit_survey))
@@ -79,19 +82,28 @@ pub mod routes {
         //         mw_ctx_resolver,
         //     ));
 
-        let t = Router::new()
+        let routes = Router::new()
             // .merge(survey_routes)
             // .layer(Extension(state))
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             .route(&format!("/surveys/test"), post(test_survey))
             .route(&format!("/login"), post(api_login))
             .route("/signup", post(signup))
+            // .with_state(state.clone())
+            // .route_layer(middleware::from_fn_with_state(
+            //     state.clone(),
+            //     mw_ctx_resolver,
+            // ))
+            .layer(middleware::from_fn_with_state(
+                state.clone(),
+                mw_ctx_resolver,
+            ))
             .layer(middleware::map_response(main_response_mapper))
-            .with_state(state.clone());
+            .with_state(state);
         // .layer(Extension(state));
         // .with_state(state);
 
-        return t;
+        return Ok(routes);
     }
 
     async fn main_response_mapper(
@@ -148,18 +160,15 @@ pub mod routes {
     pub async fn create_survey(
         headers: HeaderMap,
         State(state): State<ServerState>,
+        ctx: Option<Ctext>,
         extract::Json(payload): extract::Json<CreateSurveyRequest>,
-    ) -> impl IntoResponse {
+    ) -> anyhow::Result<Json<Value>, ServerError> {
         info!("Called create survey");
 
-        // Check user + type, can they make surveys?
-        let testuser = HeaderValue::from_str("").unwrap();
-        let user_id = headers
-            .get("x-user-id")
-            .unwrap_or(&testuser)
-            .to_str()
-            .unwrap();
-
+        let user_id = match &ctx {
+            Some(x) => x.user_id(),
+            None => return Err(ServerError::AuthFailNoTokenCookie),
+        };
         println!("Creating new survey for user={user_id:?}");
         // Check that the survey is Ok
         let parsed_survey = parse_markdown_v3(payload.plaintext);
@@ -186,7 +195,8 @@ pub mod routes {
 
         let insert_result = state.db.create_survey(survey_model).await.unwrap();
         let response = CreateSurveyResponse { survey: new_survey };
-        (StatusCode::CREATED, Json(response))
+
+        return Ok(Json(json!(response)));
     }
 
     #[tracing::instrument]
@@ -283,7 +293,12 @@ pub mod routes {
         ctx: Result<Ctext, ServerError>,
         // State(state): State<ServerState>,
         headers: HeaderMap,
-    ) -> impl IntoResponse {
+    ) -> anyhow::Result<Json<Value>, ServerError> {
+        println!("context: {:?}", ctx);
+        if ctx.is_err() {
+            return Err(ctx.err().unwrap());
+        }
+
         println!("Recieved headers={headers:#?}");
         let testuser = HeaderValue::from_str("").unwrap();
         let user_id = headers
@@ -312,7 +327,7 @@ pub mod routes {
 
         let resp = ListSurveyResponse { surveys: res };
 
-        (StatusCode::OK, Json(resp))
+        Ok(Json(json!(resp)))
     }
 
     #[derive(Deserialize, Serialize, Debug)]
@@ -326,22 +341,10 @@ pub mod routes {
         pub password: String,
     }
 
-    use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
-
-    #[derive(Debug, Serialize, Deserialize)]
-    struct Claims {
-        sub: String, // subject
-        exp: usize,  // expire
-        iat: usize,  // issued at
-        // iss: String, // issuer
-        // aud: String, // audience
-        uid: String, // customer - user_id
-                     // role: String, // custom - role of the user
-    }
 
     pub async fn signup(
-        cookies: Cookies,
-        // ctx: Result<Ctext, CustomError>,
+        // cookies: Cookies,
+        ctx: Option<Ctext>,
         state: State<ServerState>,
         payload: Json<LoginPayload>,
     ) -> anyhow::Result<Json<Value>, ServerError> {
@@ -395,7 +398,6 @@ pub mod routes {
         state: State<ServerState>,
         payload: Json<LoginPayload>,
     ) -> anyhow::Result<Json<Value>, ServerError> {
-        let key = b"privatekey";
         info!("api_login");
 
         // look for email in database
@@ -444,40 +446,4 @@ pub mod routes {
         Ok(Json(json!({"result": logged_in, "username": username})))
     }
 
-    fn get_jwt_claim(
-        payload: &Json<LoginPayload>,
-        key: &[u8; 10],
-    ) -> Result<String, Result<Json<Value>, ServerError>> {
-        let nowutc = chrono::Utc::now();
-        let now: usize = match nowutc
-            .timestamp()
-            .try_into()
-            .with_context(|| "Could not turn time into timestamp")
-        {
-            Ok(x) => x,
-            Err(e) => return Err(Err(ServerError::LoginFail)),
-        };
-        let expire: usize = match (nowutc + chrono::Duration::minutes(5))
-            .timestamp()
-            .try_into()
-        {
-            Ok(x) => x,
-            Err(e) => return Err(Err(ServerError::LoginFail)),
-        };
-        let claim = Claims {
-            sub: payload.email.clone(),
-            exp: expire,
-            iat: now,
-            uid: "useridfromdatabase".to_string(),
-        };
-        let jwt = match encode(&Header::default(), &claim, &EncodingKey::from_secret(key)) {
-            Ok(t) => t,
-            Err(_) => {
-                return Err(Err(ServerError::BadRequest(
-                    "yo this request is messed".to_string(),
-                )))
-            }
-        };
-        Ok(jwt)
-    }
 }

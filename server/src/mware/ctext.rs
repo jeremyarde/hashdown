@@ -1,3 +1,4 @@
+use anyhow::Context;
 use async_trait::async_trait;
 use axum::{
     extract::{FromRequestParts, State},
@@ -6,6 +7,8 @@ use axum::{
     response::Response,
     RequestPartsExt,
 };
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+use serde::{Deserialize, Serialize};
 use tower_cookies::{Cookie, Cookies};
 use tower_http::auth;
 
@@ -19,7 +22,7 @@ pub async fn mw_ctx_resolver<B>(
 ) -> Result<Response, ServerError> {
     println!("->> {:<12} - mw_ctx_resolver", "MIDDLEWARE");
 
-    const AUTH_TOKEN: &str = "authtoken";
+    const AUTH_TOKEN: &str = "x-auth-token";
     let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
 
     // todo: actually validate the auth token
@@ -50,10 +53,11 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctext {
         _state: &S,
     ) -> Result<Self, ServerError> {
         let cookies = parts.extract::<Cookies>().await.unwrap();
-        let auth_token = cookies.get("authtoken").map(|c| c.value().to_string());
-        let user_id = auth_token.ok_or(ServerError::AuthFailNoTokenCookie)?;
+        let auth_token = cookies.get("x-auth-token").map(|c| c.value().to_string());
+        let jwt = auth_token.ok_or(ServerError::AuthFailNoTokenCookie)?;
+        let jwt_claim = get_jwt_claim(jwt)?;
 
-        Ok(Ctext::new(user_id))
+        Ok(Ctext::new(jwt_claim.uid))
     }
 }
 
@@ -63,6 +67,84 @@ fn parse_token(token: String) -> Result<String, ServerError> {
         Some(x) => return Ok(x.to_string()),
         None => return Err(ServerError::AuthFailNoTokenCookie),
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+    sub: String, // subject
+    exp: usize,  // expire
+    iat: usize,  // issued at
+    // iss: String, // issuer
+    // aud: String, // audience
+    uid: String, // customer - user_id
+    // role: String, // custom - role of the user
+    nbf: usize, // not before
+    tenant: String,
+}
+
+fn get_jwt_claim(
+    // payload: &Json<LoginPayload>,
+    // key: &[u8; 10],
+    jwt_token: String,
+) -> anyhow::Result<Claims, ServerError> {
+    let key = b"privatekey";
+    let decode_key = DecodingKey::from_secret(key);
+    let decode_result =
+        match decode::<Claims>(&jwt_token, &decode_key, &Validation::new(Algorithm::HS256)) {
+            Ok(x) => x.claims,
+            Err(e) => return Err(ServerError::AuthFailTokenNotVerified(e.to_string())),
+        };
+    return Ok(decode_result);
+}
+
+fn create_jwt_claim(// payload: &Json<LoginPayload>,
+    // key: &[u8; 10],
+    // jwt_token: String,
+) -> anyhow::Result<String, ServerError> {
+    let key = b"privatekey";
+    // let decode_key = DecodingKey::from_secret(key);
+    // let decode_result =
+    //     match decode::<Claims>(&jwt_token, &decode_key, &Validation::new(Algorithm::HS256)) {
+    //         Ok(x) => x.claims,
+    //         Err(e) => return Err(ServerError::AuthFailTokenNotVerified(e.to_string())),
+    //     };
+
+    let nowutc = chrono::Utc::now();
+    let now: usize = match nowutc
+        .timestamp()
+        .try_into()
+        .with_context(|| "Could not turn time into timestamp")
+    {
+        Ok(x) => x,
+        Err(e) => return Err(ServerError::LoginFail),
+    };
+    let expire: usize = match (nowutc + chrono::Duration::minutes(5))
+        .timestamp()
+        .try_into()
+    {
+        Ok(x) => x,
+        Err(e) => return Err(ServerError::LoginFail),
+    };
+
+    let claim = Claims {
+        sub: "myemailsub@email.com".to_string(),
+        exp: expire,
+        iat: now,
+        uid: "useridfromdatabase".to_string(),
+        nbf: now,
+        tenant: "tenant".to_string(),
+    };
+
+    let jwt = match encode(&Header::default(), &claim, &EncodingKey::from_secret(key)) {
+        Ok(t) => t,
+        Err(_) => {
+            return Err(ServerError::BadRequest(
+                "yo this request is messed".to_string(),
+            ))
+        }
+    };
+
+    return Ok(jwt);
 }
 
 #[derive(Clone, Debug)]

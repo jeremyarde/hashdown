@@ -39,24 +39,14 @@ pub struct ServerState {
 #[instrument]
 async fn main() -> anyhow::Result<()> {
     // cargo watch -d 1.5 -- cargo run
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .with_env_filter("server=debug")
+        .init();
 
-    // tracing_subscriber::fmt()
-    //     .with_max_level(tracing::Level::DEBUG)
-    //     .init();
-    // env::set_current_dir("./server").unwrap();
-    info!("{:?}", std::env::current_dir());
+    // info!("{:?}", std::env::current_dir());
 
-    // dotenvy::from_filename().unwrap();
-    // dotenvy::dotenv().unwrap();
     dotenvy::from_filename("./server/.env")?;
-    // curl -X GET 127.0.0.1:3000/surveys
-    // curl -X GET https://127.0.0.1:3000/surveys
-    /*
-
-    curl -X POST http://localhost:3000/surveys \
-       -H 'Content-Type: application/json' \
-       -d '{"id": "test", "plaintext": "content"}'
-       */
 
     info!("Spinning up the server.");
     let server_app = ServerApplication::new().await;
@@ -69,7 +59,10 @@ async fn main() -> anyhow::Result<()> {
 mod tests {
     use std::collections::HashMap;
 
-    use axum::http::{HeaderMap, HeaderValue};
+    use axum::{
+        http::{HeaderMap, HeaderValue},
+        Json,
+    };
     use db::models::{
         AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
     };
@@ -104,15 +97,44 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn list_survey_test() {
+        dotenvy::from_filename("./server/.env").unwrap();
+
         let app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
         router.ready().await.unwrap();
 
-        // let mut test_headers = HeaderMap::new();
-        // test_headers.insert("test", HeaderValue::from_str("yo").unwrap());
-
         let client = get_client().await;
 
+        // Login
+        let url = "/signup";
+        let client_url = format!("http://{}{}", "localhost:8080", url);
+
+        println!("Sending req to: {client_url}");
+
+        let request: LoginPayload = LoginPayload {
+            email: "jere".to_string(),
+            password: "mypassword".to_string(),
+        };
+
+        let response = client
+            .post(&client_url)
+            .json(&request)
+            .send()
+            .await
+            .expect("Should recieve repsonse from app");
+
+        let cookie = response
+            .headers()
+            .get("set-cookie")
+            .expect("Cookie is available in headers");
+        let auth_header = cookie
+            .to_str()
+            .expect("Converting cookie to string")
+            .to_string();
+        let auth_token = auth_header.split("=").nth(1).expect("Split auth on '='");
+        let results = response.text().await;
+
+        // List surveys
         let client_url = format!("http://{}{}", app.base_url.to_string(), "/surveys");
 
         println!("Client sending to: {client_url}");
@@ -120,15 +142,17 @@ mod tests {
         // TODO! Send issues to request for headers???
         let request = client
             .post(&client_url)
-            // .headers(headers)
-            // .header("x-user-id", "testuser")
-            .header("duringbuildnotworking", "custom")
+            .header("Cookie", format!("x-auth-token={auth_token}"))
             .json(&CreateSurveyRequest {
                 plaintext: "- another\n - this one".to_string(),
             })
             .build()
             .unwrap();
-        println!("Sending request={request:#?}");
+
+        println!("Sending create survey with headers...");
+        dbg!(&request);
+
+        // println!("Sending request={request:#?}");
 
         let response = client.execute(request).await.unwrap();
 
@@ -136,9 +160,12 @@ mod tests {
 
         assert_eq!(results.survey.survey.plaintext, "- another\n - this one");
 
-        //call list
+        // call list
         let listresponse = client.get(&client_url).send().await.unwrap();
-        let listresults: ListSurveyResponse = listresponse.json().await.unwrap();
+        let listresults: ListSurveyResponse = listresponse
+            .json()
+            .await
+            .expect("Could not turn response to json");
 
         assert_eq!(listresults.surveys.len(), 1);
         assert_eq!(listresults.surveys[0].plaintext, "- another\n - this one");
@@ -367,5 +394,40 @@ mod tests {
         dbg!(&response);
         let results = response.text().await;
         dbg!(results);
+    }
+
+    #[serial]
+    #[tokio::test]
+    async fn test_client_only() {
+        let client = get_client().await;
+
+        let client_url = format!("http://{}{}", "localhost:8080", "/surveys");
+
+        println!("Client sending to: {client_url}");
+
+        // TODO! Send issues to request for headers???
+        let request = client
+            .post(&client_url)
+            // .headers(headers)
+            // .header("x-user-id", "testuser")
+            .json(&CreateSurveyRequest {
+                plaintext: "- another\n - this one".to_string(),
+            })
+            .build()
+            .unwrap();
+        println!("Sending request={request:#?}");
+
+        let response = client.execute(request).await.unwrap();
+
+        let results: CreateSurveyResponse = response.json().await.unwrap();
+
+        assert_eq!(results.survey.survey.plaintext, "- another\n - this one");
+
+        //call list
+        let listresponse = client.get(&client_url).send().await.unwrap();
+        let listresults: ListSurveyResponse = listresponse.json().await.unwrap();
+
+        assert_eq!(listresults.surveys.len(), 1);
+        assert_eq!(listresults.surveys[0].plaintext, "- another\n - this one");
     }
 }

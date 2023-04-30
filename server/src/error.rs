@@ -16,6 +16,7 @@ pub enum ServerError {
     AuthPasswordsDoNotMatch,
     AuthFailNoTokenCookie,
     PasswordDoesNotMatch,
+    AuthFailTokenNotVerified(String),
 }
 
 // So that errors get printed to the browser?
