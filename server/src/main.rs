@@ -105,37 +105,9 @@ mod tests {
 
         let client = get_client().await;
 
-        // Login
-        let url = "/signup";
-        let client_url = format!("http://{}{}", "localhost:8080", url);
+        let auth_token = get_auth_token(&client).await;
 
-        println!("Sending req to: {client_url}");
-
-        let request: LoginPayload = LoginPayload {
-            email: "jere".to_string(),
-            password: "mypassword".to_string(),
-        };
-
-        let response = client
-            .post(&client_url)
-            .json(&request)
-            .send()
-            .await
-            .expect("Should recieve repsonse from app");
-
-        println!("Response after logging in:");
-        dbg!(&response);
-
-        let cookie = response
-            .headers()
-            .get("set-cookie")
-            .expect("Cookie is available in headers");
-        let auth_header = cookie
-            .to_str()
-            .expect("Converting cookie to string")
-            .to_string();
-        let auth_token = auth_header.split("=").nth(1).expect("Split auth on '='");
-        let results = response.text().await;
+        // let results = response.text().await;
 
         // List surveys
         let client_url = format!("http://{}{}", app.base_url.to_string(), "/surveys");
@@ -170,7 +142,7 @@ mod tests {
             .send()
             .await
             .unwrap();
-    
+
         let listresults: ListSurveyResponse = listresponse
             .json()
             .await
@@ -194,6 +166,8 @@ mod tests {
             .build()
             .unwrap();
 
+        let auth_token = get_auth_token(&client).await;
+
         let client_url = format!("http://{}{}", "localhost:8080", "/surveys");
         // let client_url = format!("/surveys");
 
@@ -204,6 +178,7 @@ mod tests {
             .json(&CreateSurveyRequest {
                 plaintext: "- create\n - this one".to_string(),
             })
+            .header("Cookie", format!("x-auth-token={auth_token}"))
             .send()
             .await
             .unwrap();
@@ -408,11 +383,15 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn test_client_only() {
+        dotenvy::from_filename("./server/.env").unwrap();
+
         let client = get_client().await;
 
         let client_url = format!("http://{}{}", "localhost:8080", "/surveys");
 
         println!("Client sending to: {client_url}");
+
+        let auth_token = get_auth_token(&client).await;
 
         // TODO! Send issues to request for headers???
         let request = client
@@ -422,6 +401,7 @@ mod tests {
             .json(&CreateSurveyRequest {
                 plaintext: "- another\n - this one".to_string(),
             })
+            .header("Cookie", format!("x-auth-token={auth_token}"))
             .build()
             .unwrap();
         println!("Sending request={request:#?}");
@@ -438,5 +418,44 @@ mod tests {
 
         assert_eq!(listresults.surveys.len(), 1);
         assert_eq!(listresults.surveys[0].plaintext, "- another\n - this one");
+    }
+
+    async fn get_auth_token(client: &Client) -> String {
+        // Login
+        let url = "/signup";
+        let client_url = format!("http://{}{}", "localhost:8080", url);
+
+        println!("Sending req to: {client_url}");
+
+        let request: LoginPayload = LoginPayload {
+            email: "jere".to_string(),
+            password: "mypassword".to_string(),
+        };
+
+        let response = client
+            .post(&client_url)
+            .json(&request)
+            .send()
+            .await
+            .expect("Should recieve response from app");
+
+        println!("Response after logging in:");
+        dbg!(&response);
+
+        let cookie = response
+            .headers()
+            .get("set-cookie")
+            .expect("Cookie is available in headers");
+        let auth_header = cookie
+            .to_str()
+            .expect("Converting cookie to string")
+            .to_string();
+        let auth_token = auth_header
+            .split("=")
+            .nth(1)
+            .expect("Split auth on '='")
+            .to_string();
+
+        return auth_token;
     }
 }

@@ -54,7 +54,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctext {
         parts: &mut axum::http::request::Parts,
         _state: &S,
     ) -> Result<Self, ServerError> {
-        let cookies = parts.extract::<Cookies>().await.unwrap();
+        let cookies =parts.extract::<Cookies>().await.unwrap();
         let auth_token = cookies.get("x-auth-token").map(|c| c.value().to_string());
         let jwt = auth_token.ok_or(ServerError::AuthFailNoTokenCookie)?;
         let jwt_claim = validate_jwt_claim(jwt)?;

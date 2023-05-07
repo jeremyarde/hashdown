@@ -59,19 +59,6 @@ pub mod routes {
         ServerError, ServerState,
     };
 
-    // pub fn get_routes(state: ServerState) -> Router {
-    //     let t = Router::new()
-    //         // .layer(Extension(state))
-    //         .route(&format!("/surveys"), post(create_survey).get(list_survey))
-    //         .route(&format!("/surveys/test"), post(test_survey))
-    //         .route(&format!("/surveys/:id"), get(get_survey))
-    //         .route(&format!("/submit"), post(submit_survey))
-    //         .route(&format!("login"), post(api_login))
-    //         .with_state(state);
-    //     return t;
-    // }
-    // use mware::middleware_require_auth;
-
     pub fn get_routes(state: ServerState) -> anyhow::Result<Router> {
         // let survey_routes: Router = Router::new()
         //     .route(&format!("/surveys/:id"), get(get_survey))
@@ -169,7 +156,7 @@ pub mod routes {
             Some(x) => x.user_id(),
             None => return Err(ServerError::AuthFailNoTokenCookie),
         };
-        println!("Creating new survey for user={user_id:?}");
+        info!("Creating new survey for user={user_id:?}");
         // Check that the survey is Ok
         let parsed_survey = parse_markdown_v3(payload.plaintext);
 
