@@ -40,7 +40,7 @@ export default function App() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            credentials: "same-origin",
+            credentials: "include",
             body: JSON.stringify(data)
         })
             .then(response => response.json())

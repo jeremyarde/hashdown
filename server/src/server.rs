@@ -60,7 +60,7 @@ impl ServerApplication {
         let state = ServerState { db: db };
 
         let origins = [
-            "http://localhost:8080".parse().unwrap(),
+            "http://localhost:3000".parse().unwrap(),
             // "http://api.example.com".parse().unwrap(),
         ];
         let corslayer = CorsLayer::new()
@@ -68,7 +68,7 @@ impl ServerApplication {
             .allow_headers([
                 http::header::CONTENT_TYPE,
                 http::header::ACCEPT,
-                HeaderName::from_static("x-auth-token"),
+                // HeaderName::from_static("x-auth-token"),
             ])
             // .allow_headers(Any)
             .allow_credentials(true)
