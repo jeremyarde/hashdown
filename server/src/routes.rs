@@ -377,7 +377,13 @@ pub mod routes {
         //     Ok(x) => x,
         //     Err(e) => return Err(ServerError::AuthFailNoTokenCookie),
         // };
-        cookies.add(Cookie::new("x-auth-token", jwt));
+        let auth_cookie = Cookie::build("x-auth-token", jwt)
+            // .domain("localhost")
+            // .same_site(tower_cookies::cookie::SameSite::Lax)
+            .secure(true)
+            .http_only(true)
+            .finish();
+        cookies.add(auth_cookie);
 
         return Ok(Json(json!(user.email)));
     }

@@ -59,15 +59,20 @@ impl ServerApplication {
             .expect("Database was not created.");
         let state = ServerState { db: db };
 
+        let origins = [
+            "http://localhost:8080".parse().unwrap(),
+            // "http://api.example.com".parse().unwrap(),
+        ];
         let corslayer = CorsLayer::new()
             .allow_methods([Method::POST, Method::GET])
-            // .allow_headers([
-            //     http::header::CONTENT_TYPE,
-            //     http::header::ACCEPT,
-            //     HeaderName::from_str("x-user-id").unwrap(),
-            // ])
-            .allow_headers(Any)
-            .allow_origin(Any);
+            .allow_headers([
+                http::header::CONTENT_TYPE,
+                http::header::ACCEPT,
+                HeaderName::from_static("x-auth-token"),
+            ])
+            // .allow_headers(Any)
+            .allow_credentials(true)
+            .allow_origin(origins);
 
         // let corslayer = CorsLayer::new().allow_headers(Any);
 
@@ -80,9 +85,10 @@ impl ServerApplication {
             // .merge(get_routes(state.clone()))
             .merge(get_routes(state).unwrap())
             // .layer(Extension(state))
-            .layer(corslayer)
             // .layer(middleware::map_response(main_response_mapper))
             .layer(CookieManagerLayer::new())
+            // .layer(CorsLayer::very_permissive())
+            .layer(corslayer)
             // .with_state(state)
             // .route(&format!("/surveys/test"), post(test_survey))
             // .route(&format!("/surveys/:id"), get(get_survey))
