@@ -40,8 +40,7 @@ pub async fn mw_ctx_resolver<B>(
     }
 
     // Store the ctx_result in the request extension.
-    req.extensions_mut()
-        .insert(result_ctx);
+    req.extensions_mut().insert(result_ctx);
 
     Ok(next.run(req).await)
 }
@@ -54,7 +53,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctext {
         parts: &mut axum::http::request::Parts,
         _state: &S,
     ) -> Result<Self, ServerError> {
-        let cookies =parts.extract::<Cookies>().await.unwrap();
+        let cookies = parts.extract::<Cookies>().await.unwrap();
         let auth_token = cookies.get("x-auth-token").map(|c| c.value().to_string());
         let jwt = auth_token.ok_or(ServerError::AuthFailNoTokenCookie)?;
         let jwt_claim = validate_jwt_claim(jwt)?;
@@ -84,6 +83,11 @@ struct Claims {
     tenant: String,
 }
 
+pub struct JwtResult {
+    pub token: String,
+    pub expires: usize,
+}
+
 fn validate_jwt_claim(
     // payload: &Json<LoginPayload>,
     // key: &[u8; 10],
@@ -104,7 +108,7 @@ pub fn create_jwt_claim(
     // key: &[u8; 10],
     user_id: String,
     role: &str, // jwt_token: String,
-) -> anyhow::Result<String, ServerError> {
+) -> anyhow::Result<JwtResult, ServerError> {
     let key = b"privatekey";
     // let decode_key = DecodingKey::from_secret(key);
     // let decode_result =
@@ -140,6 +144,7 @@ pub fn create_jwt_claim(
         role: role.to_string(),
     };
 
+    // return Ok(claim);
     let jwt = match encode(&Header::default(), &claim, &EncodingKey::from_secret(key)) {
         Ok(t) => t,
         Err(_) => {
@@ -149,7 +154,10 @@ pub fn create_jwt_claim(
         }
     };
 
-    return Ok(jwt);
+    return Ok(JwtResult {
+        token: jwt,
+        expires: expire,
+    });
 }
 
 #[derive(Clone, Debug)]

@@ -370,16 +370,16 @@ pub mod routes {
             }
         };
 
-        let jwt = create_jwt_claim(user.email.clone(), "somerole-pleasechange")?;
-
-        // let key = b"privatekey";
-        // let jwt = match get_jwt_claim(&payload, key) {
-        //     Ok(x) => x,
-        //     Err(e) => return Err(ServerError::AuthFailNoTokenCookie),
-        // };
-        let auth_cookie = Cookie::build("x-auth-token", jwt)
+        let jwt_claim = create_jwt_claim(user.email.clone(), "somerole-pleasechange")?;
+        let auth_cookie = Cookie::build("x-auth-token", jwt_claim.token)
             // .domain("localhost")
-            // .same_site(tower_cookies::cookie::SameSite::Lax)
+            .same_site(tower_cookies::cookie::SameSite::Strict)
+            .expires(
+                tower_cookies::cookie::time::OffsetDateTime::from_unix_timestamp(
+                    jwt_claim.expires as i64,
+                )
+                .unwrap(),
+            )
             .secure(true)
             .http_only(true)
             .finish();
@@ -410,14 +410,14 @@ pub mod routes {
             }
         };
 
-        let password = "mypassword";
+        // let password = "mypassword";
         let argon2 = argon2::Argon2::default();
-        let salt = SaltString::generate(OsRng);
-        let hash = argon2.hash_password(password.as_bytes(), &salt).unwrap();
-        let password_hash_string = hash.to_string();
+        // let salt = SaltString::generate(OsRng);
+        // let hash: PasswordHash = argon2.hash_password(password.as_bytes(), &salt).unwrap();
+        // let password_hash_string = hash.to_string();
         // PasswordHash::generate(phf, password, salt)
-
         // let hash = PasswordHash::new(&password_hash_string).unwrap();
+
         let hash = PasswordHash::new(&user.password_hash).unwrap();
         let is_correct = match argon2.verify_password(&payload.password.as_bytes(), &hash) {
             Ok(_) => true,
@@ -431,7 +431,7 @@ pub mod routes {
         let jwt = create_jwt_claim(user.email, "randomrole- please update")?;
 
         // TODO: set cookies
-        cookies.add(Cookie::new("x-auth-token", jwt));
+        cookies.add(Cookie::new("x-auth-token", jwt.token));
 
         // TODO: create success body
         let username = payload.email.clone();
