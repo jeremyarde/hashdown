@@ -114,6 +114,7 @@ pub mod mainapp {
 
             let client = reqwest::Client::builder()
                 .default_headers(headers)
+                // .cookie_store(true)
                 // .cookie_store(true) // does not work on wasm right now: https://github.com/seanmonstar/reqwest/pull/1753
                 .build()
                 .unwrap();
