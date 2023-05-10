@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Editor from "./Editor";
 import Login from "./Login";
-import Survey from "./Survey";
+import Survey from "../app/Survey";
 
 export default function App() {
     const [editor, setEditor] = React.useState("");

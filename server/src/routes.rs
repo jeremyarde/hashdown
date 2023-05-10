@@ -125,7 +125,9 @@ pub mod routes {
 
         // Build and log the server log line.
         let client_error = client_status_error.unzip().1;
-        log_request(uuid, req_method, uri, ctx, service_error, client_error).await;
+        log_request(uuid, req_method, uri, ctx, service_error, client_error)
+            .await
+            .unwrap();
 
         println!();
         error_response.unwrap_or(res)

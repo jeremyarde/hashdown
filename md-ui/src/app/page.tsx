@@ -1,18 +1,35 @@
 'use client';
 
 import Image from 'next/image'
-import Login from './Login'
-import Survey from './Survey'
-import App from './App';
+import Login from '../components/Login'
+// import Survey from './Survey'
+import App from '../components/App';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuIndicator,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  NavigationMenuViewport,
+} from "@/components/ui/navigation-menu";
+
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex text-blue-600">
-        {/* <Login></Login>
-        <Survey></Survey> */}
-        <App></App>
-      </div>
-    </main>
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <NavigationMenuLink>Link</NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
+      <App></App>
+    </main >
   )
 }

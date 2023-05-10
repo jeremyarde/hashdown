@@ -6,7 +6,7 @@ pub mod mainapp {
 
     use gloo_timers::{callback::Timeout, future::TimeoutFuture};
     // use console_log::log;
-    use log;
+    use log::info;
     // use db::database::Database;
 
     // use std::{thread::sleep, time::Duration};
@@ -28,7 +28,7 @@ pub mod mainapp {
     // use types::SurveyDto;
 
     // use gloo_timers::future::TimeoutFuture;
-    use reqwest::{header, Client};
+    use reqwest::{header, Client, RequestBuilder};
     use serde::{Deserialize, Serialize};
 
     static APP: Atom<AppState> = |_| AppState::new();
@@ -114,6 +114,7 @@ pub mod mainapp {
 
             let client = reqwest::Client::builder()
                 .default_headers(headers)
+                // .cookie_store(true) // does not work on wasm right now: https://github.com/seanmonstar/reqwest/pull/1753
                 .build()
                 .unwrap();
             AppState {
@@ -365,7 +366,7 @@ pub mod mainapp {
             });
             rsx!{
                 div {
-                    onclick:  move |_| {
+                    onclick: move |_| {
                         toast_visible.set(false)
                     },
                     class:"fixed right-10 bottom-10 px-5 py-4 border-r-8 bg-white drop-shadow-lg fade-in transition ease-in-out hover:-translate-y-1 hover:scale-110 hover:bg-indigo-500 duration-1000 from-blue-500",
@@ -448,7 +449,7 @@ pub mod mainapp {
     // use fermi::use_atom_state;
 
     use fermi::use_init_atom_root;
-    use tracing::info;
+    // use tracing::info;
     // use tracing::log::info;
     // use ui::mainapp::app;
 
@@ -545,6 +546,70 @@ pub mod mainapp {
         }
     }
 
+    #[derive(Deserialize, Debug, Serialize)]
+    pub struct LoginPayload {
+        pub email: String,
+        pub password: String,
+    }
+    pub fn Navbar(cx: Scope) -> Element {
+        let app_state = use_atom_state(cx, APP);
+        let signup = move |authmethod: String, client: Client| {
+            cx.spawn({
+                // to_owned![];
+                async move {
+                    println!("Attempting signup...");
+                    // println!("Questions save: {:?}", question_state);
+
+                    match client
+                        .post(format!("http://localhost:3000/{authmethod}"))
+                        .json(&LoginPayload {
+                            email: "a@a.a".to_string(),
+                            password: "a".to_string(),
+                        })
+                        .send()
+                        .await
+                    {
+                        Ok(x) => {
+                            info!("success: {x:?}");
+                            let authtoken = x.headers().get_all("x-auth-token");
+                            info!("auth: {authtoken:?}");
+                            let cookie = x.headers().get_all("Set-Cookie");
+                            info!("auth: {cookie:?}");
+                            // for header in x.headers() {
+                            //     info!("Header: {header:?}");
+                            // }
+                        }
+                        Err(x) => println!("error: {x:?}"),
+                    };
+                }
+            })
+        };
+
+        cx.render(rsx! {
+            div {"Navbar here"}
+            button {
+                class: "bg-blue-500 p-2 hover:bg-green-700 text-white font-bold py-2 px-4 rounded",
+                // onclick: move |e| {signup()}
+                onclick: move |evt| {
+                    println!("Pushed publish :)");
+                    signup( "signup".to_string(), app_state.client.clone());
+                    evt.stop_propagation();
+                },
+                "signup"
+            },
+            button {
+                class: "bg-blue-500 p-2 hover:bg-green-700 text-white font-bold py-2 px-4 rounded",
+                // onclick: move |e| {signup()}
+                onclick: move |evt| {
+                    println!("Pushed login :)");
+                    signup( "login".to_string(), app_state.client.clone());
+                    evt.stop_propagation();
+                },
+                "login"
+            }
+        })
+    }
+
     pub fn App(cx: Scope) -> Element {
         use_init_atom_root(cx);
         let app_state = use_atom_state(cx, APP);
@@ -555,6 +620,7 @@ pub mod mainapp {
                 // class: "container mx-auto max-w-lg p-6",
                 class: "container p-6",
                 div {
+                    self::Navbar {},
                     self::Editor {},
                     self::RenderSurvey { survey_to_render: &app_state.curr_survey },
                     // SurveysComponent { survey: &app_state.curr_survey }

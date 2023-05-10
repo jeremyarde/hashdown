@@ -644,6 +644,8 @@
 
 // use ui::mainapp::{self, server_side};
 
+use dioxus_web::Config;
+use log::LevelFilter;
 use ui::mainapp;
 
 fn main() {
@@ -656,13 +658,13 @@ fn main() {
     // kill -9 PID
 
     // init debug tool for WebAssembly
-    wasm_logger::init(wasm_logger::Config::default());
-    console_error_panic_hook::set_once();
-    std::panic::set_hook(Box::new(|info| {
-        println!("Panic: {}", info);
-    }));
-
-    dioxus_web::launch(mainapp::App);
+    // wasm_logger::init(wasm_logger::Config::default());
+    // console_error_panic_hook::set_once();
+    // std::panic::set_hook(Box::new(|info| {
+    //     println!("Panic: {}", info);
+    // }));
+    dioxus_logger::init(LevelFilter::Info).expect("failed to init logger");
+    dioxus_web::launch_cfg(mainapp::App, Config::new());
     // server_side()
     // dioxus::web::launch_cfg(app, |c| c.into());
 }

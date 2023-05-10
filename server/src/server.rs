@@ -60,7 +60,8 @@ impl ServerApplication {
         let state = ServerState { db: db };
 
         let origins = [
-            "http://localhost:3000".parse().unwrap(),
+            // "http://localhost:3000".parse().unwrap(),
+            "http://localhost:8080".parse().unwrap(),
             // "http://api.example.com".parse().unwrap(),
         ];
         let corslayer = CorsLayer::new()
@@ -120,7 +121,7 @@ impl ServerApplication {
         let app = ServerApplication::get_router().await;
 
         // let app = configure_app().await;
-        let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+        let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
         tracing::debug!("listening on {}", addr);
 
         let server = tokio::spawn(async move {
