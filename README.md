@@ -1,6 +1,6 @@
 Goals
 1. parse markdown file/text into survey
-
+- [ ] 
 
 
 User
@@ -11,6 +11,7 @@ User
 Technical
 1. save markdown file contents
 2. parse markdown into questionnaire
+
 
 
 

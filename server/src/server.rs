@@ -56,11 +56,12 @@ impl ServerApplication {
     pub async fn get_router() -> Router {
         let db = Database::new(true)
             .await
-            .expect("Database was not created.");
+            .expect("Database was not created. Probably an error in the migrations.");
         let state = ServerState { db: db };
 
         let origins = [
-            // "http://localhost:3000".parse().unwrap(),
+            "http://localhost:3000".parse().unwrap(),
+            "http://localhost:3001".parse().unwrap(),
             "http://localhost:8080".parse().unwrap(),
             // "http://api.example.com".parse().unwrap(),
         ];
@@ -69,7 +70,7 @@ impl ServerApplication {
             .allow_headers([
                 http::header::CONTENT_TYPE,
                 http::header::ACCEPT,
-                // HeaderName::from_static("x-auth-token"),
+                http::header::AUTHORIZATION, // HeaderName::from_static("x-auth-token"),
             ])
             // .allow_headers(Any)
             .allow_credentials(true)
@@ -158,67 +159,6 @@ impl CreateSurveyResponse {
     }
 }
 
-// async fn main_response_mapper(res: Response) -> Response {
-//     println!("main_response_mapper - res={:?}", res);
-//     res
-// }
-
-// #[axum::debug_handler]
-// pub async fn get_survey(
-//     State(state): State<ServerState>,
-//     Path(survey_id): Path<String>,
-// ) -> impl IntoResponse {
-//     let pool = state.db.pool;
-
-//     let count: i64 = sqlx::query_scalar("select count(id) from surveys")
-//         .fetch_one(&pool)
-//         .await
-//         .map_err(internal_error)
-//         .unwrap();
-//     println!("Survey count: {count:#?}");
-
-//     let res = sqlx::query_as::<_, SurveyModel>("select * from surveys as s where s.id = $1")
-//         .bind(survey_id)
-//         .fetch_one(&pool)
-//         .await
-//         .unwrap();
-
-//     println!("Survey: {res:#?}");
-//     let resp_survey = parse_markdown_v3(res.plaintext.clone());
-//     let response = CreateSurveyResponse {
-//         survey: resp_survey,
-//         // metadata: res,
-//     };
-
-//     let template = FormTemplate {
-//         survey_id: response.survey.id,
-//     };
-
-//     return (StatusCode::OK, template);
-// }
-
-// #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
-// pub struct Survey {
-//     pub id: String,
-//     nanoid: String,
-//     pub plaintext: String,
-//     // questions: Question,
-//     user_id: String,
-//     created_at: String,
-//     modified_at: String,
-//     version: String,
-// }
-
-// #[derive(Debug, Deserialize, Serialize)]
-// pub struct CreateSurveyRequest {
-//     pub plaintext: String,
-// }
-
-// #[derive(Debug, Deserialize, Serialize)]
-// pub struct CreateSurveyResponse {
-//     pub survey: Survey,
-// }
-
 use std::{collections::HashMap, net::SocketAddr};
 
 use axum::{
@@ -306,32 +246,6 @@ struct Answer {
     form_id: String,
     value: String,
 }
-
-// #[derive(Template)]
-// #[template(path = "form.html")]
-// struct FormTemplate {
-//     survey_id: String,
-// }
-
-// pub async fn get_form(
-//     State(_state): State<ServerState>,
-//     Path(survey_id): Path<String>,
-// ) -> FormTemplate {
-//     FormTemplate {
-//         survey_id: survey_id,
-//     }
-// }
-
-// #[derive(Template)]
-// #[template(path = "create_survey.html")]
-// struct CreateSurveyTemplate {
-//     // survey_value: String,
-// }
-
-// #[axum::debug_handler]
-// pub async fn create_survey_form(State(_state): State<ServerState>) -> impl IntoResponse {
-//     CreateSurveyTemplate {}
-// }
 
 mod test {
     use std::collections::HashMap;

@@ -10,11 +10,11 @@ CREATE TABLE surveys (
 );
 CREATE TABLE users (
     id TEXT NOT NULL UNIQUE,
-    username TEXT,
+    email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-    email TEXT NOT NULL,
     created_at TEXT NOT NULL,
-    modified_at TEXT
+    modified_at TEXT NOT NULL,
+    verified TEXT default false
 );
 Create table answers (
     id TEXT NOT NULL UNIQUE,
@@ -27,6 +27,13 @@ Create table answers (
     created_at TEXT
 );
 
+-- create table sessions (
+--     id serial primary key,
+--     user_id text,
+--     session_verifier text not null,
+--     otp_code_encrypted text not null,
+
+-- )
 
 insert into surveys (id, plaintext, user_id)
 values (

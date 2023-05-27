@@ -9,8 +9,8 @@ pub mod routes {
     use axum::{
         body::Body,
         extract::{DefaultBodyLimit, Multipart, Path, Query},
-        http::{self, HeaderMap, HeaderName, HeaderValue, Method, Uri},
-        middleware,
+        http::{self, HeaderMap, HeaderName, HeaderValue, Method, Request, Uri},
+        middleware::{self, Next},
         response::IntoResponse,
         response::Response,
         routing::{get, get_service, post, MethodRouter},
@@ -26,6 +26,7 @@ pub mod routes {
     use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey, SurveyBuilder};
     // use oauth2::basic::BasicClient;
 
+    // use reqwest::header;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use tower_cookies::{Cookie, Cookies};
@@ -73,6 +74,7 @@ pub mod routes {
             // .merge(survey_routes)
             // .layer(Extension(state))
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
+            .route("/surveys/:id", get(get_survey))
             .route(&format!("/surveys/test"), post(test_survey))
             .route(&format!("/login"), post(api_login))
             .route("/signup", post(signup))
@@ -86,11 +88,26 @@ pub mod routes {
                 mw_ctx_resolver,
             ))
             .layer(middleware::map_response(main_response_mapper))
+            .layer(middleware::from_fn(propagate_header))
             .with_state(state);
         // .layer(Extension(state));
         // .with_state(state);
 
         return Ok(routes);
+    }
+
+    async fn propagate_header<B>(req: Request<B>, next: Next<B>) -> Response {
+        // let header = req.headers().get("something").expect(msg);
+        let mut res = next.run(req).await;
+        res.headers_mut()
+            .insert("x-customkey", HeaderValue::from_str("header").unwrap());
+        res.headers_mut()
+            .insert("x-asdfcustomkey", HeaderValue::from_str("header").unwrap());
+        res.headers_mut().insert(
+            "x-asdfasdfcustomkey",
+            HeaderValue::from_str("header").unwrap(),
+        );
+        res
     }
 
     async fn main_response_mapper(

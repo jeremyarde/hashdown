@@ -15,8 +15,8 @@ pub mod mainapp {
 
     // use dioxus_router::{Link, Route, Router};
     // use dioxus_router::{Link, Route, Router};
-    use dioxus_ssr::render_lazy;
-    use fermi::{use_atom_state, use_read, Atom, AtomRoot};
+    // use dioxus_ssr::render_lazy;
+    use fermi::{use_atom_state, Atom, AtomRoot};
     // use gloo_timers::future::TimeoutFuture;
     // use gloo_timers::future::TimeoutFuture;
     // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
@@ -38,6 +38,23 @@ pub mod mainapp {
         plaintext: String,
     }
 
+    #[derive(Serialize, Debug)]
+    struct UserContext {
+        username: String,
+        token: String,
+        cookie: String,
+    }
+
+    impl UserContext {
+        fn new() -> Self {
+            return Self {
+                username: "jeremy".to_string(),
+                token: "".to_string(),
+                cookie: "".to_string(),
+            };
+        }
+    }
+
     #[derive(Debug)]
     struct AppState {
         // questions: Questions,
@@ -46,6 +63,7 @@ pub mod mainapp {
         // surveys: Vec<Survey>,
         surveys: Vec<SurveyDto>,
         curr_survey: SurveyDto,
+        user: UserContext,
     }
 
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -114,7 +132,6 @@ pub mod mainapp {
 
             let client = reqwest::Client::builder()
                 .default_headers(headers)
-                // .cookie_store(true)
                 // .cookie_store(true) // does not work on wasm right now: https://github.com/seanmonstar/reqwest/pull/1753
                 .build()
                 .unwrap();
@@ -133,6 +150,7 @@ pub mod mainapp {
                     modified_at: "".to_string(),
                     version: "".to_string(),
                 },
+                user: UserContext::new(),
             }
         }
     }
@@ -182,6 +200,7 @@ pub mod mainapp {
                                     client: curr.client.clone(),
                                     surveys: vec![],
                                     curr_survey: SurveyDto::from(content.clone()),
+                                    user: UserContext::new(),
                                 }
                                 // curr.questions = question;
                             });
@@ -226,6 +245,7 @@ pub mod mainapp {
                                     client: curr.client.clone(),
                                     surveys: vec![],
                                     curr_survey: SurveyDto::from(content.clone()),
+                                    user: UserContext::new(),
                                 }
                                 // curr.questions = question;
                             });
@@ -243,46 +263,37 @@ pub mod mainapp {
         };
 
         cx.render(rsx! {
-        div{
-            form {
-                prevent_default: "onclick",
-                oninput: move |e| {
-                    let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
-                    editor_state.set(formvalue);
-                    // timeout = timeout.set(Some(Timeout::new(2000, || {
-                    //     println!("form event: {e:#?}");
-                    //     let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
-                    //     create_survey(formvalue, app_state.client.clone());
-                    // })));
-                },
-                div { class: "p-4 rounded-xl bg-white dark:bg-gray-800 focus:ring-red-500",
-                    id: "editor",
-                    label { class: "sr-only",
-                        r#for: "editor",
-                        "Publish post"
+            div {
+                form {
+                    prevent_default: "onclick",
+                    oninput: move |e| {
+                        let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
+                        editor_state.set(formvalue);
+                    },
+                    div {
+                        class: "p-4 rounded-xl bg-white dark:bg-gray-800 focus:ring-red-500",
+                        id: "editor",
+                        label { class: "sr-only", r#for: "editor", "Publish post" }
+                        textarea {
+                            class: " w-full resize-y rounded-xl text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400",
+                            required: "",
+                            rows: "8",
+                            placeholder: "Write your survey here",
+                            name: "forminput"
+                        }
+                        Publish {}
+                        button {
+                            onclick: move |evt| {
+                                check_survey(editor_state.get().clone(), app_state.client.clone());
+                                evt.stop_propagation();
+                            },
+                            "check values"
+                        }
                     }
-                    textarea { class: " w-full resize-y rounded-xl text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400",
-                        required: "",
-                        rows: "8",
-                        placeholder: "Write your survey here",
-                        name: "forminput"
-                        // oninput: move |e| {send_input(e.value.clone())},
-                    }
-                    Publish {}
-                    button {
-                        onclick: move |evt| {
-                            check_survey(editor_state.get().clone(), app_state.client.clone());
-                            evt.stop_propagation();
-                        },
-                        "check values"
-                    }
-                }
-                div {
-                    "{app_state.get().curr_survey:?}"
+                    div { "{app_state.get().curr_survey:?}" }
                 }
             }
-        }
-    })
+        })
     }
 
     fn Publish(cx: Scope) -> Element {
@@ -349,7 +360,7 @@ pub mod mainapp {
         };
 
         cx.render(rsx! {
-        toast_visible.then(|| {
+            toast_visible.then(|| {
             cx.spawn({
                 to_owned![toast_visible];
                 // TimeoutFuture::new(1_000).await;
@@ -381,7 +392,7 @@ pub mod mainapp {
                 }
             }
         })
-    })
+        })
     }
 
     #[inline_props]
@@ -389,57 +400,7 @@ pub mod mainapp {
         // let questions = parse_markdown_v3(survey_to_render.plaintext.clone()).questions;
         // let questions = all_questions.get(0).unwrap();
         // let questions: Vec<Question> = vec![];
-        cx.render(rsx! {
-            "render survey"
-            // questions.iter().map(|q|
-            //     rsx!{
-            //         div {
-            //             class: "outline-1 outline-red-400 bg-blue-600",
-            //             form {
-            //                 prevent_default: "onclick",
-            //                 questions.iter().map(|q: &Question| rsx!{
-            //                 // app_state.questions.qs.iter().map(|q: &Question| rsx!{
-            //                     // surveyspage.get().surveys.into_iter().map(|s| s.questions.into_iter().map(|q| rsx! {
-            //                     // .iter().map(|q: &Question| rsx!{
-            //                     fieldset {
-            //                         legend {
-            //                             class: "",
-            //                             "{q.value} - {q.r#type:?}"
-            //                         }
-            //                         {
-            //                             q.options.iter().map(|option| {
-            //                                 let qtype = match q.r#type {
-            //                                     QuestionType::Radio => "radio",
-            //                                     QuestionType::Checkbox => "checkbox",
-            //                                     QuestionType::Text => "textarea",
-            //                                 };
-
-            //                                 rsx!{
-            //                                     div{
-            //                                         key: "{option.id}",
-            //                                         class: "flex items-center",
-            //                                         input {
-            //                                             id: "{option.id}",
-            //                                             name: "{q.id}",
-            //                                             r#type: "{qtype}",
-            //                                             class: " m-3 border border-gray-400"
-            //                                         }
-            //                                         label {
-            //                                             r#for: "{option.id}",
-            //                                             class: " text-gray-700 font-medium",
-            //                                             "{option.text}"
-            //                                         }
-            //                                     }
-            //                                 }
-            //                             })
-            //                         }
-            //                     }
-            //                 })
-            //             }
-            //         }
-            //     }
-            // )
-        })
+        cx.render(rsx! {"render survey"})
     }
 
     // mod mainapp {
@@ -509,6 +470,7 @@ pub mod mainapp {
                         client: curr.client.clone(),
                         surveys: surveys,
                         curr_survey: curr.curr_survey.clone(),
+                        user: UserContext::new(),
                     });
                 }
             })
@@ -517,11 +479,8 @@ pub mod mainapp {
         println!("list survey component");
 
         cx.render(rsx! {
-            div {
-                class: "bg-green-400",
-                h1 {
-                    "All Surveys"
-                }
+            div { class: "bg-green-400",
+                h1 { "All Surveys" }
                 app_state.surveys.iter().map(|sur| rsx!{
                     h3 {
                         "{sur.nanoid}"
@@ -567,18 +526,24 @@ pub mod mainapp {
                             email: "a@a.a".to_string(),
                             password: "a".to_string(),
                         })
+                        .bearer_auth("this is an auth token")
                         .send()
                         .await
                     {
                         Ok(x) => {
                             info!("success: {x:?}");
-                            let authtoken = x.headers().get_all("x-auth-token");
-                            info!("auth: {authtoken:?}");
-                            let cookie = x.headers().get_all("Set-Cookie");
-                            info!("auth: {cookie:?}");
-                            // for header in x.headers() {
-                            //     info!("Header: {header:?}");
+                            info!("asdf: {:?}", x.headers().get("x-customkey"));
+                            info!("text: {:?}", &x.text().await);
+                            // let authtoken = x.headers().get_all("x-auth-token");
+                            // info!("auth: {authtoken:?}");
+                            // let cookie = x.headers().get_all("Set-Cookie");
+                            // info!("auth: {cookie:?}");
+                            // for c in x.headers().iter() {
+                            //     info!("cookie value: {c:?}");
                             // }
+
+                            // let specific = x.headers().get("x-customkey");
+                            // info!("specific: {specific:?}");
                         }
                         Err(x) => println!("error: {x:?}"),
                     };
@@ -587,23 +552,23 @@ pub mod mainapp {
         };
 
         cx.render(rsx! {
-            div {"Navbar here"}
+            div { "Navbar here" }
             button {
                 class: "bg-blue-500 p-2 hover:bg-green-700 text-white font-bold py-2 px-4 rounded",
                 // onclick: move |e| {signup()}
                 onclick: move |evt| {
                     println!("Pushed publish :)");
-                    signup( "signup".to_string(), app_state.client.clone());
+                    signup("signup".to_string(), app_state.client.clone());
                     evt.stop_propagation();
                 },
                 "signup"
-            },
+            }
             button {
                 class: "bg-blue-500 p-2 hover:bg-green-700 text-white font-bold py-2 px-4 rounded",
                 // onclick: move |e| {signup()}
                 onclick: move |evt| {
                     println!("Pushed login :)");
-                    signup( "login".to_string(), app_state.client.clone());
+                    signup("login".to_string(), app_state.client.clone());
                     evt.stop_propagation();
                 },
                 "login"
@@ -617,16 +582,17 @@ pub mod mainapp {
         let editor_state = use_atom_state(cx, EDITOR);
 
         cx.render(rsx!(
-            main{
+            main {
                 // class: "container mx-auto max-w-lg p-6",
                 class: "container p-6",
                 div {
-                    self::Navbar {},
-                    self::Editor {},
-                    self::RenderSurvey { survey_to_render: &app_state.curr_survey },
+                    self::Navbar {}
+                    self::Editor {}
+                    self::RenderSurvey { survey_to_render: &app_state.curr_survey }
                     // SurveysComponent { survey: &app_state.curr_survey }
-                    self::Toast {},
+                    self::Toast {}
                 }
-            }        ))
+            }
+        ))
     }
 }

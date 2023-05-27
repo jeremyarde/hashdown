@@ -429,7 +429,7 @@ mod tests {
 
         let request: LoginPayload = LoginPayload {
             email: "jere".to_string(),
-            password: "mypassword".to_string(), 
+            password: "mypassword".to_string(),
         };
 
         let response = client

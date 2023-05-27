@@ -167,7 +167,7 @@ impl Question {
 
     fn parse_question_type(line: &str) -> QuestionType {
         let res: QuestionType;
-        if line.contains("[checkbox]") || line.contains("[c]]") {
+        if line.contains("[checkbox]") || line.contains("[c]") {
             res = QuestionType::Checkbox;
         } else {
             res = QuestionType::Radio;

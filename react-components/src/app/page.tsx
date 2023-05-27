@@ -4,22 +4,17 @@ import Image from 'next/image'
 import Login from '../components/Login'
 // import Survey from './Survey'
 import App from '../components/App';
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuIndicator,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  NavigationMenuViewport,
-} from "@/components/ui/navigation-menu";
 
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <NavigationMenu>
+    <main>
+      <div className='grid grid-cols-3'>
+        <App></App>
+      </div>
+    </main>)
+  // <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-yellow-200 ">
+  {/* <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
             <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
@@ -28,8 +23,8 @@ export default function Home() {
             </NavigationMenuContent>
           </NavigationMenuItem>
         </NavigationMenuList>
-      </NavigationMenu>
-      <App></App>
-    </main >
-  )
+      </NavigationMenu> */}
+  // <App></App>
+  // </main >
+  // )
 }

@@ -114,6 +114,7 @@ pub struct Answer {
 
 #[derive(Debug, FromRow, Serialize, Deserialize)]
 pub struct UserModel {
+    pub user_id: String,
     pub email: String,
     pub password_hash: String,
     // pub user_id: String,
