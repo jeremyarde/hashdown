@@ -1,27 +1,73 @@
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities; */
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --normal-font: 400;
+  --bold-font: 600;
+  --bolder-font: 900;
+  --primary-color: #0652dd;
+  --secondary-color: #ea2027;
+  --line-height: 1.7rem;
+  --transition: 0.4s ease-in;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+html {
+  background-color: antiquewhite;
+  scroll-behavior: smooth;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  transition: var(--transition);
+}
+
+ul li {
+  list-style-type: none;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  display: flex;
+  flex-direction: column;
+  /* flex-direction: column;
+  justify-self: center;
+  */
+  /* justify-items: center; */
+  width: 50%;
+  /* align-items: center; */
+  /* justify-content: center; */
+  /* align-items: center; */
+}
+
+.container {
+  display: grid;
+  grid-template-rows: 100%;
+}
+
+.navbar {
+  display: flex;
+  justify-content: stretch;
+  flex: auto;
+  flex-direction: row;
+}
+
+.debug {
+  border: 5px;
+  border-color: red;
+  border-style: double;
+}
+
+.navbar-items {
+  display: flex;
+  justify-content: right;
+  align-items: flex-end;
+}
+
+.navbar-links {
+  /* display: flex; */
+  align-items: flex-end;
+  justify-content: right;
+  list-style-type: none;
 }
