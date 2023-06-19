@@ -11,18 +11,21 @@ pub mod mainapp {
 
     // use std::{thread::sleep, time::Duration};
 
-    use dioxus::{html::button, prelude::*};
+    use dioxus::{
+        html::{button, style, fieldset, legend},
+        prelude::*,
+    };
+    use fermi::{use_atom_state, Atom, AtomRoot};
 
     // use dioxus_router::{Link, Route, Router};
     // use dioxus_router::{Link, Route, Router};
     // use dioxus_ssr::render_lazy;
-    use fermi::{use_atom_state, Atom, AtomRoot};
     // use gloo_timers::future::TimeoutFuture;
     // use gloo_timers::future::TimeoutFuture;
     // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
-    // use markdownparser::{
-    //     nanoid_gen, parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions,
-    // };
+    use markdownparser::{
+        parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions, QuestionOption,
+    };
 
     // mod types;
     // use types::SurveyDto;
@@ -87,7 +90,7 @@ pub mod mainapp {
         created_at: String,
         modified_at: String,
         version: String,
-        // questions: Questions,
+        questions: Vec<Question>,
     }
 
     impl SurveyDto {
@@ -100,19 +103,20 @@ pub mod mainapp {
                 created_at: "".to_string(),
                 modified_at: "".to_string(),
                 version: "".to_string(),
-                // questions: Questions { qs: vec![] },
+                questions: vec![],
             }
         }
         fn from(text: String) -> SurveyDto {
+            let survey = parse_markdown_v3(text);
             SurveyDto {
                 id: "".to_string(),
                 nanoid: "".to_string(),
-                plaintext: text,
+                plaintext: survey.plaintext,
                 user_id: "".to_string(),
                 created_at: "".to_string(),
                 modified_at: "".to_string(),
-                version: "".to_string(),
-                // questions: parse_markdown_v3(text).unwrap(),
+                version: survey.parse_version,
+                questions: survey.questions,
             }
         }
     }
@@ -149,6 +153,7 @@ pub mod mainapp {
                     created_at: "".to_string(),
                     modified_at: "".to_string(),
                     version: "".to_string(),
+                    questions: vec![],
                 },
                 user: UserContext::new(),
             }
@@ -171,7 +176,7 @@ pub mod mainapp {
         // let send_request_timeout = use_atom_state(&cx, REQ_TIMEOUT);
         let send_req_timeout = use_atom_state(&cx, REQ_TIMEOUT);
         let some_timeout = use_state(&cx, || TimeoutFuture::new(2000));
-        // some_timeout.get().await;
+
         let create_survey = move |content: String, client: Client| {
             cx.spawn({
                 to_owned![editor_state, app_state, send_req_timeout];
@@ -266,10 +271,43 @@ pub mod mainapp {
             div {
                 form {
                     prevent_default: "onclick",
+                    // oninput: move |e| {
+                    //     let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
+                    //     editor_state.set(formvalue);
+                    // },
+                    
                     oninput: move |e| {
                         let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
-                        editor_state.set(formvalue);
+                        // let formvalue = "- this is a test\n  - this is a question".to_string();
+
+                        app_state.modify(|curr| {
+                            AppState {
+                                // questions: Questions { qs: vec![] },
+                                input_text: curr.input_text.clone(),
+                                client: curr.client.clone(),
+                                surveys: vec![],
+                                curr_survey: SurveyDto::from(formvalue.clone()),
+                                user: UserContext::new(),
+                            }
+                            // curr.questions = question;
+                        });
+                        info!("onchange results: {:?}", formvalue);
                     },
+                    // onfocus: move |e| {
+                    //     let formvalue = "- this is a test\n  - this is a question".to_string();
+
+                    //     app_state.modify(|curr| {
+                    //         AppState {
+                    //             // questions: Questions { qs: vec![] },
+                    //             input_text: curr.input_text.clone(),
+                    //             client: curr.client.clone(),
+                    //             surveys: vec![],
+                    //             curr_survey: SurveyDto::from(formvalue.clone()),
+                    //             user: UserContext::new(),
+                    //         }
+                    //         // curr.questions = question;
+                    //     });
+                    // },
                     div {
                         class: "p-4 rounded-xl bg-white dark:bg-gray-800 focus:ring-red-500",
                         id: "editor",
@@ -282,15 +320,8 @@ pub mod mainapp {
                             name: "forminput"
                         }
                         Publish {}
-                        button {
-                            onclick: move |evt| {
-                                check_survey(editor_state.get().clone(), app_state.client.clone());
-                                evt.stop_propagation();
-                            },
-                            "check values"
-                        }
                     }
-                    div { "{app_state.get().curr_survey:?}" }
+                    // div { "{app_state.get().curr_survey:?}" }
                 }
             }
         })
@@ -397,23 +428,50 @@ pub mod mainapp {
 
     #[inline_props]
     fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a SurveyDto) -> Element {
+        let app_state = use_atom_state(cx, APP);
+
         // let questions = parse_markdown_v3(survey_to_render.plaintext.clone()).questions;
         // let questions = all_questions.get(0).unwrap();
         // let questions: Vec<Question> = vec![];
-        cx.render(rsx! {"render survey"})
+        // let survey_html
+        let curr_survey = app_state.curr_survey.clone();
+        cx.render(rsx! {
+                div {
+                    class: "survey",
+                    form {
+                        h1 {"form title"}
+                        app_state.curr_survey.questions.iter().map(|question| rsx!{
+                            fieldset {
+                                legend {
+                                    "question text: {question.value}"
+                                }
+                                ul {
+                                    question.options.iter().enumerate().map(|(i, option):(usize, &QuestionOption)| rsx!{
+                                        li {
+                                            input {
+                                                r#type: "radio",
+                                                value: "o.text: {option.text:?}",
+                                                id: "{option.id}_{i}",
+                                                name: "{question.id}",
+                                            }
+                                            label {
+                                                r#for:"{option.id}_{i}",
+                                                "o.text: {option.text:?}"
+                                            }
+                                            "{option:?}"
+                                        }
+                                    })
+                                }
+                            }
+                            
+                        })
+                    }
+                    "{curr_survey:?}"
+                }
+        })
     }
 
-    // mod mainapp {
-    // use super::EDITOR;
-
-    // use super::APP;
-
-    // use fermi::use_atom_state;
-
     use fermi::use_init_atom_root;
-    // use tracing::info;
-    // use tracing::log::info;
-    // use ui::mainapp::app;
 
     fn ListSurveysComponent(cx: Scope) -> Element {
         let app_state = use_atom_state(&cx, APP);
@@ -552,26 +610,29 @@ pub mod mainapp {
         };
 
         cx.render(rsx! {
-            div { "Navbar here" }
-            button {
-                class: "bg-blue-500 p-2 hover:bg-green-700 text-white font-bold py-2 px-4 rounded",
-                // onclick: move |e| {signup()}
-                onclick: move |evt| {
-                    println!("Pushed publish :)");
-                    signup("signup".to_string(), app_state.client.clone());
-                    evt.stop_propagation();
-                },
-                "signup"
-            }
-            button {
-                class: "bg-blue-500 p-2 hover:bg-green-700 text-white font-bold py-2 px-4 rounded",
-                // onclick: move |e| {signup()}
-                onclick: move |evt| {
-                    println!("Pushed login :)");
-                    signup("login".to_string(), app_state.client.clone());
-                    evt.stop_propagation();
-                },
-                "login"
+            div {
+                class: "navbar",
+                a { href:"/", class:"navbar-home", "Navbar here"  }
+                button {
+                    class: "",
+                    // onclick: move |e| {signup()}
+                    onclick: move |evt| {
+                        println!("Pushed login :)");
+                        signup("login".to_string(), app_state.client.clone());
+                        evt.stop_propagation();
+                    },
+                    "login"
+                }
+                button {
+                    class: "",
+                    // onclick: move |e| {signup()}
+                    onclick: move |evt| {
+                        println!("Pushed publish :)");
+                        signup("signup".to_string(), app_state.client.clone());
+                        evt.stop_propagation();
+                    },
+                    "signup"
+                }
             }
         })
     }
@@ -587,10 +648,26 @@ pub mod mainapp {
                 class: "container p-6",
                 div {
                     self::Navbar {}
-                    self::Editor {}
-                    self::RenderSurvey { survey_to_render: &app_state.curr_survey }
-                    // SurveysComponent { survey: &app_state.curr_survey }
-                    self::Toast {}
+                    div {
+                        class: "editor-view",
+                        div {
+                            style: "grid-column:1",
+                            self::Editor {}
+                        }
+                        div {
+                            style: "grid-column:2",
+                            self::RenderSurvey { survey_to_render: &app_state.curr_survey }
+                        }
+                    }
+                    // // SurveysComponent { survey: &app_state.curr_survey }
+                    // self::Toast {}
+                }
+                div {
+                    "- yo this is cool
+ - another
+ - asdfa
+- asdfasd
+ - asdfasf"
                 }
             }
         ))

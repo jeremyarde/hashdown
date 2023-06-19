@@ -17,3 +17,32 @@
     width: 100%;
     grid-column: 1 / 4;
 } */
+
+* {
+    outline: red;
+    outline-style: double;
+    outline-width: 4px;
+    outline-color: blueviolet;
+}
+
+.navbar {
+    display: flex;
+    outline-color: red;
+    flex-flow: row;
+    justify-content: flex-end;
+}
+
+.navbar-home {
+    margin-right: auto;
+}
+
+.editor-view {
+    display: grid;
+    grid-template-columns: 50%;
+    flex-wrap: wrap;
+    background-color: bisque;
+}
+
+.survey {
+    
+}

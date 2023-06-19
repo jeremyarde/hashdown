@@ -16,7 +16,7 @@ export function Navbar() {
                 <ul className="navbar-links">
                     {navlinks.map((nav, index) => (
                         <li key={nav.id} className="navbar-items">
-                            <a href={nav.link} className="navbar-items">{nav.title}</a>
+                            <a href={nav.link} className="">{nav.title}</a>
                             <a></a>
                         </li>
                     ))}

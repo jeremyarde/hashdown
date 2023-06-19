@@ -1,9 +1,9 @@
 // use wasm_bindgen::prelude::*;
 
 use derive_builder::Builder;
-use rand::{thread_rng, Rng};
+// use rand::{thread_rng, Rng};
 // use nanoid::nanoid;
-// use getrandom::getrandom;
+use getrandom::getrandom;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -24,33 +24,33 @@ const NANOID_ALPHA: [char; 34] = [
     'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-pub fn nanoid_gen() -> String {
-    let random =
-        [(); NANOID_LEN].map(|_| NANOID_ALPHA[thread_rng().gen_range(0..NANOID_ALPHA.len())]);
-    return String::from_iter(random.iter());
-}
+// pub fn nanoid_gen() -> String {
+//     let random =
+//         [(); NANOID_LEN].map(|_| NANOID_ALPHA[thread_rng().gen_range(0..NANOID_ALPHA.len())]);
+//     return String::from_iter(random.iter());
+// }
 
 // #[wasm_bindgen]
-// pub fn nanoid_gen(size: usize) -> String {
-//     let mask = NANOID_ALPHA.len().next_power_of_two() - 1;
+pub fn nanoid_gen(size: usize) -> String {
+    let mask = NANOID_ALPHA.len().next_power_of_two() - 1;
 
-//     let mut res = String::new();
-//     let mut random: [u8; 32] = [0; 32];
+    let mut res = String::new();
+    let mut random: [u8; 32] = [0; 32];
 
-//     loop {
-//         getrandom(&mut random).unwrap();
+    loop {
+        getrandom(&mut random).unwrap();
 
-//         for &byte in random.iter() {
-//             let masked = byte as usize & mask;
-//             if masked < NANOID_ALPHA.len() {
-//                 res.push(NANOID_ALPHA[masked]);
-//             }
-//             if res.len() == size {
-//                 return res;
-//             }
-//         }
-//     }
-// }
+        for &byte in random.iter() {
+            let masked = byte as usize & mask;
+            if masked < NANOID_ALPHA.len() {
+                res.push(NANOID_ALPHA[masked]);
+            }
+            if res.len() == size {
+                return res;
+            }
+        }
+    }
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct UserInfo {
@@ -78,7 +78,7 @@ impl Default for Metadata {
             created_at: chrono::offset::Utc::now().to_string(),
             modified_at: chrono::offset::Utc::now().to_string(),
             version: "0".to_string(),
-            id: nanoid_gen(),
+            id: "nanoid_gen()".to_string(),
         }
     }
 }
@@ -148,14 +148,16 @@ pub enum QuestionType {
 
 impl Question {
     fn from(q_text: &str, options: Vec<&str>) -> Self {
+        let question_id = nanoid_gen(NANOID_LEN);
         return Question {
             // id: nanoid!(NANOID_LEN, &NANOID_ALPHA, random),
-            id: nanoid_gen(),
+            id: question_id,
             value: Question::parse_question_text(q_text).to_string(),
             options: options
                 .iter()
                 .map(|&o| QuestionOption {
-                    id: nanoid_gen(),
+                    // id: "nanoid_gen()".to_string(),
+                    id: nanoid_gen(12),
                     text: Question::parse_question_text(o).to_string(),
                 })
                 .collect(),
@@ -437,7 +439,7 @@ enum MarkdownElement {
 
 #[cfg(test)]
 mod tests {
-    use crate::{nanoid_gen, parse_markdown_blocks, parse_markdown_v3, Question};
+    use crate::{parse_markdown_blocks, parse_markdown_v3, Question};
 
     #[test]
     fn test() {
@@ -482,11 +484,11 @@ mod tests {
         println!("{:#?}", res)
     }
 
-    #[test]
-    fn test_nanoid_gen() {
-        let nanoid = nanoid_gen();
-        println!("nanoid: {nanoid:?}");
-    }
+    // #[test]
+    // fn test_nanoid_gen() {
+    //     let nanoid = nanoid_gen();
+    //     println!("nanoid: {nanoid:?}");
+    // }
 
     #[test]
     fn test_question_parsing() {
