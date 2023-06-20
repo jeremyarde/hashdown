@@ -1,6 +1,6 @@
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities; */
 
 
 /* .wrapper {
@@ -23,17 +23,36 @@
     outline-style: double;
     outline-width: 4px;
     outline-color: blueviolet;
+    /* max-width: fit-content; */
+}
+
+.editor {
+
 }
 
 .navbar {
     display: flex;
+    flex-direction: row;
     outline-color: red;
-    flex-flow: row;
-    justify-content: flex-end;
+    /* align-items: center; */
+    /* align-items: stretch; */
+    justify-content: space-between;
+
 }
 
 .navbar-home {
-    margin-right: auto;
+    /* margin-right: ; */
+    padding: 10px;
+    /* margin-right: ; */
+    /* flex: 6; */
+}
+
+.navbar-login,
+.navbar-signup {
+    align-items: flex-end;
+    flex-grow: 1;
+    /* flex: 1; */
+    /* flex-direction: row; */
 }
 
 .editor-view {
@@ -43,6 +62,4 @@
     background-color: bisque;
 }
 
-.survey {
-    
-}
+.survey {}

@@ -269,6 +269,7 @@ pub mod mainapp {
 
         cx.render(rsx! {
             div {
+                class: "editor",
                 form {
                     prevent_default: "onclick",
                     // oninput: move |e| {
@@ -446,10 +447,11 @@ pub mod mainapp {
                                     "question text: {question.value}"
                                 }
                                 ul {
-                                    question.options.iter().enumerate().map(|(i, option):(usize, &QuestionOption)| rsx!{
+                                    question.options.iter().enumerate().map(|(i, option):(usize, &QuestionOption)|
+                                    rsx!{
                                         li {
                                             input {
-                                                r#type: "radio",
+                                                r#type: if question.r#type == QuestionType::Checkbox { "checkbox"} else {"radio"},
                                                 value: "o.text: {option.text:?}",
                                                 id: "{option.id}_{i}",
                                                 name: "{question.id}",
@@ -612,26 +614,32 @@ pub mod mainapp {
         cx.render(rsx! {
             div {
                 class: "navbar",
-                a { href:"/", class:"navbar-home", "Navbar here"  }
-                button {
-                    class: "",
-                    // onclick: move |e| {signup()}
-                    onclick: move |evt| {
-                        println!("Pushed login :)");
-                        signup("login".to_string(), app_state.client.clone());
-                        evt.stop_propagation();
-                    },
-                    "login"
+                div {
+                    style: "",
+                    a { href:"/", class:"navbar-home", "Navbar here"  }
                 }
-                button {
-                    class: "",
-                    // onclick: move |e| {signup()}
-                    onclick: move |evt| {
-                        println!("Pushed publish :)");
-                        signup("signup".to_string(), app_state.client.clone());
-                        evt.stop_propagation();
-                    },
-                    "signup"
+                div {
+                    style: "",
+                    button {
+                        class: "navbar-login",
+                        // onclick: move |e| {signup()}
+                        onclick: move |evt| {
+                            println!("Pushed login :)");
+                            signup("login".to_string(), app_state.client.clone());
+                            evt.stop_propagation();
+                        },
+                        "login"
+                    }
+                    button {
+                        class: "navbar-signup",
+                        // onclick: move |e| {signup()}
+                        onclick: move |evt| {
+                            println!("Pushed publish :)");
+                            signup("signup".to_string(), app_state.client.clone());
+                            evt.stop_propagation();
+                        },
+                        "signup"
+                    }
                 }
             }
         })
@@ -661,13 +669,6 @@ pub mod mainapp {
                     }
                     // // SurveysComponent { survey: &app_state.curr_survey }
                     // self::Toast {}
-                }
-                div {
-                    "- yo this is cool
- - another
- - asdfa
-- asdfasd
- - asdfasf"
                 }
             }
         ))
