@@ -175,10 +175,10 @@ impl Database {
 
         let result = sqlx::query_as!(
             UserModel,
-            "select email, password_hash from users where users.email = ?",
+            "select email, password_hash from users where email = '$1'",
             email
         )
-        .fetch_one(&mut self.pool)
+        .fetch_one(&self.pool)
         .await?;
 
         return Ok(result);
