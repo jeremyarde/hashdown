@@ -2,7 +2,7 @@ use anyhow::Context;
 use async_trait::async_trait;
 use axum::{
     extract::{FromRequestParts, State},
-    http::Request,
+    http::{HeaderMap, Request},
     middleware::Next,
     response::Response,
     RequestPartsExt,
@@ -11,6 +11,7 @@ use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, 
 use serde::{Deserialize, Serialize};
 use tower_cookies::{Cookie, Cookies};
 use tower_http::auth;
+use tracing::log::info;
 
 use crate::{ServerError, ServerState};
 
@@ -45,24 +46,65 @@ pub async fn mw_ctx_resolver<B>(
     Ok(next.run(req).await)
 }
 
-#[async_trait]
-impl<S: Send + Sync> FromRequestParts<S> for Ctext {
-    type Rejection = ServerError;
+// #[async_trait]
+// impl<S: Send + Sync> FromRequestParts<S> for Ctext {
+//     type Rejection = ServerError;
 
-    async fn from_request_parts(
-        parts: &mut axum::http::request::Parts,
-        _state: &S,
-    ) -> Result<Self, ServerError> {
-        let cookies = parts.extract::<Cookies>().await.unwrap();
-        let auth_token = cookies.get("x-auth-token").map(|c| c.value().to_string());
-        let jwt = auth_token.ok_or(ServerError::AuthFailNoTokenCookie)?;
-        let jwt_claim = validate_jwt_claim(jwt)?;
+//     // #[tracing::instrument]
+//     async fn from_request_parts(
+//         parts: &mut axum::http::request::Parts,
+//         _state: &S,
+//     ) -> Result<Self, ServerError> {
+//         info!("->> from_request_parts");
 
-        Ok(Ctext::new(jwt_claim.uid))
-    }
-}
+//         let cookies = match parts.extract::<Cookies>().await {
+//             Ok(x) => {
+//                 info!("found cookies");
+//                 let token = x.get("x-auth-token").map(|c| c.value().to_string());
+//                 token
+//             }
+//             Err((status, err)) => {
+//                 info!(
+//                     "No cookies found. Looking in headers now. Status: {status:?}, Error: {err:?}"
+//                 );
+//                 None
+//             }
+//         };
 
+//         info!("After cookies");
+//         let auth_token = match cookies {
+//             Some(x) => x,
+//             None => {
+//                 let headers = parts
+//                     .extract::<HeaderMap>()
+//                     .await
+//                     .expect("Could not extract headers");
+
+//                 headers
+//                     .get("x-auth-token")
+//                     .expect("token not found in headermap")
+//                     .to_str()
+//                     .unwrap()
+//                     .to_string()
+//             }
+//         };
+
+//         if auth_token == "".to_string() {
+//             return Err(ServerError::AuthFailNoTokenCookie);
+//         }
+
+//         // let auth_token = cookies.get("x-auth-token").map(|c| c.value().to_string());
+//         // let jwt = auth_token.ok_or(ServerError::AuthFailNoTokenCookie)?;
+//         let jwt_claim = validate_jwt_claim(auth_token)?;
+
+//         Ok(Ctext::new(jwt_claim.uid))
+//     }
+// }
+
+#[tracing::instrument]
 fn parse_token(token: String) -> Result<String, ServerError> {
+    info!("->> parse_token");
+    info!("parsing auth token");
     let user_id = token.split("user_id=").nth(0);
     match user_id {
         Some(x) => return Ok(x.to_string()),
@@ -89,11 +131,14 @@ pub struct JwtResult {
     pub expires: usize,
 }
 
+#[tracing::instrument]
 fn validate_jwt_claim(
     // payload: &Json<LoginPayload>,
     // key: &[u8; 10],
     jwt_token: String,
 ) -> anyhow::Result<Claims, ServerError> {
+    info!("->> validate_jwt_claim");
+
     let key = b"privatekey";
     let decode_key = DecodingKey::from_secret(key);
     let decode_result =
@@ -104,12 +149,14 @@ fn validate_jwt_claim(
     return Ok(decode_result);
 }
 
+#[tracing::instrument]
 pub fn create_jwt_claim(
     // payload: &Json<LoginPayload>,
     // key: &[u8; 10],
     user_id: String,
     role: &str, // jwt_token: String,
 ) -> anyhow::Result<JwtResult, ServerError> {
+    info!("->> create_jwt_claim");
     let key = b"privatekey";
     // let decode_key = DecodingKey::from_secret(key);
     // let decode_result =

@@ -89,7 +89,8 @@ impl ServerApplication {
             .allow_headers([
                 http::header::CONTENT_TYPE,
                 http::header::ACCEPT,
-                http::header::AUTHORIZATION, // HeaderName::from_static("x-auth-token"),
+                http::header::AUTHORIZATION,
+                HeaderName::from_static("x-auth-token"),
             ])
             // .allow_headers(Any)
             .allow_credentials(true)

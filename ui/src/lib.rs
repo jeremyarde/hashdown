@@ -197,7 +197,7 @@ pub mod mainapp {
                     // TimeoutFuture::new(2000).await;
                     // let t = Timeou
                     info!("Attempting to save questions...");
-                    // println!("Questions save: {:?}", question_state);
+                    // info!("Questions save: {:?}", question_state);
                     match client
                         .post("http://localhost:3000/surveys")
                         .json(&CreateSurvey {
@@ -225,7 +225,7 @@ pub mod mainapp {
                                     });
                                     // let _x = &set_app.get().questions;
                                     editor_state.set(content);
-                                    // println!("should show toast now");
+                                    // info!("should show toast now");
                                     // toast_visible.set(true);
                                 }
                                 Err(_) => {}
@@ -249,7 +249,7 @@ pub mod mainapp {
                     // TimeoutFuture::new(2000).await;
                     // let t = Timeou
                     // info!("Attempting to save questions...");
-                    // println!("Questions save: {:?}", question_state);
+                    // info!("Questions save: {:?}", question_state);
                     match client
                         .post("http://localhost:3000/surveys/test")
                         .json(&CreateSurvey {
@@ -276,7 +276,7 @@ pub mod mainapp {
                                     });
                                     // let _x = &set_app.get().questions;
                                     editor_state.set(content);
-                                    // println!("should show toast now");
+                                    // info!("should show toast now");
                                     // toast_visible.set(true);
                                 }
                                 Err(_) => {}
@@ -346,21 +346,23 @@ pub mod mainapp {
             cx.spawn({
                 to_owned![toast_visible, app_state];
                 async move {
-                    println!("Attempting to save questions...");
-                    // println!("Questions save: {:?}", question_state);
+                    info!("Attempting to save questions...");
+                    info!("Publishing content, app_state: {app_state:?}");
+                    // info!("Questions save: {:?}", question_state);
                     match client
                         .post("http://localhost:3000/surveys")
                         .json(&CreateSurvey { plaintext: content })
                         .bearer_auth(app_state.user.token.clone())
+                        .header("x-auth-token", app_state.user.token.clone())
                         .send()
                         .await
                     {
                         Ok(x) => {
                             info!("success: {x:?}");
-                            println!("should show toast now");
+                            info!("should show toast now");
                             toast_visible.set(true);
                         }
-                        Err(x) => println!("error: {x:?}"),
+                        Err(x) => info!("error: {x:?}"),
                     };
                 }
             })
@@ -371,7 +373,7 @@ pub mod mainapp {
                 prevent_default: "onclick",
                 class: "hover:bg-violet-600 w-full text-blue-500 bg-blue-200 rounded p-2",
                 onclick: move |evt| {
-                    println!("Pushed publish :)");
+                    info!("Pushed publish :)");
                     post_questions("test".to_string(), app_state.client.clone());
                     evt.stop_propagation();
                 },
@@ -412,10 +414,10 @@ pub mod mainapp {
                     //     toast_visible.set(false);
                     // })
                     // .forget();
-                    println!("before timeout");
+                    info!("before timeout");
                     // TimeoutFuture::new(7000).await;
                     toast_visible.set(false);
-                    println!("after timeout");
+                    info!("after timeout");
                 }
             });
             rsx!{
@@ -488,7 +490,7 @@ pub mod mainapp {
 
     fn ListSurveysComponent(cx: Scope) -> Element {
         let app_state = use_atom_state(&cx, APP);
-        println!("In list survey components");
+        info!("In list survey components");
 
         let get_questions = move |client: Client| {
             cx.spawn({
@@ -508,7 +510,7 @@ pub mod mainapp {
             })
         };
 
-        println!("list survey component");
+        info!("list survey component");
 
         cx.render(rsx! {
             div { class: "bg-green-400",
@@ -525,14 +527,14 @@ pub mod mainapp {
     async fn list_surveys(client: &Client) -> Vec<SurveyDto> {
         match client.get("http://localhost:3000/survey").send().await {
             Ok(x) => {
-                println!("successfully listing surveys: {x:?}");
+                info!("successfully listing surveys: {x:?}");
                 return x
                     .json::<Vec<SurveyDto>>()
                     .await
                     .expect("Could not parse json surveys");
             }
             Err(x) => {
-                println!("error listing surveys: {x:?}");
+                info!("error listing surveys: {x:?}");
                 return vec![];
             }
         }
@@ -549,8 +551,8 @@ pub mod mainapp {
             cx.spawn({
                 to_owned![app_state];
                 async move {
-                    println!("Attempting signup...");
-                    // println!("Questions save: {:?}", question_state);
+                    info!("Attempting signup...");
+                    // info!("Questions save: {:?}", question_state);
 
                     match client
                         .post(format!("http://localhost:3000/{authmethod}"))
@@ -562,10 +564,11 @@ pub mod mainapp {
                         .await
                     {
                         Ok(x) => {
-                            info!("success: {x:?}");
+                            info!("signup success: {x:?}");
                             let token = x.json::<Value>().await.expect("Could not deserialize signup result");
                             let token_text = token.get("auth_token").expect("Did not find auth_token in signup result");
                             let new_user = UserContext::from(token_text.to_string());
+                            info!("new user context: {token} {token_text} {new_user:?}");
 
                             app_state.modify(|curr| AppState {
                                 input_text: curr.input_text.clone(),
@@ -574,8 +577,9 @@ pub mod mainapp {
                                 curr_survey: curr.curr_survey.clone(),
                                 user: new_user,
                             });
+
                         }
-                        Err(x) => println!("error: {x:?}"),
+                        Err(x) => info!("error: {x:?}"),
                     };
                 }
             })
@@ -594,7 +598,7 @@ pub mod mainapp {
                         class: "navbar-login",
                         // onclick: move |e| {signup()}
                         onclick: move |evt| {
-                            println!("Pushed login :)");
+                            info!("Pushed login :)");
                             signup("login".to_string(), app_state.client.clone());
                             evt.stop_propagation();
                         },
@@ -604,7 +608,7 @@ pub mod mainapp {
                         class: "navbar-signup",
                         // onclick: move |e| {signup()}
                         onclick: move |evt| {
-                            println!("Pushed publish :)");
+                            info!("Pushed publish :)");
                             signup("signup".to_string(), app_state.client.clone());
                             evt.stop_propagation();
                         },

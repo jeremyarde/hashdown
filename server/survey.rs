@@ -105,6 +105,7 @@ pub async fn create_survey(
     State(state): State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> impl IntoResponse {
+    info!("->> create_survey in survey.rs");
     let survey = parse_markdown_v3(payload.plaintext.clone());
     // let survey = Survey::from(payload.plaintext.clone());
     let response_survey = survey.clone();

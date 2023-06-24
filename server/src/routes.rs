@@ -40,6 +40,7 @@ pub mod routes {
         Json,
     };
     use tower_http::{
+        auth::require_authorization::Bearer,
         cors::{Any, CorsLayer},
         limit::RequestBodyLimitLayer,
         services::ServeDir,
@@ -167,10 +168,10 @@ pub mod routes {
     pub async fn create_survey(
         headers: HeaderMap,
         State(state): State<ServerState>,
-        ctx: Option<Ctext>,
+        // ctx: Option<Ctext>,
         extract::Json(payload): extract::Json<CreateSurveyRequest>,
     ) -> anyhow::Result<Json<Value>, ServerError> {
-        info!("Called create survey");
+        info!("->> create_survey");
 
         let user_id = match &ctx {
             Some(x) => x.user_id(),
@@ -210,7 +211,7 @@ pub mod routes {
     pub async fn submit_survey(
         State(state): State<ServerState>,
         // mut multipart: Multipart,
-        ctx: Option<Ctext>,
+        // ctx: Option<Ctext>,
         extract::Json(payload): extract::Json<CreateAnswersRequest>,
     ) -> Result<Json<CreateAnswersResponse>, ServerError> {
         // let content_type_header = req.headers().get(CONTENT_TYPE);
@@ -269,7 +270,8 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn get_survey(
         State(_state): State<ServerState>,
-        ctx: Option<Ctext>,
+        // ctx: Option<Ctext>,
+        authorization: TypedHeader<Authorization<Bearer>>,
         Path(survey_id): Path<String>,
         Query(query): Query<GetSurveyQuery>,
     ) -> impl IntoResponse {
@@ -296,7 +298,7 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn list_survey(
         state: State<ServerState>,
-        ctx: Option<Ctext>,
+        // ctx: Option<Ctext>,
         // State(state): State<ServerState>,
         headers: HeaderMap,
     ) -> anyhow::Result<Json<Value>, ServerError> {
@@ -351,7 +353,7 @@ pub mod routes {
 
     pub async fn signup(
         cookies: Cookies,
-        ctx: Option<Ctext>,
+        // ctx: Option<Ctext>,
         state: State<ServerState>,
         payload: Json<LoginPayload>,
     ) -> anyhow::Result<Json<Value>, ServerError> {

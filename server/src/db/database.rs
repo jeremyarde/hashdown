@@ -172,14 +172,15 @@ impl Database {
         // .bind(email)
         // .fetch_one(&self.pool)
         // .await?;
+        info!("Search for user with email: {email:?}");
 
-        let result = sqlx::query_as!(
-            UserModel,
-            "select email, password_hash from users where email = '$1'",
-            email
-        )
-        .fetch_one(&self.pool)
-        .await?;
+        let row_result = sqlx::query("select * from users where email = $1")
+            .bind(email)
+            .fetch_one(&self.pool)
+            .await?;
+
+        info!("Found user");
+        let result = UserModel::from_row(&row_result).expect("Could not turn row into user model");
 
         return Ok(result);
     }
