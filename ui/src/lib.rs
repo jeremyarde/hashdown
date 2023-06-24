@@ -2,7 +2,7 @@
 
 // #![feature(async_closure)]
 pub mod mainapp {
-    use std::time::{self, Instant};
+    use std::{time::{self, Instant}, error};
 
     use gloo_timers::{callback::Timeout, future::TimeoutFuture};
     // use console_log::log;
@@ -41,7 +41,7 @@ pub mod mainapp {
         plaintext: String,
     }
 
-    #[derive(Serialize, Debug)]
+    #[derive(Serialize, Debug, Clone)]
     struct UserContext {
         username: String,
         token: String,
@@ -56,6 +56,14 @@ pub mod mainapp {
                 cookie: "".to_string(),
             };
         }
+
+        fn from(token: String) -> Self {
+            return Self {
+                username: "jeremy".to_string(),
+                token: token,
+                cookie: "".to_string(),
+            };
+        }
     }
 
     #[derive(Debug)]
@@ -67,6 +75,7 @@ pub mod mainapp {
         surveys: Vec<SurveyDto>,
         curr_survey: SurveyDto,
         user: UserContext,
+        // auth_token: String,
     }
 
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -106,9 +115,9 @@ pub mod mainapp {
                 questions: vec![],
             }
         }
-        fn from(text: String) -> SurveyDto {
-            let survey = parse_markdown_v3(text);
-            SurveyDto {
+        fn from(text: String) -> anyhow::Result<SurveyDto>{
+            let survey = parse_markdown_v3(text)?;
+            return Ok(SurveyDto {
                 id: "".to_string(),
                 nanoid: "".to_string(),
                 plaintext: survey.plaintext,
@@ -117,7 +126,7 @@ pub mod mainapp {
                 modified_at: "".to_string(),
                 version: survey.parse_version,
                 questions: survey.questions,
-            }
+            });
         }
     }
 
@@ -144,6 +153,7 @@ pub mod mainapp {
                 input_text: String::from(""),
                 client: client,
                 surveys: vec![],
+                // auth_token: "".to_string(),
                 // curr_survey: Survey::new(),
                 curr_survey: SurveyDto {
                     id: "".to_string(),
@@ -193,26 +203,33 @@ pub mod mainapp {
                         .json(&CreateSurvey {
                             plaintext: editor_state.get().clone(),
                         })
+                        .bearer_auth(app_state.user.token.clone())
                         .send()
                         .await
                     {
                         Ok(x) => {
                             info!("success: {x:?}");
-                            app_state.modify(|curr| {
-                                AppState {
-                                    // questions: Questions { qs: vec![] },
-                                    input_text: curr.input_text.clone(),
-                                    client: curr.client.clone(),
-                                    surveys: vec![],
-                                    curr_survey: SurveyDto::from(content.clone()),
-                                    user: UserContext::new(),
+                            match SurveyDto::from(content.clone()) {
+                                Ok(sur) => {
+                                    app_state.modify(|curr| {
+                                        AppState {
+                                            // questions: Questions { qs: vec![] },
+                                            input_text: curr.input_text.clone(),
+                                            client: curr.client.clone(),
+                                            surveys: vec![],
+                                            curr_survey: sur,
+                                            user: curr.user.to_owned(),
+                                            // auth_token: curr.auth_token.clone(),
+                                        }
+                                        // curr.questions = question;
+                                    });
+                                    // let _x = &set_app.get().questions;
+                                    editor_state.set(content);
+                                    // println!("should show toast now");
+                                    // toast_visible.set(true);
                                 }
-                                // curr.questions = question;
-                            });
-                            // let _x = &set_app.get().questions;
-                            editor_state.set(content);
-                            // println!("should show toast now");
-                            // toast_visible.set(true);
+                                Err(_) => {}
+                            }
                         }
                         Err(x) => info!("error: {x:?}"),
                     }
@@ -238,26 +255,32 @@ pub mod mainapp {
                         .json(&CreateSurvey {
                             plaintext: editor_state.get().clone(),
                         })
+                        .bearer_auth(app_state.user.token.clone())
                         .send()
                         .await
                     {
                         Ok(x) => {
                             info!("success: {x:?}");
-                            app_state.modify(|curr| {
-                                AppState {
-                                    // questions: Questions { qs: vec![] },
-                                    input_text: curr.input_text.clone(),
-                                    client: curr.client.clone(),
-                                    surveys: vec![],
-                                    curr_survey: SurveyDto::from(content.clone()),
-                                    user: UserContext::new(),
+                            match SurveyDto::from(content.clone()) {
+                                Ok(sur) => {
+                                    app_state.modify(|curr| {
+                                        AppState {
+                                            // questions: Questions { qs: vec![] },
+                                            input_text: curr.input_text.clone(),
+                                            client: curr.client.clone(),
+                                            surveys: vec![],
+                                            curr_survey: sur,
+                                            user: curr.user.to_owned(),
+                                        }
+                                        // curr.questions = question;
+                                    });
+                                    // let _x = &set_app.get().questions;
+                                    editor_state.set(content);
+                                    // println!("should show toast now");
+                                    // toast_visible.set(true);
                                 }
-                                // curr.questions = question;
-                            });
-                            // let _x = &set_app.get().questions;
-                            editor_state.set(content);
-                            // println!("should show toast now");
-                            // toast_visible.set(true);
+                                Err(_) => {}
+                            }
                         }
                         Err(x) => info!("error: {x:?}"),
                     }
@@ -269,7 +292,7 @@ pub mod mainapp {
 
         cx.render(rsx! {
             div {
-                class: "editor",
+                class: "editor-container",
                 form {
                     prevent_default: "onclick",
                     // oninput: move |e| {
@@ -280,50 +303,36 @@ pub mod mainapp {
                     oninput: move |e| {
                         let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
                         // let formvalue = "- this is a test\n  - this is a question".to_string();
-
-                        app_state.modify(|curr| {
-                            AppState {
-                                // questions: Questions { qs: vec![] },
-                                input_text: curr.input_text.clone(),
-                                client: curr.client.clone(),
-                                surveys: vec![],
-                                curr_survey: SurveyDto::from(formvalue.clone()),
-                                user: UserContext::new(),
+                        match SurveyDto::from(formvalue.clone()) {
+                            Ok(sur) => {
+                                app_state.modify(|curr| {
+                                    AppState {
+                                        // questions: Questions { qs: vec![] },
+                                        input_text: curr.input_text.clone(),
+                                        client: curr.client.clone(),
+                                        surveys: vec![],
+                                        curr_survey: sur,
+                                        user: UserContext::new(),
+                                        // auth_token: curr.auth_token.clone(),
+                                    }
+                                });
                             }
-                            // curr.questions = question;
-                        });
+                            Err(_) => {}
+                        };
                         info!("onchange results: {:?}", formvalue);
                     },
-                    // onfocus: move |e| {
-                    //     let formvalue = "- this is a test\n  - this is a question".to_string();
-
-                    //     app_state.modify(|curr| {
-                    //         AppState {
-                    //             // questions: Questions { qs: vec![] },
-                    //             input_text: curr.input_text.clone(),
-                    //             client: curr.client.clone(),
-                    //             surveys: vec![],
-                    //             curr_survey: SurveyDto::from(formvalue.clone()),
-                    //             user: UserContext::new(),
-                    //         }
-                    //         // curr.questions = question;
-                    //     });
-                    // },
-                    div {
-                        class: "p-4 rounded-xl bg-white dark:bg-gray-800 focus:ring-red-500",
-                        id: "editor",
-                        label { class: "sr-only", r#for: "editor", "Publish post" }
-                        textarea {
-                            class: " w-full resize-y rounded-xl text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400",
-                            required: "",
-                            rows: "8",
-                            placeholder: "Write your survey here",
-                            name: "forminput"
-                        }
-                        Publish {}
+                    textarea {
+                        class: "editor-field",
+                        required: "",
+                        rows: "8",
+                        placeholder: "Write your survey here",
+                        name: "forminput",
                     }
-                    // div { "{app_state.get().curr_survey:?}" }
                 }
+            }
+            div {
+                class: "editor-buttons",
+                Publish {}
             }
         })
     }
@@ -335,13 +344,14 @@ pub mod mainapp {
 
         let post_questions = move |content, client: Client| {
             cx.spawn({
-                to_owned![toast_visible];
+                to_owned![toast_visible, app_state];
                 async move {
                     println!("Attempting to save questions...");
                     // println!("Questions save: {:?}", question_state);
                     match client
                         .post("http://localhost:3000/surveys")
                         .json(&CreateSurvey { plaintext: content })
+                        .bearer_auth(app_state.user.token.clone())
                         .send()
                         .await
                     {
@@ -474,50 +484,11 @@ pub mod mainapp {
     }
 
     use fermi::use_init_atom_root;
+    use serde_json::Value;
 
     fn ListSurveysComponent(cx: Scope) -> Element {
         let app_state = use_atom_state(&cx, APP);
         println!("In list survey components");
-        // let thing = move || {
-        //     cx.spawn(async move {
-        //         to_owned![app_state];
-        //         let surveys = list_surveys(&app_state.client).await;
-        //         app_state.modify(|curr| AppState {
-        //             questions: curr.questions.clone(),
-        //             input_text: curr.input_text.clone(),
-        //             client: curr.client.clone(),
-        //             surveys: surveys,
-        //             curr_survey: curr.curr_survey.clone(),
-        //         });
-        //     })
-        // };
-
-        // let post_questions = move |content, client: Client| {
-        //     let id = nanoid_gen(12);
-        //     cx.spawn({
-        //         to_owned![toast_visible];
-        //         async move {
-        //             println!("Attempting to save questions...");
-        //             // println!("Questions save: {:?}", question_state);
-        //             match client
-        //                 .post("http://localhost:3000/survey")
-        //                 .json(&CreateSurvey {
-        //                     id,
-        //                     plaintext: content,
-        //                 })
-        //                 .send()
-        //                 .await
-        //             {
-        //                 Ok(x) => {
-        //                     println!("success: {x:?}");
-        //                     println!("should show toast now");
-        //                     toast_visible.set(true);
-        //                 }
-        //                 Err(x) => println!("error: {x:?}"),
-        //             };
-        //         }
-        //     })
-        // };
 
         let get_questions = move |client: Client| {
             cx.spawn({
@@ -530,7 +501,8 @@ pub mod mainapp {
                         client: curr.client.clone(),
                         surveys: surveys,
                         curr_survey: curr.curr_survey.clone(),
-                        user: UserContext::new(),
+                        user: curr.user.to_owned(),
+                        // auth_token: curr.auth_token.clone(),
                     });
                 }
             })
@@ -572,10 +544,10 @@ pub mod mainapp {
         pub password: String,
     }
     pub fn Navbar(cx: Scope) -> Element {
-        let app_state = use_atom_state(cx, APP);
+        let app_state = use_atom_state(&cx, APP);
         let signup = move |authmethod: String, client: Client| {
             cx.spawn({
-                // to_owned![];
+                to_owned![app_state];
                 async move {
                     println!("Attempting signup...");
                     // println!("Questions save: {:?}", question_state);
@@ -586,24 +558,22 @@ pub mod mainapp {
                             email: "a@a.a".to_string(),
                             password: "a".to_string(),
                         })
-                        .bearer_auth("this is an auth token")
                         .send()
                         .await
                     {
                         Ok(x) => {
                             info!("success: {x:?}");
-                            info!("asdf: {:?}", x.headers().get("x-customkey"));
-                            info!("text: {:?}", &x.text().await);
-                            // let authtoken = x.headers().get_all("x-auth-token");
-                            // info!("auth: {authtoken:?}");
-                            // let cookie = x.headers().get_all("Set-Cookie");
-                            // info!("auth: {cookie:?}");
-                            // for c in x.headers().iter() {
-                            //     info!("cookie value: {c:?}");
-                            // }
+                            let token = x.json::<Value>().await.expect("Could not deserialize signup result");
+                            let token_text = token.get("auth_token").expect("Did not find auth_token in signup result");
+                            let new_user = UserContext::from(token_text.to_string());
 
-                            // let specific = x.headers().get("x-customkey");
-                            // info!("specific: {specific:?}");
+                            app_state.modify(|curr| AppState {
+                                input_text: curr.input_text.clone(),
+                                client: curr.client.clone(),
+                                surveys: curr.surveys.to_owned(),
+                                curr_survey: curr.curr_survey.clone(),
+                                user: new_user,
+                            });
                         }
                         Err(x) => println!("error: {x:?}"),
                     };

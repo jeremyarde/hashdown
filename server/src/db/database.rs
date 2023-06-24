@@ -2,25 +2,31 @@ use std::{collections::HashMap, str::FromStr};
 
 use anyhow::{self, Context};
 
+use chrono::Utc;
 use markdownparser::{nanoid_gen, parse_markdown_v3, Survey};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 // use models::CreateAnswersModel;
 // use chrono::Local;
 use sqlx::{
+    postgres::PgConnectOptions,
     sqlite::{SqliteConnectOptions, SqliteJournalMode},
-    ConnectOptions, FromRow, Row, SqliteConnection, SqlitePool,
+    ConnectOptions, FromRow, PgPool, Row, SqliteConnection, SqlitePool,
 };
 use tracing::{info, instrument};
 
-use crate::models::{self, CreateAnswersModel, CreateSurveyRequest, SurveyModel};
+// mod models;
+use models::{CreateAnswersModel, CreateSurveyRequest, SurveyModel};
+
+use super::models;
 
 // mod models;
 
 #[derive(Debug, Clone)]
 pub struct Database {
     // data: Arc<RwLock<TodoModel>>,
-    pub pool: SqlitePool,
+    // pub pool: SqlitePool,
+    pub pool: PgPool,
     // pool: SqliteConnection,
     // pub pool: SqlitePool,
     // options: Option<DatabaseOptions>,
@@ -30,11 +36,15 @@ pub struct Database {
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Settings {
     pub base_path: Option<String>,
+    pub nanoid_length: Option<usize>,
 }
 
 impl Settings {
     fn default() -> Settings {
-        Settings { base_path: None }
+        Settings {
+            base_path: None,
+            nanoid_length: Some(12 as usize),
+        }
     }
 }
 
@@ -42,19 +52,23 @@ impl Settings {
 
 impl Database {
     #[instrument]
-    pub async fn new(in_memory: bool) -> anyhow::Result<Self> {
-        println!("{:?}", std::env::current_dir()); //Ok("/Users/jarde/Documents/code/markdownparser/server")
-        let database_url = dotenvy::var("DATABASE_URL")?;
+    pub async fn new(in_memory: bool, database_url: String) -> anyhow::Result<Self> {
+        // println!("{:?}", std::env::current_dir()); //Ok("/Users/jarde/Documents/code/markdownparser/server")
+        // let database_url = dotenvy::var("DATABASE_URL")?;
 
-        let mut pool = match in_memory {
+        let pool = match in_memory {
             true => {
                 info!("Creating in-memory database");
 
-                let conn = SqliteConnectOptions::from_str("sqlite::memory:")?
-                    .journal_mode(SqliteJournalMode::Wal)
-                    .read_only(false)
-                    .create_if_missing(true);
-                SqlitePool::connect_with(conn).await?
+                // let conn = SqliteConnectOptions::from_str("sqlite::memory:")?
+                //     .journal_mode(SqliteJournalMode::Wal)
+                //     .read_only(false)
+                //     .create_if_missing(true);
+                // SqlitePool::connect_with(conn).await?
+
+                // let conn = PgConnectOptions::default();
+                PgPool::connect(&database_url).await?
+                // PgPool::connect_with(conn).await?
 
                 // let connection_options = SqliteConnectOptions::new()
                 //     .create_if_missing(true)
@@ -64,11 +78,15 @@ impl Database {
             }
             false => {
                 info!("Creating new database");
-                let conn = SqliteConnectOptions::from_str(database_url.as_str())?
-                    .journal_mode(SqliteJournalMode::Wal)
-                    .read_only(false)
-                    .create_if_missing(true);
-                SqlitePool::connect_with(conn).await?
+                // let conn = SqliteConnectOptions::from_str(database_url.as_str())?
+                //     .journal_mode(SqliteJournalMode::Wal)
+                //     .read_only(false)
+                //     .create_if_missing(true);
+                // SqlitePool::connect_with(conn).await?
+
+                // let conn = PgConnectOptions::default();
+                // PgPool::connect_with(conn).await?
+                PgPool::connect(&database_url).await?
 
                 // let connection_options = SqliteConnectOptions::new()
                 //     .create_if_missing(true)
@@ -79,8 +97,9 @@ impl Database {
             }
         };
 
+        info!("Running migrations");
         sqlx::migrate!().run(&pool).await?;
-
+        info!("Finished running migrations");
         // let settings = sqlx::query_as::<_, Settings>("select * from settings")
         //     .fetch_one(&mut pool)
         //     .await?;
@@ -114,9 +133,13 @@ pub struct Answer {
 
 #[derive(Debug, FromRow, Serialize, Deserialize)]
 pub struct UserModel {
-    pub user_id: String,
+    pub id: i32,
     pub email: String,
     pub password_hash: String,
+    pub created_at: String,
+    pub modified_at: String,
+    pub verified: bool,
+    pub user_id: String,
     // pub user_id: String,
 }
 
@@ -129,9 +152,9 @@ impl Database {
     pub async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel> {
         println!("->> create_user");
         let result = sqlx::query_as::<_, UserModel>(
-            "insert into users (id, password_hash, email, created_at, modified_at) values($1, $2, $3, $4, $5) returning *",
+            "insert into users (user_id, password_hash, email, created_at, modified_at) values($1, $2, $3, $4, $5) returning *",
         )
-        .bind(nanoid_gen())
+        .bind(nanoid_gen(self.settings.nanoid_length.unwrap()))
         .bind(request.password_hash)
         .bind(request.email)
         .bind(chrono::Utc::now().to_string())
@@ -143,11 +166,19 @@ impl Database {
     }
 
     pub async fn get_user_by_email(&self, email: String) -> anyhow::Result<UserModel> {
-        let result = sqlx::query_as::<_, UserModel>(
-            "select email, password_hash from users where users.email = $1",
+        // let result = sqlx::query_as::<_, UserModel>(
+        //     "select email, password_hash from users where users.email = $1",
+        // )
+        // .bind(email)
+        // .fetch_one(&self.pool)
+        // .await?;
+
+        let result = sqlx::query_as!(
+            UserModel,
+            "select email, password_hash from users where users.email = ?",
+            email
         )
-        .bind(email)
-        .fetch_one(&self.pool)
+        .fetch_one(&mut self.pool)
         .await?;
 
         return Ok(result);
@@ -172,11 +203,10 @@ impl Database {
         // let now = chrono::offset::Utc::now();
         // let nowstr = now.to_string();
         let _res = sqlx::query!(
-            r#"insert into surveys (id, plaintext, user_id, created_at, modified_at, version, parse_version)
+            r#"insert into surveys (plaintext, user_id, created_at, modified_at, version, parse_version)
             values 
-            ($1, $2, $3, $4, $5, $6, $7)
+            ($1, $2, $3, $4, $5, $6)
             "#,
-            survey.id,
             survey.plaintext,
             survey.user_id,
             survey.created_at,
@@ -242,5 +272,5 @@ mod tests {
 
     // use db::{database::Database, models::CreateSurveyRequest};
 
-    use crate::{database::Database, models::CreateSurveyRequest};
+    // use crate::{database::Database, models::CreateSurveyRequest};
 }

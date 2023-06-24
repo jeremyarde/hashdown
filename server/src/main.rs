@@ -18,6 +18,7 @@ use crate::server::ServerApplication;
 // mod answer;
 // mod db;
 mod auth;
+mod db;
 mod log;
 mod mware;
 mod server;
@@ -41,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
     // cargo watch -d 1.5 -- cargo run
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
-        .with_env_filter("server=debug")
+        .with_env_filter("server=debug,sqlx=debug")
         .init();
 
     // info!("{:?}", std::env::current_dir());
@@ -77,6 +78,7 @@ mod tests {
     use tracing::info;
 
     use crate::{
+        db,
         routes::routes::{ListSurveyResponse, LoginPayload},
         server::CreateSurveyResponse,
         ServerApplication,

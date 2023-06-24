@@ -1,23 +1,26 @@
 -- Add migration script here
 CREATE TABLE surveys (
-    id TEXT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     plaintext TEXT NOT NULL,
     user_id TEXT,
     created_at TEXT,
-    modified_at TEXT version TEXT,
+    modified_at TEXT,
     version TEXT,
     parse_version TEXT
 );
+
 CREATE TABLE users (
-    id TEXT NOT NULL UNIQUE,
+    id SERIAL PRIMARY KEY,
+    user_id TEXT,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     created_at TEXT NOT NULL,
     modified_at TEXT NOT NULL,
-    verified TEXT default false
+    verified BOOLEAN DEFAULT false
 );
-Create table answers (
-    id TEXT NOT NULL UNIQUE,
+
+CREATE TABLE answers (
+    id SERIAL PRIMARY KEY,
     answer_id TEXT NOT NULL,
     survey_id TEXT NOT NULL,
     survey_version TEXT,
@@ -27,17 +30,9 @@ Create table answers (
     created_at TEXT
 );
 
--- create table sessions (
---     id serial primary key,
---     user_id text,
---     session_verifier text not null,
---     otp_code_encrypted text not null,
-
--- )
-
-insert into surveys (id, plaintext, user_id)
-values (
-        'testid',
+INSERT INTO surveys (plaintext, user_id)
+VALUES (
         '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
-        'statictestuser'
-    )
+        'testid'
+    );
+

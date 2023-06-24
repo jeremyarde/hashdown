@@ -83,6 +83,7 @@ struct Claims {
     tenant: String,
 }
 
+#[derive(Serialize)]
 pub struct JwtResult {
     pub token: String,
     pub expires: usize,

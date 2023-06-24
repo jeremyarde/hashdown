@@ -1,8 +1,7 @@
 [workspace]
 members = [
   "backend", # "ui", 
-  "server",
-  "db",
+  "server", # "db",
   "ui",
 ]
 

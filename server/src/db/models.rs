@@ -112,7 +112,7 @@ pub struct Survey {
 
 #[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow, Builder)]
 pub struct SurveyModel {
-    pub id: String,
+    pub id: i32,
     pub plaintext: String,
     pub user_id: String,
     pub created_at: String,

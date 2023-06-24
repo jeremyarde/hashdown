@@ -51,6 +51,7 @@ pub mod routes {
 
     use crate::{
         auth::{validate_credentials, AuthError},
+        db,
         log::log_request,
         mware::{
             self,
@@ -75,8 +76,8 @@ pub mod routes {
             // .layer(Extension(state))
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             .route("/surveys/:id", get(get_survey))
-            .route(&format!("/surveys/test"), post(test_survey))
-            .route(&format!("/login"), post(api_login))
+            // .route(&format!("/surveys/test"), post(test_survey))
+            .route(&format!("/login"), post(login))
             .route("/signup", post(signup))
             // .with_state(state.clone())
             // .route_layer(middleware::from_fn_with_state(
@@ -177,12 +178,11 @@ pub mod routes {
         };
         info!("Creating new survey for user={user_id:?}");
         // Check that the survey is Ok
-        let parsed_survey = parse_markdown_v3(payload.plaintext);
+        let parsed_survey = parse_markdown_v3(payload.plaintext).unwrap();
 
         let metadata = MetadataBuilder::default().build().unwrap();
 
         let survey_model = SurveyModelBuilder::default()
-            .id(metadata.id.clone())
             .plaintext(parsed_survey.plaintext.clone())
             .parse_version(parsed_survey.parse_version.clone())
             .user_id(user_id.to_string())
@@ -226,7 +226,7 @@ pub mod routes {
             None => return Err(ServerError::BadRequest("another issue".to_string())),
         };
         info!("Found survey_id in database");
-        let answer_id = nanoid_gen();
+        let answer_id = nanoid_gen(12);
         let response = CreateAnswersResponse {
             answer_id: answer_id.clone(),
         };
@@ -282,15 +282,15 @@ pub mod routes {
         (StatusCode::OK, Json(db_response))
     }
 
-    #[tracing::instrument]
-    #[axum::debug_handler]
-    pub async fn test_survey(
-        // State(_state): State<ServerState>,
-        extract::Json(payload): extract::Json<CreateSurveyRequest>,
-    ) -> impl IntoResponse {
-        let survey = parse_markdown_v3(payload.plaintext.clone());
-        (StatusCode::OK, Json(survey))
-    }
+    // #[tracing::instrument]
+    // #[axum::debug_handler]
+    // pub async fn test_survey(
+    //     // State(_state): State<ServerState>,
+    //     extract::Json(payload): extract::Json<CreateSurveyRequest>,
+    // ) -> impl IntoResponse {
+    //     let survey = parse_markdown_v3(payload.plaintext.clone())?;
+    //     (StatusCode::OK, Json(survey))
+    // }
 
     #[tracing::instrument]
     #[axum::debug_handler]
@@ -355,7 +355,7 @@ pub mod routes {
         state: State<ServerState>,
         payload: Json<LoginPayload>,
     ) -> anyhow::Result<Json<Value>, ServerError> {
-        info!("signup");
+        info!("->> signup");
 
         match state
             .db
@@ -390,7 +390,7 @@ pub mod routes {
         };
 
         let jwt_claim = create_jwt_claim(user.email.clone(), "somerole-pleasechange")?;
-        let auth_cookie = Cookie::build("x-auth-token", jwt_claim.token)
+        let auth_cookie = Cookie::build("x-auth-token", jwt_claim.token.clone())
             // .domain("localhost")
             .same_site(tower_cookies::cookie::SameSite::Strict)
             .expires(
@@ -404,16 +404,19 @@ pub mod routes {
             .finish();
         cookies.add(auth_cookie);
 
-        return Ok(Json(json!(user.email)));
+        return Ok(Json(
+            json!({"email": user.email, "auth_token": jwt_claim.token}),
+        ));
     }
 
-    pub async fn api_login(
+    pub async fn login(
         cookies: Cookies,
         // ctx: Result<Ctext, CustomError>,
         state: State<ServerState>,
         payload: Json<LoginPayload>,
     ) -> anyhow::Result<Json<Value>, ServerError> {
-        info!("api_login");
+        info!("->> api_login");
+        info!("Payload: {payload:#?}");
 
         // look for email in database
         let user = match state
@@ -424,7 +427,7 @@ pub mod routes {
         {
             Ok(x) => x,
             Err(_) => {
-                println!("Did not find user in database");
+                info!("Did not find user in database");
                 return Err(ServerError::LoginFail);
             }
         };
@@ -450,11 +453,13 @@ pub mod routes {
         let jwt = create_jwt_claim(user.email, "randomrole- please update")?;
 
         // TODO: set cookies
-        cookies.add(Cookie::new("x-auth-token", jwt.token));
+        cookies.add(Cookie::new("x-auth-token", jwt.token.clone()));
 
         // TODO: create success body
         let username = payload.email.clone();
         let logged_in = true;
-        Ok(Json(json!({"result": logged_in, "username": username})))
+        Ok(Json(
+            json!({"result": logged_in, "username": username, "auth_token": jwt.token}),
+        ))
     }
 }

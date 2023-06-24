@@ -7,7 +7,9 @@ use getrandom::getrandom;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
+use anyhow::{anyhow, Error};
 use std::collections::hash_map::RandomState;
+
 use std::hash::{BuildHasher, Hasher};
 
 fn rand64() -> u64 {
@@ -149,48 +151,48 @@ pub enum QuestionType {
 impl Question {
     fn from(q_text: &str, options: Vec<&str>) -> Self {
         let question_id = nanoid_gen(NANOID_LEN);
+        let (question_type, question_text) = Question::parse_question_type_and_text(q_text);
         return Question {
             // id: nanoid!(NANOID_LEN, &NANOID_ALPHA, random),
             id: question_id,
-            value: Question::parse_question_text(q_text).to_string(),
+            value: question_text.clone(),
             options: options
                 .iter()
                 .map(|&o| QuestionOption {
                     // id: "nanoid_gen()".to_string(),
                     id: nanoid_gen(12),
-                    text: Question::parse_question_text(o).to_string(),
+                    text: question_text.clone(),
                 })
                 .collect(),
-            r#type: Question::parse_question_type(q_text),
+            r#type: question_type,
             created_on: "now".to_string(),
             modified_on: "now".to_string(),
         };
     }
 
-    fn parse_question_type(line: &str) -> QuestionType {
-        let res: QuestionType;
-        if line.contains("[checkbox]") || line.contains("[c]") {
-            res = QuestionType::Checkbox;
+    fn parse_question_type_and_text(line: &str) -> (QuestionType, String) {
+        let qtype: QuestionType;
+        let question_text = line;
+        // if line.contains("[checkbox]") || line.contains("[c]") {
+        if question_text.contains("[c]") {
+            qtype = QuestionType::Checkbox;
+            question_text.replace("[c]", "").as_str();
         } else {
-            res = QuestionType::Radio;
+            qtype = QuestionType::Radio;
         }
 
-        res
-    }
-
-    fn parse_question_text(line: &str) -> &str {
-        let mut question_text = match line.trim_start().split_once("- ") {
+        let mut question_text = match question_text.trim_start().split_once("- ") {
             Some(x) => x.1,
-            None => line,
+            None => question_text,
         };
 
-        let trimmed = line.clone().trim_start();
+        let trimmed = question_text.clone().trim_start();
         if trimmed.starts_with(char::is_numeric) {
-            question_text = trimmed.split_once(". ").unwrap_or((line, "")).1;
+            question_text = trimmed.split_once(". ").unwrap_or((question_text, "")).1;
         }
 
         // println!("parse: {question_text:?}");
-        return question_text;
+        return (qtype, question_text.to_string());
     }
 
     // pub async fn insert(
@@ -315,10 +317,14 @@ enum LineType {
     Question,
     Option,
     Nothing,
+    Title,
 }
 
 pub fn markdown_to_form(contents: String) -> ParsedSurvey {
-    let survey = parse_markdown_v3(contents);
+    let survey = match parse_markdown_v3(contents) {
+        Ok(_) => todo!(),
+        Err(_) => todo!(),
+    };
     return survey;
 }
 
@@ -329,7 +335,12 @@ pub fn markdown_to_form(contents: String) -> ParsedSurvey {
 //     return serde_wasm_bindgen::to_value(&survey).unwrap();
 // }
 
-pub fn parse_markdown_v3(contents: String) -> ParsedSurvey {
+#[derive(Debug)]
+enum ParseError {
+    MultipleTitle(String),
+}
+
+pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
     const VERSION: &str = "0";
 
     let mut questions = vec![];
@@ -338,6 +349,7 @@ pub fn parse_markdown_v3(contents: String) -> ParsedSurvey {
     let _in_question = false;
     let mut last_line_type: LineType = LineType::Nothing;
     let _question_num = 0;
+    let mut title = "";
 
     for line in contents.lines() {
         // println!("Curr line: {line}");
@@ -373,6 +385,15 @@ pub fn parse_markdown_v3(contents: String) -> ParsedSurvey {
                 curr_options.push(line);
                 last_line_type = LineType::Option;
             }
+            (LineType::Title, LineType::Nothing) => {
+                title = line.clone();
+                last_line_type = LineType::Title;
+            }
+            (LineType::Title, _) => {
+                return Err(anyhow!(
+                    "Found multiple titles, remove one line that starts with `# `"
+                ))
+            }
             _ => {}
         }
     }
@@ -388,34 +409,40 @@ pub fn parse_markdown_v3(contents: String) -> ParsedSurvey {
 
     let survey = ParsedSurvey {
         // id: nanoid_gen(),
-        plaintext: contents,
         // user_id: "".to_string(),
         // created_at: "".to_string(),
         // modified_at: "".to_string(),
         questions: questions,
         // version: "0".to_string(),
         parse_version: "0".to_string(),
+        title: title.to_string(),
+        plaintext: contents,
     };
 
-    return survey;
+    return Ok(survey);
     // return JsValue::from(value);
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ParsedSurvey {
+    pub title: String,
     pub plaintext: String,
     pub questions: Vec<Question>,
     pub parse_version: String,
 }
 
 impl ParsedSurvey {
-    fn from(plaintext: String) -> ParsedSurvey {
+    fn from(plaintext: String) -> anyhow::Result<ParsedSurvey> {
         return parse_markdown_v3(plaintext);
     }
 }
 
 fn find_line_type(line: &str) -> LineType {
     let linetype: LineType;
+    if line.starts_with("# ") {
+        return LineType::Title;
+    }
+
     if !line.starts_with(' ') && line.starts_with(|c: char| c.eq(&'-') || c.is_ascii_digit()) {
         linetype = LineType::Question
     } else if line.starts_with(" ")
@@ -492,12 +519,30 @@ mod tests {
 
     #[test]
     fn test_question_parsing() {
-        assert_eq!(Question::parse_question_text("- testing"), "testing");
-        assert_eq!(Question::parse_question_text(" - testing"), "testing");
-        assert_eq!(Question::parse_question_text("  - testing"), "testing");
+        assert_eq!(
+            Question::parse_question_type_and_text("- testing").1,
+            "testing"
+        );
+        assert_eq!(
+            Question::parse_question_type_and_text(" - testing").1,
+            "testing"
+        );
+        assert_eq!(
+            Question::parse_question_type_and_text("  - testing").1,
+            "testing"
+        );
 
-        assert_eq!(Question::parse_question_text("1. testing"), "testing");
-        assert_eq!(Question::parse_question_text(" 1. testing"), "testing");
-        assert_eq!(Question::parse_question_text("  1. testing"), "testing");
+        assert_eq!(
+            Question::parse_question_type_and_text("1. testing").1,
+            "testing"
+        );
+        assert_eq!(
+            Question::parse_question_type_and_text(" 1. testing").1,
+            "testing"
+        );
+        assert_eq!(
+            Question::parse_question_type_and_text("  1. testing").1,
+            "testing"
+        );
     }
 }

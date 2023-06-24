@@ -2,6 +2,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Server;
 use serde::{Deserialize, Serialize};
+use tracing::info;
 
 #[derive(Debug, Deserialize, strum_macros::AsRefStr, Serialize)]
 #[serde(tag = "type", content = "data")]
@@ -55,10 +56,13 @@ impl ServerError {
             // CustomError::Database(_) => ,
             // CustomError::LoginFail => todo!(),
             // CustomError::AuthFailNoTokenCookie => todo!(),
-            _ => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ClientError::SERVICE_ERROR,
-            ),
+            _ => {
+                tracing::log::error!("Failed");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    ClientError::SERVICE_ERROR,
+                )
+            }
         }
     }
 }

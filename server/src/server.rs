@@ -22,8 +22,15 @@ use tower_http::{
 
 // use crate::answer::post_answer;
 use crate::{
+    db,
     routes::routes::{
-        api_login, create_survey, get_routes, get_survey, list_survey, submit_survey, test_survey,
+        create_survey,
+        get_routes,
+        get_survey,
+        list_survey,
+        login,
+        submit_survey,
+        // test_survey,
     },
     ServerState,
 };
@@ -54,7 +61,19 @@ pub struct ServerApplication {
 
 impl ServerApplication {
     pub async fn get_router() -> Router {
-        let db = Database::new(true)
+        let in_memory = if dotenvy::var("DATABASE_IN_MEMORY")
+            .expect("Could not find `DATABASE_IN_MEMORY` env variable")
+            .trim()
+            == "true"
+        {
+            true
+        } else {
+            false
+        };
+
+        let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
+
+        let db = Database::new(in_memory, uri)
             .await
             .expect("Database was not created. Probably an error in the migrations.");
         let state = ServerState { db: db };
@@ -250,10 +269,9 @@ struct Answer {
 mod test {
     use std::collections::HashMap;
 
+    use crate::{db, ServerState};
     use axum::extract::{multipart, Multipart};
     use db::database::Database;
-
-    use crate::ServerState;
 
     // #[tokio::test]
     // async fn test_create_answer() {
