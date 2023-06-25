@@ -60,7 +60,7 @@ pub mod mainapp {
         fn from(token: String) -> Self {
             return Self {
                 username: "jeremy".to_string(),
-                token: token,
+                token: token.trim().replace("\"", "").to_owned(),
                 cookie: "".to_string(),
             };
         }
@@ -181,6 +181,7 @@ pub mod mainapp {
 
     fn Editor(cx: Scope) -> Element {
         let editor_state = use_atom_state(&cx, EDITOR);
+        let toast_visible = use_atom_state(&cx, TOAST);
         // let question_state = use_atom_state(&cx, APP);
         let app_state = use_atom_state(&cx, APP);
         // let send_request_timeout = use_atom_state(&cx, REQ_TIMEOUT);
@@ -290,57 +291,6 @@ pub mod mainapp {
             })
         };
 
-        cx.render(rsx! {
-            div {
-                class: "editor-container",
-                form {
-                    prevent_default: "onclick",
-                    // oninput: move |e| {
-                    //     let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
-                    //     editor_state.set(formvalue);
-                    // },
-                    
-                    oninput: move |e| {
-                        let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
-                        // let formvalue = "- this is a test\n  - this is a question".to_string();
-                        match SurveyDto::from(formvalue.clone()) {
-                            Ok(sur) => {
-                                app_state.modify(|curr| {
-                                    AppState {
-                                        // questions: Questions { qs: vec![] },
-                                        input_text: curr.input_text.clone(),
-                                        client: curr.client.clone(),
-                                        surveys: vec![],
-                                        curr_survey: sur,
-                                        user: UserContext::new(),
-                                        // auth_token: curr.auth_token.clone(),
-                                    }
-                                });
-                            }
-                            Err(_) => {}
-                        };
-                        info!("onchange results: {:?}", formvalue);
-                    },
-                    textarea {
-                        class: "editor-field",
-                        required: "",
-                        rows: "8",
-                        placeholder: "Write your survey here",
-                        name: "forminput",
-                    }
-                }
-            }
-            div {
-                class: "editor-buttons",
-                Publish {}
-            }
-        })
-    }
-
-    fn Publish(cx: Scope) -> Element {
-        // let question_state = use_atom_state(&cx, APP);
-        let app_state = use_atom_state(&cx, APP);
-        let toast_visible = use_atom_state(&cx, TOAST);
 
         let post_questions = move |content, client: Client| {
             cx.spawn({
@@ -369,18 +319,111 @@ pub mod mainapp {
         };
 
         cx.render(rsx! {
-            button {
-                prevent_default: "onclick",
-                class: "hover:bg-violet-600 w-full text-blue-500 bg-blue-200 rounded p-2",
-                onclick: move |evt| {
-                    info!("Pushed publish :)");
-                    post_questions("test".to_string(), app_state.client.clone());
-                    evt.stop_propagation();
-                },
-                "Publish"
+            div {
+                class: "editor-container",
+                form {
+                    prevent_default: "onsubmit",
+                    // action: "localhost:3000/survey",
+                    onsubmit: move |evt| {
+                        // evt.prevent_default();
+                            info!("Pushed publish :)");
+                            let formvalue = evt.values.get(FORMINPUT_KEY).clone().unwrap().clone();
+                            post_questions(formvalue, app_state.client.clone());
+                            evt.stop_propagation();
+                    },
+                    // oninput: move |e| {
+                    //     let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
+                    //     editor_state.set(formvalue);
+                    // },
+                    
+                    oninput: move |e| {
+                        let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
+                        // let formvalue = "- this is a test\n  - this is a question".to_string();
+                        match SurveyDto::from(formvalue.clone()) {
+                            Ok(sur) => {
+                                app_state.modify(|curr| {
+                                    AppState {
+                                        input_text: curr.input_text.clone(),
+                                        client: curr.client.clone(),
+                                        surveys: vec![],
+                                        curr_survey: sur,
+                                        user: curr.user.to_owned(),
+                                    }
+                                });
+                            }
+                            Err(_) => {}
+                        };
+                        info!("onchange results: {:?}", formvalue);
+                    },
+                    textarea {
+                        class: "editor-field",
+                        required: "",
+                        rows: "8",
+                        placeholder: "Write your survey here",
+                        name: FORMINPUT_KEY,
+                    }
+                    // button {
+                    //     prevent_default: "onclick",
+                    //     class: "hover:bg-violet-600 w-full text-blue-500 bg-blue-200 rounded p-2",
+                    //     onclick: move |evt| {
+                    //         info!("Pushed publish :)");
+                    //         post_questions("test".to_string(), app_state.client.clone());
+                    //         evt.stop_propagation();
+                    //     },
+                    //     "Publish"
+                    // }
+                    button {
+                        // r#type: "submit",
+                        "Publish"
+                    }
+                }
             }
         })
     }
+
+    // fn Publish(cx: Scope) -> Element {
+    //     let app_state = use_atom_state(&cx, APP);
+    //     let toast_visible = use_atom_state(&cx, TOAST);
+
+    //     let post_questions = move |content, client: Client| {
+    //         cx.spawn({
+    //             to_owned![toast_visible, app_state];
+    //             async move {
+    //                 info!("Attempting to save questions...");
+    //                 info!("Publishing content, app_state: {app_state:?}");
+    //                 // info!("Questions save: {:?}", question_state);
+    //                 match client
+    //                     .post("http://localhost:3000/surveys")
+    //                     .json(&CreateSurvey { plaintext: content })
+    //                     .bearer_auth(app_state.user.token.clone())
+    //                     .header("x-auth-token", app_state.user.token.clone())
+    //                     .send()
+    //                     .await
+    //                 {
+    //                     Ok(x) => {
+    //                         info!("success: {x:?}");
+    //                         info!("should show toast now");
+    //                         toast_visible.set(true);
+    //                     }
+    //                     Err(x) => info!("error: {x:?}"),
+    //                 };
+    //             }
+    //         })
+    //     };
+
+    //     cx.render(rsx! {
+    //         button {
+    //             prevent_default: "onclick",
+    //             class: "hover:bg-violet-600 w-full text-blue-500 bg-blue-200 rounded p-2",
+    //             onclick: move |evt| {
+    //                 info!("Pushed publish :)");
+    //                 post_questions("test".to_string(), app_state.client.clone());
+    //                 evt.stop_propagation();
+    //             },
+    //             "Publish"
+    //         }
+    //     })
+    // }
 
     static TOAST: Atom<bool> = |_| false;
 
@@ -575,7 +618,7 @@ pub mod mainapp {
                                 client: curr.client.clone(),
                                 surveys: curr.surveys.to_owned(),
                                 curr_survey: curr.curr_survey.clone(),
-                                user: new_user,
+                                user: new_user.to_owned(),
                             });
 
                         }
@@ -606,7 +649,6 @@ pub mod mainapp {
                     }
                     button {
                         class: "navbar-signup",
-                        // onclick: move |e| {signup()}
                         onclick: move |evt| {
                             info!("Pushed publish :)");
                             signup("signup".to_string(), app_state.client.clone());

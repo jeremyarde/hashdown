@@ -168,7 +168,7 @@ pub mod routes {
     pub async fn create_survey(
         headers: HeaderMap,
         State(state): State<ServerState>,
-        // ctx: Option<Ctext>,
+        ctx: Option<Ctext>,
         extract::Json(payload): extract::Json<CreateSurveyRequest>,
     ) -> anyhow::Result<Json<Value>, ServerError> {
         info!("->> create_survey");
@@ -190,6 +190,7 @@ pub mod routes {
             .created_at(metadata.created_at.clone())
             .modified_at(metadata.modified_at.clone())
             .version(metadata.version.clone())
+            .id(0)
             .build()
             .unwrap();
 
@@ -270,8 +271,8 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn get_survey(
         State(_state): State<ServerState>,
-        // ctx: Option<Ctext>,
-        authorization: TypedHeader<Authorization<Bearer>>,
+        ctx: Option<Ctext>,
+        // authorization: TypedHeader<Authorization<Bearer>>,
         Path(survey_id): Path<String>,
         Query(query): Query<GetSurveyQuery>,
     ) -> impl IntoResponse {
@@ -298,7 +299,7 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn list_survey(
         state: State<ServerState>,
-        // ctx: Option<Ctext>,
+        ctx: Option<Ctext>,
         // State(state): State<ServerState>,
         headers: HeaderMap,
     ) -> anyhow::Result<Json<Value>, ServerError> {
