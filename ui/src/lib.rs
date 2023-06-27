@@ -74,7 +74,7 @@ pub mod mainapp {
         // surveys: Vec<Survey>,
         surveys: Vec<SurveyDto>,
         curr_survey: SurveyDto,
-        user: UserContext,
+        user: Option<UserContext>,
         // auth_token: String,
     }
 
@@ -165,7 +165,7 @@ pub mod mainapp {
                     version: "".to_string(),
                     questions: vec![],
                 },
-                user: UserContext::new(),
+                user: None,
             }
         }
     }
@@ -191,9 +191,14 @@ pub mod mainapp {
         let create_survey = move |content: String, client: Client| {
             cx.spawn({
                 to_owned![editor_state, app_state, send_req_timeout];
+                if app_state.user.is_none() {
+                    info!("Not logged in yet.");
+                    return;
+                }
                 // timeout.get()
                 async move {
                     let something = send_req_timeout.get();
+                    let token  = app_state.user.clone().unwrap().token;
                     // timeout.await;
                     // TimeoutFuture::new(2000).await;
                     // let t = Timeou
@@ -204,7 +209,7 @@ pub mod mainapp {
                         .json(&CreateSurvey {
                             plaintext: editor_state.get().clone(),
                         })
-                        .bearer_auth(app_state.user.token.clone())
+                        .bearer_auth(token)
                         .send()
                         .await
                     {
@@ -240,61 +245,15 @@ pub mod mainapp {
             })
         };
 
-        let check_survey = move |content: String, client: Client| {
-            cx.spawn({
-                to_owned![editor_state, app_state, send_req_timeout];
-                // timeout.get()
-                async move {
-                    let something = send_req_timeout.get();
-                    // timeout.await;
-                    // TimeoutFuture::new(2000).await;
-                    // let t = Timeou
-                    // info!("Attempting to save questions...");
-                    // info!("Questions save: {:?}", question_state);
-                    match client
-                        .post("http://localhost:3000/surveys/test")
-                        .json(&CreateSurvey {
-                            plaintext: editor_state.get().clone(),
-                        })
-                        .bearer_auth(app_state.user.token.clone())
-                        .send()
-                        .await
-                    {
-                        Ok(x) => {
-                            info!("success: {x:?}");
-                            match SurveyDto::from(content.clone()) {
-                                Ok(sur) => {
-                                    app_state.modify(|curr| {
-                                        AppState {
-                                            // questions: Questions { qs: vec![] },
-                                            input_text: curr.input_text.clone(),
-                                            client: curr.client.clone(),
-                                            surveys: vec![],
-                                            curr_survey: sur,
-                                            user: curr.user.to_owned(),
-                                        }
-                                        // curr.questions = question;
-                                    });
-                                    // let _x = &set_app.get().questions;
-                                    editor_state.set(content);
-                                    // info!("should show toast now");
-                                    // toast_visible.set(true);
-                                }
-                                Err(_) => {}
-                            }
-                        }
-                        Err(x) => info!("error: {x:?}"),
-                    }
-
-                    // timeout = Timeout::new(1000, callback)
-                }
-            })
-        };
-
 
         let post_questions = move |content, client: Client| {
             cx.spawn({
                 to_owned![toast_visible, app_state];
+
+                if app_state.user.is_none() {
+                    info!("user token is not set");
+                }
+                let token  = app_state.user.clone().unwrap().token;
                 async move {
                     info!("Attempting to save questions...");
                     info!("Publishing content, app_state: {app_state:?}");
@@ -302,8 +261,8 @@ pub mod mainapp {
                     match client
                         .post("http://localhost:3000/surveys")
                         .json(&CreateSurvey { plaintext: content })
-                        .bearer_auth(app_state.user.token.clone())
-                        .header("x-auth-token", app_state.user.token.clone())
+                        .bearer_auth(token.clone())
+                        .header("x-auth-token", token)
                         .send()
                         .await
                     {
@@ -358,7 +317,7 @@ pub mod mainapp {
                     textarea {
                         class: "editor-field",
                         required: "",
-                        rows: "8",
+                        rows: "16",
                         placeholder: "Write your survey here",
                         name: FORMINPUT_KEY,
                     }
@@ -381,49 +340,6 @@ pub mod mainapp {
         })
     }
 
-    // fn Publish(cx: Scope) -> Element {
-    //     let app_state = use_atom_state(&cx, APP);
-    //     let toast_visible = use_atom_state(&cx, TOAST);
-
-    //     let post_questions = move |content, client: Client| {
-    //         cx.spawn({
-    //             to_owned![toast_visible, app_state];
-    //             async move {
-    //                 info!("Attempting to save questions...");
-    //                 info!("Publishing content, app_state: {app_state:?}");
-    //                 // info!("Questions save: {:?}", question_state);
-    //                 match client
-    //                     .post("http://localhost:3000/surveys")
-    //                     .json(&CreateSurvey { plaintext: content })
-    //                     .bearer_auth(app_state.user.token.clone())
-    //                     .header("x-auth-token", app_state.user.token.clone())
-    //                     .send()
-    //                     .await
-    //                 {
-    //                     Ok(x) => {
-    //                         info!("success: {x:?}");
-    //                         info!("should show toast now");
-    //                         toast_visible.set(true);
-    //                     }
-    //                     Err(x) => info!("error: {x:?}"),
-    //                 };
-    //             }
-    //         })
-    //     };
-
-    //     cx.render(rsx! {
-    //         button {
-    //             prevent_default: "onclick",
-    //             class: "hover:bg-violet-600 w-full text-blue-500 bg-blue-200 rounded p-2",
-    //             onclick: move |evt| {
-    //                 info!("Pushed publish :)");
-    //                 post_questions("test".to_string(), app_state.client.clone());
-    //                 evt.stop_propagation();
-    //             },
-    //             "Publish"
-    //         }
-    //     })
-    // }
 
     static TOAST: Atom<bool> = |_| false;
 
@@ -523,7 +439,6 @@ pub mod mainapp {
                             
                         })
                     }
-                    "{curr_survey:?}"
                 }
         })
     }
@@ -618,7 +533,7 @@ pub mod mainapp {
                                 client: curr.client.clone(),
                                 surveys: curr.surveys.to_owned(),
                                 curr_survey: curr.curr_survey.clone(),
-                                user: new_user.to_owned(),
+                                user: Some(new_user.to_owned()),
                             });
 
                         }
