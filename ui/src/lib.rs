@@ -1,9 +1,13 @@
 #![allow(non_snake_case)]
 
+mod pages;
+use pages::login::Login;
+
 // #![feature(async_closure)]
 pub mod mainapp {
     use std::{time::{self, Instant}, error};
 
+    use dioxus_router::{Router, Route, Link, Redirect};
     use gloo_timers::{callback::Timeout, future::TimeoutFuture};
     // use console_log::log;
     use log::info;
@@ -34,7 +38,7 @@ pub mod mainapp {
     use reqwest::{header, Client, RequestBuilder};
     use serde::{Deserialize, Serialize};
 
-    static APP: Atom<AppState> = |_| AppState::new();
+    pub static APP: Atom<AppState> = |_| AppState::new();
 
     #[derive(Serialize)]
     struct CreateSurvey {
@@ -67,7 +71,7 @@ pub mod mainapp {
     }
 
     #[derive(Debug)]
-    struct AppState {
+    pub struct AppState {
         // questions: Questions,
         input_text: String,
         client: Client,
@@ -76,6 +80,7 @@ pub mod mainapp {
         curr_survey: SurveyDto,
         user: Option<UserContext>,
         // auth_token: String,
+        pub show_login: bool,
     }
 
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -166,6 +171,7 @@ pub mod mainapp {
                     questions: vec![],
                 },
                 user: None,
+                show_login: false,
             }
         }
     }
@@ -225,6 +231,7 @@ pub mod mainapp {
                                             surveys: vec![],
                                             curr_survey: sur,
                                             user: curr.user.to_owned(),
+                                            show_login: curr.show_login,
                                             // auth_token: curr.auth_token.clone(),
                                         }
                                         // curr.questions = question;
@@ -281,6 +288,7 @@ pub mod mainapp {
             div {
                 class: "editor-container",
                 form {
+                    class: "editor-form",
                     prevent_default: "onsubmit",
                     // action: "localhost:3000/survey",
                     onsubmit: move |evt| {
@@ -307,6 +315,7 @@ pub mod mainapp {
                                         surveys: vec![],
                                         curr_survey: sur,
                                         user: curr.user.to_owned(),
+                                        show_login: curr.show_login
                                     }
                                 });
                             }
@@ -317,7 +326,7 @@ pub mod mainapp {
                     textarea {
                         class: "editor-field",
                         required: "",
-                        rows: "16",
+                        rows: "8",
                         placeholder: "Write your survey here",
                         name: FORMINPUT_KEY,
                     }
@@ -332,6 +341,7 @@ pub mod mainapp {
                     //     "Publish"
                     // }
                     button {
+                        class: "publish-button",
                         // r#type: "submit",
                         "Publish"
                     }
@@ -446,6 +456,8 @@ pub mod mainapp {
     use fermi::use_init_atom_root;
     use serde_json::Value;
 
+    use crate::pages::{self, login::Login};
+
     fn ListSurveysComponent(cx: Scope) -> Element {
         let app_state = use_atom_state(&cx, APP);
         info!("In list survey components");
@@ -463,6 +475,7 @@ pub mod mainapp {
                         curr_survey: curr.curr_survey.clone(),
                         user: curr.user.to_owned(),
                         // auth_token: curr.auth_token.clone(),
+                        show_login: curr.show_login,
                     });
                 }
             })
@@ -503,6 +516,7 @@ pub mod mainapp {
         pub email: String,
         pub password: String,
     }
+
     pub fn Navbar(cx: Scope) -> Element {
         let app_state = use_atom_state(&cx, APP);
         let signup = move |authmethod: String, client: Client| {
@@ -534,6 +548,7 @@ pub mod mainapp {
                                 surveys: curr.surveys.to_owned(),
                                 curr_survey: curr.curr_survey.clone(),
                                 user: Some(new_user.to_owned()),
+                                show_login: curr.show_login,
                             });
 
                         }
@@ -557,10 +572,22 @@ pub mod mainapp {
                         // onclick: move |e| {signup()}
                         onclick: move |evt| {
                             info!("Pushed login :)");
-                            signup("login".to_string(), app_state.client.clone());
+                            // signup("login".to_string(), app_state.client.clone());
                             evt.stop_propagation();
+                            app_state.modify(|curr| AppState {
+                                input_text: curr.input_text.clone(),
+                                client: curr.client.clone(),
+                                surveys: curr.surveys.to_owned(),
+                                curr_survey: curr.curr_survey.clone(),
+                                user: curr.user.to_owned(),
+                                show_login: if curr.show_login { false} else { true},
+                            });
                         },
                         "login"
+                    }
+                    a {
+                        href: "/login",
+                        "login link"
                     }
                     button {
                         class: "navbar-signup",
@@ -575,6 +602,28 @@ pub mod mainapp {
             }
         })
     }
+ 
+    fn NotFound(cx: Scope) -> Element {
+        cx.render(rsx!(
+            div {
+                "YO THIS IS NOT FOUND"
+            }
+        ))
+    }
+
+    
+    // fn Home(cx: Scope) -> Element {
+    //     // cx.render(rsx!(
+    //     //     div {
+    //     //         Router {
+    //     //             Route { to: "/", App {}},
+    //     //             Route { to: "/login", Login {}}
+    //     //             // Route { to: "", NotFound {} }
+    //     //             Redirect { from: "", to: "/" }
+    //     //         }
+    //     //     }
+    //     // ))
+    // }
 
     pub fn App(cx: Scope) -> Element {
         use_init_atom_root(cx);
@@ -598,6 +647,7 @@ pub mod mainapp {
                             self::RenderSurvey { survey_to_render: &app_state.curr_survey }
                         }
                     }
+                    Login{}
                     // // SurveysComponent { survey: &app_state.curr_survey }
                     // self::Toast {}
                 }

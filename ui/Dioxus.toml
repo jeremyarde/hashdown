@@ -16,7 +16,7 @@ asset_dir = "public"
 [web.app]
 
 # HTML title tag content
-title = "Testing stuff | ⛺"
+title = "Formit"
 
 [web.watcher]
 
@@ -31,7 +31,7 @@ watch_path = ["src", "public"]
 
 # CSS style file
 # style = ["./output.css"]
-style = ["../input.css"]
+style = ["input.css"]
 
 # Javascript code file
 script = []
