@@ -8,7 +8,7 @@ pub fn Login(cx: Scope) -> Element {
 
     let onsubmit = move |evt: FormEvent| {
         cx.spawn(async move {
-            let resp = reqwest::Client::new() 
+            let resp = reqwest::Client::new()
                 .post("http://localhost:8080/login")
                 .form(&[
                     ("username", &evt.values["username"]),
@@ -31,18 +31,21 @@ pub fn Login(cx: Scope) -> Element {
     cx.render(rsx! {
         if app_state.show_login {
             rsx!{
-                h1 { "Login" }
-            form {
-                onsubmit: onsubmit,
-                prevent_default: "onsubmit", // Prevent the default behavior of <form> to post
-                input { r#type: "text", id: "username", name: "username" }
-                label { "Username" }
-                br {}
-                input { r#type: "password", id: "password", name: "password" }
-                label { "Password" }
-                br {}
-                button { "Login" }
-            }
+                div {
+                    h1 { "Login" }
+                    form {
+                        onsubmit: onsubmit,
+                        class: "login-form",
+                        prevent_default: "onsubmit", // Prevent the default behavior of <form> to post
+                        input { r#type: "text", id: "username", name: "username" }
+                        label { "Username" }
+                        br {}
+                        input { r#type: "password", id: "password", name: "password" }
+                        label { "Password" }
+                        br {}
+                        button { "Login" }
+                    }
+                }
             }
         }
     })

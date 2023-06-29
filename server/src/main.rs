@@ -45,8 +45,6 @@ async fn main() -> anyhow::Result<()> {
         .with_env_filter("server=debug,sqlx=debug")
         .init();
 
-    // info!("{:?}", std::env::current_dir());
-
     dotenvy::from_filename("./server/.env")?;
 
     info!("Spinning up the server.");
@@ -68,6 +66,7 @@ mod tests {
         AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
     };
     use dotenvy::dotenv;
+    use lettre::transport::smtp::client::{Tls, TlsParameters};
     use markdownparser::ParsedSurvey;
     // use markdownparser::{markdown_to_form, markdown_to_form_wasm};
     use reqwest::{header::CONTENT_TYPE, Client, StatusCode};
@@ -459,5 +458,45 @@ mod tests {
             .to_string();
 
         return auth_token;
+    }
+
+    #[test]
+    fn test_email() {
+        dotenvy::from_filename("./server/.env").unwrap();
+
+        use lettre::message::header::ContentType;
+        use lettre::transport::smtp::authentication::Credentials;
+        use lettre::{Message, SmtpTransport, Transport};
+        let from_email = "Test FROM <test@jeremyarde.com>";
+        let to_email = "Test TO <test@jeremyarde.com>";
+        // let smtp_server = "email-smtp.us-west-2.amazonaws.com:587";
+        let smtp_server = "email-smtp.us-east-1.amazonaws.com";
+
+        let email = Message::builder()
+            .from(from_email.parse().unwrap())
+            // .reply_to("Yuin <yuin@domain.tld>".parse().unwrap())
+            .to(to_email.parse().unwrap())
+            .subject("Test email")
+            .header(ContentType::TEXT_PLAIN)
+            .body(String::from("Be happy!"))
+            .unwrap();
+        // openssl s_client -crlf -quiet -starttls smtp -connect email-smtp.us-west-2.amazonaws.com:587
+        let creds = Credentials::new(
+            dotenvy::var("SMTP_USERNAME").expect("smtp username should be set"),
+            dotenvy::var("SMTP_PASSWORD").expect("smtp password should be set"),
+        );
+
+        // Open a remote connection to gmail
+        let mailer = SmtpTransport::relay(smtp_server)
+            .unwrap()
+            .credentials(creds)
+            // .tls(Tls::Wrapper(TlsParameters::builder(domain)))
+            .build();
+
+        // Send the email
+        match mailer.send(&email) {
+            Ok(_) => println!("Email sent successfully!"),
+            Err(e) => panic!("Could not send email: {e:?}"),
+        }
     }
 }
