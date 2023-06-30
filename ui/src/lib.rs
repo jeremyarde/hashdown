@@ -38,7 +38,11 @@ pub mod mainapp {
     use reqwest::{header, Client, RequestBuilder};
     use serde::{Deserialize, Serialize};
 
+
+
     pub static APP: Atom<AppState> = |_| AppState::new();
+    pub static CLIENT: Atom<reqwest::Client> = |_| reqwest::Client::new();
+
 
     #[derive(Serialize)]
     struct CreateSurvey {
@@ -46,10 +50,10 @@ pub mod mainapp {
     }
 
     #[derive(Serialize, Debug, Clone)]
-    struct UserContext {
-        username: String,
-        token: String,
-        cookie: String,
+    pub struct UserContext {
+        pub username: String,
+        pub token: String,
+        pub cookie: String,
     }
 
     impl UserContext {
@@ -73,14 +77,20 @@ pub mod mainapp {
     #[derive(Debug)]
     pub struct AppState {
         // questions: Questions,
-        input_text: String,
-        client: Client,
+        pub input_text: String,
+        pub client: Client,
         // surveys: Vec<Survey>,
-        surveys: Vec<SurveyDto>,
-        curr_survey: SurveyDto,
-        user: Option<UserContext>,
+        pub surveys: Vec<SurveyDto>,
+        pub curr_survey: SurveyDto,
+        pub user: Option<UserContext>,
         // auth_token: String,
         pub show_login: bool,
+    }
+
+    impl AppState {
+        fn set_user(&mut self, user: UserContext) {
+            self.user = Some(user);
+        }
     }
 
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -96,7 +106,7 @@ pub mod mainapp {
     }
 
     #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    struct SurveyDto {
+    pub struct SurveyDto {
         id: String,
         nanoid: String,
         plaintext: String,
@@ -210,7 +220,7 @@ pub mod mainapp {
                     // let t = Timeou
                     info!("Attempting to save questions...");
                     // info!("Questions save: {:?}", question_state);
-                    match client
+                    match app_state.client
                         .post("http://localhost:3000/surveys")
                         .json(&CreateSurvey {
                             plaintext: editor_state.get().clone(),
@@ -260,7 +270,8 @@ pub mod mainapp {
                 if app_state.user.is_none() {
                     info!("user token is not set");
                 }
-                let token  = app_state.user.clone().unwrap().token;
+                let mut token  = app_state.user.clone().unwrap().token;
+                token = token.trim_matches('"').to_string();
                 async move {
                     info!("Attempting to save questions...");
                     info!("Publishing content, app_state: {app_state:?}");

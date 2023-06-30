@@ -26,14 +26,19 @@ pub async fn mw_ctx_resolver<B>(
     const AUTH_TOKEN: &str = "x-auth-token";
     let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
 
+    info!("Checking for auth token in headers");
     // todo: actually validate the auth token
     let result_ctx = match auth_token
         .ok_or(ServerError::AuthFailNoTokenCookie)
         .and_then(parse_token)
     {
-        Ok(token) => validate_jwt_claim(token),
+        Ok(token) => {
+            info!("Auth token was found, validating...");
+            validate_jwt_claim(token)
+        }
         Err(e) => Err(e),
     };
+    info!("Checking if claim is correct");
 
     // Remove the cookie if something went wrong other than NoAuthTokenCookie.
     if result_ctx.is_err() && !matches!(result_ctx, Err(ServerError::AuthFailNoTokenCookie)) {
@@ -141,8 +146,14 @@ fn validate_jwt_claim(
     let decode_key = DecodingKey::from_secret(key);
     let decode_result =
         match decode::<Claims>(&jwt_token, &decode_key, &Validation::new(Algorithm::HS256)) {
-            Ok(x) => x.claims,
-            Err(e) => return Err(ServerError::AuthFailTokenNotVerified(e.to_string())),
+            Ok(x) => {
+                info!("jwt was decoded properly");
+                x.claims
+            }
+            Err(e) => {
+                info!("jwt was NOT decoded properly");
+                return Err(ServerError::AuthFailTokenNotVerified(e.to_string()));
+            }
         };
     return Ok(decode_result);
 }

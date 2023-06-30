@@ -15,3 +15,11 @@ cargo run
 cargo test
 
 cargo watch -- cargo run
+
+
+
+
+## Database
+
+sqlx migrate revert
+sqlx migrate run

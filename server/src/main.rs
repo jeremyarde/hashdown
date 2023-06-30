@@ -480,7 +480,7 @@ mod tests {
             .header(ContentType::TEXT_PLAIN)
             .body(String::from("Be happy!"))
             .unwrap();
-        // openssl s_client -crlf -quiet -starttls smtp -connect email-smtp.us-west-2.amazonaws.com:587
+
         let creds = Credentials::new(
             dotenvy::var("SMTP_USERNAME").expect("smtp username should be set"),
             dotenvy::var("SMTP_PASSWORD").expect("smtp password should be set"),

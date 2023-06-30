@@ -30,6 +30,17 @@ CREATE TABLE answers (
     created_at TEXT
 );
 
+create table pageviews (
+    id serial primary key,
+    page_url TEXT not null,
+    timestamp timestamp not null default CURRENT_TIMESTAMP,
+    user_id integer,
+    device text,
+    referrer text,
+    ip_address TEXT,
+    user_agent TEXT
+);
+
 INSERT INTO surveys (plaintext, user_id)
 VALUES (
         '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
