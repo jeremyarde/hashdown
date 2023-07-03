@@ -596,10 +596,6 @@ pub mod mainapp {
                         },
                         "login"
                     }
-                    a {
-                        href: "/login",
-                        "login link"
-                    }
                     button {
                         class: "navbar-signup",
                         onclick: move |evt| {

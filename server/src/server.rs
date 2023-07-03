@@ -22,7 +22,9 @@ use tower_http::{
 
 // use crate::answer::post_answer;
 use crate::{
+    config::EnvConfig,
     db,
+    mail::mail::Mailer,
     routes::routes::{
         create_survey,
         get_routes,
@@ -76,14 +78,21 @@ impl ServerApplication {
         let db = Database::new(in_memory, uri)
             .await
             .expect("Database was not created. Probably an error in the migrations.");
-        let state = ServerState { db: db };
+        let state = ServerState {
+            db: db,
+            mail: Mailer::new(),
+            config: EnvConfig::new(),
+        };
 
-        let origins = [
-            "http://localhost:3000".parse().unwrap(),
-            "http://localhost:3001".parse().unwrap(),
-            "http://localhost:8080".parse().unwrap(),
-            // "http://api.example.com".parse().unwrap(),
-        ];
+        let mut origins = vec![];
+        if state.config.is_dev() {
+            origins.append(&mut vec![
+                "http://localhost:3000".parse().unwrap(),
+                "http://localhost:3001".parse().unwrap(),
+                "http://localhost:8080".parse().unwrap(),
+                // "http://api.example.com".parse().unwrap(),
+            ]);
+        }
         let corslayer = CorsLayer::new()
             .allow_methods([Method::POST, Method::GET])
             .allow_headers([

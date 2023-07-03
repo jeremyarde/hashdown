@@ -1,7 +1,9 @@
 use axum::http::StatusCode;
+use config::EnvConfig;
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
 
+use crate::mail::mail::Mailer;
 use dotenvy::dotenv;
 use tokio::try_join;
 use tracing::{instrument, log::info};
@@ -15,9 +17,11 @@ use tracing::{instrument, log::info};
 // use tower::http
 
 use crate::server::ServerApplication;
+
 // mod answer;
 // mod db;
 mod auth;
+mod config;
 mod db;
 mod log;
 mod mware;
@@ -27,6 +31,7 @@ use anyhow;
 use db::database::Database;
 
 mod error;
+mod mail;
 mod routes;
 
 pub use self::{error::ServerError, routes::*};
@@ -34,6 +39,8 @@ pub use self::{error::ServerError, routes::*};
 #[derive(Debug, Clone)]
 pub struct ServerState {
     db: Database,
+    mail: Mailer,
+    config: EnvConfig,
 }
 
 #[tokio::main]
@@ -469,7 +476,6 @@ mod tests {
         use lettre::{Message, SmtpTransport, Transport};
         let from_email = "Test FROM <test@jeremyarde.com>";
         let to_email = "Test TO <test@jeremyarde.com>";
-        // let smtp_server = "email-smtp.us-west-2.amazonaws.com:587";
         let smtp_server = "email-smtp.us-east-1.amazonaws.com";
 
         let email = Message::builder()
