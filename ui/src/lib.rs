@@ -225,7 +225,7 @@ pub mod mainapp {
                         .json(&CreateSurvey {
                             plaintext: editor_state.get().clone(),
                         })
-                        .bearer_auth(token)
+                        // .bearer_auth(token)
                         .send()
                         .await
                     {
@@ -279,7 +279,7 @@ pub mod mainapp {
                     match client
                         .post("http://localhost:3000/surveys")
                         .json(&CreateSurvey { plaintext: content })
-                        .bearer_auth(token.clone())
+                        // .bearer_auth(token.clone())
                         .header("x-auth-token", token)
                         .send()
                         .await

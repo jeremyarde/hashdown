@@ -29,7 +29,7 @@ pub mod routes {
     // use reqwest::header;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
-    use tower_cookies::{Cookie, Cookies};
+    // use tower_cookies::{Cookie, Cookies};
     use tracing::log::info;
     // use uuid::Uuid;
     // use sqlx::{Sqlite, SqlitePool};
@@ -56,7 +56,13 @@ pub mod routes {
         log::log_request,
         mware::{
             self,
-            ctext::{create_jwt_claim, mw_ctx_resolver, Ctext},
+            ctext::{
+                create_jwt_claim,
+                create_jwt_token,
+                // mw_ctx_resolver,
+                Claims,
+                Ctext,
+            },
         },
         server::CreateSurveyResponse,
         ServerError, ServerState,
@@ -78,19 +84,19 @@ pub mod routes {
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             .route("/surveys/:id", get(get_survey))
             // .route(&format!("/surveys/test"), post(test_survey))
-            .route(&format!("/login"), post(login))
+            .route(&format!("/login"), post(authorize))
             .route("/signup", post(signup))
             // .with_state(state.clone())
             // .route_layer(middleware::from_fn_with_state(
             //     state.clone(),
             //     mw_ctx_resolver,
             // ))
-            .layer(middleware::from_fn_with_state(
-                state.clone(),
-                mw_ctx_resolver,
-            ))
+            // .layer(middleware::from_fn_with_state(
+            //     state.clone(),
+            //     mw_ctx_resolver,
+            // ))
             .layer(middleware::map_response(main_response_mapper))
-            .layer(middleware::from_fn(propagate_header))
+            // .layer(middleware::from_fn(propagate_header))
             .with_state(state);
         // .layer(Extension(state));
         // .with_state(state);
@@ -101,14 +107,8 @@ pub mod routes {
     async fn propagate_header<B>(req: Request<B>, next: Next<B>) -> Response {
         // let header = req.headers().get("something").expect(msg);
         let mut res = next.run(req).await;
-        res.headers_mut()
-            .insert("x-customkey", HeaderValue::from_str("header").unwrap());
-        res.headers_mut()
-            .insert("x-asdfcustomkey", HeaderValue::from_str("header").unwrap());
-        res.headers_mut().insert(
-            "x-asdfasdfcustomkey",
-            HeaderValue::from_str("header").unwrap(),
-        );
+        // res.headers_mut()
+        //     .insert("x-customkey", HeaderValue::from_str("header").unwrap());
         res
     }
 
@@ -136,7 +136,7 @@ pub mod routes {
                     }
                 });
 
-                println!("    ->> client_error_body: {client_error_body}");
+                info!("    ->> client_error_body: {client_error_body}");
 
                 // Build the new response from the client_error_body
                 (*status_code, Json(client_error_body)).into_response()
@@ -148,7 +148,7 @@ pub mod routes {
             .await
             .unwrap();
 
-        println!();
+        info!("Mapped response, returning...");
         error_response.unwrap_or(res)
     }
 
@@ -202,9 +202,13 @@ pub mod routes {
             .unwrap();
 
         let insert_result = state.db.create_survey(survey_model).await.unwrap();
-        let response = CreateSurveyResponse { survey: new_survey };
 
-        return Ok(Json(json!(response)));
+        info!("     ->> Inserted survey: {:?}", new_survey);
+        // let response = CreateSurveyResponse { survey: new_survey };
+
+        // return Ok(json!(response));
+
+        return Ok(Json(json!({ "survey": new_survey })));
     }
 
     #[tracing::instrument]
@@ -353,7 +357,7 @@ pub mod routes {
     }
 
     pub async fn signup(
-        cookies: Cookies,
+        // cookies: Cookies,
         // ctx: Option<Ctext>,
         state: State<ServerState>,
         payload: Json<LoginPayload>,
@@ -388,38 +392,43 @@ pub mod routes {
             Ok(user) => user,
             Err(e) => {
                 println!("Could not create user, error in database: {e}");
-                return Err(ServerError::LoginFail);
+                return Err(ServerError::WrongCredentials);
             }
         };
 
         let jwt_claim = create_jwt_claim(user.email.clone(), "somerole-pleasechange")?;
-        let auth_cookie = Cookie::build("x-auth-token", jwt_claim.token.clone())
-            // .domain("localhost")
-            .same_site(tower_cookies::cookie::SameSite::Strict)
-            .expires(
-                tower_cookies::cookie::time::OffsetDateTime::from_unix_timestamp(
-                    jwt_claim.expires as i64,
-                )
-                .unwrap(),
-            )
-            .secure(true)
-            .http_only(true)
-            .finish();
-        cookies.add(auth_cookie);
+
+        // let auth_cookie = Cookie::build("x-auth-token", jwt_claim.token.clone())
+        //     // .domain("localhost")
+        //     .same_site(tower_cookies::cookie::SameSite::Strict)
+        //     .expires(
+        //         tower_cookies::cookie::time::OffsetDateTime::from_unix_timestamp(
+        //             jwt_claim.expires as i64,
+        //         )
+        //         .unwrap(),
+        //     )
+        //     .secure(true)
+        //     .http_only(true)
+        //     .finish();
+        // cookies.add(auth_cookie);
 
         return Ok(Json(
             json!({"email": user.email, "auth_token": jwt_claim.token}),
         ));
     }
 
-    pub async fn login(
-        cookies: Cookies,
+    pub async fn authorize(
+        // cookies: Cookies,
         // ctx: Result<Ctext, CustomError>,
         state: State<ServerState>,
         payload: Json<LoginPayload>,
     ) -> anyhow::Result<Json<Value>, ServerError> {
         info!("->> api_login");
         info!("Payload: {payload:#?}");
+
+        if payload.email.is_empty() || payload.password.is_empty() {
+            return Err(ServerError::MissingCredentials);
+        }
 
         // look for email in database
         let user = match state
@@ -431,11 +440,11 @@ pub mod routes {
             Ok(x) => x,
             Err(_) => {
                 info!("Did not find user in database");
-                return Err(ServerError::LoginFail);
+                return Err(ServerError::WrongCredentials);
             }
         };
 
-        // let password = "mypassword";
+        // check if password matches
         let argon2 = argon2::Argon2::default();
         // let salt = SaltString::generate(OsRng);
         // let hash: PasswordHash = argon2.hash_password(password.as_bytes(), &salt).unwrap();
@@ -448,21 +457,24 @@ pub mod routes {
             Ok(_) => true,
             Err(_) => return Err(ServerError::AuthPasswordsDoNotMatch),
         };
-        println!("password matches={is_correct}");
+        println!("      ->> password matches={is_correct}");
         // login and check database
         // match validate_credentials("passwordhash", payload.password) {};
 
         // start building token
-        let jwt = create_jwt_claim(user.email, "randomrole- please update")?;
+        // let jwt = create_jwt_claim(user.email, "randomrole- please update")?;
 
         // TODO: set cookies
-        cookies.add(Cookie::new("x-auth-token", jwt.token.clone()));
+        // cookies.add(Cookie::new("x-auth-token", jwt.token.clone()));
+        let jwt = create_jwt_token(user)?;
 
         // TODO: create success body
         let username = payload.email.clone();
         let logged_in = true;
+
+        info!("     ->> Success logging in");
         Ok(Json(
-            json!({"result": logged_in, "username": username, "auth_token": jwt.token}),
+            json!({"result": logged_in, "username": username, "auth_token": jwt}),
         ))
     }
 }

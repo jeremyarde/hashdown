@@ -182,6 +182,7 @@ impl Database {
         info!("Found user");
         let result = UserModel::from_row(&row_result).expect("Could not turn row into user model");
 
+        info!("Successfully found user");
         return Ok(result);
     }
 

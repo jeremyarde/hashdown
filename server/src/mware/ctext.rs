@@ -9,47 +9,78 @@ use axum::{
 };
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
-use tower_cookies::{Cookie, Cookies};
+// use tower_cookies::{Cookie, Cookies};
+use once_cell::sync::Lazy;
 use tower_http::auth;
 use tracing::log::info;
 
-use crate::{ServerError, ServerState};
+use crate::{db, ServerError, ServerState};
 
-pub async fn mw_ctx_resolver<B>(
-    _state: State<ServerState>,
-    cookies: Cookies,
-    mut req: Request<B>,
-    next: Next<B>,
-) -> Result<Response, ServerError> {
-    println!("->> {:<12} - mw_ctx_resolver", "MIDDLEWARE");
-
-    const AUTH_TOKEN: &str = "x-auth-token";
-    let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
-
-    info!("Checking for auth token in headers");
-    // todo: actually validate the auth token
-    let result_ctx = match auth_token
-        .ok_or(ServerError::AuthFailNoTokenCookie)
-        .and_then(parse_token)
-    {
-        Ok(token) => {
-            info!("Auth token was found, validating...");
-            validate_jwt_claim(token)
-        }
-        Err(e) => Err(e),
-    };
-    info!("Checking if claim is correct");
-
-    // Remove the cookie if something went wrong other than NoAuthTokenCookie.
-    if result_ctx.is_err() && !matches!(result_ctx, Err(ServerError::AuthFailNoTokenCookie)) {
-        cookies.remove(Cookie::named(AUTH_TOKEN))
-    }
-
-    // Store the ctx_result in the request extension.
-    req.extensions_mut().insert(result_ctx);
-
-    Ok(next.run(req).await)
+struct Keys {
+    encoding: EncodingKey,
+    decoding: DecodingKey,
 }
+
+impl Keys {
+    fn new(secret: &[u8]) -> Self {
+        Self {
+            encoding: EncodingKey::from_secret(secret),
+            decoding: DecodingKey::from_secret(secret),
+        }
+    }
+}
+
+pub const AUTH_TOKEN: &str = "x-auth-token";
+
+static KEYS: Lazy<Keys> = Lazy::new(|| {
+    let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    Keys::new(secret.as_bytes())
+});
+
+// pub async fn mw_ctx_resolver<B>(
+//     _state: State<ServerState>,
+//     // cookies: Cookies,
+//     headers: HeaderMap,
+//     mut req: Request<B>,
+//     next: Next<B>,
+// ) -> Result<Response, ServerError> {
+//     println!("->> {:<12} - mw_ctx_resolver", "MIDDLEWARE");
+//     // const AUTH_TOKEN: &str = "x-auth-token";
+//     // let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string())
+
+//     info!("Checking for auth token in headers");
+//     // todo: actually validate the auth token
+//     // let result_ctx = match headers
+//     //     .get(AUTH_TOKEN)
+//     //     .ok_or(ServerError::AuthFailNoTokenCookie)
+//     //     .and_then(|x| parse_token(x.to_owned()))
+//     // {
+//     //     Ok(token) => {
+//     //         info!("Auth token was found, validating...");
+//     //         validate_jwt_claim(token)
+//     //     }
+//     //     Err(e) => Err(e),
+//     // };
+//     let auth_token = match headers.get("x-auth-token") {
+//         Some(x) => x.to_str().expect("Auth token was not a string").to_string(),
+//         None => "".to_string(),
+//     };
+
+//     if auth_token == "".to_string() {
+//         return Err(ServerError::AuthFailNoTokenCookie);
+//     }
+
+//     // let auth_token = cookies.get("x-auth-token").map(|c| c.value().to_string());
+//     // let jwt = auth_token.ok_or(ServerError::AuthFailNoTokenCookie)?;
+//     let jwt_claim = validate_jwt_claim(auth_token)?;
+
+//     let context = Ctext::new(jwt_claim.uid);
+
+//     // Store the ctx_result in the request extension.
+//     req.extensions_mut().insert(context);
+
+//     Ok(next.run(req).await)
+// }
 
 #[async_trait]
 impl<S: Send + Sync> FromRequestParts<S> for Ctext {
@@ -62,34 +93,14 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctext {
     ) -> Result<Self, ServerError> {
         info!("->> from_request_parts");
 
-        let cookies = match parts.extract::<Cookies>().await {
-            Ok(x) => {
-                info!("found cookies");
-                let token = x.get("x-auth-token").map(|c| c.value().to_string());
-                token
-            }
-            Err((status, err)) => {
-                info!(
-                    "No cookies found. Looking in headers now. Status: {status:?}, Error: {err:?}"
-                );
-                None
-            }
-        };
+        let headers = parts
+            .extract::<HeaderMap>()
+            .await
+            .expect("Could not extract headers");
 
-        info!("After cookies");
-        let auth_token = match cookies {
-            Some(x) => x,
-            None => {
-                let headers = parts
-                    .extract::<HeaderMap>()
-                    .await
-                    .expect("Could not extract headers");
-
-                match headers.get("x-auth-token") {
-                    Some(x) => x.to_str().expect("Auth token was not a string").to_string(),
-                    None => "".to_string(),
-                }
-            }
+        let auth_token = match headers.get("x-auth-token") {
+            Some(x) => x.to_str().expect("Auth token was not a string").to_string(),
+            None => "".to_string(),
         };
 
         if auth_token == "".to_string() {
@@ -116,7 +127,7 @@ fn parse_token(token: String) -> Result<String, ServerError> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Claims {
+pub struct Claims {
     sub: String, // subject
     exp: usize,  // expire
     iat: usize,  // issued at
@@ -133,6 +144,18 @@ pub struct JwtResult {
     pub token: String,
     pub expires: usize,
 }
+// #[derive(Debug, Serialize, Deserialize)]
+// struct Claims {
+//     sub: String, // subject
+//     exp: usize,  // expire
+//     iat: usize,  // issued at
+//     // iss: String, // issuer
+//     // aud: String, // audience
+//     uid: String,  // customer - user_id
+//     role: String, // custom - role of the user
+//     nbf: usize,   // not before
+//     tenant: String,
+// }
 
 #[tracing::instrument]
 fn validate_jwt_claim(
@@ -142,8 +165,8 @@ fn validate_jwt_claim(
 ) -> anyhow::Result<Claims, ServerError> {
     info!("->> validate_jwt_claim");
 
-    let key = b"privatekey";
-    let decode_key = DecodingKey::from_secret(key);
+    // let key = b"privatekey";
+    let decode_key = &KEYS.decoding;
     let decode_result =
         match decode::<Claims>(&jwt_token, &decode_key, &Validation::new(Algorithm::HS256)) {
             Ok(x) => {
@@ -166,13 +189,6 @@ pub fn create_jwt_claim(
     role: &str, // jwt_token: String,
 ) -> anyhow::Result<JwtResult, ServerError> {
     info!("->> create_jwt_claim");
-    let key = b"privatekey";
-    // let decode_key = DecodingKey::from_secret(key);
-    // let decode_result =
-    //     match decode::<Claims>(&jwt_token, &decode_key, &Validation::new(Algorithm::HS256)) {
-    //         Ok(x) => x.claims,
-    //         Err(e) => return Err(ServerError::AuthFailTokenNotVerified(e.to_string())),
-    //     };
 
     let nowutc = chrono::Utc::now();
     let now: usize = match nowutc
@@ -181,14 +197,14 @@ pub fn create_jwt_claim(
         .with_context(|| "Could not turn time into timestamp")
     {
         Ok(x) => x,
-        Err(e) => return Err(ServerError::LoginFail),
+        Err(e) => return Err(ServerError::WrongCredentials),
     };
     let expire: usize = match (nowutc + chrono::Duration::minutes(5))
         .timestamp()
         .try_into()
     {
         Ok(x) => x,
-        Err(e) => return Err(ServerError::LoginFail),
+        Err(e) => return Err(ServerError::WrongCredentials),
     };
 
     let claim = Claims {
@@ -202,7 +218,7 @@ pub fn create_jwt_claim(
     };
 
     // return Ok(claim);
-    let jwt = match encode(&Header::default(), &claim, &EncodingKey::from_secret(key)) {
+    let jwt = match encode(&Header::default(), &claim, &KEYS.encoding) {
         Ok(t) => t,
         Err(_) => {
             return Err(ServerError::BadRequest(
@@ -231,4 +247,35 @@ impl Ctext {
     pub fn new(user_id: String) -> Self {
         return Ctext { user_id };
     }
+}
+
+pub fn create_jwt_token(user: db::database::UserModel) -> Result<String, ServerError> {
+    let nowutc = chrono::Utc::now();
+    let now: usize = match nowutc
+        .timestamp()
+        .try_into()
+        .with_context(|| "Could not turn time into timestamp")
+    {
+        Ok(x) => x,
+        Err(e) => return Err(ServerError::WrongCredentials),
+    };
+    let expire: usize = match (nowutc + chrono::Duration::minutes(5))
+        .timestamp()
+        .try_into()
+    {
+        Ok(x) => x,
+        Err(e) => return Err(ServerError::WrongCredentials),
+    };
+    let claims = Claims {
+        sub: "myemailsub@email.com".to_string(),
+        exp: expire,
+        iat: now,
+        uid: user.id.to_string(),
+        nbf: now,
+        tenant: "".to_string(),
+        role: "".to_owned(),
+    };
+    let jwt = encode(&Header::default(), &claims, &KEYS.encoding)
+        .map_err(|_| ServerError::AuthTokenCreationFail)?;
+    Ok(jwt)
 }

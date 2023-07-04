@@ -53,8 +53,7 @@ pub async fn log_request(
         error_data,
     };
 
-    println!("request log line: {:?}", log_line);
+    println!("      ->> request log line: {:?}", log_line);
 
-    // todo: send to logging service
     Ok(())
 }

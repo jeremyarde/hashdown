@@ -9,7 +9,7 @@ use db::database::Database;
 use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey, SurveyBuilder};
 
 use tokio::{fs, task::JoinHandle};
-use tower_cookies::CookieManagerLayer;
+
 use tracing::log::info;
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
@@ -26,11 +26,11 @@ use crate::{
     db,
     mail::mail::Mailer,
     routes::routes::{
+        authorize,
         create_survey,
         get_routes,
         get_survey,
         list_survey,
-        login,
         submit_survey,
         // test_survey,
     },
@@ -85,6 +85,7 @@ impl ServerApplication {
         };
 
         let mut origins = vec![];
+        info!("Starting app in stage={:?}", state.config.stage);
         if state.config.is_dev() {
             origins.append(&mut vec![
                 "http://localhost:3000".parse().unwrap(),
@@ -98,16 +99,12 @@ impl ServerApplication {
             .allow_headers([
                 http::header::CONTENT_TYPE,
                 http::header::ACCEPT,
-                http::header::AUTHORIZATION,
+                // http::header::AUTHORIZATION,
                 HeaderName::from_static("x-auth-token"),
             ])
             // .allow_headers(Any)
             .allow_credentials(true)
             .allow_origin(origins);
-
-        // let corslayer = CorsLayer::new().allow_headers(Any);
-
-        // let static_dir = "./dist";
 
         // build our application with a route
         let app = Router::new()
@@ -117,7 +114,7 @@ impl ServerApplication {
             .merge(get_routes(state).unwrap())
             // .layer(Extension(state))
             // .layer(middleware::map_response(main_response_mapper))
-            .layer(CookieManagerLayer::new())
+            // .layer(CookieManagerLayer::new())
             // .layer(CorsLayer::very_permissive())
             .layer(corslayer)
             // .with_state(state)

@@ -12,10 +12,12 @@ pub enum ServerError {
     Database(String),
 
     // Auth
+    MissingCredentials,
     UserAlreadyExists,
-    LoginFail,
+    WrongCredentials,
     AuthPasswordsDoNotMatch,
     AuthFailNoTokenCookie,
+    AuthTokenCreationFail,
     PasswordDoesNotMatch,
     AuthFailTokenNotVerified(String),
 }

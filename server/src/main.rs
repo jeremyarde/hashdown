@@ -85,14 +85,19 @@ mod tests {
 
     use crate::{
         db,
+        mware::ctext::AUTH_TOKEN,
         routes::routes::{ListSurveyResponse, LoginPayload},
         server::CreateSurveyResponse,
         ServerApplication,
     };
 
+    fn setup_environment() {
+        dotenvy::from_filename("./server/.env").unwrap();
+    }
+
     async fn get_client() -> Client {
         let mut headers = HeaderMap::new();
-        headers.insert("x-user-id", HeaderValue::from_static("testuser"));
+        // headers.insert("x-", HeaderValue::from_static("testuser"));
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
         let client = reqwest::Client::builder()
@@ -105,7 +110,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn list_survey_test() {
-        dotenvy::from_filename("./server/.env").unwrap();
+        // dotenvy::from_filename("./server/.env").unwrap();
+        setup_environment();
 
         let app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
@@ -163,7 +169,8 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn create_survey_test() {
-        dotenvy::from_filename("./server/.env").unwrap();
+        setup_environment();
+        // dotenvy::from_filename("./server/.env").unwrap();
 
         let _app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
@@ -176,7 +183,7 @@ mod tests {
 
         let auth_token = get_auth_token(&client).await;
 
-        let client_url = format!("http://{}{}", "localhost:8080", "/surveys");
+        let client_url = format!("http://{}{}", "localhost:3000", "/surveys");
         // let client_url = format!("/surveys");
 
         println!("Client sending to: {client_url}");
@@ -200,41 +207,15 @@ mod tests {
 
     #[tokio::test]
     #[serial]
-    async fn test_survey_test() {
-        let _app = ServerApplication::new().await;
-        let mut router = ServerApplication::get_router().await;
-        router.ready().await.unwrap();
-
-        let client = get_client().await;
-        let client_url = format!("http://{}{}", "localhost:8080", "/surveys/test");
-
-        println!("Client sending to: {client_url}");
-
-        let request_test = "- test question\n - this one";
-        let response = client
-            .post(&client_url)
-            .json(&CreateSurveyRequest {
-                plaintext: request_test.to_string(),
-            })
-            .send()
-            .await
-            .unwrap();
-
-        let results: ParsedSurvey = response.json().await.unwrap();
-
-        assert_eq!(results.plaintext, request_test);
-        assert_eq!(results.questions[0].value, "test question");
-    }
-
-    #[tokio::test]
-    #[serial]
     async fn create_answer_test() {
+        todo!("Submit not implemented yet");
+        setup_environment();
         let _app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
         router.ready().await.unwrap();
 
         let client = get_client().await;
-        let client_url = format!("http://{}{}", "localhost:8080", "/submit");
+        let client_url = format!("http://{}{}", "localhost:3000", "/submit");
 
         println!("Client sending to: {client_url}");
 
@@ -267,16 +248,19 @@ mod tests {
 
         // assert!();
     }
+
     #[tokio::test]
     #[serial]
     async fn login_test() {
+        setup_environment();
+
         let _app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
         router.ready().await.unwrap();
 
         let url = "/login";
         let client = get_client().await;
-        let client_url = format!("http://{}{}", "localhost:8080", url);
+        let client_url = format!("http://{}{}", "localhost:3000", url);
 
         println!("Sending req to: {client_url}");
 
@@ -308,13 +292,8 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn signup_test() {
-        // for debug, tests run in workspace folder, so dotenvy does not work
-        match std::env::current_dir().unwrap().ends_with("server") {
-            true => {}
-            false => {
-                std::env::set_current_dir("./server").unwrap();
-            }
-        }
+        setup_environment();
+
         println!("=== Signup testing");
         let _app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
@@ -323,7 +302,7 @@ mod tests {
         let client = get_client().await;
 
         let url = "/signup";
-        let client_url = format!("http://{}{}", "localhost:8080", url);
+        let client_url = format!("http://{}{}", "localhost:3000", url);
 
         println!("Sending req to: {client_url}");
 
@@ -349,7 +328,7 @@ mod tests {
 
         // attempt to login
         let url = "/login";
-        let client_url = format!("http://{}{}", "localhost:8080", url);
+        let client_url = format!("http://{}{}", "localhost:3000", url);
 
         println!("Sending req to: {client_url}");
 
@@ -391,11 +370,11 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn test_client_only() {
-        dotenvy::from_filename("./server/.env").unwrap();
+        setup_environment();
 
         let client = get_client().await;
 
-        let client_url = format!("http://{}{}", "localhost:8080", "/surveys");
+        let client_url = format!("http://{}{}", "localhost:3000", "/surveys");
 
         println!("Client sending to: {client_url}");
 
@@ -431,7 +410,7 @@ mod tests {
     async fn get_auth_token(client: &Client) -> String {
         // Login
         let url = "/signup";
-        let client_url = format!("http://{}{}", "localhost:8080", url);
+        let client_url = format!("http://{}{}", "localhost:3000", url);
 
         println!("Sending req to: {client_url}");
 
@@ -449,60 +428,53 @@ mod tests {
 
         println!("Response after logging in:");
         dbg!(&response);
-
-        let cookie = response
-            .headers()
-            .get("set-cookie")
-            .expect("Cookie is available in headers");
-        let auth_header = cookie
-            .to_str()
-            .expect("Converting cookie to string")
-            .to_string();
-        let auth_token = auth_header
-            .split("=")
-            .nth(1)
-            .expect("Split auth on '='")
+        let auth_token = response
+            .json::<Value>()
+            .await
+            .expect("Auth token to json broken.")
+            .get("auth_token")
+            .expect("Auth token was not found in response")
             .to_string();
 
         return auth_token;
     }
 
-    #[test]
-    fn test_email() {
-        dotenvy::from_filename("./server/.env").unwrap();
+    // #[test]
+    // fn test_email() {
+    //     dotenvy::from_filename("./server/.env").unwrap();
 
-        use lettre::message::header::ContentType;
-        use lettre::transport::smtp::authentication::Credentials;
-        use lettre::{Message, SmtpTransport, Transport};
-        let from_email = "Test FROM <test@jeremyarde.com>";
-        let to_email = "Test TO <test@jeremyarde.com>";
-        let smtp_server = "email-smtp.us-east-1.amazonaws.com";
+    //     use lettre::message::header::ContentType;
+    //     use lettre::transport::smtp::authentication::Credentials;
+    //     use lettre::{Message, SmtpTransport, Transport};
+    //     let from_email = "Test FROM <test@jeremyarde.com>";
+    //     let to_email = "Test TO <test@jeremyarde.com>";
+    //     let smtp_server = "email-smtp.us-east-1.amazonaws.com";
 
-        let email = Message::builder()
-            .from(from_email.parse().unwrap())
-            // .reply_to("Yuin <yuin@domain.tld>".parse().unwrap())
-            .to(to_email.parse().unwrap())
-            .subject("Test email")
-            .header(ContentType::TEXT_PLAIN)
-            .body(String::from("Be happy!"))
-            .unwrap();
+    //     let email = Message::builder()
+    //         .from(from_email.parse().unwrap())
+    //         // .reply_to("Yuin <yuin@domain.tld>".parse().unwrap())
+    //         .to(to_email.parse().unwrap())
+    //         .subject("Test email")
+    //         .header(ContentType::TEXT_PLAIN)
+    //         .body(String::from("Be happy!"))
+    //         .unwrap();
 
-        let creds = Credentials::new(
-            dotenvy::var("SMTP_USERNAME").expect("smtp username should be set"),
-            dotenvy::var("SMTP_PASSWORD").expect("smtp password should be set"),
-        );
+    //     let creds = Credentials::new(
+    //         dotenvy::var("SMTP_USERNAME").expect("smtp username should be set"),
+    //         dotenvy::var("SMTP_PASSWORD").expect("smtp password should be set"),
+    //     );
 
-        // Open a remote connection to gmail
-        let mailer = SmtpTransport::relay(smtp_server)
-            .unwrap()
-            .credentials(creds)
-            // .tls(Tls::Wrapper(TlsParameters::builder(domain)))
-            .build();
+    //     // Open a remote connection to gmail
+    //     let mailer = SmtpTransport::relay(smtp_server)
+    //         .unwrap()
+    //         .credentials(creds)
+    //         // .tls(Tls::Wrapper(TlsParameters::builder(domain)))
+    //         .build();
 
-        // Send the email
-        match mailer.send(&email) {
-            Ok(_) => println!("Email sent successfully!"),
-            Err(e) => panic!("Could not send email: {e:?}"),
-        }
-    }
+    //     // Send the email
+    //     match mailer.send(&email) {
+    //         Ok(_) => println!("Email sent successfully!"),
+    //         Err(e) => panic!("Could not send email: {e:?}"),
+    //     }
+    // }
 }
