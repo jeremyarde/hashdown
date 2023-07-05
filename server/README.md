@@ -23,3 +23,12 @@ cargo watch -- cargo run
 
 sqlx migrate revert
 sqlx migrate run
+
+
+## TODO
+
+- [ ] Submitting survey
+- [ ] login
+  - [ ] email links for logging in?
+  - [ ] verifying users with email
+- [ ] data models for everything

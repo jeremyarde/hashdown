@@ -446,11 +446,6 @@ pub mod routes {
 
         // check if password matches
         let argon2 = argon2::Argon2::default();
-        // let salt = SaltString::generate(OsRng);
-        // let hash: PasswordHash = argon2.hash_password(password.as_bytes(), &salt).unwrap();
-        // let password_hash_string = hash.to_string();
-        // PasswordHash::generate(phf, password, salt)
-        // let hash = PasswordHash::new(&password_hash_string).unwrap();
 
         let hash = PasswordHash::new(&user.password_hash).unwrap();
         let is_correct = match argon2.verify_password(&payload.password.as_bytes(), &hash) {
@@ -458,14 +453,6 @@ pub mod routes {
             Err(_) => return Err(ServerError::AuthPasswordsDoNotMatch),
         };
         println!("      ->> password matches={is_correct}");
-        // login and check database
-        // match validate_credentials("passwordhash", payload.password) {};
-
-        // start building token
-        // let jwt = create_jwt_claim(user.email, "randomrole- please update")?;
-
-        // TODO: set cookies
-        // cookies.add(Cookie::new("x-auth-token", jwt.token.clone()));
         let jwt = create_jwt_token(user)?;
 
         // TODO: create success body

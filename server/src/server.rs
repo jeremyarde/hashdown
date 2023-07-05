@@ -23,7 +23,7 @@ use tower_http::{
 // use crate::answer::post_answer;
 use crate::{
     config::EnvConfig,
-    db,
+    db::{self, database::ConnectionDetails},
     mail::mail::Mailer,
     routes::routes::{
         authorize,
@@ -74,8 +74,8 @@ impl ServerApplication {
         };
 
         let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
-
-        let db = Database::new(in_memory, uri)
+        let db_url = ConnectionDetails(uri);
+        let db = Database::new(in_memory, db_url)
             .await
             .expect("Database was not created. Probably an error in the migrations.");
         let state = ServerState {

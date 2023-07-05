@@ -1,4 +1,8 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{
+    collections::HashMap,
+    fmt::{self, Display},
+    str::FromStr,
+};
 
 use anyhow::{self, Context};
 
@@ -33,6 +37,9 @@ pub struct Database {
     pub settings: Settings,
 }
 
+#[derive()]
+pub struct ConnectionDetails(pub String);
+
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Settings {
     pub base_path: Option<String>,
@@ -48,14 +55,32 @@ impl Settings {
     }
 }
 
+impl fmt::Display for ConnectionDetails {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let databasetype = self.0.split("://").nth(0);
+        match databasetype {
+            Some(x) => write!(f, "DB: {}", x),
+            None => write!(f, "DB: {}", &"Not sure DB type"),
+        }
+    }
+}
+
+impl fmt::Debug for ConnectionDetails {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DBConnection")
+            .field("type", &self.0.split("://").nth(0))
+            .finish()
+    }
+}
+
 // pub type InsertTodosRequest = Vec<todo::TodoModel>;
 
 impl Database {
     #[instrument]
-    pub async fn new(in_memory: bool, database_url: String) -> anyhow::Result<Self> {
+    pub async fn new(in_memory: bool, database_url: ConnectionDetails) -> anyhow::Result<Self> {
         // println!("{:?}", std::env::current_dir()); //Ok("/Users/jarde/Documents/code/markdownparser/server")
         // let database_url = dotenvy::var("DATABASE_URL")?;
-
+        let database_url = database_url.0;
         let pool = match in_memory {
             true => {
                 info!("Creating in-memory database");
