@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 // use tower_cookies::{Cookie, Cookies};
 use once_cell::sync::Lazy;
 use tower_http::auth;
-use tracing::log::info;
+use tracing::{debug, log::info};
 
 use crate::{db, ServerError, ServerState};
 
@@ -173,11 +173,20 @@ fn validate_jwt_claim(
                 info!("jwt was decoded properly");
                 x.claims
             }
-            Err(e) => {
-                info!("jwt was NOT decoded properly");
-                return Err(ServerError::AuthFailTokenNotVerified(e.to_string()));
+            Err(err) => {
+                info!("Invalid token: {}", err.to_string());
+                match err.into_kind() {
+                    jsonwebtoken::errors::ErrorKind::ExpiredSignature => {
+                        info!("Invalid token - Expired");
+                        return Err(ServerError::AuthFailTokenExpired);
+                    }
+                    _ => {
+                        return Err(ServerError::AuthFailTokenDecodeIssue);
+                    }
+                }
             }
         };
+
     return Ok(decode_result);
 }
 

@@ -5,7 +5,7 @@ use pages::login::Login;
 
 // #![feature(async_closure)]
 pub mod mainapp {
-    use std::{time::{self, Instant}, error};
+    use std::{time::{self, Instant}, error, collections::HashMap};
 
     use dioxus_router::{Router, Route, Link, Redirect};
     use gloo_timers::{callback::Timeout, future::TimeoutFuture};
@@ -332,7 +332,7 @@ pub mod mainapp {
                             }
                             Err(_) => {}
                         };
-                        info!("onchange results: {:?}", formvalue);
+                        // info!("onchange results: {:?}", formvalue);
                     },
                     textarea {
                         class: "editor-field",
@@ -419,20 +419,75 @@ pub mod mainapp {
         })
     }
 
+
+    static FORM_DATA: Atom<HashMap<String, String>> = |_| HashMap::new();
+
     #[inline_props]
     fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a SurveyDto) -> Element {
         let app_state = use_atom_state(cx, APP);
+        let form_data: &fermi::AtomState<_> = use_atom_state(cx, FORM_DATA);
 
         // let questions = parse_markdown_v3(survey_to_render.plaintext.clone()).questions;
         // let questions = all_questions.get(0).unwrap();
         // let questions: Vec<Question> = vec![];
         // let survey_html
+        let post_questions = move |content, client: Client| {
+            cx.spawn({
+                to_owned![app_state];
+
+                if app_state.user.is_none() {
+                    info!("user token is not set");
+                }
+                let mut token  = app_state.user.clone().unwrap().token;
+                token = token.trim_matches('"').to_string();
+
+                let curr_survey_id = app_state.curr_survey.id.clone();
+                async move {
+                    info!("Attempting to save questions...");
+                    info!("Publishing content, app_state: {app_state:?}");
+                    // info!("Questions save: {:?}", question_state);
+                    match client
+                        .post(format!("http://localhost:3000/surveys/{curr_survey_id}"))
+                        .json(&json!(content))
+                        // .bearer_auth(token.clone())
+                        .header("x-auth-token", token)
+                        .send()
+                        .await
+                    {
+                        Ok(x) => {
+                            info!("success: {x:?}");
+                            info!("should show toast now");
+                            // toast_visible.set(true);
+                        }
+                        Err(x) => info!("error: {x:?}"),
+                    };
+                }
+            })
+        };
+
+
         let curr_survey = app_state.curr_survey.clone();
         cx.render(rsx! {
                 div {
                     class: "survey",
                     form {
-                        h1 {"form title"}
+                        prevent_default: "onsubmit",
+                        onsubmit: move |evt| {
+                            info!("submitting survey result");
+                            let formvalue = evt.values.get(FORMINPUT_KEY).clone().unwrap().clone();
+                            // let formvalue = match evt.values.get(FORMINPUT_KEY).clone() {
+                            //     Some(x) => {info!("found some data in the form"); x}
+                            //     None => {"No data found"} 
+                            // };
+                            post_questions(formvalue, app_state.client.clone());
+                            // evt.stop_propagation();
+                        },
+                        onchange: move |evt| {
+                            info!("form: {:#?}", evt.data);
+                            info!("appstate: {:#?}", app_state.curr_survey);
+                            // evt
+                        },
+                        h1 {"title: "}
                         app_state.curr_survey.questions.iter().map(|question| rsx!{
                             fieldset {
                                 legend {
@@ -444,28 +499,33 @@ pub mod mainapp {
                                         li {
                                             input {
                                                 r#type: if question.r#type == QuestionType::Checkbox { "checkbox"} else {"radio"},
-                                                value: "o.text: {option.text:?}",
+                                                value: "{option.text:?}",
                                                 id: "{option.id}_{i}",
                                                 name: "{question.id}",
                                             }
                                             label {
                                                 r#for:"{option.id}_{i}",
-                                                "o.text: {option.text:?}"
+                                                "{option.id}_{i}: {option.text:?}"
                                             }
-                                            "{option:?}"
+                                            // "{option:?}"
                                         }
                                     })
                                 }
                             }
                             
                         })
+                        button {
+                            class: "publish-button",
+                            // r#type: "submit",
+                            "Publish"
+                        }
                     }
                 }
         })
     }
 
     use fermi::use_init_atom_root;
-    use serde_json::Value;
+    use serde_json::{Value, json};
 
     use crate::pages::{self, login::Login};
 

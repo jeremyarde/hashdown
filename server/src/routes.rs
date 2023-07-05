@@ -82,7 +82,7 @@ pub mod routes {
             // .merge(survey_routes)
             // .layer(Extension(state))
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
-            .route("/surveys/:id", get(get_survey))
+            .route("/surveys/:id", get(get_survey).post(submit_survey))
             // .route(&format!("/surveys/test"), post(test_survey))
             .route(&format!("/login"), post(authorize))
             .route("/signup", post(signup))

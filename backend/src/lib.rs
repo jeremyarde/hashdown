@@ -8,7 +8,8 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use anyhow::{anyhow, Error};
-use std::collections::hash_map::RandomState;
+use std::{collections::hash_map::RandomState, option};
+use tracing::{debug, info};
 
 use std::hash::{BuildHasher, Hasher};
 
@@ -158,10 +159,15 @@ impl Question {
             value: question_text.clone(),
             options: options
                 .iter()
-                .map(|&o| QuestionOption {
-                    // id: "nanoid_gen()".to_string(),
-                    id: nanoid_gen(12),
-                    text: question_text.clone(),
+                .map(|&option_value| {
+                    let clean = option_value.trim();
+                    todo!("Add regex here to remove either ' - ' from start or ' 1. ' ");
+
+                    QuestionOption {
+                        // id: "nanoid_gen()".to_string(),
+                        id: nanoid_gen(12),
+                        text: clean.to_owned(),
+                    }
                 })
                 .collect(),
             r#type: question_type,
@@ -172,60 +178,33 @@ impl Question {
 
     fn parse_question_type_and_text(line: &str) -> (QuestionType, String) {
         let qtype: QuestionType;
-        let question_text = line;
+        let mut question_text = line.to_owned();
         // if line.contains("[checkbox]") || line.contains("[c]") {
         if question_text.contains("[c]") {
             qtype = QuestionType::Checkbox;
-            question_text.replace("[c]", "").as_str();
+            question_text = question_text.clone().replace("[c]", "");
+            // question_text = temp;
         } else {
             qtype = QuestionType::Radio;
         }
 
-        let mut question_text = match question_text.trim_start().split_once("- ") {
-            Some(x) => x.1,
+        question_text = match question_text.trim_start().split_once("- ") {
+            Some(x) => x.1.to_owned(),
             None => question_text,
         };
 
-        let trimmed = question_text.clone().trim_start();
+        let trimmed = question_text.trim_start();
         if trimmed.starts_with(char::is_numeric) {
-            question_text = trimmed.split_once(". ").unwrap_or((question_text, "")).1;
+            question_text = trimmed
+                .split_once(". ")
+                .unwrap_or((&question_text, ""))
+                .1
+                .to_owned();
         }
 
         // println!("parse: {question_text:?}");
         return (qtype, question_text.to_string());
     }
-
-    // pub async fn insert(
-    //     &mut self,
-    //     survey: PutSurveyRequest,
-    //     pool: SqlitePool,
-    // ) -> anyhow::Result<()> {
-    //     println!("To insert: {:?}", survey);
-
-    //     let res = sqlx::query("Insert into surveys (plaintext) values ($1) returning *")
-    //         .bind(survey.plaintext)
-    //         .execute(&mut pool.acquire().await?)
-    //         .await?;
-    //     // let mut query_builder: QueryBuilder<Sqlite> =
-    //     //     QueryBuilder::new(TodoModel::create_insert_sql());
-    //     // query_builder.push_values(todos.into_iter().take(512), |mut b, x| {
-    //     //     info!("todo to be entered: {x:?}");
-    //     //     b.push_bind(x.id)
-    //     //         .push_bind(x.status)
-    //     //         .push_bind(x.description)
-    //     //         .push_bind(x.file)
-    //     //         .push_bind(x.last_updated)
-    //     //         .push_bind(x.last_indexed)
-    //     //         .push_bind(x.due);
-    //     // });
-    //     // let res = query_builder.build().execute(&mut self.pool).await?;
-
-    //     info!("database insert results; #={:?}", res);
-
-    //     // potentially one way to make sure we don't overwrite certain fields:
-    //     // https://stackoverflow.com/questions/3634984/insert-if-not-exists-else-update
-    //     Ok(())
-    // }
 }
 
 // #[wasm_bindgen]
@@ -249,69 +228,70 @@ impl Questions {
     }
 }
 
-pub fn parse_markdown_blocks(markdown: String) -> Questions {
-    // let markdown = include_str!("../test_file.md").to_string();
-    let questions = Regex::new(r"(?m)^(\d). (.*)$").unwrap();
-    let _locations = questions.captures_iter(&markdown);
-    // for x in locations {
-    //     println!("{:#?}", x);
-    // }
-    let mut questions = vec![];
+// pub fn parse_markdown_blocks(markdown: String) -> Questions {
+//     // let markdown = include_str!("../test_file.md").to_string();
+//     let questions = Regex::new(r"(?m)^(\d). (.*)$").unwrap();
+//     let _locations = questions.captures_iter(&markdown);
+//     // for x in locations {
+//     //     println!("{:#?}", x);
+//     // }
+//     let mut questions = vec![];
 
-    let mut current_question: &str;
-    let mut options: Vec<&str> = vec![];
-    let mut question_id = 1;
+//     let mut current_question: &str;
+//     let mut options: Vec<&str> = vec![];
+//     let mut question_id = 1;
 
-    let mut current = 1;
-    // for line in markdown.lines() {
-    let mut lines = markdown.lines();
-    let mut currline = match lines.next() {
-        Some(x) => x,
-        None => return Questions { qs: vec![] },
-    };
+//     let mut current = 1;
+//     // for line in markdown.lines() {
+//     let mut lines = markdown.lines();
+//     let mut currline = match lines.next() {
+//         Some(x) => x,
+//         None => return Questions { qs: vec![] },
+//     };
 
-    loop {
-        let q_num = format!("{}. ", current);
-        println!("{}", currline);
-        // Is a question
-        if currline.starts_with(q_num.as_str()) {
-            current += 1;
+//     loop {
+//         let q_num = format!("{}. ", current);
+//         println!("{}", currline);
+//         // Is a question
+//         if currline.starts_with(q_num.as_str()) {
+//             current += 1;
 
-            // current_question = currline.trim_start_matches(q_num.as_str()).to_owned();
-            current_question = currline;
-            // current_question = parse_question_text(currline).to_owned();
+//             // current_question = currline.trim_start_matches(q_num.as_str()).to_owned();
+//             current_question = currline;
+//             // current_question = parse_question_text(currline).to_owned();
 
-            currline = match lines.next() {
-                Some(x) => x,
-                None => {
-                    println!("Did not find a new line to parse");
-                    continue;
-                }
-            };
-            println!("{}", currline);
-            while currline.starts_with("  ") {
-                options.push(currline);
-                currline = match lines.next() {
-                    Some(x) => x,
-                    None => break,
-                };
-            }
+//             currline = match lines.next() {
+//                 Some(x) => x,
+//                 None => {
+//                     println!("Did not find a new line to parse");
+//                     continue;
+//                 }
+//             };
+//             println!("{}", currline);
+//             while currline.starts_with("  ") {
+//                 options.push(currline);
+//                 currline = match lines.next() {
+//                     Some(x) => x,
+//                     None => break,
+//                 };
+//             }
 
-            questions.push(Question::from(&current_question, options));
-            options = vec![];
-            question_id += 1;
-        } else {
-            println!("next: {}", currline);
-            currline = match lines.next() {
-                Some(x) => x,
-                None => break,
-            };
-        }
-    }
+//             debug!("Question pushed");
+//             questions.push(Question::from(&current_question, options));
+//             options = vec![];
+//             question_id += 1;
+//         } else {
+//             println!("next: {}", currline);
+//             currline = match lines.next() {
+//                 Some(x) => x,
+//                 None => break,
+//             };
+//         }
+//     }
 
-    println!("{:#?}", questions);
-    Questions { qs: questions }
-}
+//     println!("{:#?}", questions);
+//     Questions { qs: questions }
+// }
 
 enum LineType {
     Question,
@@ -466,14 +446,14 @@ enum MarkdownElement {
 
 #[cfg(test)]
 mod tests {
-    use crate::{parse_markdown_blocks, parse_markdown_v3, Question};
+    use crate::{parse_markdown_v3, Question};
 
     #[test]
     fn test() {
-        let teststring = "1. this is a test\n  ";
+        let teststring = "1. this is a test\n - option 1\n - opt 2";
 
         let content = String::from(teststring);
-        let result = parse_markdown_blocks(content);
+        let result = parse_markdown_v3(content);
         print!("test result: {:?}\n", result);
     }
 
@@ -489,9 +469,28 @@ mod tests {
   2. q3 option 2
 "#;
 
-        let res = parse_markdown_v3(teststring.to_string());
+        let res = parse_markdown_v3(teststring.to_string()).unwrap();
 
-        println!("{:#?}", res)
+        assert!(&res.questions.get(0).unwrap().value.eq("Question number 1"));
+        assert_eq!(
+            &res.questions.get(0).unwrap().options.get(0).unwrap().text,
+            "option 1"
+        );
+
+        assert_eq!(&res.questions.get(0).unwrap().value, "Question number 2");
+        assert_eq!(&res.questions.get(0).unwrap().options.len(), &(0 as usize));
+
+        assert_eq!(&res.questions.get(0).unwrap().value, "Question number 3");
+        assert_eq!(
+            &res.questions.get(1).unwrap().options.get(0).unwrap().text,
+            "q3 option 1"
+        );
+        assert_eq!(
+            &res.questions.get(0).unwrap().options.get(0).unwrap().text,
+            "q3 option 2"
+        );
+
+        // println!("{:#?}", res)
     }
 
     #[test]
