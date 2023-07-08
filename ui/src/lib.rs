@@ -5,7 +5,7 @@ use pages::login::Login;
 
 // #![feature(async_closure)]
 pub mod mainapp {
-    use std::{time::{self, Instant}, error, collections::HashMap};
+    use std::{time::{self, Instant}, error, collections::HashMap, str::FromStr};
 
     use dioxus_router::{Router, Route, Link, Redirect};
     use gloo_timers::{callback::Timeout, future::TimeoutFuture};
@@ -20,6 +20,12 @@ pub mod mainapp {
         prelude::*,
     };
     use fermi::{use_atom_state, Atom, AtomRoot};
+
+
+    use fermi::use_init_atom_root;
+    use serde_json::{Value, json};
+
+    use crate::pages::{login::Login};
 
     // use dioxus_router::{Link, Route, Router};
     // use dioxus_router::{Link, Route, Router};
@@ -37,12 +43,6 @@ pub mod mainapp {
     // use gloo_timers::future::TimeoutFuture;
     use reqwest::{header, Client, RequestBuilder};
     use serde::{Deserialize, Serialize};
-
-
-
-    pub static APP: Atom<AppState> = |_| AppState::new();
-    pub static CLIENT: Atom<reqwest::Client> = |_| reqwest::Client::new();
-
 
     #[derive(Serialize)]
     struct CreateSurvey {
@@ -74,18 +74,25 @@ pub mod mainapp {
         }
     }
 
+#[derive(Debug)]
+    pub enum AppError {
+        NotLoggedIn,
+        Idle,
+    }
+
     #[derive(Debug)]
     pub struct AppState {
         // questions: Questions,
         pub input_text: String,
         pub client: Client,
         // surveys: Vec<Survey>,
-        pub surveys: Vec<SurveyDto>,
-        pub curr_survey: SurveyDto,
+        // pub surveys: Vec<SurveyDto>,
+        // pub curr_survey: SurveyDto,
         pub user: Option<UserContext>,
         // auth_token: String,
         pub show_login: bool,
         pub survey: ParsedSurvey,
+        pub state: AppError,
     }
 
     impl AppState {
@@ -94,57 +101,57 @@ pub mod mainapp {
         }
     }
 
-    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    struct Survey {
-        id: String,
-        nanoid: String,
-        plaintext: String,
-        user_id: String,
-        created_at: String,
-        modified_at: String,
-        version: String,
-        // questions: Questions,
-    }
+    // #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+    // struct Survey {
+    //     id: String,
+    //     nanoid: String,
+    //     plaintext: String,
+    //     user_id: String,
+    //     created_at: String,
+    //     modified_at: String,
+    //     version: String,
+    //     // questions: Questions,
+    // }
 
-    #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    pub struct SurveyDto {
-        id: String,
-        nanoid: String,
-        plaintext: String,
-        user_id: String,
-        created_at: String,
-        modified_at: String,
-        version: String,
-        questions: Vec<Question>,
-    }
+    // #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+    // pub struct SurveyDto {
+    //     id: String,
+    //     nanoid: String,
+    //     plaintext: String,
+    //     user_id: String,
+    //     created_at: String,
+    //     modified_at: String,
+    //     version: String,
+    //     questions: Vec<Question>,
+    // }
 
-    impl SurveyDto {
-        fn new() -> SurveyDto {
-            SurveyDto {
-                id: "".to_string(),
-                nanoid: "".to_string(),
-                plaintext: "".to_string(),
-                user_id: "".to_string(),
-                created_at: "".to_string(),
-                modified_at: "".to_string(),
-                version: "".to_string(),
-                questions: vec![],
-            }
-        }
-        fn from(text: String) -> anyhow::Result<SurveyDto>{
-            let survey = parse_markdown_v3(text)?;
-            return Ok(SurveyDto {
-                id: "".to_string(),
-                nanoid: "".to_string(),
-                plaintext: survey.plaintext,
-                user_id: "".to_string(),
-                created_at: "".to_string(),
-                modified_at: "".to_string(),
-                version: survey.parse_version,
-                questions: survey.questions,
-            });
-        }
-    }
+    // impl SurveyDto {
+    //     fn new() -> SurveyDto {
+    //         SurveyDto {
+    //             id: "".to_string(),
+    //             nanoid: "".to_string(),
+    //             plaintext: "".to_string(),
+    //             user_id: "".to_string(),
+    //             created_at: "".to_string(),
+    //             modified_at: "".to_string(),
+    //             version: "".to_string(),
+    //             questions: vec![],
+    //         }
+    //     }
+    //     fn from(text: String) -> anyhow::Result<SurveyDto>{
+    //         let survey = parse_markdown_v3(text)?;
+    //         return Ok(SurveyDto {
+    //             id: "".to_string(),
+    //             nanoid: "".to_string(),
+    //             plaintext: survey.plaintext,
+    //             user_id: "".to_string(),
+    //             created_at: "".to_string(),
+    //             modified_at: "".to_string(),
+    //             version: survey.parse_version,
+    //             questions: survey.questions,
+    //         });
+    //     }
+    // }
 
     impl AppState {
         fn new() -> Self {
@@ -168,22 +175,23 @@ pub mod mainapp {
                 // questions: Questions { qs: vec![] },
                 input_text: String::from(""),
                 client: client,
-                surveys: vec![],
-                // auth_token: "".to_string(),
-                // curr_survey: Survey::new(),
-                curr_survey: SurveyDto {
-                    id: "".to_string(),
-                    nanoid: "".to_string(),
-                    plaintext: "".to_string(),
-                    user_id: "".to_string(),
-                    created_at: "".to_string(),
-                    modified_at: "".to_string(),
-                    version: "".to_string(),
-                    questions: vec![],
-                },
+                // surveys: vec![],
+                // // auth_token: "".to_string(),
+                // // curr_survey: Survey::new(),
+                // curr_survey: SurveyDto {
+                //     id: "".to_string(),
+                //     nanoid: "".to_string(),
+                //     plaintext: "".to_string(),
+                //     user_id: "".to_string(),
+                //     created_at: "".to_string(),
+                //     modified_at: "".to_string(),
+                //     version: "".to_string(),
+                //     questions: vec![],
+                // },
                 user: None,
                 survey: ParsedSurvey::new(),
                 show_login: false,
+                state: AppError::NotLoggedIn,
             }
         }
     }
@@ -192,9 +200,12 @@ pub mod mainapp {
     //     fn new() -> SurveyDto {}
     // }
 
+
+    pub static APP: Atom<AppState> = |_| AppState::new();
+    static CLIENT: Atom<reqwest::Client> = |_| reqwest::Client::new();
     static EDITOR: Atom<String> = |_| String::from("");
     static REQ_TIMEOUT: Atom<TimeoutFuture> = |_| TimeoutFuture::new(2000);
-    // static FORMINPUT_KEY: Atom<String> = |_| String::from("forminput");
+
     const FORMINPUT_KEY: &str = "forminput";
 
     fn Editor(cx: Scope) -> Element {
@@ -233,29 +244,30 @@ pub mod mainapp {
                     {
                         Ok(x) => {
                             info!("success: {x:?}");
-                            match SurveyDto::from(content.clone()) {
-                                Ok(sur) => {
-                                    app_state.modify(|curr| {
-                                        AppState {
-                                            // questions: Questions { qs: vec![] },
-                                            input_text: curr.input_text.clone(),
-                                            client: curr.client.clone(),
-                                            surveys: vec![],
-                                            curr_survey: sur,
-                                            user: curr.user.to_owned(),
-                                            show_login: curr.show_login,
-                                            survey: curr.survey.to_owned(),
-                                            // auth_token: curr.auth_token.clone(),
-                                        }
-                                        // curr.questions = question;
-                                    });
-                                    // let _x = &set_app.get().questions;
-                                    editor_state.set(content);
-                                    // info!("should show toast now");
-                                    // toast_visible.set(true);
-                                }
-                                Err(_) => {}
-                            }
+                            // match SurveyDto::from(content.clone()) {
+                            //     Ok(sur) => {
+                            //         app_state.modify(|curr| {
+                            //             AppState {
+                            //                 // questions: Questions { qs: vec![] },
+                            //                 input_text: curr.input_text.clone(),
+                            //                 client: curr.client.clone(),
+                            //                 // surveys: vec![],
+                            //                 // curr_survey: sur,
+                            //                 user: curr.user.to_owned(),
+                            //                 show_login: curr.show_login,
+                            //                 survey: curr.survey.to_owned(),
+                            //                 state: todo!(),
+                            //                 // auth_token: curr.auth_token.clone(),
+                            //             }
+                            //             // curr.questions = question;
+                            //         });
+                            //         // let _x = &set_app.get().questions;
+                            //         editor_state.set(content);
+                            //         // info!("should show toast now");
+                            //         // toast_visible.set(true);
+                            //     }
+                            //     Err(_) => {}
+                            // }
                         }
                         Err(x) => info!("error: {x:?}"),
                     }
@@ -307,11 +319,12 @@ pub mod mainapp {
                         AppState {
                             input_text: curr.input_text.clone(),
                             client: curr.client.clone(),
-                            surveys: vec![],
-                            curr_survey: curr.curr_survey.to_owned(),
+                            // surveys: vec![],
+                            // curr_survey: curr.curr_survey.to_owned(),
                             user: curr.user.to_owned(),
                             show_login: curr.show_login,
                             survey: x,
+                            state: AppError::Idle,
                         }
                     });
                 }
@@ -425,7 +438,7 @@ pub mod mainapp {
     static FORM_DATA: Atom<HashMap<String, String>> = |_| HashMap::new();
 
     #[inline_props]
-    fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a SurveyDto) -> Element {
+    fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
         let app_state = use_atom_state(cx, APP);
         let form_data: &fermi::AtomState<_> = use_atom_state(cx, FORM_DATA);
 
@@ -445,7 +458,7 @@ pub mod mainapp {
                 let mut token  = app_state.user.clone().unwrap().token;
                 token = token.trim_matches('"').to_string();
 
-                let curr_survey_id = app_state.curr_survey.id.clone();
+                let curr_survey_id = "tempid-need to set this from database???".to_string();
                 async move {
                     info!("Attempting to save questions...");
                     info!("Publishing content, app_state: {app_state:?}");
@@ -491,7 +504,8 @@ pub mod mainapp {
                         },
                         onchange: move |evt| {
                             info!("form: {:#?}", evt.data);
-                            info!("appstate: {:#?}", app_state.curr_survey);
+                            // info!("form testing deserialize: {:#?}", serde_json::Value::from_str(&evt.data.value));
+                            info!("appstate: {:#?}", app_state.survey);
                             // evt
                         },
                         h1 {"title: {app_state.survey.title:?}"}
@@ -524,17 +538,12 @@ pub mod mainapp {
                         button {
                             class: "publish-button",
                             // r#type: "submit",
-                            "Publish"
+                            "Submit"
                         }
                     }
                 }
         })
     }
-
-    use fermi::use_init_atom_root;
-    use serde_json::{Value, json};
-
-    use crate::pages::{login::Login};
 
 
     #[derive(Deserialize, Debug, Serialize)]
@@ -571,11 +580,12 @@ pub mod mainapp {
                             app_state.modify(|curr| AppState {
                                 input_text: curr.input_text.clone(),
                                 client: curr.client.clone(),
-                                surveys: curr.surveys.to_owned(),
-                                curr_survey: curr.curr_survey.clone(),
+                                // surveys: curr.surveys.to_owned(),
+                                // curr_survey: curr.curr_survey.clone(),
                                 user: Some(new_user.to_owned()),
                                 show_login: curr.show_login,
                                 survey: curr.survey.to_owned(),
+                                state: AppError::Idle,
                             });
 
                         }
@@ -603,9 +613,10 @@ pub mod mainapp {
                             evt.stop_propagation();
                             app_state.modify(|curr| AppState {
                                 input_text: curr.input_text.clone(),
+                                state: AppError::Idle,
                                 client: curr.client.clone(),
-                                surveys: curr.surveys.to_owned(),
-                                curr_survey: curr.curr_survey.clone(),
+                                // surveys: curr.surveys.to_owned(),
+                                // curr_survey: curr.curr_survey.clone(),
                                 user: curr.user.to_owned(),
                                 show_login: if curr.show_login { false} else { true},
                                 survey: curr.survey.to_owned(),
@@ -654,7 +665,7 @@ pub mod mainapp {
                         }
                         div {
                             style: "grid-column:2",
-                            self::RenderSurvey { survey_to_render: &app_state.curr_survey }
+                            self::RenderSurvey { survey_to_render: &app_state.survey }
                         }
                     }
                     Login{}

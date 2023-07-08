@@ -81,7 +81,7 @@ impl Default for Metadata {
             created_at: chrono::offset::Utc::now().to_string(),
             modified_at: chrono::offset::Utc::now().to_string(),
             version: "0".to_string(),
-            id: "nanoid_gen()".to_string(),
+            id: nanoid_gen(NANOID_LEN),
         }
     }
 }
@@ -102,7 +102,17 @@ pub struct Survey {
     pub metadata: Metadata,
     // #[serde(flatten)]
     // pub UserInfo: UserInfo,
-    pub user_id: String,
+    pub user_id: Option<String>,
+}
+
+impl Survey {
+    fn from(parsed: ParsedSurvey) -> Survey {
+        Survey {
+            survey: parsed,
+            metadata: Metadata::default(),
+            user_id: None,
+        }
+    }
 }
 
 // impl Survey {
@@ -230,11 +240,11 @@ pub struct Questions {
 }
 
 // #[wasm_bindgen]
-impl Questions {
-    fn new() -> Self {
-        Questions { qs: vec![] }
-    }
-}
+// impl Questions {
+//     fn new() -> Self {
+//         Questions { qs: vec![] }
+//     }
+// }
 
 #[derive(Debug)]
 enum LineType {
@@ -242,14 +252,6 @@ enum LineType {
     Option,
     Nothing,
     Title,
-}
-
-pub fn markdown_to_form(contents: String) -> ParsedSurvey {
-    let survey = match parse_markdown_v3(contents) {
-        Ok(_) => todo!(),
-        Err(_) => todo!(),
-    };
-    return survey;
 }
 
 // #[wasm_bindgen]

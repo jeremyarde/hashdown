@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use fermi::use_atom_state;
 use serde_json::{json, Value};
 
-use crate::mainapp::{AppState, LoginPayload, UserContext, APP};
+use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP};
 
 pub fn Login(cx: Scope) -> Element {
     let app_state = use_atom_state(&cx, APP);
@@ -52,8 +52,9 @@ pub fn Login(cx: Scope) -> Element {
                             AppState {
                                 input_text: curr.input_text.to_owned(),
                                 client: curr.client.to_owned(),
-                                surveys: curr.surveys.to_owned(),
-                                curr_survey: curr.curr_survey.to_owned(),
+                                state: AppError::Idle,
+                                // surveys: curr.surveys.to_owned(),
+                                // curr_survey: curr.curr_survey.to_owned(),
                                 user: Some(UserContext {
                                     username: request.email,
                                     token: response
