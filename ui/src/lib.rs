@@ -28,7 +28,7 @@ pub mod mainapp {
     // use gloo_timers::future::TimeoutFuture;
     // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
     use markdownparser::{
-        parse_markdown_blocks, parse_markdown_v3, Question, QuestionType, Questions, QuestionOption,
+        parse_markdown_v3, Question, QuestionType, Questions, QuestionOption,
     };
 
     // mod types;

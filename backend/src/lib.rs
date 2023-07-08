@@ -4,7 +4,7 @@ use derive_builder::Builder;
 // use rand::{thread_rng, Rng};
 // use nanoid::nanoid;
 use getrandom::getrandom;
-use regex::Regex;
+use regex::{Captures, Regex};
 use serde::{Deserialize, Serialize};
 
 use anyhow::{anyhow, Error};
@@ -160,13 +160,21 @@ impl Question {
             options: options
                 .iter()
                 .map(|&option_value| {
-                    let clean = option_value.trim();
-                    todo!("Add regex here to remove either ' - ' from start or ' 1. ' ");
+                    let remove_start =
+                        Regex::new(r"((?P<number>\d{1,}).|(?P<dash>-))(?P<content>\s.*)$").unwrap();
+
+                    let mut clean = remove_start.replace(option_value, "$content").to_string();
+
+                    // remove_start.replace(option_value);
+                    clean = clean.trim().to_owned();
+                    // clean.trim_end_matches(char::is_digit);
+                    // clean.trim_start_matches(&[" -", "1. "]);
+                    // todo!("Add regex here to remove either ' - ' from start or ' 1. ' ");
 
                     QuestionOption {
                         // id: "nanoid_gen()".to_string(),
                         id: nanoid_gen(12),
-                        text: clean.to_owned(),
+                        text: clean.to_string().to_owned(),
                     }
                 })
                 .collect(),
@@ -227,71 +235,6 @@ impl Questions {
         Questions { qs: vec![] }
     }
 }
-
-// pub fn parse_markdown_blocks(markdown: String) -> Questions {
-//     // let markdown = include_str!("../test_file.md").to_string();
-//     let questions = Regex::new(r"(?m)^(\d). (.*)$").unwrap();
-//     let _locations = questions.captures_iter(&markdown);
-//     // for x in locations {
-//     //     println!("{:#?}", x);
-//     // }
-//     let mut questions = vec![];
-
-//     let mut current_question: &str;
-//     let mut options: Vec<&str> = vec![];
-//     let mut question_id = 1;
-
-//     let mut current = 1;
-//     // for line in markdown.lines() {
-//     let mut lines = markdown.lines();
-//     let mut currline = match lines.next() {
-//         Some(x) => x,
-//         None => return Questions { qs: vec![] },
-//     };
-
-//     loop {
-//         let q_num = format!("{}. ", current);
-//         println!("{}", currline);
-//         // Is a question
-//         if currline.starts_with(q_num.as_str()) {
-//             current += 1;
-
-//             // current_question = currline.trim_start_matches(q_num.as_str()).to_owned();
-//             current_question = currline;
-//             // current_question = parse_question_text(currline).to_owned();
-
-//             currline = match lines.next() {
-//                 Some(x) => x,
-//                 None => {
-//                     println!("Did not find a new line to parse");
-//                     continue;
-//                 }
-//             };
-//             println!("{}", currline);
-//             while currline.starts_with("  ") {
-//                 options.push(currline);
-//                 currline = match lines.next() {
-//                     Some(x) => x,
-//                     None => break,
-//                 };
-//             }
-
-//             debug!("Question pushed");
-//             questions.push(Question::from(&current_question, options));
-//             options = vec![];
-//             question_id += 1;
-//         } else {
-//             println!("next: {}", currline);
-//             currline = match lines.next() {
-//                 Some(x) => x,
-//                 None => break,
-//             };
-//         }
-//     }
-
-//     println!("{:#?}", questions);
-//     Questions { qs: questions }
-// }
 
 enum LineType {
     Question,
@@ -477,16 +420,16 @@ mod tests {
             "option 1"
         );
 
-        assert_eq!(&res.questions.get(0).unwrap().value, "Question number 2");
-        assert_eq!(&res.questions.get(0).unwrap().options.len(), &(0 as usize));
+        assert_eq!(&res.questions.get(1).unwrap().value, "Question number 2");
+        assert_eq!(&res.questions.get(1).unwrap().options.len(), &(0 as usize));
 
-        assert_eq!(&res.questions.get(0).unwrap().value, "Question number 3");
+        assert_eq!(&res.questions.get(2).unwrap().value, "Question number 3");
         assert_eq!(
-            &res.questions.get(1).unwrap().options.get(0).unwrap().text,
+            &res.questions.get(2).unwrap().options.get(0).unwrap().text,
             "q3 option 1"
         );
         assert_eq!(
-            &res.questions.get(0).unwrap().options.get(0).unwrap().text,
+            &res.questions.get(2).unwrap().options.get(1).unwrap().text,
             "q3 option 2"
         );
 
