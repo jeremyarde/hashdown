@@ -2,12 +2,18 @@
 
 mod pages;
 use pages::login::Login;
+use pages::survey::RenderSurvey;
 
 // #![feature(async_closure)]
 pub mod mainapp {
-    use std::{time::{self, Instant}, error, collections::HashMap, str::FromStr};
+    use std::{
+        collections::HashMap,
+        error,
+        str::FromStr,
+        time::{self, Instant},
+    };
 
-    use dioxus_router::{Router, Route, Link, Redirect};
+    use dioxus_router::{Link, Redirect, Route, Router};
     use gloo_timers::{callback::Timeout, future::TimeoutFuture};
     // use console_log::log;
     use log::info;
@@ -16,16 +22,15 @@ pub mod mainapp {
     // use std::{thread::sleep, time::Duration};
 
     use dioxus::{
-        html::{button, style, fieldset, legend},
+        html::{button, fieldset, legend, style},
         prelude::*,
     };
     use fermi::{use_atom_state, Atom, AtomRoot};
 
-
     use fermi::use_init_atom_root;
-    use serde_json::{Value, json};
+    use serde_json::{json, Value};
 
-    use crate::pages::{login::Login};
+    use crate::pages::{login::Login, survey::RenderSurvey};
 
     // use dioxus_router::{Link, Route, Router};
     // use dioxus_router::{Link, Route, Router};
@@ -34,7 +39,7 @@ pub mod mainapp {
     // use gloo_timers::future::TimeoutFuture;
     // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
     use markdownparser::{
-        parse_markdown_v3, Question, QuestionType, Questions, QuestionOption, ParsedSurvey, Survey,
+        parse_markdown_v3, ParsedSurvey, Question, QuestionOption, QuestionType, Questions, Survey,
     };
 
     // mod types;
@@ -74,7 +79,7 @@ pub mod mainapp {
         }
     }
 
-#[derive(Debug)]
+    #[derive(Debug)]
     pub enum AppError {
         NotLoggedIn,
         Idle,
@@ -200,7 +205,6 @@ pub mod mainapp {
     //     fn new() -> SurveyDto {}
     // }
 
-
     pub static APP: Atom<AppState> = |_| AppState::new();
     static CLIENT: Atom<reqwest::Client> = |_| reqwest::Client::new();
     static EDITOR: Atom<String> = |_| String::from("");
@@ -227,13 +231,14 @@ pub mod mainapp {
                 // timeout.get()
                 async move {
                     let something = send_req_timeout.get();
-                    let token  = app_state.user.clone().unwrap().token;
+                    let token = app_state.user.clone().unwrap().token;
                     // timeout.await;
                     // TimeoutFuture::new(2000).await;
                     // let t = Timeou
                     info!("Attempting to save questions...");
                     // info!("Questions save: {:?}", question_state);
-                    match app_state.client
+                    match app_state
+                        .client
                         .post("http://localhost:3000/surveys")
                         .json(&CreateSurvey {
                             plaintext: editor_state.get().clone(),
@@ -277,7 +282,6 @@ pub mod mainapp {
             })
         };
 
-
         let post_questions = move |content, client: Client| {
             cx.spawn({
                 to_owned![toast_visible, app_state];
@@ -287,7 +291,7 @@ pub mod mainapp {
                     return;
                 }
 
-                let mut token  = app_state.user.clone().unwrap().token;
+                let mut token = app_state.user.clone().unwrap().token;
                 token = token.trim_matches('"').to_string();
                 async move {
                     info!("Attempting to save questions...");
@@ -328,7 +332,7 @@ pub mod mainapp {
                         }
                     });
                 }
-                Err(_) => {},
+                Err(_) => {}
             };
         };
 
@@ -350,7 +354,7 @@ pub mod mainapp {
                     //     let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
                     //     editor_state.set(formvalue);
                     // },
-                    
+
                     oninput: move |e| {
 
                         let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
@@ -365,7 +369,7 @@ pub mod mainapp {
                         placeholder: "Write your survey here",
                         name: FORMINPUT_KEY,
                     }
- 
+
                     button {
                         class: "publish-button",
                         // r#type: "submit",
@@ -375,7 +379,6 @@ pub mod mainapp {
             }
         })
     }
-
 
     static TOAST: Atom<bool> = |_| false;
 
@@ -434,7 +437,6 @@ pub mod mainapp {
         })
     }
 
-
     static FORM_DATA: Atom<HashMap<String, String>> = |_| HashMap::new();
 
     // #[inline_props]
@@ -482,7 +484,6 @@ pub mod mainapp {
     //         })
     //     };
 
-
     //     // let curr_survey = app_state.curr_survey.clone();
     //     cx.render(rsx! {
     //             div {
@@ -497,7 +498,7 @@ pub mod mainapp {
     //                         // };
     //                         // let formvalue = match evt.values.get(FORMINPUT_KEY).clone() {
     //                         //     Some(x) => {info!("found some data in the form"); x}
-    //                         //     None => {"No data found"} 
+    //                         //     None => {"No data found"}
     //                         // };
     //                         post_questions(evt.values.clone(), app_state.client.clone());
     //                         // evt.stop_propagation();
@@ -533,7 +534,7 @@ pub mod mainapp {
     //                                 })
     //                             }
     //                         }
-                            
+
     //                     })
     //                     button {
     //                         class: "publish-button",
@@ -544,7 +545,6 @@ pub mod mainapp {
     //             }
     //     })
     // }
-
 
     #[derive(Deserialize, Debug, Serialize)]
     pub struct LoginPayload {
@@ -572,8 +572,13 @@ pub mod mainapp {
                     {
                         Ok(x) => {
                             info!("signup success: {x:?}");
-                            let token = x.json::<Value>().await.expect("Could not deserialize signup result");
-                            let token_text = token.get("auth_token").expect("Did not find auth_token in signup result");
+                            let token = x
+                                .json::<Value>()
+                                .await
+                                .expect("Could not deserialize signup result");
+                            let token_text = token
+                                .get("auth_token")
+                                .expect("Did not find auth_token in signup result");
                             let new_user = UserContext::from(token_text.to_string());
                             info!("new user context: {token} {token_text} {new_user:?}");
 
@@ -587,7 +592,6 @@ pub mod mainapp {
                                 survey: curr.survey.to_owned(),
                                 state: AppError::Idle,
                             });
-
                         }
                         Err(x) => info!("error: {x:?}"),
                     };
@@ -637,7 +641,7 @@ pub mod mainapp {
             }
         })
     }
- 
+
     fn NotFound(cx: Scope) -> Element {
         cx.render(rsx!(
             div {
@@ -665,7 +669,7 @@ pub mod mainapp {
                         }
                         div {
                             style: "grid-column:2",
-                            self::RenderSurvey { survey_to_render: &app_state.survey.survey }
+                            RenderSurvey { survey_to_render: &app_state.survey.survey }
                         }
                     }
                     Login{}

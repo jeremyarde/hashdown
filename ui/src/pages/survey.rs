@@ -1,8 +1,15 @@
-use dioxus::prelude::inline_props;
+use dioxus::prelude::*;
+use fermi::use_atom_state;
+use log::info;
+use markdownparser::{ParsedSurvey, QuestionOption, QuestionType};
+use reqwest::Client;
+use serde_json::{json, Value};
+
+use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP};
 
 
 #[inline_props]
-    fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
+    pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
         let app_state = use_atom_state(cx, APP);
         // let form_data: &fermi::AtomState<_> = use_atom_state(cx, FORM_DATA);
 
@@ -79,21 +86,34 @@ use dioxus::prelude::inline_props;
                                     "question text: {question.value}"
                                 }
                                 ul {
-                                    question.options.iter().enumerate().map(|(i, option):(usize, &QuestionOption)|
-                                    rsx!{
-                                        li {
-                                            input {
-                                                r#type: if question.r#type == QuestionType::Checkbox { "checkbox"} else {"radio"},
-                                                value: "{option.text:?}",
-                                                id: "{option.id}_{i}",
-                                                name: "{question.id}",
+                                    question.options.iter().enumerate().map(|(i, option): (usize, &QuestionOption)| {
+                                        let test = "test";
+                                        // rsx!(div{})
+                                        
+                                        let question_type = match question.r#type {
+                                            QuestionType::Checkbox=>{"checkbox"}
+                                            QuestionType::Radio => {"radio"},
+                                            QuestionType::Text => {"text"},
+                                            QuestionType::Number => {"number"},
+                                            QuestionType::Email => "email",
+                                            QuestionType::Date => "date"
+                                        };
+                                            
+                                        rsx!{
+                                            li {
+                                                    input {
+                                                        // r#type: if question.r#type == QuestionType::Checkbox { "checkbox"} else {"radio"},
+                                                        r#type: question_type,
+                                                        value: "{option.text:?}",
+                                                        id: "{option.id}_{i}",
+                                                        name: "{question.id}",
+                                                    }
+                                                    label {
+                                                        r#for:"{option.id}_{i}",
+                                                        "{option.id}_{i}: {option.text:?}"
+                                                    }
                                             }
-                                            label {
-                                                r#for:"{option.id}_{i}",
-                                                "{option.id}_{i}: {option.text:?}"
-                                            }
-                                            // "{option:?}"
-                                        }
+                                        } 
                                     })
                                 }
                             }
