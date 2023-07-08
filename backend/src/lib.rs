@@ -106,9 +106,17 @@ pub struct Survey {
 }
 
 impl Survey {
-    fn from(parsed: ParsedSurvey) -> Survey {
+    pub fn from(parsed: ParsedSurvey) -> Survey {
         Survey {
             survey: parsed,
+            metadata: Metadata::default(),
+            user_id: None,
+        }
+    }
+
+    pub fn new() -> Self {
+        Self {
+            survey: ParsedSurvey::new(),
             metadata: Metadata::default(),
             user_id: None,
         }
@@ -157,6 +165,9 @@ pub enum QuestionType {
     Radio,
     Checkbox,
     Text,
+    Number,
+    Email,
+    Date,
 }
 
 impl Question {
@@ -202,6 +213,12 @@ impl Question {
             qtype = QuestionType::Checkbox;
             question_text = question_text.clone().replace("[c]", "");
             // question_text = temp;
+        } else if question_text.contains("[t]") {
+            qtype = QuestionType::Text;
+            question_text = question_text.clone().replace("[t]", "");
+        } else if question_text.contains("[n]") {
+            qtype = QuestionType::Number;
+            question_text = question_text.clone().replace("[n]", "");
         } else {
             qtype = QuestionType::Radio;
         }

@@ -34,7 +34,7 @@ pub mod mainapp {
     // use gloo_timers::future::TimeoutFuture;
     // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
     use markdownparser::{
-        parse_markdown_v3, Question, QuestionType, Questions, QuestionOption, ParsedSurvey,
+        parse_markdown_v3, Question, QuestionType, Questions, QuestionOption, ParsedSurvey, Survey,
     };
 
     // mod types;
@@ -91,7 +91,7 @@ pub mod mainapp {
         pub user: Option<UserContext>,
         // auth_token: String,
         pub show_login: bool,
-        pub survey: ParsedSurvey,
+        pub survey: Survey,
         pub state: AppError,
     }
 
@@ -189,7 +189,7 @@ pub mod mainapp {
                 //     questions: vec![],
                 // },
                 user: None,
-                survey: ParsedSurvey::new(),
+                survey: Survey::new(),
                 show_login: false,
                 state: AppError::NotLoggedIn,
             }
@@ -323,7 +323,7 @@ pub mod mainapp {
                             // curr_survey: curr.curr_survey.to_owned(),
                             user: curr.user.to_owned(),
                             show_login: curr.show_login,
-                            survey: x,
+                            survey: Survey::from(x),
                             state: AppError::Idle,
                         }
                     });
@@ -437,113 +437,113 @@ pub mod mainapp {
 
     static FORM_DATA: Atom<HashMap<String, String>> = |_| HashMap::new();
 
-    #[inline_props]
-    fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
-        let app_state = use_atom_state(cx, APP);
-        let form_data: &fermi::AtomState<_> = use_atom_state(cx, FORM_DATA);
+    // #[inline_props]
+    // fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
+    //     let app_state = use_atom_state(cx, APP);
+    //     // let form_data: &fermi::AtomState<_> = use_atom_state(cx, FORM_DATA);
 
-        // let questions = parse_markdown_v3(survey_to_render.plaintext.clone()).questions;
-        // let questions = all_questions.get(0).unwrap();
-        // let questions: Vec<Question> = vec![];
-        // let survey_html
-        let post_questions = move |content, client: Client| {
-            cx.spawn({
-                to_owned![app_state];
+    //     // let questions = parse_markdown_v3(survey_to_render.plaintext.clone()).questions;
+    //     // let questions = all_questions.get(0).unwrap();
+    //     // let questions: Vec<Question> = vec![];
+    //     // let survey_html
+    //     let post_questions = move |content, client: Client| {
+    //         cx.spawn({
+    //             to_owned![app_state];
 
-                if app_state.user.is_none() {
-                    info!("user token is not set");
-                    // Pop open the login ?
-                    return;
-                }
-                let mut token  = app_state.user.clone().unwrap().token;
-                token = token.trim_matches('"').to_string();
+    //             if app_state.user.is_none() {
+    //                 info!("user token is not set");
+    //                 // Pop open the login ?
+    //                 return;
+    //             }
+    //             let mut token  = app_state.user.clone().unwrap().token;
+    //             token = token.trim_matches('"').to_string();
 
-                let curr_survey_id = "tempid-need to set this from database???".to_string();
-                async move {
-                    info!("Attempting to save questions...");
-                    info!("Publishing content, app_state: {app_state:?}");
-                    // info!("Questions save: {:?}", question_state);
-                    match client
-                        .post(format!("http://localhost:3000/surveys/{curr_survey_id}"))
-                        .json(&json!(content))
-                        // .bearer_auth(token.clone())
-                        .header("x-auth-token", token)
-                        .send()
-                        .await
-                    {
-                        Ok(x) => {
-                            info!("success: {x:?}");
-                            info!("should show toast now");
-                            // toast_visible.set(true);
-                        }
-                        Err(x) => info!("error: {x:?}"),
-                    };
-                }
-            })
-        };
+    //             let curr_survey_id = app_state.survey.metadata.id.to_string();
+    //             async move {
+    //                 info!("Attempting to save questions...");
+    //                 info!("Publishing content, app_state: {app_state:?}");
+    //                 // info!("Questions save: {:?}", question_state);
+    //                 match client
+    //                     .post(format!("http://localhost:3000/surveys/{curr_survey_id}"))
+    //                     .json(&json!(content))
+    //                     // .bearer_auth(token.clone())
+    //                     .header("x-auth-token", token)
+    //                     .send()
+    //                     .await
+    //                 {
+    //                     Ok(x) => {
+    //                         info!("success: {x:?}");
+    //                         info!("should show toast now");
+    //                         // toast_visible.set(true);
+    //                     }
+    //                     Err(x) => info!("error: {x:?}"),
+    //                 };
+    //             }
+    //         })
+    //     };
 
 
-        // let curr_survey = app_state.curr_survey.clone();
-        cx.render(rsx! {
-                div {
-                    class: "survey",
-                    form {
-                        prevent_default: "onsubmit",
-                        onsubmit: move |evt| {
-                            info!("submitting survey result: {:?}", evt.values);
-                            // let formvalue = match evt.values.get(FORMINPUT_KEY).clone() {
-                            //     Some(x) => {info!("form values: {x:?}"); x.clone()}
-                            //     None => {"None".to_string()}
-                            // };
-                            // let formvalue = match evt.values.get(FORMINPUT_KEY).clone() {
-                            //     Some(x) => {info!("found some data in the form"); x}
-                            //     None => {"No data found"} 
-                            // };
-                            post_questions(evt.values.clone(), app_state.client.clone());
-                            // evt.stop_propagation();
-                        },
-                        onchange: move |evt| {
-                            info!("form: {:#?}", evt.data);
-                            // info!("form testing deserialize: {:#?}", serde_json::Value::from_str(&evt.data.value));
-                            info!("appstate: {:#?}", app_state.survey);
-                            // evt
-                        },
-                        h1 {"title: {app_state.survey.title:?}"}
-                        app_state.survey.questions.iter().map(|question| rsx!{
-                            fieldset {
-                                legend {
-                                    "question text: {question.value}"
-                                }
-                                ul {
-                                    question.options.iter().enumerate().map(|(i, option):(usize, &QuestionOption)|
-                                    rsx!{
-                                        li {
-                                            input {
-                                                r#type: if question.r#type == QuestionType::Checkbox { "checkbox"} else {"radio"},
-                                                value: "{option.text:?}",
-                                                id: "{option.id}_{i}",
-                                                name: "{question.id}",
-                                            }
-                                            label {
-                                                r#for:"{option.id}_{i}",
-                                                "{option.id}_{i}: {option.text:?}"
-                                            }
-                                            // "{option:?}"
-                                        }
-                                    })
-                                }
-                            }
+    //     // let curr_survey = app_state.curr_survey.clone();
+    //     cx.render(rsx! {
+    //             div {
+    //                 class: "survey",
+    //                 form {
+    //                     prevent_default: "onsubmit",
+    //                     onsubmit: move |evt| {
+    //                         info!("submitting survey result: {:?}", evt.values);
+    //                         // let formvalue = match evt.values.get(FORMINPUT_KEY).clone() {
+    //                         //     Some(x) => {info!("form values: {x:?}"); x.clone()}
+    //                         //     None => {"None".to_string()}
+    //                         // };
+    //                         // let formvalue = match evt.values.get(FORMINPUT_KEY).clone() {
+    //                         //     Some(x) => {info!("found some data in the form"); x}
+    //                         //     None => {"No data found"} 
+    //                         // };
+    //                         post_questions(evt.values.clone(), app_state.client.clone());
+    //                         // evt.stop_propagation();
+    //                     },
+    //                     onchange: move |evt| {
+    //                         info!("form: {:#?}", evt.data);
+    //                         // info!("form testing deserialize: {:#?}", serde_json::Value::from_str(&evt.data.value));
+    //                         info!("appstate: {:#?}", app_state.survey);
+    //                         // evt
+    //                     },
+    //                     h1 {"title: {app_state.survey.survey.title:?}"}
+    //                     app_state.survey.survey.questions.iter().map(|question| rsx!{
+    //                         fieldset {
+    //                             legend {
+    //                                 "question text: {question.value}"
+    //                             }
+    //                             ul {
+    //                                 question.options.iter().enumerate().map(|(i, option):(usize, &QuestionOption)|
+    //                                 rsx!{
+    //                                     li {
+    //                                         input {
+    //                                             r#type: if question.r#type == QuestionType::Checkbox { "checkbox"} else {"radio"},
+    //                                             value: "{option.text:?}",
+    //                                             id: "{option.id}_{i}",
+    //                                             name: "{question.id}",
+    //                                         }
+    //                                         label {
+    //                                             r#for:"{option.id}_{i}",
+    //                                             "{option.id}_{i}: {option.text:?}"
+    //                                         }
+    //                                         // "{option:?}"
+    //                                     }
+    //                                 })
+    //                             }
+    //                         }
                             
-                        })
-                        button {
-                            class: "publish-button",
-                            // r#type: "submit",
-                            "Submit"
-                        }
-                    }
-                }
-        })
-    }
+    //                     })
+    //                     button {
+    //                         class: "publish-button",
+    //                         // r#type: "submit",
+    //                         "Submit"
+    //                     }
+    //                 }
+    //             }
+    //     })
+    // }
 
 
     #[derive(Deserialize, Debug, Serialize)]
@@ -665,7 +665,7 @@ pub mod mainapp {
                         }
                         div {
                             style: "grid-column:2",
-                            self::RenderSurvey { survey_to_render: &app_state.survey }
+                            self::RenderSurvey { survey_to_render: &app_state.survey.survey }
                         }
                     }
                     Login{}

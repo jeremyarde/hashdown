@@ -197,7 +197,7 @@ pub mod routes {
         let new_survey = SurveyBuilder::default()
             .metadata(metadata)
             .survey(parsed_survey)
-            .user_id(user_id.to_string())
+            .user_id(Some(user_id.to_owned()))
             .build()
             .unwrap();
 
