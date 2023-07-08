@@ -123,25 +123,6 @@ impl Survey {
     }
 }
 
-// impl Survey {
-//     fn from(partial_survey: ParsedSurvey, user_id: String) -> Survey {
-//         return Survey {
-//             // plaintext: partial_survey.plaintext,
-//             metadata: Metadata::new(),
-//             user_id,
-//             survey: partial_survey,
-//         };
-//     }
-
-//     pub fn new(plaintext: String) -> Survey {
-//         Survey {
-//             survey: ParsedSurvey::from(plaintext),
-//             metadata: Metadata::new(),
-//             user_id: ,
-//         }
-//     }
-// }
-
 // #[wasm_bindgen]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Question {
@@ -301,8 +282,8 @@ pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
         // println!("Curr line: {line}");
         match (find_line_type(line), &last_line_type) {
             (LineType::Question, LineType::Question) => {
-                curr_line_type = LineType::Question;
                 // new question after question, push prev, clear old
+                curr_line_type = LineType::Question;
                 questions.push(Question::from(curr_question_text, curr_options.clone()));
                 curr_question_text = line;
                 curr_options.clear();
@@ -310,14 +291,15 @@ pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
             }
             (LineType::Question, LineType::Nothing) => {
                 // new question, push prev, clear options
-                curr_line_type = LineType::Question;
                 curr_question_text = line;
                 curr_options.clear();
+                // questions.push(Question::from(curr_question_text, curr_options.clone()));
+                curr_line_type = LineType::Question;
                 last_line_type = LineType::Question;
             }
             (LineType::Question, LineType::Option) => {
-                curr_line_type = LineType::Question;
                 // new question, push prev, clear options
+                curr_line_type = LineType::Question;
                 questions.push(Question::from(curr_question_text, curr_options.clone()));
                 curr_options.clear();
                 curr_question_text = line;

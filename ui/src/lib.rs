@@ -319,6 +319,7 @@ pub mod mainapp {
         let editor_survey = move |content: String| {
             let survey = match ParsedSurvey::from(content) {
                 Ok(x) => {
+                    info!("Parsed: {x:#?}");
                     app_state.modify(|curr| {
                         AppState {
                             input_text: curr.input_text.clone(),
