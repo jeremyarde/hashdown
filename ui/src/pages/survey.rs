@@ -57,17 +57,12 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
             div {
                 class: "survey",
                 form {
-                    prevent_default: "onsubmit",
+                    action: "http://localhost:3000/surveys/{app_state.survey.metadata.id}",
+                    // enctype: "multipart/form-data",
+                    method: "post",
+                    // prevent_default: "onsubmit",
                     onsubmit: move |evt| {
                         info!("submitting survey result: {:?}", evt.values);
-                        // let formvalue = match evt.values.get(FORMINPUT_KEY).clone() {
-                        //     Some(x) => {info!("form values: {x:?}"); x.clone()}
-                        //     None => {"None".to_string()}
-                        // };
-                        // let formvalue = match evt.values.get(FORMINPUT_KEY).clone() {
-                        //     Some(x) => {info!("found some data in the form"); x}
-                        //     None => {"No data found"}
-                        // };
                         post_questions(evt.values.clone(), app_state.client.clone());
                         // evt.stop_propagation();
                     },
