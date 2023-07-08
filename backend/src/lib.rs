@@ -236,6 +236,7 @@ impl Questions {
     }
 }
 
+#[derive(Debug)]
 enum LineType {
     Question,
     Option,
@@ -266,6 +267,7 @@ enum ParseError {
 pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
     const VERSION: &str = "0";
 
+    let plaintext = contents.clone();
     let mut questions = vec![];
     let mut curr_question_text: &str = "";
     let mut curr_options: Vec<&str> = vec![];
@@ -273,11 +275,14 @@ pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
     let mut last_line_type: LineType = LineType::Nothing;
     let _question_num = 0;
     let mut title = "";
+    let mut curr_line_type: LineType = LineType::Nothing;
+    let mut curr_line: &str;
 
     for line in contents.lines() {
         // println!("Curr line: {line}");
         match (find_line_type(line), &last_line_type) {
             (LineType::Question, LineType::Question) => {
+                curr_line_type = LineType::Question;
                 // new question after question, push prev, clear old
                 questions.push(Question::from(curr_question_text, curr_options.clone()));
                 curr_question_text = line;
@@ -286,12 +291,13 @@ pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
             }
             (LineType::Question, LineType::Nothing) => {
                 // new question, push prev, clear options
-                // questions.push(Question::from(curr_question_text, curr_options.clone()));
+                curr_line_type = LineType::Question;
                 curr_question_text = line;
                 curr_options.clear();
                 last_line_type = LineType::Question;
             }
             (LineType::Question, LineType::Option) => {
+                curr_line_type = LineType::Question;
                 // new question, push prev, clear options
                 questions.push(Question::from(curr_question_text, curr_options.clone()));
                 curr_options.clear();
@@ -299,26 +305,42 @@ pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
             }
             (LineType::Option, LineType::Question) => {
                 // option for new question, clear options, push option
+                curr_line_type = LineType::Option;
                 curr_options.clear();
                 curr_options.push(line);
                 last_line_type = LineType::Option;
             }
             (LineType::Option, LineType::Option) => {
+                curr_line_type = LineType::Option;
                 // new option same question, push option
                 curr_options.push(line);
                 last_line_type = LineType::Option;
             }
             (LineType::Title, LineType::Nothing) => {
+                curr_line_type = LineType::Title;
                 title = line.clone();
                 last_line_type = LineType::Title;
             }
+            (LineType::Question, LineType::Title) => {
+                // First question
+                curr_line_type = LineType::Question;
+                curr_question_text = line;
+                curr_options.clear();
+                last_line_type = LineType::Question;
+            }
             (LineType::Title, _) => {
+                curr_line_type = LineType::Title;
                 return Err(anyhow!(
                     "Found multiple titles, remove one line that starts with `# `"
-                ))
+                ));
             }
-            _ => {}
+            _ => {
+                curr_line_type = LineType::Nothing;
+                last_line_type = LineType::Nothing;
+            }
         }
+        println!("{curr_line_type:?}: {line:?}");
+        debug!("{curr_line_type:?}: {line:?}");
     }
 
     // adding the last question
@@ -330,17 +352,7 @@ pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
     //     text: "test".to_string(),
     // };
 
-    let survey = ParsedSurvey {
-        // id: nanoid_gen(),
-        // user_id: "".to_string(),
-        // created_at: "".to_string(),
-        // modified_at: "".to_string(),
-        questions: questions,
-        // version: "0".to_string(),
-        parse_version: "0".to_string(),
-        title: title.to_string(),
-        plaintext: contents,
-    };
+    let survey = ParsedSurvey::from_details(title, &plaintext, questions);
 
     return Ok(survey);
     // return JsValue::from(value);
@@ -355,8 +367,27 @@ pub struct ParsedSurvey {
 }
 
 impl ParsedSurvey {
-    fn from(plaintext: String) -> anyhow::Result<ParsedSurvey> {
+    pub fn from(plaintext: String) -> anyhow::Result<ParsedSurvey> {
         return parse_markdown_v3(plaintext);
+    }
+
+    fn from_details(title: &str, plaintext: &str, questions: Vec<Question>) -> Self {
+        let title = title.replace("# ", "");
+
+        ParsedSurvey {
+            title: title.to_owned(),
+            plaintext: plaintext.to_owned(),
+            questions: questions,
+            parse_version: "".to_string(),
+        }
+    }
+    pub fn new() -> Self {
+        ParsedSurvey {
+            title: "".to_owned(),
+            plaintext: "".to_owned(),
+            questions: vec![],
+            parse_version: "".to_string(),
+        }
     }
 }
 
@@ -403,6 +434,8 @@ mod tests {
     #[test]
     fn test_v3() {
         let teststring = r#"
+# This is the title
+
 1. Question number 1
   1. option 1
   2. option 2
@@ -414,6 +447,7 @@ mod tests {
 
         let res = parse_markdown_v3(teststring.to_string()).unwrap();
 
+        assert_eq!(&res.title, "This is the title");
         assert!(&res.questions.get(0).unwrap().value.eq("Question number 1"));
         assert_eq!(
             &res.questions.get(0).unwrap().options.get(0).unwrap().text,
@@ -435,29 +469,6 @@ mod tests {
 
         // println!("{:#?}", res)
     }
-
-    #[test]
-    fn test_bullet_points() {
-        let teststring = r#"
-- Question number 1
-  - option 1
-  - option 2
-- Question number 2
-- Question number 3
-  - q3 option 1
-  - q3 option 2
-"#;
-
-        let res = parse_markdown_v3(teststring.to_string());
-
-        println!("{:#?}", res)
-    }
-
-    // #[test]
-    // fn test_nanoid_gen() {
-    //     let nanoid = nanoid_gen();
-    //     println!("nanoid: {nanoid:?}");
-    // }
 
     #[test]
     fn test_question_parsing() {

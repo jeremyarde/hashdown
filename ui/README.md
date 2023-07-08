@@ -65,3 +65,7 @@ dioxus build --release
   - option 1 in other
 - test2 question
   - this is great
+
+
+
+npx tailwindcss -i ./input.css -o ./public/output.css --watch

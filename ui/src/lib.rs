@@ -28,7 +28,7 @@ pub mod mainapp {
     // use gloo_timers::future::TimeoutFuture;
     // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
     use markdownparser::{
-        parse_markdown_v3, Question, QuestionType, Questions, QuestionOption,
+        parse_markdown_v3, Question, QuestionType, Questions, QuestionOption, ParsedSurvey,
     };
 
     // mod types;
@@ -85,6 +85,7 @@ pub mod mainapp {
         pub user: Option<UserContext>,
         // auth_token: String,
         pub show_login: bool,
+        pub survey: ParsedSurvey,
     }
 
     impl AppState {
@@ -181,6 +182,7 @@ pub mod mainapp {
                     questions: vec![],
                 },
                 user: None,
+                survey: ParsedSurvey::new(),
                 show_login: false,
             }
         }
@@ -242,6 +244,7 @@ pub mod mainapp {
                                             curr_survey: sur,
                                             user: curr.user.to_owned(),
                                             show_login: curr.show_login,
+                                            survey: curr.survey.to_owned(),
                                             // auth_token: curr.auth_token.clone(),
                                         }
                                         // curr.questions = question;
@@ -326,7 +329,8 @@ pub mod mainapp {
                                         surveys: vec![],
                                         curr_survey: sur,
                                         user: curr.user.to_owned(),
-                                        show_login: curr.show_login
+                                        show_login: curr.show_login,
+                                        survey: curr.survey.to_owned(),
                                     }
                                 });
                             }
@@ -437,6 +441,8 @@ pub mod mainapp {
 
                 if app_state.user.is_none() {
                     info!("user token is not set");
+                    // Pop open the login ?
+                    return;
                 }
                 let mut token  = app_state.user.clone().unwrap().token;
                 token = token.trim_matches('"').to_string();
@@ -473,13 +479,16 @@ pub mod mainapp {
                     form {
                         prevent_default: "onsubmit",
                         onsubmit: move |evt| {
-                            info!("submitting survey result");
-                            let formvalue = evt.values.get(FORMINPUT_KEY).clone().unwrap().clone();
+                            info!("submitting survey result: {:?}", evt.values);
+                            // let formvalue = match evt.values.get(FORMINPUT_KEY).clone() {
+                            //     Some(x) => {info!("form values: {x:?}"); x.clone()}
+                            //     None => {"None".to_string()}
+                            // };
                             // let formvalue = match evt.values.get(FORMINPUT_KEY).clone() {
                             //     Some(x) => {info!("found some data in the form"); x}
                             //     None => {"No data found"} 
                             // };
-                            post_questions(formvalue, app_state.client.clone());
+                            post_questions(evt.values.clone(), app_state.client.clone());
                             // evt.stop_propagation();
                         },
                         onchange: move |evt| {
@@ -487,7 +496,7 @@ pub mod mainapp {
                             info!("appstate: {:#?}", app_state.curr_survey);
                             // evt
                         },
-                        h1 {"title: "}
+                        h1 {"title: {app_state.survey.title:?}"}
                         app_state.curr_survey.questions.iter().map(|question| rsx!{
                             fieldset {
                                 legend {
@@ -547,6 +556,7 @@ pub mod mainapp {
                         user: curr.user.to_owned(),
                         // auth_token: curr.auth_token.clone(),
                         show_login: curr.show_login,
+                        survey: curr.survey.to_owned(),
                     });
                 }
             })
@@ -620,6 +630,7 @@ pub mod mainapp {
                                 curr_survey: curr.curr_survey.clone(),
                                 user: Some(new_user.to_owned()),
                                 show_login: curr.show_login,
+                                survey: curr.survey.to_owned(),
                             });
 
                         }
@@ -652,6 +663,7 @@ pub mod mainapp {
                                 curr_survey: curr.curr_survey.clone(),
                                 user: curr.user.to_owned(),
                                 show_login: if curr.show_login { false} else { true},
+                                survey: curr.survey.to_owned(),
                             });
                         },
                         "login"

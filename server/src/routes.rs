@@ -203,7 +203,7 @@ pub mod routes {
 
         let insert_result = state.db.create_survey(survey_model).await.unwrap();
 
-        info!("     ->> Inserted survey: {:?}", new_survey);
+        info!("     ->> Inserted survey");
         // let response = CreateSurveyResponse { survey: new_survey };
 
         // return Ok(json!(response));

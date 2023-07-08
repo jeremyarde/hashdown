@@ -63,6 +63,7 @@ pub fn Login(cx: Scope) -> Element {
                                     cookie: "".to_string(),
                                 }),
                                 show_login: curr.show_login,
+                                survey: curr.survey.to_owned(),
                                 // auth_token: curr.auth_token.clone(),
                             }
                         });
