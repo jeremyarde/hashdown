@@ -272,7 +272,9 @@ pub mod mainapp {
 
                 if app_state.user.is_none() {
                     info!("user token is not set");
+                    return;
                 }
+
                 let mut token  = app_state.user.clone().unwrap().token;
                 token = token.trim_matches('"').to_string();
                 async move {
@@ -298,6 +300,25 @@ pub mod mainapp {
             })
         };
 
+        let editor_survey = move |content: String| {
+            let survey = match ParsedSurvey::from(content) {
+                Ok(x) => {
+                    app_state.modify(|curr| {
+                        AppState {
+                            input_text: curr.input_text.clone(),
+                            client: curr.client.clone(),
+                            surveys: vec![],
+                            curr_survey: curr.curr_survey.to_owned(),
+                            user: curr.user.to_owned(),
+                            show_login: curr.show_login,
+                            survey: x,
+                        }
+                    });
+                }
+                Err(_) => {},
+            };
+        };
+
         cx.render(rsx! {
             div {
                 class: "editor-container",
@@ -318,25 +339,11 @@ pub mod mainapp {
                     // },
                     
                     oninput: move |e| {
+
                         let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
                         // let formvalue = "- this is a test\n  - this is a question".to_string();
-                        match SurveyDto::from(formvalue.clone()) {
-                            Ok(sur) => {
-                                app_state.modify(|curr| {
-                                    AppState {
-                                        input_text: curr.input_text.clone(),
-                                        client: curr.client.clone(),
-                                        surveys: vec![],
-                                        curr_survey: sur,
-                                        user: curr.user.to_owned(),
-                                        show_login: curr.show_login,
-                                        survey: curr.survey.to_owned(),
-                                    }
-                                });
-                            }
-                            Err(_) => {}
-                        };
-                        // info!("onchange results: {:?}", formvalue);
+                        editor_survey(formvalue.clone());
+                        info!("onchange results: {:?}", formvalue);
                     },
                     textarea {
                         class: "editor-field",
@@ -345,16 +352,7 @@ pub mod mainapp {
                         placeholder: "Write your survey here",
                         name: FORMINPUT_KEY,
                     }
-                    // button {
-                    //     prevent_default: "onclick",
-                    //     class: "hover:bg-violet-600 w-full text-blue-500 bg-blue-200 rounded p-2",
-                    //     onclick: move |evt| {
-                    //         info!("Pushed publish :)");
-                    //         post_questions("test".to_string(), app_state.client.clone());
-                    //         evt.stop_propagation();
-                    //     },
-                    //     "Publish"
-                    // }
+ 
                     button {
                         class: "publish-button",
                         // r#type: "submit",
@@ -472,7 +470,7 @@ pub mod mainapp {
         };
 
 
-        let curr_survey = app_state.curr_survey.clone();
+        // let curr_survey = app_state.curr_survey.clone();
         cx.render(rsx! {
                 div {
                     class: "survey",
@@ -497,7 +495,7 @@ pub mod mainapp {
                             // evt
                         },
                         h1 {"title: {app_state.survey.title:?}"}
-                        app_state.curr_survey.questions.iter().map(|question| rsx!{
+                        app_state.survey.questions.iter().map(|question| rsx!{
                             fieldset {
                                 legend {
                                     "question text: {question.value}"
@@ -536,61 +534,8 @@ pub mod mainapp {
     use fermi::use_init_atom_root;
     use serde_json::{Value, json};
 
-    use crate::pages::{self, login::Login};
+    use crate::pages::{login::Login};
 
-    fn ListSurveysComponent(cx: Scope) -> Element {
-        let app_state = use_atom_state(&cx, APP);
-        info!("In list survey components");
-
-        let get_questions = move |client: Client| {
-            cx.spawn({
-                to_owned![app_state];
-                async move {
-                    let surveys = list_surveys(&client).await;
-                    app_state.modify(|curr| AppState {
-                        // questions: curr.questions.clone(),
-                        input_text: curr.input_text.clone(),
-                        client: curr.client.clone(),
-                        surveys: surveys,
-                        curr_survey: curr.curr_survey.clone(),
-                        user: curr.user.to_owned(),
-                        // auth_token: curr.auth_token.clone(),
-                        show_login: curr.show_login,
-                        survey: curr.survey.to_owned(),
-                    });
-                }
-            })
-        };
-
-        info!("list survey component");
-
-        cx.render(rsx! {
-            div { class: "bg-green-400",
-                h1 { "All Surveys" }
-                app_state.surveys.iter().map(|sur| rsx!{
-                    h3 {
-                        "{sur.nanoid}"
-                    }
-                })
-            }
-        })
-    }
-
-    async fn list_surveys(client: &Client) -> Vec<SurveyDto> {
-        match client.get("http://localhost:3000/survey").send().await {
-            Ok(x) => {
-                info!("successfully listing surveys: {x:?}");
-                return x
-                    .json::<Vec<SurveyDto>>()
-                    .await
-                    .expect("Could not parse json surveys");
-            }
-            Err(x) => {
-                info!("error listing surveys: {x:?}");
-                return vec![];
-            }
-        }
-    }
 
     #[derive(Deserialize, Debug, Serialize)]
     pub struct LoginPayload {
@@ -689,20 +634,6 @@ pub mod mainapp {
             }
         ))
     }
-
-    
-    // fn Home(cx: Scope) -> Element {
-    //     // cx.render(rsx!(
-    //     //     div {
-    //     //         Router {
-    //     //             Route { to: "/", App {}},
-    //     //             Route { to: "/login", Login {}}
-    //     //             // Route { to: "", NotFound {} }
-    //     //             Redirect { from: "", to: "/" }
-    //     //         }
-    //     //     }
-    //     // ))
-    // }
 
     pub fn App(cx: Scope) -> Element {
         use_init_atom_root(cx);
