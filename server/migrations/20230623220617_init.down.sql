@@ -2,3 +2,4 @@
 drop table users;
 drop table answers;
 drop table surveys;
+drop table pageviews;

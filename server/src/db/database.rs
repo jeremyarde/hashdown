@@ -252,16 +252,15 @@ impl Database {
         info!("Creating answers in database");
 
         let res = sqlx::query(
-            r#"insert into answers (answer_id, survey_id, survey_version, answers, created_at)
+            r#"insert into answers (answer_id, survey_id, submitted_at, answers)
         values
-        ($1, $2, $3, $4, $5)
+        ($1, $2, $3, $4)
         "#,
         )
         .bind(answer.answer_id)
         .bind(answer.survey_id)
-        .bind(answer.survey_version)
+        .bind(answer.submitted_at)
         .bind(json!(answer.answers))
-        .bind(answer.start_time)
         .execute(&self.pool)
         .await
         .unwrap();

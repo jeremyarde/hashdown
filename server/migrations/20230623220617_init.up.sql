@@ -1,33 +1,37 @@
 -- Add migration script here
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    user_id TEXT not null unique,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TEXT,
+    modified_at TEXT,
+    deleted_at TEXT,
+    verified BOOLEAN DEFAULT false
+);
+
 CREATE TABLE surveys (
     id SERIAL PRIMARY KEY,
-    plaintext TEXT NOT NULL,
+    survey_id TEXT not null unique,
+    plaintext TEXT,
     user_id TEXT,
     created_at TEXT,
     modified_at TEXT,
     version TEXT,
-    parse_version TEXT
-);
-
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    user_id TEXT,
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    created_at TEXT NOT NULL,
-    modified_at TEXT NOT NULL,
-    verified BOOLEAN DEFAULT false
+    parse_version TEXT,
+    
+    foreign key(user_id) references users(user_id)
 );
 
 CREATE TABLE answers (
     id SERIAL PRIMARY KEY,
-    answer_id TEXT NOT NULL,
-    survey_id TEXT NOT NULL,
-    survey_version TEXT,
-    start_time TEXT,
-    end_time TEXT,
+    answer_id TEXT NOT NULL unique,
+    submitted_at TEXT,
     answers JSON,
-    created_at TEXT
+    survey_id TEXT NOT NULL,
+
+    foreign key(survey_id) references surveys(survey_id)
+    
 );
 
 create table pageviews (
@@ -41,9 +45,13 @@ create table pageviews (
     user_agent TEXT
 );
 
-INSERT INTO surveys (plaintext, user_id)
+INSERT INTO users (user_id, email, password_hash) VALUES (
+    'testuserid', 'fake', ''
+);
+
+INSERT INTO surveys (survey_id, plaintext, user_id)
 VALUES (
-        '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
-        'testid'
+        '123', '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
+        'testuserid'
     );
 

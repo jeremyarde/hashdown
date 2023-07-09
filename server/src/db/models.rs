@@ -2,7 +2,7 @@ use derive_builder::Builder;
 // use ormlite::Model;
 use rand::{thread_rng, Rng};
 use serde::{self, Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, Value};
 use sqlx::FromRow;
 use std::collections::HashMap;
 const NANOID_LEN: usize = 12;
@@ -22,17 +22,15 @@ const NANOID_LEN: usize = 12;
 //     return String::from_iter(random.iter());
 // }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
 pub struct CreateAnswersModel {
     pub id: Option<String>,
     pub answer_id: String,
-    pub external_id: String,
+    // pub external_id: String,
     pub survey_id: String,
-    pub survey_version: String,
-    pub start_time: String,
-    pub end_time: String,
-    pub answers: HashMap<String, String>,
-    pub created_at: String,
+    // pub survey_version: String,
+    pub submitted_at: String,
+    pub answers: Value,
 }
 
 // impl CreateAnswersModel {

@@ -3,6 +3,7 @@ use fermi::use_atom_state;
 use log::info;
 use markdownparser::{ParsedSurvey, Question, QuestionOption, QuestionType};
 use reqwest::Client;
+use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP};
@@ -20,24 +21,26 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
         cx.spawn({
             to_owned![app_state];
 
-            if app_state.user.is_none() {
-                info!("user token is not set");
-                // Pop open the login ?
-                return;
-            }
-            let mut token = app_state.user.clone().unwrap().token;
-            token = token.trim_matches('"').to_string();
+            // if app_state.user.is_none() {
+            //     info!("user token is not set");
+            //     // Pop open the login ?
+            //     return;
+            // }
+            // let mut token = app_state.user.clone().unwrap().token;
+            // token = token.trim_matches('"').to_string();
 
             let curr_survey_id = app_state.survey.metadata.id.to_string();
             async move {
                 info!("Attempting to save questions...");
-                info!("Publishing content, app_state: {app_state:?}");
+                // info!("Publishing content, app_state: {app_state:?}");
+                info!("Form data: {content:#?}");
+                // let formdata = FormData::from(content);
                 // info!("Questions save: {:?}", question_state);
                 match client
                     .post(format!("http://localhost:3000/surveys/{curr_survey_id}"))
                     .json(&json!(content))
                     // .bearer_auth(token.clone())
-                    .header("x-auth-token", token)
+                    // .header("x-auth-token", token)
                     .send()
                     .await
                 {
@@ -57,10 +60,10 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
             div {
                 class: "survey",
                 form {
-                    action: "http://localhost:3000/surveys/{app_state.survey.metadata.id}",
-                    // enctype: "multipart/form-data",
-                    method: "post",
-                    // prevent_default: "onsubmit",
+                    // action: "http://localhost:3000/surveys/{app_state.survey.metadata.id}",
+                    // enctype: "application/x-www-form-urlencoded",
+                    // method: "post",
+                    prevent_default: "onsubmit",
                     onsubmit: move |evt| {
                         info!("submitting survey result: {:?}", evt.values);
                         post_questions(evt.values.clone(), app_state.client.clone());
@@ -80,18 +83,16 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
                             }
                             ul {
                                 // question.options.iter().enumerate().map(|(i, option): (usize, &QuestionOption)| {
-                                    rsx!{
-                                        li {
-                                            QuestionComponent{question: &question}
-                                        }
-                                    }
+                                rsx!{
+                                    QuestionComponent{question: &question}
+                                }
                             }
                         }
 
                     })
                     button {
                         class: "publish-button",
-                        // r#type: "submit",
+                        r#type: "submit",
                         "Submit"
                     }
                 }
@@ -101,22 +102,26 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
 
 // pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
 
+
+
 #[inline_props]
 fn QuestionComponent<'a>(cx: Scope, question: &'a Question) -> Element {
     let question_component = match question.r#type {
         QuestionType::Checkbox | QuestionType::Radio => {
             let value = question.options.iter().enumerate().map(|(i, option): (usize, &QuestionOption)| {
                 rsx!(
-                    input {
-                        r#type: if question.r#type == QuestionType::Checkbox { "checkbox"} else {"radio"},
-                        // r#type: question_type,
-                        value: "{option.text:?}",
-                        id: "{option.id}_{i}",
-                        name: "{question.id}",
-                    }
-                    label {
-                        r#for:"{option.id}_{i}",
-                        "{option.id}_{i}: {option.text:?}"
+                    li {
+                        input {
+                            r#type: if question.r#type == QuestionType::Checkbox { "checkbox"} else {"radio"},
+                            // r#type: question_type,
+                            value: "{option.text:?}",
+                            id: "{option.id}_{i}",
+                            name: "{question.id}",
+                        }
+                        label {
+                            r#for:"{option.id}_{i}",
+                            "{option.id}_{i}: {option.text:?}"
+                        }
                     }
                 )
             });
@@ -124,61 +129,73 @@ fn QuestionComponent<'a>(cx: Scope, question: &'a Question) -> Element {
         }
         QuestionType::Text => {
             rsx!(
-                label {
-                    r#for:"{question.id}",
-                    "{question.id}: {question.value:?}"
-                }
-                input {
-                    r#type: "text",
-                    // r#type: question_type,
-                    value: "{question.value:?}",
-                    id: "{question.id}",
-                    name: "{question.id}",
+                li {
+
+                    label {
+                        r#for:"{question.id}",
+                        "{question.id}: {question.value:?}"
+                    }
+                    input {
+                        r#type: "text",
+                        // r#type: question_type,
+                        value: "{question.value:?}",
+                        id: "{question.id}",
+                        name: "{question.id}",
+                    }
                 }
             )
         }
         QuestionType::Number => {
             rsx!(
-                label {
-                    r#for:"{question.id}",
-                    "{question.id}: {question.value:?}"
-                }
-                input {
-                    r#type: "number",
-                    // r#type: question_type,
-                    value: "{question.value:?}",
-                    id: "{question.id}",
-                    name: "{question.id}",
+                li {
+
+                    label {
+                        r#for:"{question.id}",
+                        "{question.id}: {question.value:?}"
+                    }
+                    input {
+                        r#type: "number",
+                        // r#type: question_type,
+                        value: "{question.value:?}",
+                        id: "{question.id}",
+                        name: "{question.id}",
+                    }
                 }
             )
         }
         QuestionType::Email => {
             rsx!(
-                label {
-                    r#for:"{question.id}",
-                    "{question.id}: {question.value:?}"
-                }
-                input {
-                    r#type: "email",
-                    // r#type: question_type,
-                    value: "{question.value:?}",
-                    id: "{question.id}",
-                    name: "{question.id}",
+                li {
+
+                    label {
+                        r#for:"{question.id}",
+                        "{question.id}: {question.value:?}"
+                    }
+                    input {
+                        r#type: "email",
+                        // r#type: question_type,
+                        value: "{question.value:?}",
+                        id: "{question.id}",
+                        name: "{question.id}",
+                    }
                 }
             )
         }
         QuestionType::Date => {
             rsx!(
-                label {
-                    r#for:"{question.id}",
-                    "{question.id}: {question.value:?}"
-                }
-                input {
-                    r#type: "date",
-                    // r#type: question_type,
-                    value: "{question.value:?}",
-                    id: "{question.id}",
-                    name: "{question.id}",
+                li {
+
+                    label {
+                        r#for:"{question.id}",
+                        "{question.id}: {question.value:?}"
+                    }
+                    input {
+                        r#type: "date",
+                        // r#type: question_type,
+                        value: "{question.value:?}",
+                        id: "{question.id}",
+                        name: "{question.id}",
+                    }
                 }
             )
         }

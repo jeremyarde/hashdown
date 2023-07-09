@@ -1,4 +1,6 @@
 pub mod routes {
+    use std::collections::HashMap;
+
     use anyhow::Context;
     use argon2::{
         password_hash::{rand_core::OsRng, SaltString},
@@ -14,7 +16,7 @@ pub mod routes {
         response::IntoResponse,
         response::Response,
         routing::{get, get_service, post, MethodRouter},
-        Extension, Router,
+        Extension, Form, Router,
     };
     use db::{
         database::{CreateUserRequest, Database},
@@ -30,7 +32,7 @@ pub mod routes {
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     // use tower_cookies::{Cookie, Cookies};
-    use tracing::log::info;
+    use tracing::{debug, log::info};
     // use uuid::Uuid;
     // use sqlx::{Sqlite, SqlitePool};
     // use tower_http::http::cors::CorsLayer;
@@ -211,48 +213,71 @@ pub mod routes {
         return Ok(Json(json!({ "survey": new_survey })));
     }
 
-    #[tracing::instrument]
+    #[derive(Deserialize, Serialize, Debug)]
+    #[serde(tag = "type", rename_all = "snake_case")]
+    pub enum Answer {
+        MultipleChoice {
+            id: String,
+            value: Vec<String>,
+        },
+        Radio {
+            id: String,
+            value: String,
+            // r#type: String,
+        },
+    }
+
+    // #[derive(Deserialize, Serialize, Debug)]
+    // pub enum Answers {
+    //     id: String,
+    //     value: Answer,
+    // }
+
+    // #[tracing::instrument]
     #[axum::debug_handler]
     pub async fn submit_survey(
         State(state): State<ServerState>,
+        Path(survey_id): Path<String>,
         // mut multipart: Multipart,
         // ctx: Option<Ctext>,
-        extract::Json(payload): extract::Json<CreateAnswersRequest>,
-    ) -> Result<Json<CreateAnswersResponse>, ServerError> {
-        // let content_type_header = req.headers().get(CONTENT_TYPE);
-        // let content_type => content_type_header.and_then(|value| value.to_str().ok());
+        // extract::Json(payload): extract::Json<CreateAnswersRequest>,
+        Json(payload): extract::Json<Vec<Answer>>, // for urlencoded
+    ) -> Result<Json<Value>, ServerError> {
+        info!("->> submit_survey");
+        debug!("    ->> survey: {:#?}", payload);
 
-        info!("Called submit survey");
-        // check
-
-        info!("Found survey_id in request");
-
-        let survey = match state.db.get_survey(&payload.survey_id).await.unwrap() {
+        // json version
+        let survey = match state.db.get_survey(&survey_id).await.unwrap() {
             Some(x) => x,
-            None => return Err(ServerError::BadRequest("another issue".to_string())),
+            None => {
+                return Err(ServerError::BadRequest(
+                    "Resource does not exist".to_string(),
+                ))
+            }
         };
-        info!("Found survey_id in database");
-        let answer_id = nanoid_gen(12);
-        let response = CreateAnswersResponse {
-            answer_id: answer_id.clone(),
-        };
+        // info!("Found survey_id in database");
+        // let answer_id = nanoid_gen(12);
+        // let response = CreateAnswersResponse {
+        //     answer_id: answer_id.clone(),
+        // };
         let create_answer_model = CreateAnswersModel {
             id: None,
-            answer_id: answer_id,
-            external_id: "".to_string(),
-            survey_id: payload.survey_id,
-            survey_version: "".to_string(),
-            start_time: chrono::Local::now().to_string(),
-            end_time: "".to_string(),
-            answers: payload.answers,
-            created_at: "".to_string(),
+            answer_id: nanoid_gen(12),
+            survey_id: survey_id.clone(),
+            answers: json!(payload),
+            submitted_at: chrono::Utc::now().to_string(),
+            // external_id: "".to_string(),
+            // survey_version: "".to_string(),
+            // start_time: chrono::Local::now().to_string(),
+            // end_time: "".to_string(),
+            // created_at: "".to_string(),
         };
 
         let answer_result = state.db.create_answer(create_answer_model).await.unwrap();
 
         info!("completed survey submit");
 
-        return Ok(Json(response));
+        return Ok(Json(json!({ "survey_id": survey_id })));
     }
 
     fn try_thing() -> Result<(), anyhow::Error> {
