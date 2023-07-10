@@ -39,6 +39,33 @@ static ANSWERS: AtomRef<HashMap<String, Answer>> = |_| HashMap::new();
 pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
     let app_state = use_atom_state(cx, APP);
     let answers_state = use_atom_ref(cx, ANSWERS);
+
+    // Build the state for the answers
+    // for x in app_state.survey.survey.questions.iter() {
+    //     if x.r#type == QuestionType::Checkbox || x.r#type == QuestionType::Radio {
+    //         let new_answer: Option<Answer> = match x.r#type {
+    //             QuestionType::Radio => {
+    //                 Some(Answer::Radio { id: x.id.clone(), value: "".to_string() })
+    //             }
+    //             QuestionType::Checkbox => {
+    //                 Some(Answer::MultipleChoice { 
+    //                     id: x.id.clone(), 
+    //                     value: vec![]
+    //                 })
+    //             },
+    //             _ => {None}
+    //         };
+    //         if new_answer.is_some() {
+    //             answers_state.write().insert(x.id.to_string(), {
+    //                 new_answer.unwrap()
+    //             });
+    //         }
+    //     }
+    // }
+
+    info!("answers state: {:#?}", answers_state.read());
+            // Answer::Radio { id: "", value: () })
+    
     // let mut answer_state = use_atom_state(cx, ANSWERS);
 
     
@@ -78,53 +105,55 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
     };
 
     cx.render(rsx! {
-            div {
-                class: "survey",
-                form {
-                    // action: "http://localhost:3000/surveys/{app_state.survey.metadata.id}",
-                    // enctype: "application/x-www-form-urlencoded",
-                    // method: "post",
-                    prevent_default: "onsubmit",
-                    onsubmit: move |evt| {
-                        info!("submitting survey result: {:?}", evt.values);
-                        post_questions(evt.values.clone(), app_state.client.clone());
-                        // evt.stop_propagation();
-                    },
-                    onchange: move |evt| {
-                        info!("form: {:#?}", evt.data);
-                        // info!("form testing deserialize: {:#?}", serde_json::Value::from_str(&evt.data.value));
-                        info!("appstate: {:#?}", app_state.survey);
-                        // evt
-                    },
-                    h1 {"title: {app_state.survey.survey.title:?}"}
-                    app_state.survey.survey.questions.iter().map(|question| {
-                        info!("curr question: {:?}" ,question);
-                        // let curr_state = answer_state.get().get(&question.id.clone()).unwrap();
-                        rsx!{
-                        // fieldset {
-                        //     legend {
-                        //         "question text: {question.value}"
-                        //     }
-                        //     ul {
-                        //         // question.options.iter().enumerate().map(|(i, option): (usize, &QuestionOption)| {
-                        //         rsx!{
-                        //             Questions{question: &question}
-                        //         }
-                        //     }
-                        // }
-                        // Radio {question: question.clone()}
-                        Question {
-                            question: question.clone(), 
-                            // set_answer: set_answer 
-                        }
-                    }})
-                    button {
-                        class: "publish-button",
-                        r#type: "submit",
-                        "Submit"
+        div {
+            class: "survey",
+            form {
+                // action: "http://localhost:3000/surveys/{app_state.survey.metadata.id}",
+                // enctype: "application/x-www-form-urlencoded",
+                // method: "post",
+                prevent_default: "onsubmit",
+                onsubmit: move |evt| {
+                    info!("submitting survey result: {:?}", evt.values);
+                    post_questions(evt.values.clone(), app_state.client.clone());
+                    // evt.stop_propagation();
+                },
+                onchange: move |evt| {
+                    info!("form: {:#?}", evt.data);
+                    // info!("form testing deserialize: {:#?}", serde_json::Value::from_str(&evt.data.value));
+                    info!("appstate: {:#?}", app_state.survey);
+                    // evt
+                },
+                h1 {"title: {app_state.survey.survey.title:?}"}
+                app_state.survey.survey.questions.iter().map(|question| {
+
+
+                    info!("curr question: {:?}" ,question);
+                    // let curr_state = answer_state.get().get(&question.id.clone()).unwrap();
+                    rsx!{
+                    // fieldset {
+                    //     legend {
+                    //         "question text: {question.value}"
+                    //     }
+                    //     ul {
+                    //         // question.options.iter().enumerate().map(|(i, option): (usize, &QuestionOption)| {
+                    //         rsx!{
+                    //             Questions{question: &question}
+                    //         }
+                    //     }
+                    // }
+                    // Radio {question: question.clone()}
+                    Question {
+                        question: question.clone(), 
+                        // set_answer: set_answer 
                     }
+                }})
+                button {
+                    class: "publish-button",
+                    r#type: "submit",
+                    "Submit"
                 }
             }
+        }
     })
 }
 
@@ -136,6 +165,7 @@ fn Question(cx: Scope, question: Question,
     // set_answer: Box<dyn Fn(&Question, Answer)>
 ) -> Element {
     let answer_state = use_atom_ref(cx, ANSWERS);
+    // let answers = use_state(cx, || vec![]);
     // let set_answer = use_set(cx, ANSWERS);
 
     // answer_state.modify(|curr| {
@@ -156,11 +186,11 @@ fn Question(cx: Scope, question: Question,
                         input {
                             r#type: if question.r#type == QuestionType::Checkbox { "checkbox"} else {"radio"},
                             // r#type: question_type,
-                            value: "{option.text:?}",
+                            // value: "{option.text}",
                             id: "{option.id}_{i}",
                             name: "{question.id}",
                             onchange: move |evt| {
-                                info!("Checkbox/Radio change: {:?}", evt.values);
+                                info!("Checkbox/Radio change event: {:?}", evt);
                                 let new_answer = match question.r#type {
                                     QuestionType::Radio => {
                                         Answer::MultipleChoice { id: question.id.clone(), value: vec![evt.value.clone()] }

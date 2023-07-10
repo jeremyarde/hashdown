@@ -106,58 +106,6 @@ pub mod mainapp {
         }
     }
 
-    // #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    // struct Survey {
-    //     id: String,
-    //     nanoid: String,
-    //     plaintext: String,
-    //     user_id: String,
-    //     created_at: String,
-    //     modified_at: String,
-    //     version: String,
-    //     // questions: Questions,
-    // }
-
-    // #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-    // pub struct SurveyDto {
-    //     id: String,
-    //     nanoid: String,
-    //     plaintext: String,
-    //     user_id: String,
-    //     created_at: String,
-    //     modified_at: String,
-    //     version: String,
-    //     questions: Vec<Question>,
-    // }
-
-    // impl SurveyDto {
-    //     fn new() -> SurveyDto {
-    //         SurveyDto {
-    //             id: "".to_string(),
-    //             nanoid: "".to_string(),
-    //             plaintext: "".to_string(),
-    //             user_id: "".to_string(),
-    //             created_at: "".to_string(),
-    //             modified_at: "".to_string(),
-    //             version: "".to_string(),
-    //             questions: vec![],
-    //         }
-    //     }
-    //     fn from(text: String) -> anyhow::Result<SurveyDto>{
-    //         let survey = parse_markdown_v3(text)?;
-    //         return Ok(SurveyDto {
-    //             id: "".to_string(),
-    //             nanoid: "".to_string(),
-    //             plaintext: survey.plaintext,
-    //             user_id: "".to_string(),
-    //             created_at: "".to_string(),
-    //             modified_at: "".to_string(),
-    //             version: survey.parse_version,
-    //             questions: survey.questions,
-    //         });
-    //     }
-    // }
-
     impl AppState {
         fn new() -> Self {
             // let db = Database::new(false).;
@@ -180,19 +128,6 @@ pub mod mainapp {
                 // questions: Questions { qs: vec![] },
                 input_text: String::from(""),
                 client: client,
-                // surveys: vec![],
-                // // auth_token: "".to_string(),
-                // // curr_survey: Survey::new(),
-                // curr_survey: SurveyDto {
-                //     id: "".to_string(),
-                //     nanoid: "".to_string(),
-                //     plaintext: "".to_string(),
-                //     user_id: "".to_string(),
-                //     created_at: "".to_string(),
-                //     modified_at: "".to_string(),
-                //     version: "".to_string(),
-                //     questions: vec![],
-                // },
                 user: None,
                 survey: Survey::new(),
                 show_login: false,
