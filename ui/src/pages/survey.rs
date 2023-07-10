@@ -1,39 +1,61 @@
+use std::collections::{HashMap, HashSet};
+
 use dioxus::prelude::*;
-use fermi::use_atom_state;
+use fermi::{use_atom_state, Atom, use_set, use_atom_ref, AtomRef, use_init_atom_root};
 use log::info;
 use markdownparser::{ParsedSurvey, Question, QuestionOption, QuestionType};
 use reqwest::Client;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP};
 
+#[derive(Deserialize, Serialize, Debug, Hash, Eq)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum Answer {
+    MultipleChoice { id: String, value: Vec<String> },
+    Radio { id: String, value: String },
+}
+
+impl PartialEq for Answer {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            // (Answer::MultipleChoice { id, value }, Answer::Radio { id, value }) => todo!(),
+            // (Answer::Radio { id, value }, Answer::MultipleChoice { id, value }) => todo!(),
+            (Answer::Radio { id, .. } 
+                | Answer::MultipleChoice { id, .. }, 
+            Answer::Radio { id: idy, .. }
+                | Answer::MultipleChoice { id: idy, .. }) => id == idy,
+            (_, _) => {false}
+        }
+    }
+}
+
+// static ANSWERS: Atom<HashSet<Answer>> = |_| HashSet::new();
+static ANSWERS: AtomRef<HashMap<String, Answer>> = |_| HashMap::new();
+
+
 #[inline_props]
 pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
     let app_state = use_atom_state(cx, APP);
-    // let form_data: &fermi::AtomState<_> = use_atom_state(cx, FORM_DATA);
+    let answers_state = use_atom_ref(cx, ANSWERS);
+    // let mut answer_state = use_atom_state(cx, ANSWERS);
 
-    // let questions = parse_markdown_v3(survey_to_render.plaintext.clone()).questions;
-    // let questions = all_questions.get(0).unwrap();
-    // let questions: Vec<Question> = vec![];
-    // let survey_html
+    
+    // answer_state.insert(Answer::Radio { id: "".to_string(), value: "".to_string() });
+    // let set_answer = move |curr: &Question, new_value: Answer| {
+    //     answer_state.insert(curr.id, new_value);
+    // };
+
     let post_questions = move |content, client: Client| {
         cx.spawn({
             to_owned![app_state];
-
-            // if app_state.user.is_none() {
-            //     info!("user token is not set");
-            //     // Pop open the login ?
-            //     return;
-            // }
-            // let mut token = app_state.user.clone().unwrap().token;
-            // token = token.trim_matches('"').to_string();
 
             let curr_survey_id = app_state.survey.metadata.id.to_string();
             async move {
                 info!("Attempting to save questions...");
                 // info!("Publishing content, app_state: {app_state:?}");
-                info!("Form data: {content:#?}");
+                // info!("answers state: {:#?}", &answers_state.read());
                 // let formdata = FormData::from(content);
                 // info!("Questions save: {:?}", question_state);
                 match client
@@ -55,7 +77,6 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
         })
     };
 
-    // let curr_survey = app_state.curr_survey.clone();
     cx.render(rsx! {
             div {
                 class: "survey",
@@ -76,20 +97,27 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
                         // evt
                     },
                     h1 {"title: {app_state.survey.survey.title:?}"}
-                    app_state.survey.survey.questions.iter().map(|question| rsx!{
-                        fieldset {
-                            legend {
-                                "question text: {question.value}"
-                            }
-                            ul {
-                                // question.options.iter().enumerate().map(|(i, option): (usize, &QuestionOption)| {
-                                rsx!{
-                                    QuestionComponent{question: &question}
-                                }
-                            }
+                    app_state.survey.survey.questions.iter().map(|question| {
+                        info!("curr question: {:?}" ,question);
+                        // let curr_state = answer_state.get().get(&question.id.clone()).unwrap();
+                        rsx!{
+                        // fieldset {
+                        //     legend {
+                        //         "question text: {question.value}"
+                        //     }
+                        //     ul {
+                        //         // question.options.iter().enumerate().map(|(i, option): (usize, &QuestionOption)| {
+                        //         rsx!{
+                        //             Questions{question: &question}
+                        //         }
+                        //     }
+                        // }
+                        // Radio {question: question.clone()}
+                        Question {
+                            question: question.clone(), 
+                            // set_answer: set_answer 
                         }
-
-                    })
+                    }})
                     button {
                         class: "publish-button",
                         r#type: "submit",
@@ -102,12 +130,26 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
 
 // pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
 
-
-
+// static ANSWERS: Atom<HashMap<String, Answer>> = |_| HashMap::new();
 #[inline_props]
-fn QuestionComponent<'a>(cx: Scope, question: &'a Question) -> Element {
-    let question_component = match question.r#type {
-        QuestionType::Checkbox | QuestionType::Radio => {
+fn Question(cx: Scope, question: Question, 
+    // set_answer: Box<dyn Fn(&Question, Answer)>
+) -> Element {
+    let answer_state = use_atom_ref(cx, ANSWERS);
+    // let set_answer = use_set(cx, ANSWERS);
+
+    // answer_state.modify(|curr| {
+    //     let new = HashSet::new();
+    //     // new.insert(curr);
+
+        
+    //     curr.insert(Answer::Radio { id: "".to_string(), value: "".to_string()}); 
+
+    //     new
+    // });
+    cx.render(rsx!(div {
+        match question.r#type {
+            QuestionType::Checkbox | QuestionType::Radio => {
             let value = question.options.iter().enumerate().map(|(i, option): (usize, &QuestionOption)| {
                 rsx!(
                     li {
@@ -117,6 +159,38 @@ fn QuestionComponent<'a>(cx: Scope, question: &'a Question) -> Element {
                             value: "{option.text:?}",
                             id: "{option.id}_{i}",
                             name: "{question.id}",
+                            onchange: move |evt| {
+                                info!("Checkbox/Radio change: {:?}", evt.values);
+                                let new_answer = match question.r#type {
+                                    QuestionType::Radio => {
+                                        Answer::MultipleChoice { id: question.id.clone(), value: vec![evt.value.clone()] }
+                                    }
+                                    _ => {
+                                        Answer::MultipleChoice { id: question.id.clone(), value: vec![evt.value.clone()] }
+                                    }
+                                    // Answer::MultipleChoice { id: id.to_owned(), value: value.to_owned() },
+                                    // Answer::Radio { id, value } => todo!(),
+                                };
+                                let mut new_answers = answer_state.write();
+                                new_answers.insert(question.id.clone(), new_answer);
+                                // let new_asnwers = HashMap::new();
+
+                                // set_answer(new_answers);
+                                // answer_state.modify(|curr| {
+                                //     let new: HashSet<Answer> = HashSet::new();
+                                //     // new.insert(curr);
+                                //     // curr.insert(Answer::Radio { id: "".to_string(), value: "".to_string()}); 
+                                //     // new.extend(curr.clone().to_owned());
+
+                                //     let _ = curr.clone();
+                                //     new
+                                // });
+                                // state.get()
+                                // *curr_state.insert(question.id, Answer::Radio { id: question.id.clone(), value: evt.value }).unwrap();
+                                // answer_state.modify(|mut curr| {
+                                //     curr.insert(question.id, Answer::Radio { id: question.id.clone(), value: evt.value }).unwrap();
+                                // });
+                            },
                         }
                         label {
                             r#for:"{option.id}_{i}",
@@ -124,82 +198,16 @@ fn QuestionComponent<'a>(cx: Scope, question: &'a Question) -> Element {
                         }
                     }
                 )
-            });
-            rsx!(value)
-        }
-        QuestionType::Text => {
+                });
+
             rsx!(
-                li {
-
-                    label {
-                        r#for:"{question.id}",
-                        "{question.id}: {question.value:?}"
-                    }
-                    input {
-                        r#type: "text",
-                        // r#type: question_type,
-                        value: "{question.value:?}",
-                        id: "{question.id}",
-                        name: "{question.id}",
-                    }
+                h3 {
+                    "{question.value}"
                 }
+                value
             )
+            } 
+            _ => rsx!(div{"not supported"})
         }
-        QuestionType::Number => {
-            rsx!(
-                li {
-
-                    label {
-                        r#for:"{question.id}",
-                        "{question.id}: {question.value:?}"
-                    }
-                    input {
-                        r#type: "number",
-                        // r#type: question_type,
-                        value: "{question.value:?}",
-                        id: "{question.id}",
-                        name: "{question.id}",
-                    }
-                }
-            )
-        }
-        QuestionType::Email => {
-            rsx!(
-                li {
-
-                    label {
-                        r#for:"{question.id}",
-                        "{question.id}: {question.value:?}"
-                    }
-                    input {
-                        r#type: "email",
-                        // r#type: question_type,
-                        value: "{question.value:?}",
-                        id: "{question.id}",
-                        name: "{question.id}",
-                    }
-                }
-            )
-        }
-        QuestionType::Date => {
-            rsx!(
-                li {
-
-                    label {
-                        r#for:"{question.id}",
-                        "{question.id}: {question.value:?}"
-                    }
-                    input {
-                        r#type: "date",
-                        // r#type: question_type,
-                        value: "{question.value:?}",
-                        id: "{question.id}",
-                        name: "{question.id}",
-                    }
-                }
-            )
-        }
-    };
-
-    return cx.render(question_component);
+    }))
 }

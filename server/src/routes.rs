@@ -223,7 +223,6 @@ pub mod routes {
         Radio {
             id: String,
             value: String,
-            // r#type: String,
         },
     }
 
