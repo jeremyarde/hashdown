@@ -177,6 +177,7 @@ fn Question(cx: Scope, question: Question,
 
     //     new
     // });
+
     cx.render(rsx!(div {
         match question.r#type {
             QuestionType::Checkbox | QuestionType::Radio => {
@@ -191,18 +192,34 @@ fn Question(cx: Scope, question: Question,
                             name: "{question.id}",
                             onchange: move |evt| {
                                 info!("Checkbox/Radio change event: {:?}", evt);
-                                let new_answer = match question.r#type {
+
+
+                                match question.r#type {
                                     QuestionType::Radio => {
-                                        Answer::Radio { id: question.id.clone(), value: option.text.clone() }
+                                        let new_answer = Answer::Radio { id: question.id.clone(), value: option.text.clone() };
+                                        answer_state.write().insert(question.id.clone(), new_answer);
                                     }
-                                    _ => {
-                                        Answer::MultipleChoice { id: question.id.clone(), value: vec![option.text.clone()] }
+                                    QuestionType::Checkbox => {
+                                        match answer_state.write().get_key_value(&question.id) {
+                                            Some(x) => {
+                                                let _ = x;
+                                                let new_answer = Answer::MultipleChoice { id: question.id.clone(), value: vec![option.text.clone()] };
+                                                answer_state.write().insert(question.id.clone(), new_answer);
+
+                                            }
+                                            None => {
+                                                let new_answer = Answer::MultipleChoice { id: question.id.clone(), value: vec![option.text.clone()] };
+                                                answer_state.write().insert(question.id.clone(), new_answer);
+
+                                            }
+                                        }
                                     }
+                                    _ => { info!("Question type not supported"); }
                                     // Answer::MultipleChoice { id: id.to_owned(), value: value.to_owned() },
                                     // Answer::Radio { id, value } => todo!(),
                                 };
-                                let mut new_answers = answer_state.write();
-                                new_answers.insert(question.id.clone(), new_answer);
+                                // let mut new_answers = answer_state.write();
+                                // new_answers.write().insert(question.id.clone(), new_answer);
                                 // let new_asnwers = HashMap::new();
 
                                 // set_answer(new_answers);
