@@ -193,10 +193,10 @@ fn Question(cx: Scope, question: Question,
                                 info!("Checkbox/Radio change event: {:?}", evt);
                                 let new_answer = match question.r#type {
                                     QuestionType::Radio => {
-                                        Answer::MultipleChoice { id: question.id.clone(), value: vec![evt.value.clone()] }
+                                        Answer::Radio { id: question.id.clone(), value: option.text.clone() }
                                     }
                                     _ => {
-                                        Answer::MultipleChoice { id: question.id.clone(), value: vec![evt.value.clone()] }
+                                        Answer::MultipleChoice { id: question.id.clone(), value: vec![option.text.clone()] }
                                     }
                                     // Answer::MultipleChoice { id: id.to_owned(), value: value.to_owned() },
                                     // Answer::Radio { id, value } => todo!(),
@@ -232,7 +232,7 @@ fn Question(cx: Scope, question: Question,
 
             rsx!(
                 h3 {
-                    "{question.value}"
+                    "{question.id}: {question.value}"
                 }
                 value
             )
