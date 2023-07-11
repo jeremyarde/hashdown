@@ -17,16 +17,17 @@ serde = {version = "1.0.152", features = ["derive"]}
 # tower = "0.4.13"
 # tower-http = { version = "0.3.5", features = ["cors"] }
 # sqlx = { version = "0.6.2", features = ["sqlite", 'runtime-tokio-rustls'] }
+serde-wasm-bindgen = "0.4"
 tracing = "0.1.37"
-# wasm-bindgen = { version = "0.2.84", features = [
-# "serde",
-# "serde-serialize",
-# "serde_json",
-# ] }
-# serde-wasm-bindgen = "0.4"
+wasm-bindgen = {version = "0.2.87", features = [
+  "serde",
+  "serde-serialize",
+  "serde_json",
+]}
 # rand = "0.8.5"
 chrono = "0.4.24"
 derive_builder = "0.12.0"
+# wasm-bindgen = "0.2.87"
 
 [lib]
-# crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]

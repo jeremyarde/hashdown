@@ -9,5 +9,8 @@
   ],
   "module": "markdownparser.js",
   "types": "markdownparser.d.ts",
-  "sideEffects": false
+  "sideEffects": [
+    "./markdownparser.js",
+    "./snippets/*"
+  ]
 }

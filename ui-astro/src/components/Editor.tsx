@@ -2,8 +2,23 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 // import { SubmitHandler, useForm } from 'react-hook-form';
 
 // import { nanoid_gen, markdown_to_form_wasm } from "../../../backend/pkg";
-import { CreateSurveyRequest } from "../../../server/bindings/CreateSurveyRequest";
+// import { CreateSurveyRequest } from "../../../server/bindings/CreateSurveyRequest";
 
+// const wasm = await WebAssembly.instantiateStreaming(
+//     fetch("markdownparser_bg.wasm")
+// );
+
+
+// let wasm;
+
+// WebAssembly.instantiateStreaming(fetch("/Users/jarde/Documents/code/markdownparser/ui-astro/public/markdownparser_bg.wasm")).then(
+//     (results) => {
+//         // Do something with the results!
+//         wasm = results;
+//     },
+// );
+
+// import init, { parse_markdown_v3 } from 'markdownparser';
 
 export function useDebouncedCallback<A extends any[]>(
     callback: (...args: A) => void,

@@ -1,4 +1,4 @@
-// use wasm_bindgen::prelude::*;
+use wasm_bindgen::prelude::*;
 
 use derive_builder::Builder;
 // use rand::{thread_rng, Rng};
@@ -86,6 +86,7 @@ impl Default for Metadata {
     }
 }
 
+// #[wasm_bindgen]
 #[derive(Clone, Debug, Serialize, Deserialize, Builder)]
 pub struct Survey {
     #[serde(flatten)]
@@ -105,7 +106,9 @@ pub struct Survey {
     pub user_id: Option<String>,
 }
 
+// #[wasm_bindgen]
 impl Survey {
+    // #[wasm_bindgen]
     pub fn from(parsed: ParsedSurvey) -> Survey {
         Survey {
             survey: parsed,
@@ -252,12 +255,15 @@ enum LineType {
     Title,
 }
 
-// #[wasm_bindgen]
-// pub fn markdown_to_form_wasm(contents: String) -> JsValue {
-//     let survey = parse_markdown_v3(contents);
+pub fn markdown_to_form_wasm(contents: String) -> JsValue {
+    let survey = parse_markdown_v3(contents);
+    match survey {
+        Ok(x) => return serde_wasm_bindgen::to_value(&x).unwrap(),
+        Err(_) => return serde_wasm_bindgen::to_value(&ParsedSurvey::new()).unwrap(),
+    }
 
-//     return serde_wasm_bindgen::to_value(&survey).unwrap();
-// }
+    // return serde_wasm_bindgen::to_value(&survey).unwrap();
+}
 
 #[derive(Debug)]
 enum ParseError {
