@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use dioxus::prelude::*;
-use fermi::{use_atom_state, Atom, use_set, use_atom_ref, AtomRef, use_init_atom_root};
+use fermi::{use_atom_ref, use_atom_state, use_init_atom_root, use_set, Atom, AtomRef};
 use log::info;
 use markdownparser::{ParsedSurvey, Question, QuestionOption, QuestionType};
 use reqwest::Client;
@@ -22,11 +22,11 @@ impl PartialEq for Answer {
         match (self, other) {
             // (Answer::MultipleChoice { id, value }, Answer::Radio { id, value }) => todo!(),
             // (Answer::Radio { id, value }, Answer::MultipleChoice { id, value }) => todo!(),
-            (Answer::Radio { id, .. } 
-                | Answer::MultipleChoice { id, .. }, 
-            Answer::Radio { id: idy, .. }
-                | Answer::MultipleChoice { id: idy, .. }) => id == idy,
-            (_, _) => {false}
+            (
+                Answer::Radio { id, .. } | Answer::MultipleChoice { id, .. },
+                Answer::Radio { id: idy, .. } | Answer::MultipleChoice { id: idy, .. },
+            ) => id == idy,
+            (_, _) => false,
         }
     }
 }
@@ -34,60 +34,13 @@ impl PartialEq for Answer {
 // static ANSWERS: Atom<HashSet<Answer>> = |_| HashSet::new();
 static ANSWERS: AtomRef<HashMap<String, Answer>> = |_| HashMap::new();
 
-
 #[inline_props]
 pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
     let app_state = use_atom_state(cx, APP);
     let answers_state = use_atom_ref(cx, ANSWERS);
     let set_answer = use_state(cx, || HashMap::<String, Answer>::new());
 
-    let update_answer = move |id: String, value: String| {
-        answers_state.write().entry(id).and_modify(|e| {
-
-        });
-        // match question.r#type {
-        //     QuestionType::Radio => {
-        //         let new_answer = Answer::Radio { id: question.id.clone(), value: option.text.clone() };
-        //         answer_state.write().insert(question.id.clone(), new_answer);
-        //     }
-        //     QuestionType::Checkbox => {
-        //         match answer_state.write().get_mut(&question.id) {
-        //             Some(val) => {
-        //                 // let thing = x;
-        //                 // let new_answer = Answer::MultipleChoice { id: question.id.clone(), value: vec![option.text.clone()] };
-        //                 match val {
-        //                     Answer::MultipleChoice {id, value} => {value.push(option.text.clone());}
-        //                     // Answer::Radio {id, value} => {value = option.text.clone();}
-        //                     _ => {}
-        //                 }
-        //                 // v.insert(new_answer);
-        //                 // answer_state.write().insert(question.id.clone(), new_answer);
-        //             }
-        //             None => {
-        //                 let new_answer = Answer::MultipleChoice { id: question.id.clone(), value: vec![option.text.clone()] };
-        //                 answer_state.write().insert(question.id.clone(), new_answer);
-
-        //             }
-        //         }
-        //     }
-        //     _ => { info!("Question type not supported"); }
-        //     // Answer::MultipleChoice { id: id.to_owned(), value: value.to_owned() },
-        //     // Answer::Radio { id, value } => todo!(),
-        // };
-        
-        info!("Triggered update_answer: {:?}, {:?}", id, value);
-    };
-
     info!("answers state: {:#?}", answers_state.read());
-            // Answer::Radio { id: "", value: () })
-    
-    // let mut answer_state = use_atom_state(cx, ANSWERS);
-
-    
-    // answer_state.insert(Answer::Radio { id: "".to_string(), value: "".to_string() });
-    // let set_answer = move |curr: &Question, new_value: Answer| {
-    //     answer_state.insert(curr.id, new_value);
-    // };
 
     let post_questions = move |content, client: Client| {
         cx.spawn({
@@ -130,6 +83,7 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
                 onsubmit: move |evt| {
                     info!("submitting survey result: {:?}", evt.values);
                     post_questions(evt.values.clone(), app_state.client.clone());
+
                     // evt.stop_propagation();
                 },
                 onchange: move |evt| {
@@ -157,11 +111,11 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
                     // Radio {question: question.clone()}
                     Question {
                         // question.clone(),
-                        update_answer_callback: update_answer,
+                        // update_answer_callback: update_answer,
                         question: question,
                         // onupdate: update_answer
                         // answer: answers_state.write().get_mut(&question.id).unwrap()
-                        // set_answer: set_answer 
+                        // set_answer: set_answer
                     }
 
                 }})
@@ -179,18 +133,17 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
 
 #[derive(Props, PartialEq)]
 struct QuestionProps<'a> {
-    update_answer_callback: Box<dyn Fn(String, String)>,
+    // update_answer_callback: Box<dyn Fn(String, String)>,
     question: &'a Question,
 }
 
 // static ANSWERS: Atom<HashMap<String, Answer>> = |_| HashMap::new();
 // #[inline_props]
-fn Question<'a>(cx: Scope<'a, QuestionProps<'a>> 
-
-    // question: Question, 
-    // set_answer: Box<dyn Fn(&Question, Answer)>
-    // answer: &'a mut Answer,
-    // update_answer_callback: Box<dyn Fn(String, String)>
+fn Question<'a>(
+    cx: Scope<'a, QuestionProps<'a>>, // question: Question,
+                                      // set_answer: Box<dyn Fn(&Question, Answer)>
+                                      // answer: &'a mut Answer,
+                                      // update_answer_callback: Box<dyn Fn(String, String)>
 ) -> Element {
     // let answer_state = use_atom_ref(cx, ANSWERS);
     // let answers = use_state(cx, || vec![]);
@@ -200,8 +153,7 @@ fn Question<'a>(cx: Scope<'a, QuestionProps<'a>>
     //     let new = HashSet::new();
     //     // new.insert(curr);
 
-        
-    //     curr.insert(Answer::Radio { id: "".to_string(), value: "".to_string()}); 
+    //     curr.insert(Answer::Radio { id: "".to_string(), value: "".to_string()});
 
     //     new
     // });
@@ -211,36 +163,49 @@ fn Question<'a>(cx: Scope<'a, QuestionProps<'a>>
     cx.render(rsx!(div {
         match cx.props.question.r#type {
             QuestionType::Checkbox | QuestionType::Radio => {
-            let value = cx.props.question.options.iter().enumerate().map(|(i, option): (usize, &QuestionOption)| {
-                rsx!(
-                    li {
-                        input {
-                            r#type: if cx.props.question.r#type == QuestionType::Checkbox { "checkbox"} else {"radio"},
-                            // r#type: question_type,
-                            // value: "{option.text}",
-                            id: "{option.id}_{i}",
-                            name: "{cx.props.question.id}",
-                            onchange: move |evt| {
-                                info!("Checkbox/Radio change event - {:?} > {:?}: {:?}", cx.props.question.id, option.id, evt);
-                                // cx.props.update_answer_callback("test".to_string(), "test".to_string())
-                                (cx.props.update_answer_callback)(option.id.clone(), option.text.clone());
-                            },
+                let value = cx.props.question.options.iter().enumerate().map(|(i, option): (usize, &QuestionOption)| {
+                    rsx!(
+                        li {
+                            input {
+                                r#type: if cx.props.question.r#type == QuestionType::Checkbox { "checkbox"} else {"radio"},
+                                // r#type: question_type,
+                                value: "{option.text}",
+                                id: "{option.id}_{i}",
+                                name: "{cx.props.question.id}",
+                                onchange: move |evt| {
+                                    info!("Checkbox/Radio change event - {:?} > {:?}: {:?}", cx.props.question.id, option.id, evt);
+                                    // cx.props.update_answer_callback("test".to_string(), "test".to_string())
+                                    // (cx.props.update_answer_callback)(option.id.clone(), option.text.clone());
+                                },
+                            }
+                            label {
+                                r#for:"{option.id}_{i}",
+                                "{option.id}_{i}: {option.text:?}"
+                            }
                         }
-                        label {
-                            r#for:"{option.id}_{i}",
-                            "{option.id}_{i}: {option.text:?}"
-                        }
-                    }
-                )
-                });
+                    )
+                    });
 
-            rsx!(
-                h3 {
-                    "{cx.props.question.id}: {cx.props.question.value}"
-                }
-                value
-            )
-            } 
+                rsx!(
+                    h3 {
+                        "{cx.props.question.id}: {cx.props.question.value}"
+                    }
+                    value
+                )
+            }
+            QuestionType::Text => {
+                rsx!(li {
+                    label {
+                        r#for: "{cx.props.question.id}",
+                        "{cx.props.question.value}: {cx.props.question.value}"
+                    }
+                    input {
+                        // value: "{cx.props.question.value}",
+                        id: "{cx.props.question.id}",
+                        name: "{cx.props.question.id}",
+                    }
+                })
+            }
             _ => rsx!(div{"not supported"})
         }
     }))
