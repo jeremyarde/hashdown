@@ -194,7 +194,8 @@ impl Question {
         let mut question_text = line.to_owned();
         // if line.contains("[checkbox]") || line.contains("[c]") {
         if question_text.contains("[c]") {
-            qtype = QuestionType::Checkbox;
+            // TODO: removed checkbox from supported answers
+            // qtype = QuestionType::Checkbox;
             question_text = question_text.clone().replace("[c]", "");
             // question_text = temp;
         } else if question_text.contains("[t]") {

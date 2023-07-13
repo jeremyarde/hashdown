@@ -76,12 +76,16 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
         div {
             class: "survey",
             form {
-                // action: "http://localhost:3000/surveys/{app_state.survey.metadata.id}",
+                action: "http://localhost:3000/surveys/{app_state.survey.metadata.id}",
+                // action: "http://localhost:3000/surveys/test",
                 // enctype: "application/x-www-form-urlencoded",
-                // method: "post",
+                method: "post",
                 prevent_default: "onsubmit",
                 onsubmit: move |evt| {
                     info!("submitting survey result: {:?}", evt.values);
+
+                    // let answers =
+
                     post_questions(evt.values.clone(), app_state.client.clone());
 
                     // evt.stop_propagation();
