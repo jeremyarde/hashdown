@@ -10,25 +10,11 @@ use serde_json::{json, Value};
 
 use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP};
 
-#[derive(Deserialize, Serialize, Debug, Hash, Eq)]
+#[derive(Deserialize, Serialize, Debug, Hash)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Answer {
-    MultipleChoice { id: String, value: Vec<String> },
+    // MultipleChoice { id: String, value: Vec<String> },
     Radio { id: String, value: String },
-}
-
-impl PartialEq for Answer {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            // (Answer::MultipleChoice { id, value }, Answer::Radio { id, value }) => todo!(),
-            // (Answer::Radio { id, value }, Answer::MultipleChoice { id, value }) => todo!(),
-            (
-                Answer::Radio { id, .. } | Answer::MultipleChoice { id, .. },
-                Answer::Radio { id: idy, .. } | Answer::MultipleChoice { id: idy, .. },
-            ) => id == idy,
-            (_, _) => false,
-        }
-    }
 }
 
 // static ANSWERS: Atom<HashSet<Answer>> = |_| HashSet::new();
@@ -49,6 +35,7 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
             let curr_survey_id = app_state.survey.metadata.id.to_string();
             async move {
                 info!("Attempting to save questions...");
+
                 // info!("Publishing content, app_state: {app_state:?}");
                 // info!("answers state: {:#?}", &answers_state.read());
                 // let formdata = FormData::from(content);
@@ -84,9 +71,20 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
                 onsubmit: move |evt| {
                     info!("submitting survey result: {:?}", evt.values);
 
-                    // let answers =
+                    let answers: Vec<Answer> = app_state.survey.survey.questions.iter().map(|question| {
+                        // evt.values.get(&question.id);
+                        Answer::Radio {
+                            id:question.id.clone(), 
+                            value: evt.values.get(&question.id).unwrap().to_owned()
+                        }
+                    }).collect();
 
-                    post_questions(evt.values.clone(), app_state.client.clone());
+                    info!("answers vec: {:?}", answers);
+                    //  evt.values.keys().iter().map(|val| {
+                    //     info!("answer: {:?}", val);
+                    // });
+
+                    post_questions(answers, app_state.client.clone());
 
                     // evt.stop_propagation();
                 },
@@ -133,37 +131,14 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
     })
 }
 
-// pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
-
 #[derive(Props, PartialEq)]
 struct QuestionProps<'a> {
-    // update_answer_callback: Box<dyn Fn(String, String)>,
     question: &'a Question,
 }
 
-// static ANSWERS: Atom<HashMap<String, Answer>> = |_| HashMap::new();
-// #[inline_props]
 fn Question<'a>(
-    cx: Scope<'a, QuestionProps<'a>>, // question: Question,
-                                      // set_answer: Box<dyn Fn(&Question, Answer)>
-                                      // answer: &'a mut Answer,
-                                      // update_answer_callback: Box<dyn Fn(String, String)>
+    cx: Scope<'a, QuestionProps<'a>>,
 ) -> Element {
-    // let answer_state = use_atom_ref(cx, ANSWERS);
-    // let answers = use_state(cx, || vec![]);
-    // let set_answer = use_set(cx, ANSWERS);
-
-    // answer_state.modify(|curr| {
-    //     let new = HashSet::new();
-    //     // new.insert(curr);
-
-    //     curr.insert(Answer::Radio { id: "".to_string(), value: "".to_string()});
-
-    //     new
-    // });
-
-    // answer_state.write().entry("test").and_modify(|e| e.)
-
     cx.render(rsx!(div {
         match cx.props.question.r#type {
             QuestionType::Checkbox | QuestionType::Radio => {
@@ -172,14 +147,11 @@ fn Question<'a>(
                         li {
                             input {
                                 r#type: if cx.props.question.r#type == QuestionType::Checkbox { "checkbox"} else {"radio"},
-                                // r#type: question_type,
                                 value: "{option.text}",
                                 id: "{option.id}_{i}",
                                 name: "{cx.props.question.id}",
                                 onchange: move |evt| {
                                     info!("Checkbox/Radio change event - {:?} > {:?}: {:?}", cx.props.question.id, option.id, evt);
-                                    // cx.props.update_answer_callback("test".to_string(), "test".to_string())
-                                    // (cx.props.update_answer_callback)(option.id.clone(), option.text.clone());
                                 },
                             }
                             label {
@@ -201,7 +173,7 @@ fn Question<'a>(
                 rsx!(li {
                     label {
                         r#for: "{cx.props.question.id}",
-                        "{cx.props.question.value}: {cx.props.question.value}"
+                        "{cx.props.question.id}: {cx.props.question.value}"
                     }
                     input {
                         // value: "{cx.props.question.value}",

@@ -196,6 +196,7 @@ impl Question {
         if question_text.contains("[c]") {
             // TODO: removed checkbox from supported answers
             // qtype = QuestionType::Checkbox;
+            qtype = QuestionType::Radio;
             question_text = question_text.clone().replace("[c]", "");
             // question_text = temp;
         } else if question_text.contains("[t]") {
