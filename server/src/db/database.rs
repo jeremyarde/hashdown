@@ -6,21 +6,34 @@ use std::{
 
 use anyhow::{self, Context};
 
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use markdownparser::{nanoid_gen, parse_markdown_v3, Survey};
+use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 // use models::CreateAnswersModel;
 // use chrono::Local;
-use sqlx::{
-    postgres::PgConnectOptions,
-    sqlite::{SqliteConnectOptions, SqliteJournalMode},
-    ConnectOptions, FromRow, PgPool, Row, SqliteConnection, SqlitePool,
-};
+// use sqlx::{
+//     postgres::PgConnectOptions,
+//     sqlite::{SqliteConnectOptions, SqliteJournalMode},
+//     ConnectOptions, FromRow, PgPool, Row, SqliteConnection, SqlitePool,
+// };
 use tracing::{info, instrument};
 
 // mod models;
-use models::{CreateAnswersModel, CreateSurveyRequest, SurveyModel};
+// use models::{CreateAnswersModel, CreateSurveyRequest, SurveyModel};
+
+#[derive(Clone, Debug, Serialize, Deserialize, Model)]
+pub struct SurveyModel {
+    pub id: i32,
+    pub plaintext: String,
+    pub user_id: String,
+    pub created_at: String,
+    pub modified_at: String,
+    // pub questions: Option<Vec<Question>>,
+    pub version: String,
+    pub parse_version: String,
+}
 
 use super::models;
 
@@ -40,7 +53,7 @@ pub struct Database {
 #[derive()]
 pub struct ConnectionDetails(pub String);
 
-#[derive(sqlx::FromRow, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Settings {
     pub base_path: Option<String>,
     pub nanoid_length: Option<usize>,
@@ -122,9 +135,10 @@ impl Database {
             }
         };
 
-        info!("Running migrations");
-        sqlx::migrate!().run(&pool).await?;
-        info!("Finished running migrations");
+        // info!("Running migrations");
+        // sqlx::migrate!().run(&pool).await?;
+        // info!("Finished running migrations");
+
         // let settings = sqlx::query_as::<_, Settings>("select * from settings")
         //     .fetch_one(&mut pool)
         //     .await?;
@@ -156,13 +170,25 @@ pub struct Answer {
     pub answers: Vec<String>,
 }
 
-#[derive(Debug, FromRow, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Model)]
+pub struct CreateAnswersModel {
+    pub id: Option<String>,
+    pub answer_id: String,
+    // pub external_id: String,
+    pub survey_id: String,
+    // pub survey_version: String,
+    pub submitted_at: String,
+    pub answers: Value,
+}
+
+#[derive(Debug, Model, Serialize, Deserialize)]
 pub struct UserModel {
+    #[ormlite(primary_key)]
     pub id: i32,
     pub email: String,
     pub password_hash: String,
-    pub created_at: String,
-    pub modified_at: String,
+    pub created_at: DateTime<Utc>,
+    pub modified_at: DateTime<Utc>,
     pub verified: bool,
     pub user_id: String,
     // pub user_id: String,
@@ -176,18 +202,32 @@ pub struct CreateUserRequest {
 impl Database {
     pub async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel> {
         println!("->> create_user");
-        let result = sqlx::query_as::<_, UserModel>(
-            "insert into users (user_id, password_hash, email, created_at, modified_at) values($1, $2, $3, $4, $5) returning *",
-        )
-        .bind(nanoid_gen(self.settings.nanoid_length.unwrap()))
-        .bind(request.password_hash)
-        .bind(request.email)
-        .bind(chrono::Utc::now().to_string())
-        .bind(chrono::Utc::now().to_string())
-        .fetch_one(&self.pool)
-        .await?;
 
-        return Ok(result);
+        let time = chrono::Utc::now();
+        let user = UserModel {
+            // id: todo!(),
+            email: request.email,
+            password_hash: request.password_hash,
+            created_at: time,
+            modified_at: time,
+            verified: false,
+            user_id: nanoid_gen(24),
+            id: 0,
+        }
+        .insert(&self.pool)
+        .await?;
+        // let result = sqlx::query_as::<_, UserModel>(
+        //     "insert into users (user_id, password_hash, email, created_at, modified_at) values($1, $2, $3, $4, $5) returning *",
+        // )
+        // .bind(nanoid_gen(self.settings.nanoid_length.expect("Settings not set.")))
+        // .bind(request.password_hash)
+        // .bind(request.email)
+        // .bind(chrono::Utc::now().to_string())
+        // .bind(chrono::Utc::now().to_string())
+        // .fetch_one(&self.pool)
+        // .await?;
+
+        return Ok(user);
     }
 
     pub async fn get_user_by_email(&self, email: String) -> anyhow::Result<UserModel> {
@@ -199,26 +239,34 @@ impl Database {
         // .await?;
         info!("Search for user with email: {email:?}");
 
-        let row_result = sqlx::query("select * from users where email = $1")
-            .bind(email)
+        // let row_result = sqlx::query("select * from users where email = $1")
+        //     .bind(email)
+        //     .fetch_one(&self.pool)
+        //     .await?;
+
+        let res = UserModel::select()
+            .where_bind("email = ", email)
             .fetch_one(&self.pool)
             .await?;
 
         info!("Found user");
-        let result = UserModel::from_row(&row_result).expect("Could not turn row into user model");
+        // let result = UserModel::from_row(&row_result).expect("Could not turn row into user model");
 
         info!("Successfully found user");
-        return Ok(result);
+        return Ok(res);
     }
 
     pub async fn get_survey(&self, survey_id: &String) -> anyhow::Result<Option<SurveyModel>> {
-        let result =
-            sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.id = $1")
-                .bind(survey_id)
-                .fetch_one(&self.pool)
-                .await?;
+        // let result =
+        //     sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.survey_id = $1")
+        //         .bind(survey_id)
+        //         .fetch_one(&self.pool)
+        //         .await?;
+        let result = SurveyModel::select()
+            .where_bind("survey_id = ?", survey_id)
+            .fetch_one(&self.pool)
+            .await?;
         // let survey = parse_markdown_v3(result.plaintext);
-
         Ok(Some(result))
     }
 
@@ -229,43 +277,50 @@ impl Database {
         // // let response_survey = survey.clone();
         // let now = chrono::offset::Utc::now();
         // let nowstr = now.to_string();
-        let _res = sqlx::query!(
-            r#"insert into surveys (plaintext, user_id, created_at, modified_at, version, parse_version)
-            values 
-            ($1, $2, $3, $4, $5, $6)
-            "#,
-            survey.plaintext,
-            survey.user_id,
-            survey.created_at,
-            survey.modified_at,
-            survey.version,
-            survey.parse_version
-        ).execute(&self.pool).await?;
+        // let _res = sqlx::query!(
+        //     r#"insert into surveys (plaintext, user_id, created_at, modified_at, version, parse_version)
+        //     values
+        //     ($1, $2, $3, $4, $5, $6)
+        //     "#,
+        //     survey.plaintext,
+        //     survey.user_id,
+        //     survey.created_at,
+        //     survey.modified_at,
+        //     survey.version,
+        //     survey.parse_version
+        // ).execute(&self.pool).await?;
 
-        let rows = _res.rows_affected();
-        println!("create survey rows affected={rows}");
+        let res = survey.insert(&self.pool).await?;
 
-        Ok(survey)
+        // let res = Survey:
+
+        // let rows = _res.rows_affected();
+        // println!("create survey rows affected={rows}");
+        info!("Successfully created a new survey");
+
+        Ok(res)
     }
 
     pub async fn create_answer(&self, answer: CreateAnswersModel) -> anyhow::Result<()> {
         info!("Creating answers in database");
 
-        let res = sqlx::query(
-            r#"insert into answers (answer_id, survey_id, submitted_at, answers)
-        values
-        ($1, $2, $3, $4)
-        "#,
-        )
-        .bind(answer.answer_id)
-        .bind(answer.survey_id)
-        .bind(answer.submitted_at)
-        .bind(json!(answer.answers))
-        .execute(&self.pool)
-        .await
-        .unwrap();
+        // let res = sqlx::query(
+        //     r#"insert into surveys_submissions (survey_id, submitted_at, answers)
+        // values
+        // ($1, $2, $3, $4)
+        // "#,
+        // )
+        // // .bind(answer.answer_id)
+        // .bind(answer.survey_id)
+        // .bind(answer.submitted_at)
+        // .bind(json!(answer.answers))
+        // .execute(&self.pool)
+        // .await?;
 
-        info!("created rows={}", res.rows_affected());
+        answer.insert(&self.pool).await?;
+
+        // info!("created rows={}", res.rows_affected());
+
         return Ok(());
     }
 }

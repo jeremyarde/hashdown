@@ -18,14 +18,8 @@ pub mod routes {
         routing::{get, get_service, post, MethodRouter},
         Extension, Form, Router,
     };
-    use db::{
-        database::{CreateUserRequest, Database},
-        models::{
-            CreateAnswersModel, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
-            SurveyModel, SurveyModelBuilder,
-        },
-    };
-    use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey, SurveyBuilder};
+    use db::database::{CreateUserRequest, Database};
+    use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey};
     // use oauth2::basic::BasicClient;
 
     // use reqwest::header;
@@ -107,10 +101,7 @@ pub mod routes {
     }
 
     async fn propagate_header<B>(req: Request<B>, next: Next<B>) -> Response {
-        // let header = req.headers().get("something").expect(msg);
         let mut res = next.run(req).await;
-        // res.headers_mut()
-        //     .insert("x-customkey", HeaderValue::from_str("header").unwrap());
         res
     }
 
@@ -148,7 +139,7 @@ pub mod routes {
         let client_error = client_status_error.unzip().1;
         log_request(uuid, req_method, uri, ctx, service_error, client_error)
             .await
-            .unwrap();
+            .expect("Did not log request properly");
 
         info!("Mapped response, returning...");
         error_response.unwrap_or(res)
@@ -181,7 +172,8 @@ pub mod routes {
         };
         info!("Creating new survey for user={user_id:?}");
         // Check that the survey is Ok
-        let parsed_survey = parse_markdown_v3(payload.plaintext).unwrap();
+        let parsed_survey =
+            parse_markdown_v3(payload.plaintext).expect("Could not parse the survey");
 
         let metadata = MetadataBuilder::default().build().unwrap();
 
@@ -194,16 +186,20 @@ pub mod routes {
             .version(metadata.version.clone())
             .id(0)
             .build()
-            .unwrap();
+            .expect("Could not create survey model");
 
         let new_survey = SurveyBuilder::default()
             .metadata(metadata)
             .survey(parsed_survey)
             .user_id(Some(user_id.to_owned()))
             .build()
-            .unwrap();
+            .expect("Could not create new survey model");
 
-        let insert_result = state.db.create_survey(survey_model).await.unwrap();
+        let insert_result = state
+            .db
+            .create_survey(survey_model)
+            .await
+            .expect("Should create survey in database");
 
         info!("     ->> Inserted survey");
         // let response = CreateSurveyResponse { survey: new_survey };
@@ -216,14 +212,8 @@ pub mod routes {
     #[derive(Deserialize, Serialize, Debug)]
     #[serde(tag = "type", rename_all = "snake_case")]
     pub enum Answer {
-        MultipleChoice {
-            id: String,
-            value: Vec<String>,
-        },
-        Radio {
-            id: String,
-            value: String,
-        },
+        MultipleChoice { id: String, value: Vec<String> },
+        Radio { id: String, value: String },
     }
 
     // #[derive(Deserialize, Serialize, Debug)]
@@ -240,13 +230,18 @@ pub mod routes {
         // mut multipart: Multipart,
         // ctx: Option<Ctext>,
         // extract::Json(payload): extract::Json<CreateAnswersRequest>,
-        Json(payload): extract::Json<Vec<Answer>>, // for urlencoded
+        Json(payload): extract::Json<Value>, // for urlencoded
     ) -> Result<Json<Value>, ServerError> {
         info!("->> submit_survey");
         debug!("    ->> survey: {:#?}", payload);
 
         // json version
-        let survey = match state.db.get_survey(&survey_id).await.unwrap() {
+        let survey = match state
+            .db
+            .get_survey(&survey_id)
+            .await
+            .expect("Could not get survey from db")
+        {
             Some(x) => x,
             None => {
                 return Err(ServerError::BadRequest(
@@ -272,7 +267,11 @@ pub mod routes {
             // created_at: "".to_string(),
         };
 
-        let answer_result = state.db.create_answer(create_answer_model).await.unwrap();
+        let answer_result = state
+            .db
+            .create_answer(create_answer_model)
+            .await
+            .expect("Should create answer in database");
 
         info!("completed survey submit");
 
@@ -304,7 +303,11 @@ pub mod routes {
         Path(survey_id): Path<String>,
         Query(query): Query<GetSurveyQuery>,
     ) -> impl IntoResponse {
-        let db_response = _state.db.get_survey(&survey_id).await.unwrap();
+        let db_response = _state
+            .db
+            .get_survey(&survey_id)
+            .await
+            .expect("Did not find survey in db");
         // let response = CreateSurveyResponse::from(insert_result);
         info!("query: {query:#?}");
         println!("query: {query:#?}");
@@ -312,16 +315,6 @@ pub mod routes {
         // let results = transform_response(db_response, query);
         (StatusCode::OK, Json(db_response))
     }
-
-    // #[tracing::instrument]
-    // #[axum::debug_handler]
-    // pub async fn test_survey(
-    //     // State(_state): State<ServerState>,
-    //     extract::Json(payload): extract::Json<CreateSurveyRequest>,
-    // ) -> impl IntoResponse {
-    //     let survey = parse_markdown_v3(payload.plaintext.clone())?;
-    //     (StatusCode::OK, Json(survey))
-    // }
 
     #[tracing::instrument]
     #[axum::debug_handler]
@@ -337,32 +330,17 @@ pub mod routes {
             return Err(ServerError::AuthFailNoTokenCookie);
         }
 
-        // println!("Recieved headers={headers:#?}");
-        // let testuser = HeaderValue::from_str("").unwrap();
-        // let user_id = headers
-        //     .get("x-user-id")
-        //     .unwrap_or(&testuser)
-        //     .to_str()
-        //     .unwrap();
         let user_id = &ctx.expect("Context should be available").user_id().clone();
 
         println!("Getting surveys for user={user_id}");
         let pool = &state.db.pool;
 
-        // let count: i64 = sqlx::query_scalar("select count(*) from surveys where surveys.id = $1")
+        // let res: Vec<SurveyModel> = SurveyModel::
+        // sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.user_id = $1")
         //     .bind(user_id)
-        //     .fetch_one(&pool)
+        //     .fetch_all(pool)
         //     .await
-        //     .map_err(internal_error)
         //     .unwrap();
-        // println!("Survey count: {count:#?}");
-
-        let res: Vec<SurveyModel> =
-            sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.user_id = $1")
-                .bind(user_id)
-                .fetch_all(pool)
-                .await
-                .unwrap();
 
         let resp = ListSurveyResponse { surveys: res };
 

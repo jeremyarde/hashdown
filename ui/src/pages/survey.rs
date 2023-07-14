@@ -80,9 +80,6 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
                     }).collect();
 
                     info!("answers vec: {:?}", answers);
-                    //  evt.values.keys().iter().map(|val| {
-                    //     info!("answer: {:?}", val);
-                    // });
 
                     post_questions(answers, app_state.client.clone());
 
@@ -99,18 +96,7 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
                     info!("curr question: {:?}" ,question);
                     // let curr_state = answer_state.get().get(&question.id.clone()).unwrap();
                     rsx!{
-                    // fieldset {
-                    //     legend {
-                    //         "question text: {question.value}"
-                    //     }
-                    //     ul {
-                    //         // question.options.iter().enumerate().map(|(i, option): (usize, &QuestionOption)| {
-                    //         rsx!{
-                    //             Questions{question: &question}
-                    //         }
-                    //     }
-                    // }
-                    // Radio {question: question.clone()}
+
                     Question {
                         // question.clone(),
                         // update_answer_callback: update_answer,

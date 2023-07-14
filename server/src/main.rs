@@ -207,31 +207,31 @@ mod tests {
 
     #[tokio::test]
     #[serial]
-    async fn create_answer_test() {
-        todo!("Submit not implemented yet");
+    async fn test_submit_answer() {
         setup_environment();
         let _app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
         router.ready().await.unwrap();
 
         let client = get_client().await;
-        let client_url = format!("http://{}{}", "localhost:3000", "/submit");
+        let client_url = format!("http://localhost:3000/surveys/testsurveyid");
 
         println!("Client sending to: {client_url}");
 
-        let request = CreateAnswersRequest {
-            id: "1".to_string(),
-            survey_id: "testid".to_string(),
-            survey_version: "0".to_string(),
-            start_time: "now()".to_string(),
-            answers: HashMap::new(),
-        };
-        let exjson = json!({"first": "answer"});
+        // let request = CreateAnswersRequest {
+        //     // id: "1".to_string(),
+        //     // id: None,
+        //     // survey_id: "testsurveyid".to_string(),
+        //     // survey_version: "0".to_string(),
+        //     // start_time: "now()".to_string(),
+        //     answers: json!([{"first": "answer"}]),
+        // };
+        // let exjson = json!([{"first": "answer"}]);
         // let request_test = "- test question\n - this one";
         let response = client
             .post(&client_url)
             // .json(&request)
-            .json(&exjson)
+            .json(&json!([{"first": "answer"}]))
             .send()
             .await
             .expect("Should recieve repsonse from app");

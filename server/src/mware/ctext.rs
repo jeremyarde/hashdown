@@ -8,6 +8,7 @@ use axum::{
     RequestPartsExt,
 };
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+use ormlite::Model;
 use serde::{Deserialize, Serialize};
 // use tower_cookies::{Cookie, Cookies};
 use once_cell::sync::Lazy;
@@ -287,4 +288,16 @@ pub fn create_jwt_token(user: db::database::UserModel) -> Result<String, ServerE
     let jwt = encode(&Header::default(), &claims, &KEYS.encoding)
         .map_err(|_| ServerError::AuthTokenCreationFail)?;
     Ok(jwt)
+}
+
+#[derive(Model)]
+pub struct UserModel {
+    id: i32,
+}
+
+#[derive(Model, Debug)]
+pub struct Person {
+    pub id: i32,
+    pub name: String,
+    pub age: i32,
 }

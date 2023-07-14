@@ -23,7 +23,7 @@ CREATE TABLE surveys (
     foreign key(user_id) references users(user_id)
 );
 
-CREATE TABLE answers (
+CREATE TABLE surveys_submissions (
     id SERIAL PRIMARY KEY,
     answer_id TEXT NOT NULL unique,
     submitted_at TEXT,
@@ -31,14 +31,13 @@ CREATE TABLE answers (
     survey_id TEXT NOT NULL,
 
     foreign key(survey_id) references surveys(survey_id)
-    
 );
 
 create table pageviews (
     id serial primary key,
     page_url TEXT not null,
     timestamp timestamp not null default CURRENT_TIMESTAMP,
-    user_id integer,
+    user_id text,
     device text,
     referrer text,
     ip_address TEXT,
@@ -51,7 +50,7 @@ INSERT INTO users (user_id, email, password_hash) VALUES (
 
 INSERT INTO surveys (survey_id, plaintext, user_id)
 VALUES (
-        '123', '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
+        'testsurveyid', '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
         'testuserid'
     );
 

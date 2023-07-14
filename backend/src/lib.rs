@@ -87,7 +87,7 @@ impl Default for Metadata {
 }
 
 // #[wasm_bindgen]
-#[derive(Clone, Debug, Serialize, Deserialize, Builder)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Survey {
     #[serde(flatten)]
     pub survey: ParsedSurvey,

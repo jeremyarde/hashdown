@@ -132,10 +132,6 @@ impl ServerApplication {
 
     pub async fn new() -> ServerApplication {
         // const V1: &str = "v1";
-
-        // dotenvy::from_filename("dev.env").ok();
-        // initialize tracing
-        // tracing_subscriber::fmt::init();
         tracing_subscriber::fmt::try_init();
 
         // tracing_subscriber::registry()
