@@ -8,7 +8,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP};
+use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP, EDITOR};
 
 #[derive(Deserialize, Serialize, Debug, Hash)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -21,8 +21,13 @@ pub enum Answer {
 // static ANSWERS: AtomRef<HashMap<String, Answer>> = |_| HashMap::new();
 
 #[inline_props]
-pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
+pub fn RenderSurvey(cx: Scope) -> Element {
     let app_state = use_atom_ref(cx, APP);
+    let editor_state = use_atom_ref(cx, EDITOR);
+    let survey_to_render = use_state(cx, || {
+        ParsedSurvey::from(editor_state.read().clone())
+            .expect("Could not create survey from editor text")
+    });
     // let answers_state = use_atom_ref(cx, ANSWERS);
     // let set_answer = use_state(cx, || HashMap::<String, Answer>::new());
 

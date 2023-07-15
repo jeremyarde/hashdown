@@ -142,13 +142,13 @@ pub mod mainapp {
 
     pub static APP: AtomRef<AppState> = |_| AppState::new();
     // static CLIENT: Atom<reqwest::Client> = |_| reqwest::Client::new();
-    static EDITOR: Atom<String> = |_| String::from("");
+    pub static EDITOR: AtomRef<String> = |_| String::from("");
     static REQ_TIMEOUT: Atom<TimeoutFuture> = |_| TimeoutFuture::new(2000);
 
     const FORMINPUT_KEY: &str = "forminput";
 
     fn Editor(cx: Scope) -> Element {
-        let editor_state = use_atom_state(&cx, EDITOR);
+        let editor_state = use_atom_ref(&cx, EDITOR);
         let toast_visible = use_atom_state(&cx, TOAST);
         // let question_state = use_atom_state(&cx, APP);
         let app_state = use_atom_ref(&cx, APP);
@@ -176,7 +176,7 @@ pub mod mainapp {
                         .client
                         .post("http://localhost:3000/surveys")
                         .json(&CreateSurvey {
-                            plaintext: editor_state.get().clone(),
+                            plaintext: editor_state.read().clone(),
                         })
                         // .bearer_auth(token)
                         .send()
@@ -410,16 +410,6 @@ pub mod mainapp {
                             let new_user = UserContext::from(token_text.to_string());
                             info!("new user context: {token} {token_text} {new_user:?}");
 
-                            // app_state.modify(|curr| AppState {
-                            //     input_text: curr.input_text.clone(),
-                            //     client: curr.client.clone(),
-                            //     // surveys: curr.surveys.to_owned(),
-                            //     // curr_survey: curr.curr_survey.clone(),
-                            //     user: Some(new_user.to_owned()),
-                            //     show_login: curr.show_login,
-                            //     survey: curr.survey.to_owned(),
-                            //     state: AppError::Idle,
-                            // });
                             app_state.write().user = Some(new_user);
                         }
                         Err(x) => info!("error: {x:?}"),
@@ -462,7 +452,8 @@ pub mod mainapp {
     pub fn App(cx: Scope) -> Element {
         use_init_atom_root(cx);
         let app_state = use_atom_ref(cx, APP);
-        let editor_state = use_atom_state(cx, EDITOR);
+        // let editor_state = use_atom_ref(cx, EDITOR);
+        let editor_state = use_state(cx, || "".to_string());
 
         cx.render(rsx!(
             main {
@@ -472,7 +463,7 @@ pub mod mainapp {
                     self::Navbar {}
                     div { class: "editor-view",
                         div { style: "grid-column:1", self::Editor {} }
-                        div { style: "grid-column:2", RenderSurvey { survey_to_render: &app_state.read().survey.survey } }
+                        div { style: "grid-column:2", RenderSurvey {} }
                     }
                     Login {}
                 }
