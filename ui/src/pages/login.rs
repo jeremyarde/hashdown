@@ -1,11 +1,12 @@
 use dioxus::prelude::*;
-use fermi::use_atom_state;
+use fermi::{use_atom_ref, use_atom_state};
+use log::info;
 use serde_json::{json, Value};
 
 use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP};
 
 pub fn Login(cx: Scope) -> Element {
-    let app_state = use_atom_state(&cx, APP);
+    let app_state = use_atom_ref(&cx, APP);
     // let myclient = use_atom_state(cx, CLIENT);
 
     let onsubmit = move |evt: FormEvent, client: reqwest::Client| {
@@ -19,6 +20,7 @@ pub fn Login(cx: Scope) -> Element {
                 };
 
                 let resp = app_state
+                    .read()
                     .client
                     // let resp = reqwest::Client::new()
                     .post("http://localhost:3000/login")
@@ -48,26 +50,41 @@ pub fn Login(cx: Scope) -> Element {
                     Ok(data) => {
                         println!("Login successful!");
                         let response: Value = data.json().await.expect("Login data was not json");
-                        app_state.modify(|curr| {
-                            AppState {
-                                input_text: curr.input_text.to_owned(),
-                                client: curr.client.to_owned(),
-                                state: AppError::Idle,
-                                // surveys: curr.surveys.to_owned(),
-                                // curr_survey: curr.curr_survey.to_owned(),
-                                user: Some(UserContext {
+                        match response.get("auth_token") {
+                            Some(x) => {
+                                info!("Logged in successfully");
+                                app_state.write().user = Some(UserContext {
                                     username: request.email,
-                                    token: response
-                                        .get("auth_token")
-                                        .expect("auth_token not found in login")
-                                        .to_string(),
+                                    token: x.to_string(),
                                     cookie: "".to_string(),
-                                }),
-                                show_login: curr.show_login,
-                                survey: curr.survey.to_owned(),
-                                // auth_token: curr.auth_token.clone(),
+                                });
                             }
-                        });
+                            None => {
+                                info!("Did not log in, could not find auth token");
+                                app_state.write().user = None;
+                            }
+                        }
+
+                        // app_state.write().user = app_state.modify(|curr| {
+                        //     AppState {
+                        //         input_text: curr.input_text.to_owned(),
+                        //         client: curr.client.to_owned(),
+                        //         state: AppError::Idle,
+                        //         // surveys: curr.surveys.to_owned(),
+                        //         // curr_survey: curr.curr_survey.to_owned(),
+                        //         user: Some(UserContext {
+                        //             username: request.email,
+                        //             token: response
+                        //                 .get("auth_token")
+                        //                 .expect("auth_token not found in login")
+                        //                 .to_string(),
+                        //             cookie: "".to_string(),
+                        //         }),
+                        //         show_login: curr.show_login,
+                        //         survey: curr.survey.to_owned(),
+                        //         // auth_token: curr.auth_token.clone(),
+                        //     }
+                        // });
                     }
 
                     //Handle any errors from the fetch here
@@ -106,12 +123,12 @@ pub fn Login(cx: Scope) -> Element {
     };
 
     cx.render(rsx! {
-        if app_state.show_login {
+        if app_state.read().show_login {
             rsx!{
                 div {
                     h1 { "Login" }
                     form {
-                        onsubmit: move |evt| onsubmit(evt, app_state.client.clone()),
+                        onsubmit: move |evt| onsubmit(evt, app_state.read().client.clone()),
                         class: "login-form",
                         prevent_default: "onsubmit", // Prevent the default behavior of <form> to post
                         input { r#type: "text", id: "email", name: "email" }

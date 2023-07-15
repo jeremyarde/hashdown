@@ -6,6 +6,7 @@ pub mod routes {
         password_hash::{rand_core::OsRng, SaltString},
         Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
     };
+    use chrono::{DateTime, Utc};
     use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 
     use axum::{
@@ -18,10 +19,14 @@ pub mod routes {
         routing::{get, get_service, post, MethodRouter},
         Extension, Form, Router,
     };
-    use db::database::{CreateUserRequest, Database};
-    use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey};
+
+    use db::database::CreateUserRequest;
+    use lettre::message::header::Date;
+    use markdownparser::{nanoid_gen, parse_markdown_v3};
     // use oauth2::basic::BasicClient;
 
+    use ormlite::Model;
+    // use ormlite::model::Model;
     // use reqwest::header;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
@@ -48,7 +53,7 @@ pub mod routes {
 
     use crate::{
         auth::{validate_credentials, AuthError},
-        db,
+        db::{self, database::CreateAnswersModel},
         log::log_request,
         mware::{
             self,
@@ -60,7 +65,7 @@ pub mod routes {
                 Ctext,
             },
         },
-        server::CreateSurveyResponse,
+        server::{CreateSurveyResponse, SurveyModel},
         ServerError, ServerState,
     };
 
@@ -175,29 +180,39 @@ pub mod routes {
         let parsed_survey =
             parse_markdown_v3(payload.plaintext).expect("Could not parse the survey");
 
-        let metadata = MetadataBuilder::default().build().unwrap();
+        let metadata = Metadata::new();
 
-        let survey_model = SurveyModelBuilder::default()
-            .plaintext(parsed_survey.plaintext.clone())
-            .parse_version(parsed_survey.parse_version.clone())
-            .user_id(user_id.to_string())
-            .created_at(metadata.created_at.clone())
-            .modified_at(metadata.modified_at.clone())
-            .version(metadata.version.clone())
-            .id(0)
-            .build()
-            .expect("Could not create survey model");
+        // let survey_model = SurveyModelBuilder::default()
+        //     .plaintext(parsed_survey.plaintext.clone())
+        //     .parse_version(parsed_survey.parse_version.clone())
+        //     .user_id(user_id.to_string())
+        //     .created_at(metadata.created_at.clone())
+        //     .modified_at(metadata.modified_at.clone())
+        //     .version(metadata.version.clone())
+        //     .id(0)
+        //     .build()
+        //     .expect("Could not create survey model");
 
-        let new_survey = SurveyBuilder::default()
-            .metadata(metadata)
-            .survey(parsed_survey)
-            .user_id(Some(user_id.to_owned()))
-            .build()
-            .expect("Could not create new survey model");
+        let survey = SurveyModel {
+            id: 0,
+            plaintext: parsed_survey.plaintext,
+            user_id: user_id.to_owned(),
+            created_at: metadata.created_at,
+            modified_at: metadata.modified_at,
+            // parse_version: parsed_survey.parse_version,
+            // metadata: Metadata::new(),
+        };
+
+        // let new_survey = SurveyBuilder::default()
+        //     .metadata(metadata)
+        //     .survey(parsed_survey)
+        //     .user_id(Some(user_id.to_owned()))
+        //     .build()
+        //     .expect("Could not create new survey model");
 
         let insert_result = state
             .db
-            .create_survey(survey_model)
+            .create_survey(survey)
             .await
             .expect("Should create survey in database");
 
@@ -206,7 +221,7 @@ pub mod routes {
 
         // return Ok(json!(response));
 
-        return Ok(Json(json!({ "survey": new_survey })));
+        return Ok(Json(json!({ "survey": insert_result })));
     }
 
     #[derive(Deserialize, Serialize, Debug)]
@@ -287,11 +302,50 @@ pub mod routes {
         pub format: SurveyFormat,
     }
 
+    // #[derive(Clone, Debug, Serialize, Deserialize, Model)]
+    // pub struct SurveyModel {
+    //     pub id: i32,
+    //     pub plaintext: String,
+    //     pub user_id: String,
+    //     // pub created_at: String,
+    //     // pub modified_at: String,
+    //     // pub questions: Option<Vec<Question>>,
+    //     // pub version: String,
+    //     // pub parse_version: String,
+    //     // #[serde(flatten)]
+    //     // pub metadata: Metadata,
+    // }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+
+    pub struct Metadata {
+        pub metadata_id: String,
+        pub created_at: DateTime<Utc>,
+        pub modified_at: DateTime<Utc>,
+        pub version: String,
+    }
+
+    impl Metadata {
+        fn new() -> Self {
+            Self {
+                metadata_id: nanoid_gen(24),
+                created_at: Utc::now(),
+                modified_at: Utc::now(),
+                version: "0".to_string(),
+            }
+        }
+    }
+
     #[derive(Deserialize, Debug)]
     #[serde(rename_all = "lowercase")]
     pub enum SurveyFormat {
         Html,
         Json,
+    }
+
+    #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
+    pub struct CreateSurveyRequest {
+        pub plaintext: String,
     }
 
     // #[tracing::instrument]
@@ -341,6 +395,11 @@ pub mod routes {
         //     .fetch_all(pool)
         //     .await
         //     .unwrap();
+        let res = SurveyModel::select()
+            .where_bind("survey.user_id = ?", user_id)
+            .fetch_all(&state.db.pool)
+            .await
+            .expect("Could not select users surveys");
 
         let resp = ListSurveyResponse { surveys: res };
 

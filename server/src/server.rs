@@ -5,9 +5,11 @@ use axum::{
     response::{IntoResponse, Response},
     Extension, Router,
 };
+use chrono::{DateTime, Utc};
 use db::database::Database;
-use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey, SurveyBuilder};
+use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey};
 
+use ormlite::Model;
 use tokio::{fs, task::JoinHandle};
 
 use tracing::log::info;
@@ -229,16 +231,16 @@ use serde::{Deserialize, Serialize};
 //     }
 // }
 
-#[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Clone, Debug, Serialize, Deserialize, Model)]
 pub struct SurveyModel {
-    pub id: String,
-    pub plaintext: String,
+    pub id: i32,
     pub user_id: String,
-    pub created_at: String,
-    pub modified_at: String,
+    pub created_at: DateTime<Utc>,
+    pub modified_at: DateTime<Utc>,
+    pub plaintext: String,
     // pub questions: Option<Vec<Question>>,
-    pub version: String,
-    pub parse_version: String,
+    // pub version: String,
+    // pub parse_version: String,
 }
 
 struct Form {

@@ -69,9 +69,9 @@ mod tests {
         http::{HeaderMap, HeaderValue},
         Json,
     };
-    use db::models::{
-        AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
-    };
+    // use db::models::{
+    //     AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
+    // };
     use dotenvy::dotenv;
     use lettre::transport::smtp::client::{Tls, TlsParameters};
     use markdownparser::ParsedSurvey;
@@ -86,7 +86,7 @@ mod tests {
     use crate::{
         db,
         mware::ctext::AUTH_TOKEN,
-        routes::routes::{ListSurveyResponse, LoginPayload},
+        routes::routes::{CreateSurveyRequest, ListSurveyResponse, LoginPayload},
         server::CreateSurveyResponse,
         ServerApplication,
     };

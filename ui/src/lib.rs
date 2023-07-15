@@ -25,7 +25,7 @@ pub mod mainapp {
         html::{button, fieldset, legend, style},
         prelude::*,
     };
-    use fermi::{use_atom_state, Atom, AtomRoot};
+    use fermi::{use_atom_ref, use_atom_state, Atom, AtomRef, AtomRoot};
 
     use fermi::use_init_atom_root;
     use serde_json::{json, Value};
@@ -140,8 +140,8 @@ pub mod mainapp {
     //     fn new() -> SurveyDto {}
     // }
 
-    pub static APP: Atom<AppState> = |_| AppState::new();
-    static CLIENT: Atom<reqwest::Client> = |_| reqwest::Client::new();
+    pub static APP: AtomRef<AppState> = |_| AppState::new();
+    // static CLIENT: Atom<reqwest::Client> = |_| reqwest::Client::new();
     static EDITOR: Atom<String> = |_| String::from("");
     static REQ_TIMEOUT: Atom<TimeoutFuture> = |_| TimeoutFuture::new(2000);
 
@@ -151,28 +151,28 @@ pub mod mainapp {
         let editor_state = use_atom_state(&cx, EDITOR);
         let toast_visible = use_atom_state(&cx, TOAST);
         // let question_state = use_atom_state(&cx, APP);
-        let app_state = use_atom_state(&cx, APP);
+        let app_state = use_atom_ref(&cx, APP);
         // let send_request_timeout = use_atom_state(&cx, REQ_TIMEOUT);
         let send_req_timeout = use_atom_state(&cx, REQ_TIMEOUT);
         let some_timeout = use_state(&cx, || TimeoutFuture::new(2000));
-
         let create_survey = move |content: String, client: Client| {
             cx.spawn({
                 to_owned![editor_state, app_state, send_req_timeout];
-                if app_state.user.is_none() {
+                if app_state.read().user.is_none() {
                     info!("Not logged in yet.");
                     return;
                 }
                 // timeout.get()
                 async move {
                     let something = send_req_timeout.get();
-                    let token = app_state.user.clone().unwrap().token;
+                    let token = app_state.read().user.clone().unwrap().token;
                     // timeout.await;
                     // TimeoutFuture::new(2000).await;
                     // let t = Timeou
                     info!("Attempting to save questions...");
                     // info!("Questions save: {:?}", question_state);
                     match app_state
+                        .read()
                         .client
                         .post("http://localhost:3000/surveys")
                         .json(&CreateSurvey {
@@ -217,22 +217,24 @@ pub mod mainapp {
             })
         };
 
-        let post_questions = move |content, client: Client| {
+        let post_questions = move |content| {
             cx.spawn({
                 to_owned![toast_visible, app_state];
 
-                if app_state.user.is_none() {
+                if app_state.read().user.is_none() {
                     info!("user token is not set");
                     return;
                 }
 
-                let mut token = app_state.user.clone().unwrap().token;
+                let mut token = app_state.read().user.clone().unwrap().token;
                 token = token.trim_matches('"').to_string();
                 async move {
                     info!("Attempting to save questions...");
-                    info!("Publishing content, app_state: {app_state:?}");
+                    info!("Publishing content, app_state: {:?}", app_state.read());
                     // info!("Questions save: {:?}", question_state);
-                    match client
+                    match app_state
+                        .read()
+                        .client
                         .post("http://localhost:3000/surveys")
                         .json(&CreateSurvey { plaintext: content })
                         // .bearer_auth(token.clone())
@@ -255,36 +257,35 @@ pub mod mainapp {
             let survey = match ParsedSurvey::from(content) {
                 Ok(x) => {
                     info!("Parsed: {x:#?}");
-                    app_state.modify(|curr| {
-                        AppState {
-                            input_text: curr.input_text.clone(),
-                            client: curr.client.clone(),
-                            // surveys: vec![],
-                            // curr_survey: curr.curr_survey.to_owned(),
-                            user: curr.user.to_owned(),
-                            show_login: curr.show_login,
-                            survey: Survey::from(x),
-                            state: AppError::Idle,
-                        }
-                    });
+                    app_state.write().survey = Survey::from(x);
+                    // app_state.write().modify(|curr| {
+                    //     AppState {
+                    //         input_text: curr.input_text.clone(),
+                    //         client: curr.client.clone(),
+                    //         // surveys: vec![],
+                    //         // curr_survey: curr.curr_survey.to_owned(),
+                    //         user: curr.user.to_owned(),
+                    //         show_login: curr.show_login,
+                    //         survey: Survey::from(x),
+                    //         state: AppError::Idle,
+                    //     }
+                    // });
                 }
                 Err(_) => {}
             };
         };
 
         cx.render(rsx! {
-            div {
-                class: "editor-container",
+            div { class: "editor-container",
                 form {
                     class: "editor-form",
                     prevent_default: "onsubmit",
                     // action: "localhost:3000/survey",
                     onsubmit: move |evt| {
-                        // evt.prevent_default();
-                            info!("Pushed publish :)");
-                            let formvalue = evt.values.get(FORMINPUT_KEY).clone().unwrap().clone();
-                            post_questions(formvalue, app_state.client.clone());
-                            evt.stop_propagation();
+                        info!("Pushed publish :)");
+                        let formvalue = evt.values.get(FORMINPUT_KEY).clone().unwrap().clone();
+                        post_questions(formvalue);
+                        evt.stop_propagation();
                     },
                     // oninput: move |e| {
                     //     let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
@@ -292,9 +293,7 @@ pub mod mainapp {
                     // },
 
                     oninput: move |e| {
-
                         let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
-                        // let formvalue = "- this is a test\n  - this is a question".to_string();
                         editor_survey(formvalue.clone());
                         info!("onchange results: {:?}", formvalue);
                     },
@@ -303,11 +302,10 @@ pub mod mainapp {
                         required: "",
                         rows: "8",
                         placeholder: "Write your survey here",
-                        name: FORMINPUT_KEY,
+                        name: FORMINPUT_KEY
                     }
 
-                    button {
-                        class: "publish-button",
+                    button { class: "publish-button",
                         // r#type: "submit",
                         "Publish"
                     }
@@ -380,15 +378,18 @@ pub mod mainapp {
     }
 
     pub fn Navbar(cx: Scope) -> Element {
-        let app_state = use_atom_state(&cx, APP);
-        let signup = move |authmethod: String, client: Client| {
+        let app_state = use_atom_ref(&cx, APP);
+
+        let signup = move |authmethod: String| {
             cx.spawn({
                 to_owned![app_state];
                 async move {
                     info!("Attempting signup...");
                     // info!("Questions save: {:?}", question_state);
 
-                    match client
+                    match app_state
+                        .read()
+                        .client
                         .post(format!("http://localhost:3000/{authmethod}"))
                         .json(&LoginPayload {
                             email: "a@a.a".to_string(),
@@ -409,16 +410,17 @@ pub mod mainapp {
                             let new_user = UserContext::from(token_text.to_string());
                             info!("new user context: {token} {token_text} {new_user:?}");
 
-                            app_state.modify(|curr| AppState {
-                                input_text: curr.input_text.clone(),
-                                client: curr.client.clone(),
-                                // surveys: curr.surveys.to_owned(),
-                                // curr_survey: curr.curr_survey.clone(),
-                                user: Some(new_user.to_owned()),
-                                show_login: curr.show_login,
-                                survey: curr.survey.to_owned(),
-                                state: AppError::Idle,
-                            });
+                            // app_state.modify(|curr| AppState {
+                            //     input_text: curr.input_text.clone(),
+                            //     client: curr.client.clone(),
+                            //     // surveys: curr.surveys.to_owned(),
+                            //     // curr_survey: curr.curr_survey.clone(),
+                            //     user: Some(new_user.to_owned()),
+                            //     show_login: curr.show_login,
+                            //     survey: curr.survey.to_owned(),
+                            //     state: AppError::Idle,
+                            // });
+                            app_state.write().user = Some(new_user);
                         }
                         Err(x) => info!("error: {x:?}"),
                     };
@@ -427,31 +429,15 @@ pub mod mainapp {
         };
 
         cx.render(rsx! {
-            div {
-                class: "navbar",
-                div {
-                    style: "",
-                    a { href:"/", class:"navbar-home", "Navbar here"  }
-                }
-                div {
-                    style: "",
+            div { class: "navbar",
+                div { style: "", a { href: "/", class: "navbar-home", "Navbar here" } }
+                div { style: "",
                     button {
                         class: "navbar-login",
                         // onclick: move |e| {signup()}
                         onclick: move |evt| {
                             info!("Pushed login :)");
-                            // signup("login".to_string(), app_state.client.clone());
                             evt.stop_propagation();
-                            app_state.modify(|curr| AppState {
-                                input_text: curr.input_text.clone(),
-                                state: AppError::Idle,
-                                client: curr.client.clone(),
-                                // surveys: curr.surveys.to_owned(),
-                                // curr_survey: curr.curr_survey.clone(),
-                                user: curr.user.to_owned(),
-                                show_login: if curr.show_login { false} else { true},
-                                survey: curr.survey.to_owned(),
-                            });
                         },
                         "login"
                     }
@@ -459,7 +445,7 @@ pub mod mainapp {
                         class: "navbar-signup",
                         onclick: move |evt| {
                             info!("Pushed publish :)");
-                            signup("signup".to_string(), app_state.client.clone());
+                            signup("signup".to_string());
                             evt.stop_propagation();
                         },
                         "signup"
@@ -470,16 +456,12 @@ pub mod mainapp {
     }
 
     fn NotFound(cx: Scope) -> Element {
-        cx.render(rsx!(
-            div {
-                "YO THIS IS NOT FOUND"
-            }
-        ))
+        cx.render(rsx!( div { "YO THIS IS NOT FOUND" } ))
     }
 
     pub fn App(cx: Scope) -> Element {
         use_init_atom_root(cx);
-        let app_state = use_atom_state(cx, APP);
+        let app_state = use_atom_ref(cx, APP);
         let editor_state = use_atom_state(cx, EDITOR);
 
         cx.render(rsx!(
@@ -488,20 +470,11 @@ pub mod mainapp {
                 class: "container p-6",
                 div {
                     self::Navbar {}
-                    div {
-                        class: "editor-view",
-                        div {
-                            style: "grid-column:1",
-                            self::Editor {}
-                        }
-                        div {
-                            style: "grid-column:2",
-                            RenderSurvey { survey_to_render: &app_state.survey.survey }
-                        }
+                    div { class: "editor-view",
+                        div { style: "grid-column:1", self::Editor {} }
+                        div { style: "grid-column:2", RenderSurvey { survey_to_render: &app_state.read().survey.survey } }
                     }
-                    Login{}
-                    // // SurveysComponent { survey: &app_state.curr_survey }
-                    // self::Toast {}
+                    Login {}
                 }
             }
         ))

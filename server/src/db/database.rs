@@ -7,7 +7,7 @@ use std::{
 use anyhow::{self, Context};
 
 use chrono::{DateTime, Utc};
-use markdownparser::{nanoid_gen, parse_markdown_v3, Survey};
+use markdownparser::{nanoid_gen, parse_markdown_v3, Metadata, Survey};
 use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -23,17 +23,20 @@ use tracing::{info, instrument};
 // mod models;
 // use models::{CreateAnswersModel, CreateSurveyRequest, SurveyModel};
 
-#[derive(Clone, Debug, Serialize, Deserialize, Model)]
-pub struct SurveyModel {
-    pub id: i32,
-    pub plaintext: String,
-    pub user_id: String,
-    pub created_at: String,
-    pub modified_at: String,
-    // pub questions: Option<Vec<Question>>,
-    pub version: String,
-    pub parse_version: String,
-}
+// #[derive(Clone, Debug, Serialize, Deserialize)]
+// pub struct SurveyModel {
+//     pub id: i32,
+//     pub plaintext: String,
+//     pub user_id: String,
+//     // pub created_at: String,
+//     // pub modified_at: String,
+//     // pub questions: Option<Vec<Question>>,
+//     pub version: String,
+//     pub parse_version: String,
+//     pub metadata: Metadata,
+// }
+
+use crate::server::SurveyModel;
 
 use super::models;
 

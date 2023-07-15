@@ -18,81 +18,64 @@ pub enum Answer {
 }
 
 // static ANSWERS: Atom<HashSet<Answer>> = |_| HashSet::new();
-static ANSWERS: AtomRef<HashMap<String, Answer>> = |_| HashMap::new();
+// static ANSWERS: AtomRef<HashMap<String, Answer>> = |_| HashMap::new();
 
 #[inline_props]
 pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Element {
-    let app_state = use_atom_state(cx, APP);
-    let answers_state = use_atom_ref(cx, ANSWERS);
-    let set_answer = use_state(cx, || HashMap::<String, Answer>::new());
+    let app_state = use_atom_ref(cx, APP);
+    // let answers_state = use_atom_ref(cx, ANSWERS);
+    // let set_answer = use_state(cx, || HashMap::<String, Answer>::new());
 
-    info!("answers state: {:#?}", answers_state.read());
+    // info!("answers state: {:#?}", answers_state.read());
 
-    let post_questions = move |content, client: Client| {
-        cx.spawn({
-            to_owned![app_state];
+    // let post_questions = move |content, client: Client| {
+    //     cx.spawn({
+    //         to_owned![app_state];
 
-            let curr_survey_id = app_state.survey.metadata.id.to_string();
-            async move {
-                info!("Attempting to save questions...");
+    //         let curr_survey_id = app_state.read().survey.metadata.id.to_string();
+    //         async move {
+    //             info!("Attempting to save questions...");
 
-                // info!("Publishing content, app_state: {app_state:?}");
-                // info!("answers state: {:#?}", &answers_state.read());
-                // let formdata = FormData::from(content);
-                // info!("Questions save: {:?}", question_state);
-                match client
-                    .post(format!("http://localhost:3000/surveys/{curr_survey_id}"))
-                    .json(&json!(content))
-                    // .bearer_auth(token.clone())
-                    // .header("x-auth-token", token)
-                    .send()
-                    .await
-                {
-                    Ok(x) => {
-                        info!("success: {x:?}");
-                        info!("should show toast now");
-                        // toast_visible.set(true);
-                    }
-                    Err(x) => info!("error: {x:?}"),
-                };
-            }
-        })
-    };
+    //             // info!("Publishing content, app_state: {app_state:?}");
+    //             // info!("answers state: {:#?}", &answers_state.read());
+    //             // let formdata = FormData::from(content);
+    //             // info!("Questions save: {:?}", question_state);
+    //             match client
+    //                 .post(format!("http://localhost:3000/surveys/{curr_survey_id}"))
+    //                 .json(&json!(content))
+    //                 // .bearer_auth(token.clone())
+    //                 // .header("x-auth-token", token)
+    //                 .send()
+    //                 .await
+    //             {
+    //                 Ok(x) => {
+    //                     info!("success: {x:?}");
+    //                     info!("should show toast now");
+    //                     // toast_visible.set(true);
+    //                 }
+    //                 Err(x) => info!("error: {x:?}"),
+    //             };
+    //         }
+    //     })
+    // };
 
     cx.render(rsx! {
-        div {
-            class: "survey",
+        div { class: "survey",
             form {
-                action: "http://localhost:3000/surveys/{app_state.survey.metadata.id}",
+                // action: "http://localhost:3000/surveys/{survey_to_render.survey.metadata.id}",
                 // action: "http://localhost:3000/surveys/test",
                 // enctype: "application/x-www-form-urlencoded",
-                method: "post",
+                // method: "post",
                 prevent_default: "onsubmit",
                 onsubmit: move |evt| {
                     info!("submitting survey result: {:?}", evt.values);
-
-                    let answers: Vec<Answer> = app_state.survey.survey.questions.iter().map(|question| {
-                        // evt.values.get(&question.id);
-                        Answer::Radio {
-                            id:question.id.clone(), 
-                            value: evt.values.get(&question.id).unwrap().to_owned()
-                        }
-                    }).collect();
-
-                    info!("answers vec: {:?}", answers);
-
-                    post_questions(answers, app_state.client.clone());
-
-                    // evt.stop_propagation();
                 },
                 onchange: move |evt| {
                     info!("form: {:#?}", evt.data);
-                    // info!("form testing deserialize: {:#?}", serde_json::Value::from_str(&evt.data.value));
-                    info!("appstate: {:#?}", app_state.survey);
-                    // evt
                 },
-                h1 {"title: {app_state.survey.survey.title:?}"}
-                app_state.survey.survey.questions.iter().map(|question| {
+                h1 { "title: {survey_to_render.title:?}" }
+                // app_state.read().survey.survey.questions.iter().map(|question| {
+                survey_to_render.questions.iter().map(|question| {
                     info!("curr question: {:?}" ,question);
                     // let curr_state = answer_state.get().get(&question.id.clone()).unwrap();
                     rsx!{
@@ -106,12 +89,8 @@ pub fn RenderSurvey<'a>(cx: Scope, survey_to_render: &'a ParsedSurvey) -> Elemen
                         // set_answer: set_answer
                     }
 
-                }})
-                button {
-                    class: "publish-button",
-                    r#type: "submit",
-                    "Submit"
-                }
+                }}),
+                button { class: "publish-button", r#type: "submit", "Submit" }
             }
         }
     })
@@ -122,11 +101,10 @@ struct QuestionProps<'a> {
     question: &'a Question,
 }
 
-fn Question<'a>(
-    cx: Scope<'a, QuestionProps<'a>>,
-) -> Element {
-    cx.render(rsx!(div {
-        match cx.props.question.r#type {
+fn Question<'a>(cx: Scope<'a, QuestionProps<'a>>) -> Element {
+    cx.render(rsx!(
+        div {
+            match cx.props.question.r#type {
             QuestionType::Checkbox | QuestionType::Radio => {
                 let value = cx.props.question.options.iter().enumerate().map(|(i, option): (usize, &QuestionOption)| {
                     rsx!(
@@ -170,5 +148,6 @@ fn Question<'a>(
             }
             _ => rsx!(div{"not supported"})
         }
-    }))
+        }
+    ))
 }
