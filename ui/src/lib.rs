@@ -258,27 +258,15 @@ pub mod mainapp {
                 Ok(x) => {
                     info!("Parsed: {x:#?}");
                     app_state.write().survey = Survey::from(x);
-                    // app_state.write().modify(|curr| {
-                    //     AppState {
-                    //         input_text: curr.input_text.clone(),
-                    //         client: curr.client.clone(),
-                    //         // surveys: vec![],
-                    //         // curr_survey: curr.curr_survey.to_owned(),
-                    //         user: curr.user.to_owned(),
-                    //         show_login: curr.show_login,
-                    //         survey: Survey::from(x),
-                    //         state: AppError::Idle,
-                    //     }
-                    // });
                 }
                 Err(_) => {}
             };
         };
 
         cx.render(rsx! {
-            div { class: "editor-container",
+            div { class: "",
                 form {
-                    class: "editor-form",
+                    class: "",
                     prevent_default: "onsubmit",
                     // action: "localhost:3000/survey",
                     onsubmit: move |evt| {
@@ -287,10 +275,6 @@ pub mod mainapp {
                         post_questions(formvalue);
                         evt.stop_propagation();
                     },
-                    // oninput: move |e| {
-                    //     let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
-                    //     editor_state.set(formvalue);
-                    // },
 
                     oninput: move |e| {
                         let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
@@ -298,14 +282,14 @@ pub mod mainapp {
                         info!("onchange results: {:?}", formvalue);
                     },
                     textarea {
-                        class: "editor-field",
+                        class: "",
                         required: "",
                         rows: "8",
                         placeholder: "Write your survey here",
                         name: FORMINPUT_KEY
                     }
 
-                    button { class: "publish-button",
+                    button { class: "",
                         // r#type: "submit",
                         "Publish"
                     }
@@ -357,7 +341,7 @@ pub mod mainapp {
                     onclick: move |_| {
                         toast_visible.set(false)
                     },
-                    class:"fixed right-10 bottom-10 px-5 py-4 border-r-8 bg-white drop-shadow-lg fade-in transition ease-in-out hover:-translate-y-1 hover:scale-110 hover:bg-indigo-500 duration-1000 from-blue-500",
+                    class: "fixed right-10 bottom-10 px-5 py-4 border-r-8 bg-white drop-shadow-lg fade-in transition ease-in-out hover:-translate-y-1 hover:scale-110 hover:bg-indigo-500 duration-1000 from-blue-500",
                     p {
                         span {
                             class: "mr-2 inline-block px-3 py-1 rounded-full bg-blue-500 text-white font-extrabold",
@@ -419,11 +403,11 @@ pub mod mainapp {
         };
 
         cx.render(rsx! {
-            div { class: "navbar",
-                div { style: "", a { href: "/", class: "navbar-home", "Navbar here" } }
-                div { style: "",
+            div { class: "",
+                div { class: "", a { href: "/", class: "", "Navbar here" } }
+                div { class: "",
                     button {
-                        class: "navbar-login",
+                        class: "",
                         // onclick: move |e| {signup()}
                         onclick: move |evt| {
                             info!("Pushed login :)");
@@ -445,10 +429,6 @@ pub mod mainapp {
         })
     }
 
-    fn NotFound(cx: Scope) -> Element {
-        cx.render(rsx!( div { "YO THIS IS NOT FOUND" } ))
-    }
-
     pub fn App(cx: Scope) -> Element {
         use_init_atom_root(cx);
         let app_state = use_atom_ref(cx, APP);
@@ -458,12 +438,12 @@ pub mod mainapp {
         cx.render(rsx!(
             main {
                 // class: "container mx-auto max-w-lg p-6",
-                class: "container p-6",
-                div {
+                // class: "container columns-2",
+                div { class: " bg-green-300",
                     self::Navbar {}
-                    div { class: "editor-view",
-                        div { style: "grid-column:1", self::Editor {} }
-                        div { style: "grid-column:2", RenderSurvey {} }
+                    div { class: "container flex-row outline-2 bg-red-700 w-full",
+                        div { class: "flex-row flex justify-around w-full", self::Editor {} }
+                        div { class: "flex-row flex justify-around w-full", RenderSurvey {} }
                     }
                     Login {}
                 }
