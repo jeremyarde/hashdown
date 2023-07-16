@@ -95,7 +95,7 @@ pub fn RenderSurvey(cx: Scope) -> Element {
                     }
 
                 }}),
-                button { class: "publish-button", r#type: "submit", "Submit" }
+                button { class: "fixed bottom-4 right-4", r#type: "submit", "Submit" }
             }
         }
     })

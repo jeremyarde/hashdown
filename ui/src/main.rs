@@ -651,6 +651,7 @@ use ui::mainapp;
 fn main() {
     // css
     // npx tailwindcss -i ./input.css -o ./public/output.css --watch
+    // npx tailwindcss -i ./input.css -o ./public/tailwind.css --watch
 
     // cargo watch -d 1 -- cargo run
     // kill hot reload
@@ -664,7 +665,17 @@ fn main() {
     //     println!("Panic: {}", info);
     // }));
     dioxus_logger::init(LevelFilter::Info).expect("failed to init logger");
-    dioxus_web::launch_cfg(mainapp::App, Config::new());
+
+    // #[cfg(not(target_arch = "wasm32"))]
+    // dioxus_desktop::launch_cfg(
+    //     mainapp::App,
+    //     dioxus_desktop::Config::new()
+    //         .with_custom_head(r#"<link rel="stylesheet" href="public/tailwind.css">"#.to_string()),
+    // );
+    #[cfg(target_arch = "wasm32")]
+    dioxus_web::launch(mainapp::App);
+
+    // dioxus_web::launch_cfg(mainapp::App, Config::new());
     // server_side()
     // dioxus::web::launch_cfg(app, |c| c.into());
 }

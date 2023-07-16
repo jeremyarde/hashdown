@@ -264,9 +264,9 @@ pub mod mainapp {
         };
 
         cx.render(rsx! {
-            div { class: "",
+            div { class: "flex w-full flex-row align-middle justify-center",
                 form {
-                    class: "",
+                    class: "w-full flex flex-col",
                     prevent_default: "onsubmit",
                     // action: "localhost:3000/survey",
                     onsubmit: move |evt| {
@@ -289,7 +289,7 @@ pub mod mainapp {
                         name: FORMINPUT_KEY
                     }
 
-                    button { class: "",
+                    button { class: "hover:bg-slate-600 transition",
                         // r#type: "submit",
                         "Publish"
                     }
@@ -403,9 +403,9 @@ pub mod mainapp {
         };
 
         cx.render(rsx! {
-            div { class: "",
-                div { class: "", a { href: "/", class: "", "Navbar here" } }
-                div { class: "",
+            div { class: "flex flex-row bg-red-500 p-1 justify-between",
+                div { class: "justify-start items-start", "Logo HERE" }
+                div { class: "flex justify-end",
                     button {
                         class: "",
                         // onclick: move |e| {signup()}
@@ -416,7 +416,7 @@ pub mod mainapp {
                         "login"
                     }
                     button {
-                        class: "navbar-signup",
+                        class: "bg-green-400",
                         onclick: move |evt| {
                             info!("Pushed publish :)");
                             signup("signup".to_string());
@@ -436,17 +436,11 @@ pub mod mainapp {
         let editor_state = use_state(cx, || "".to_string());
 
         cx.render(rsx!(
-            main {
-                // class: "container mx-auto max-w-lg p-6",
-                // class: "container columns-2",
-                div { class: " bg-green-300",
-                    self::Navbar {}
-                    div { class: "container flex-row outline-2 bg-red-700 w-full",
-                        div { class: "flex-row flex justify-around w-full", self::Editor {} }
-                        div { class: "flex-row flex justify-around w-full", RenderSurvey {} }
-                    }
-                    Login {}
-                }
+            self::Navbar {}
+            div { class: "grid grid-cols-2 h-full",
+                div { class: "", self::Editor {} }
+                div { class: "", RenderSurvey {} }
+                div { class: "", Login {} }
             }
         ))
     }

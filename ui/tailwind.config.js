@@ -1,20 +1,10 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-    content: {
-        mode: "all",
-        content: [
-            "./src/**/*.rs",
-            "./index.html",
-            "./src/**/*.html",
-            "./src/**/*.css",
-        ],
-    },
-    theme: {
-        container: {
-            center: true,
-        },
-    },
-    variants: {},
-    plugins: [
-        require('@tailwindcss/forms'),
-    ],
+  mode: "jit",
+  purge: ["./src/**/*.{rs,html,css}", "./dist/**/*.html"],
+  content: ["./src/**/*.{rs,html,css}", "./dist/**/*.html"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
 };

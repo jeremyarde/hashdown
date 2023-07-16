@@ -1,7 +1,7 @@
 [application]
 
 # App (Project) Name
-name = "frontend_markdown_parser"
+name = "Tailwind CSS + Dioxus"
 
 # Dioxus App Default Platform
 # desktop, web, mobile, ssr
@@ -16,7 +16,7 @@ asset_dir = "public"
 [web.app]
 
 # HTML title tag content
-title = "Formit"
+title = "dioxus | ⛺"
 
 [web.watcher]
 
@@ -30,14 +30,17 @@ watch_path = ["src", "public"]
 [web.resource]
 
 # CSS style file
-# style = ["./output.css"]
-style = ["input.css"]
+style = ["tailwind.css"]
 
 # Javascript code file
 script = []
 
 [web.resource.dev]
 
-# Javascript code file
 # serve: [dev-server] only
+
+# CSS style file
+style = []
+
+# Javascript code file
 script = []
