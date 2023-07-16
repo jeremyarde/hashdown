@@ -8,7 +8,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP, EDITOR};
+use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP, EDITOR, SURVEY};
 
 #[derive(Deserialize, Serialize, Debug, Hash)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -22,50 +22,12 @@ pub enum Answer {
 
 #[inline_props]
 pub fn RenderSurvey(cx: Scope) -> Element {
-    let app_state = use_atom_ref(cx, APP);
-    let editor_state = use_atom_ref(cx, EDITOR);
-    let survey_to_render = use_state(cx, || {
-        ParsedSurvey::from(editor_state.read().clone())
-            .expect("Could not create survey from editor text")
-    });
-    // let answers_state = use_atom_ref(cx, ANSWERS);
-    // let set_answer = use_state(cx, || HashMap::<String, Answer>::new());
-
-    // info!("answers state: {:#?}", answers_state.read());
-
-    // let post_questions = move |content, client: Client| {
-    //     cx.spawn({
-    //         to_owned![app_state];
-
-    //         let curr_survey_id = app_state.read().survey.metadata.id.to_string();
-    //         async move {
-    //             info!("Attempting to save questions...");
-
-    //             // info!("Publishing content, app_state: {app_state:?}");
-    //             // info!("answers state: {:#?}", &answers_state.read());
-    //             // let formdata = FormData::from(content);
-    //             // info!("Questions save: {:?}", question_state);
-    //             match client
-    //                 .post(format!("http://localhost:3000/surveys/{curr_survey_id}"))
-    //                 .json(&json!(content))
-    //                 // .bearer_auth(token.clone())
-    //                 // .header("x-auth-token", token)
-    //                 .send()
-    //                 .await
-    //             {
-    //                 Ok(x) => {
-    //                     info!("success: {x:?}");
-    //                     info!("should show toast now");
-    //                     // toast_visible.set(true);
-    //                 }
-    //                 Err(x) => info!("error: {x:?}"),
-    //             };
-    //         }
-    //     })
-    // };
+    // let app_state = use_atom_ref(cx, APP);
+    let editor_state = use_atom_state(cx, EDITOR);
+    let survey_state = use_atom_state(cx, SURVEY);
 
     cx.render(rsx! {
-        div { class: "survey",
+        div { class: "flex flex-col",
             form {
                 // action: "http://localhost:3000/surveys/{survey_to_render.survey.metadata.id}",
                 // action: "http://localhost:3000/surveys/test",
@@ -78,24 +40,19 @@ pub fn RenderSurvey(cx: Scope) -> Element {
                 onchange: move |evt| {
                     info!("form: {:#?}", evt.data);
                 },
-                h1 { "title: {survey_to_render.title:?}" }
+                h1 { "title: {survey_state.survey.title:?}" }
                 // app_state.read().survey.survey.questions.iter().map(|question| {
-                survey_to_render.questions.iter().map(|question| {
+                survey_state.survey.questions.iter().map(|question| {
                     info!("curr question: {:?}" ,question);
                     // let curr_state = answer_state.get().get(&question.id.clone()).unwrap();
                     rsx!{
 
                     Question {
-                        // question.clone(),
-                        // update_answer_callback: update_answer,
                         question: question,
-                        // onupdate: update_answer
-                        // answer: answers_state.write().get_mut(&question.id).unwrap()
-                        // set_answer: set_answer
                     }
 
                 }}),
-                button { class: "fixed bottom-4 right-4", r#type: "submit", "Submit" }
+                button { class: "", r#type: "submit", "Submit" }
             }
         }
     })

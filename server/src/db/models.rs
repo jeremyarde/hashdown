@@ -1,127 +1,53 @@
-// use derive_builder::Builder;
-// // use ormlite::Model;
-// use rand::{thread_rng, Rng};
-// use serde::{self, Deserialize, Serialize};
-// use serde_json::{json, Value};
-// // use sqlx::FromRow;
-// use std::collections::HashMap;
-// const NANOID_LEN: usize = 12;
+use chrono::{DateTime, Utc};
+use ormlite::Model;
+// use uuid::Uuid;
+use ormlite::types::Uuid;
 
-// // const NANOID_ALPHA: [char; 36] = [
-// //     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
-// //     'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-// // ];
-// // const NANOID_ALPHA: [char; 34] = [
-// //     '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-// //     'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-// // ];
+#[derive(Debug)]
+struct Session {
+    id: Uuid,
+    user_id: Uuid,
+    created_at: Option<DateTime<Utc>>,
+    updated_at: Option<DateTime<Utc>>,
+    factor_id: Option<Uuid>,
+    aal: Option<i16>, // Assuming auth.aal_level is an integer type
+    not_after: Option<DateTime<Utc>>,
+}
 
-// // pub fn nanoid_gen() -> String {
-// //     let random =
-// //         [(); NANOID_LEN].map(|_| NANOID_ALPHA[thread_rng().gen_range(0..NANOID_ALPHA.len())]);
-// //     return String::from_iter(random.iter());
-// // }
-
-
-// // impl CreateAnswersModel {
-// //     pub fn from(create_answer: CreateAnswersRequest) -> CreateAnswersModel {
-// //         CreateAnswersModel {
-// //             id: nanoid_gen(),
-// //             // id: "test".to_string(),
-// //             external_id: nanoid_gen(),
-// //             survey_id: create_answer.survey_id,
-// //             survey_version: create_answer.survey_version,
-// //             start_time: create_answer.start_time,
-// //             end_time: "now".to_string(),
-// //             answers: json!(create_answer.answers).to_string(),
-// //             created_at: "now".to_string(),
-// //         }
-// //     }
-// // }
-// use ormlite::model::Model;
-
-// #[derive(Debug, Deserialize, Serialize)]
-// // #[derive(Debug, Model)]
-// pub struct CreateAnswersRequest {
-//     pub id: i32,
-//     pub test: String,
-//     // pub id: String,
-//     // pub survey_id: String,
-//     // pub survey_version: String,
-//     // pub start_time: String,
-//     // pub answers: Value,
-// }
-
-// #[derive(Model)]
-// pub struct TestingAnswer {
-//     id: i32,
-//     val: String,
-//     you: String,
-// }
-
-// #[derive(Debug, Deserialize, Serialize)]
-// pub struct AnswerDetails {
-//     pub values: Vec<String>,
-//     pub r#type: AnswerType,
-// }
-
-// #[derive(Debug, Deserialize, Serialize)]
-// pub enum AnswerType {
-//     Float,
-//     String,
-//     Integer,
-// }
-
-// #[derive(Debug, Deserialize, Serialize)]
-// pub struct CreateAnswersResponse {
-//     // id: String,
-//     // survey_id: String,
-//     // survey_version: String,
-//     // start_time: String,
-//     // answers: HashMap<String, AnswerDetails>,
-//     pub answer_id: String,
-// }
-
-// #[derive(Deserialize, Serialize, sqlx::FromRow, Debug, PartialEq, Eq)]
-// pub struct CreateSurveyRequest {
-//     pub plaintext: String,
-// }
-// // #[derive(Debug, Deserialize, Serialize)]
-// // pub struct CreateSurveyResponse {
-// //     pub survey: Survey,
-// // }
-
-// // impl CreateSurveyResponse {
-// //     fn from(survey: Survey) -> Self {
-// //         CreateSurveyResponse { survey: survey }
-// //     }
-// // }
-
-// #[derive(Clone, Debug, Serialize, Deserialize)]
-// pub struct Survey {
-//     pub id: String,
-//     pub plaintext: String,
-//     pub user_id: String,
-//     pub created_at: String,
-//     pub modified_at: String,
-//     // pub questions: Vec<Question>,
-//     pub version: String,
-//     pub parse_version: String,
-// }
-
-// #[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow, Builder)]
-// pub struct SurveyModel {
-//     pub id: i32,
-//     pub plaintext: String,
-//     pub user_id: String,
-//     pub created_at: String,
-//     pub modified_at: String,
-//     // pub questions: Option<Vec<Question>>,
-//     pub version: String,
-//     pub parse_version: String,
-// }
-
-// #[cfg(test)]
-// mod tests {
-//     // use crate::models::nanoid_gen;
-// }
+#[derive(Debug)]
+struct User {
+    instance_id: Option<uuid::Uuid>,
+    id: uuid::Uuid,
+    aud: Option<String>,
+    role: Option<String>,
+    email: Option<String>,
+    encrypted_password: Option<String>,
+    email_confirmed_at: Option<DateTime<Utc>>,
+    invited_at: Option<DateTime<Utc>>,
+    confirmation_token: Option<String>,
+    confirmation_sent_at: Option<DateTime<Utc>>,
+    recovery_token: Option<String>,
+    recovery_sent_at: Option<DateTime<Utc>>,
+    email_change_token_new: Option<String>,
+    email_change: Option<String>,
+    email_change_sent_at: Option<DateTime<Utc>>,
+    last_sign_in_at: Option<DateTime<Utc>>,
+    raw_app_meta_data: Option<serde_json::Value>,
+    raw_user_meta_data: Option<serde_json::Value>,
+    is_super_admin: Option<bool>,
+    created_at: Option<DateTime<Utc>>,
+    updated_at: Option<DateTime<Utc>>,
+    phone: Option<String>,
+    phone_confirmed_at: Option<DateTime<Utc>>,
+    phone_change: Option<String>,
+    phone_change_token: Option<String>,
+    phone_change_sent_at: Option<DateTime<Utc>>,
+    confirmed_at: Option<DateTime<Utc>>,
+    email_change_token_current: Option<String>,
+    email_change_confirm_status: Option<i16>,
+    banned_until: Option<DateTime<Utc>>,
+    reauthentication_token: Option<String>,
+    reauthentication_sent_at: Option<DateTime<Utc>>,
+    is_sso_user: bool,
+    deleted_at: Option<DateTime<Utc>>,
+}

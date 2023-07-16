@@ -70,37 +70,15 @@ pub mod routes {
     };
 
     pub fn get_routes(state: ServerState) -> anyhow::Result<Router> {
-        // let survey_routes: Router = Router::new()
-        //     .route(&format!("/surveys/:id"), get(get_survey))
-        //     .route(&format!("/submit"), post(submit_survey))
-        //     .with_state(state.clone())
-        //     .route_layer(middleware::from_fn_with_state(
-        //         state.clone(),
-        //         mw_ctx_resolver,
-        //     ));
-
         let routes = Router::new()
-            // .merge(survey_routes)
-            // .layer(Extension(state))
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             .route("/surveys/:id", get(get_survey).post(submit_survey))
             // .route(&format!("/surveys/test"), post(test_survey))
             .route(&format!("/login"), post(authorize))
             .route("/signup", post(signup))
-            // .with_state(state.clone())
-            // .route_layer(middleware::from_fn_with_state(
-            //     state.clone(),
-            //     mw_ctx_resolver,
-            // ))
-            // .layer(middleware::from_fn_with_state(
-            //     state.clone(),
-            //     mw_ctx_resolver,
-            // ))
             .layer(middleware::map_response(main_response_mapper))
             // .layer(middleware::from_fn(propagate_header))
             .with_state(state);
-        // .layer(Extension(state));
-        // .with_state(state);
 
         return Ok(routes);
     }
@@ -525,4 +503,6 @@ pub mod routes {
             json!({"result": logged_in, "username": username, "auth_token": jwt}),
         ))
     }
+
+    // TODO: this is neat: https://github.com/jbertovic/svelte-axum-project/blob/main/back_end/src/services.rs
 }

@@ -141,15 +141,18 @@ pub mod mainapp {
     // }
 
     pub static APP: AtomRef<AppState> = |_| AppState::new();
+    pub static SURVEY: Atom<Survey> = |_| Survey::new();
     // static CLIENT: Atom<reqwest::Client> = |_| reqwest::Client::new();
-    pub static EDITOR: AtomRef<String> = |_| String::from("");
+    pub static EDITOR: Atom<String> = |_| String::from("");
     static REQ_TIMEOUT: Atom<TimeoutFuture> = |_| TimeoutFuture::new(2000);
 
     const FORMINPUT_KEY: &str = "forminput";
 
     fn Editor(cx: Scope) -> Element {
-        let editor_state = use_atom_ref(&cx, EDITOR);
+        let editor_state = use_atom_state(&cx, EDITOR);
         let toast_visible = use_atom_state(&cx, TOAST);
+        let survey_state = use_atom_state(&cx, SURVEY);
+
         // let question_state = use_atom_state(&cx, APP);
         let app_state = use_atom_ref(&cx, APP);
         // let send_request_timeout = use_atom_state(&cx, REQ_TIMEOUT);
@@ -176,7 +179,7 @@ pub mod mainapp {
                         .client
                         .post("http://localhost:3000/surveys")
                         .json(&CreateSurvey {
-                            plaintext: editor_state.read().clone(),
+                            plaintext: editor_state.get().clone(),
                         })
                         // .bearer_auth(token)
                         .send()
@@ -184,30 +187,6 @@ pub mod mainapp {
                     {
                         Ok(x) => {
                             info!("success: {x:?}");
-                            // match SurveyDto::from(content.clone()) {
-                            //     Ok(sur) => {
-                            //         app_state.modify(|curr| {
-                            //             AppState {
-                            //                 // questions: Questions { qs: vec![] },
-                            //                 input_text: curr.input_text.clone(),
-                            //                 client: curr.client.clone(),
-                            //                 // surveys: vec![],
-                            //                 // curr_survey: sur,
-                            //                 user: curr.user.to_owned(),
-                            //                 show_login: curr.show_login,
-                            //                 survey: curr.survey.to_owned(),
-                            //                 state: todo!(),
-                            //                 // auth_token: curr.auth_token.clone(),
-                            //             }
-                            //             // curr.questions = question;
-                            //         });
-                            //         // let _x = &set_app.get().questions;
-                            //         editor_state.set(content);
-                            //         // info!("should show toast now");
-                            //         // toast_visible.set(true);
-                            //     }
-                            //     Err(_) => {}
-                            // }
                         }
                         Err(x) => info!("error: {x:?}"),
                     }
@@ -254,19 +233,20 @@ pub mod mainapp {
         };
 
         let editor_survey = move |content: String| {
-            let survey = match ParsedSurvey::from(content) {
+            match ParsedSurvey::from(content) {
                 Ok(x) => {
                     info!("Parsed: {x:#?}");
-                    app_state.write().survey = Survey::from(x);
+                    app_state.write().survey = Survey::from(x.clone());
+                    survey_state.modify(|curr| Survey::from(x));
                 }
                 Err(_) => {}
             };
         };
 
         cx.render(rsx! {
-            div { class: "flex w-full flex-row align-middle justify-center",
+            div { class: "w-full h-full",
                 form {
-                    class: "w-full flex flex-col",
+                    class: "border border-red-600 flex flex-col",
                     prevent_default: "onsubmit",
                     // action: "localhost:3000/survey",
                     onsubmit: move |evt| {
@@ -280,16 +260,17 @@ pub mod mainapp {
                         let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
                         editor_survey(formvalue.clone());
                         info!("onchange results: {:?}", formvalue);
+                        editor_state.modify(|curr| { formvalue });
                     },
                     textarea {
-                        class: "",
+                        class: " bg-transparent resize w-full focus:outline-none border border-emerald-800 focus:border-blue-300",
                         required: "",
                         rows: "8",
                         placeholder: "Write your survey here",
                         name: FORMINPUT_KEY
                     }
 
-                    button { class: "hover:bg-slate-600 transition",
+                    button { class: "hover:bg-slate-600 transition bg-slate-500",
                         // r#type: "submit",
                         "Publish"
                     }
@@ -436,11 +417,9 @@ pub mod mainapp {
         let editor_state = use_state(cx, || "".to_string());
 
         cx.render(rsx!(
-            self::Navbar {}
-            div { class: "grid grid-cols-2 h-full",
+            div { class: "flex h-screen w-screen items-center justify-center bg-gray-200",
                 div { class: "", self::Editor {} }
                 div { class: "", RenderSurvey {} }
-                div { class: "", Login {} }
             }
         ))
     }
