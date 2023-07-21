@@ -25,7 +25,7 @@ pub mod routes {
     use markdownparser::{nanoid_gen, parse_markdown_v3};
     // use oauth2::basic::BasicClient;
 
-    use ormlite::Model;
+    // use ormlite::Model;
     // use ormlite::model::Model;
     // use reqwest::header;
     use serde::{Deserialize, Serialize};
@@ -74,8 +74,8 @@ pub mod routes {
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
             .route("/surveys/:id", get(get_survey).post(submit_survey))
             // .route(&format!("/surveys/test"), post(test_survey))
-            .route(&format!("/login"), post(authorize))
-            .route("/signup", post(signup))
+            .route(&format!("/auth/login"), post(authorize))
+            .route("/auth/signup", post(signup))
             .layer(middleware::map_response(main_response_mapper))
             // .layer(middleware::from_fn(propagate_header))
             .with_state(state);
@@ -367,17 +367,12 @@ pub mod routes {
         println!("Getting surveys for user={user_id}");
         let pool = &state.db.pool;
 
-        // let res: Vec<SurveyModel> = SurveyModel::
-        // sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.user_id = $1")
-        //     .bind(user_id)
-        //     .fetch_all(pool)
-        //     .await
-        //     .unwrap();
-        let res = SurveyModel::select()
-            .where_bind("survey.user_id = ?", user_id)
-            .fetch_all(&state.db.pool)
-            .await
-            .expect("Could not select users surveys");
+        let res: Vec<SurveyModel> =
+            sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.user_id = $1")
+                .bind(user_id)
+                .fetch_all(pool)
+                .await
+                .unwrap();
 
         let resp = ListSurveyResponse { surveys: res };
 

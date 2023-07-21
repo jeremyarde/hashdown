@@ -9,7 +9,8 @@ use chrono::{DateTime, Utc};
 use db::database::Database;
 use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey};
 
-use ormlite::Model;
+use sqlx::FromRow;
+// use ormlite::Model;
 use tokio::{fs, task::JoinHandle};
 
 use tracing::log::info;
@@ -231,7 +232,7 @@ use serde::{Deserialize, Serialize};
 //     }
 // }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Model)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 pub struct SurveyModel {
     pub id: i32,
     pub user_id: String,

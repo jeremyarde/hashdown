@@ -8,10 +8,11 @@ use axum::{
     RequestPartsExt,
 };
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
-use ormlite::Model;
+// use ormlite::Model;
 use serde::{Deserialize, Serialize};
 // use tower_cookies::{Cookie, Cookies};
 use once_cell::sync::Lazy;
+use sqlx::FromRow;
 use tower_http::auth;
 use tracing::{debug, log::info};
 
@@ -290,12 +291,12 @@ pub fn create_jwt_token(user: db::database::UserModel) -> Result<String, ServerE
     Ok(jwt)
 }
 
-#[derive(Model)]
+#[derive(FromRow)]
 pub struct UserModel {
     id: i32,
 }
 
-#[derive(Model, Debug)]
+#[derive(FromRow, Debug)]
 pub struct Person {
     pub id: i32,
     pub name: String,
