@@ -240,8 +240,8 @@ pub struct SurveyModel {
     pub modified_at: DateTime<Utc>,
     pub plaintext: String,
     // pub questions: Option<Vec<Question>>,
-    // pub version: String,
-    // pub parse_version: String,
+    pub version: String,
+    pub parse_version: String,
 }
 
 struct Form {

@@ -8,10 +8,10 @@ use anyhow::{self, Context};
 
 use chrono::{DateTime, Utc};
 use markdownparser::{nanoid_gen, parse_markdown_v3, Metadata, Survey};
-use ormlite::{postgres::PgPool, Model};
+// use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use sqlx::FromRow;
+use sqlx::{FromRow, PgPool};
 // use models::CreateAnswersModel;
 // use chrono::Local;
 // use sqlx::{
@@ -242,7 +242,7 @@ impl Database {
         // .await?;
         info!("Search for user with email: {email:?}");
 
-        let res = sqlx::query("select * from users where email = $1")
+        let res = sqlx::query_as::<_, UserModel>("select * from users where email = $1")
             .bind(email)
             .fetch_one(&self.pool)
             .await?;
@@ -280,18 +280,19 @@ impl Database {
         // // let response_survey = survey.clone();
         // let now = chrono::offset::Utc::now();
         // let nowstr = now.to_string();
-        let res = sqlx::query!(
+        let res = sqlx::query_as::<_, SurveyModel>( 
             r#"insert into surveys (plaintext, user_id, created_at, modified_at, version, parse_version)
             values
             ($1, $2, $3, $4, $5, $6)
-            "#,
-            survey.plaintext,
-            survey.user_id,
-            survey.created_at,
-            survey.modified_at,
-            survey.version,
-            survey.parse_version
-        ).execute(&self.pool).await?;
+            returning *
+            "#)
+            .bind(survey.plaintext)
+            .bind(survey.user_id)
+            .bind(survey.created_at)
+            .bind(survey.modified_at)
+            .bind(survey.version)
+            .bind(survey.parse_version
+        ).fetch_one(&self.pool).await?;
 
         // let res = survey.insert(&self.pool).await?;
 

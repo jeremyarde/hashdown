@@ -173,12 +173,12 @@ pub mod routes {
 
         let survey = SurveyModel {
             id: 0,
-            plaintext: parsed_survey.plaintext,
             user_id: user_id.to_owned(),
             created_at: metadata.created_at,
             modified_at: metadata.modified_at,
-            // parse_version: parsed_survey.parse_version,
-            // metadata: Metadata::new(),
+            plaintext: parsed_survey.plaintext,
+            parse_version: parsed_survey.parse_version,
+            version: "fixme".to_string(),
         };
 
         // let new_survey = SurveyBuilder::default()

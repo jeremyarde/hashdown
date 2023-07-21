@@ -4,9 +4,9 @@ CREATE TABLE users (
     user_id TEXT not null unique,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-    created_at TEXT,
-    modified_at TEXT,
-    deleted_at TEXT,
+    created_at TIMESTAMP WITH TIME ZONE,
+    modified_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     verified BOOLEAN DEFAULT false
 );
 
@@ -15,8 +15,8 @@ CREATE TABLE surveys (
     survey_id TEXT not null unique,
     plaintext TEXT,
     user_id TEXT,
-    created_at TEXT,
-    modified_at TEXT,
+    created_at TIMESTAMP WITH TIME ZONE,
+    modified_at TIMESTAMP WITH TIME ZONE,
     version TEXT,
     parse_version TEXT,
     
@@ -25,7 +25,7 @@ CREATE TABLE surveys (
 
 CREATE TABLE surveys_submissions (
     id SERIAL PRIMARY KEY,
-    submitted_at TEXT,
+    submitted_at TIMESTAMP WITH TIME ZONE,
     answers JSON,
     survey_id TEXT NOT NULL,
 
@@ -35,7 +35,7 @@ CREATE TABLE surveys_submissions (
 create table pageviews (
     id serial primary key,
     page_url TEXT not null,
-    timestamp timestamp not null default CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE,
     user_id text,
     device text,
     referrer text,
