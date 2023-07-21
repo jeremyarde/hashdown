@@ -25,7 +25,6 @@ CREATE TABLE surveys (
 
 CREATE TABLE surveys_submissions (
     id SERIAL PRIMARY KEY,
-    answer_id TEXT NOT NULL unique,
     submitted_at TEXT,
     answers JSON,
     survey_id TEXT NOT NULL,
