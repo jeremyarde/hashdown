@@ -1,7 +1,8 @@
 use chrono::{DateTime, Utc};
-use ormlite::Model;
+use uuid::Uuid;
+// use ormlite::Model;
 // use uuid::Uuid;
-use ormlite::types::Uuid;
+// use ormlite::types::Uuid;
 
 #[derive(Debug)]
 struct Session {
