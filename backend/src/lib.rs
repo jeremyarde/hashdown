@@ -257,6 +257,7 @@ enum LineType {
     Title,
 }
 
+#[wasm_bindgen]
 pub fn markdown_to_form_wasm(contents: String) -> JsValue {
     let survey = parse_markdown_v3(contents);
     match survey {
