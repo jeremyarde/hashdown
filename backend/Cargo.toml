@@ -31,3 +31,6 @@ derive_builder = "0.12.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+lto = true
