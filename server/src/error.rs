@@ -45,28 +45,64 @@ impl IntoResponse for ServerError {
 }
 
 impl ServerError {
-    pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
+    pub fn client_status_and_error(&self) -> (StatusCode, ClientError, Option<&String>) {
         match self {
-            ServerError::BadRequest(_) => (
+            ServerError::BadRequest(x) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ClientError::SERVICE_ERROR,
+                Some(x),
             ),
             ServerError::AuthPasswordsDoNotMatch => {
-                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL)
+                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, None)
             }
-            ServerError::UserAlreadyExists => {
-                (StatusCode::UNPROCESSABLE_ENTITY, ClientError::LOGIN_FAIL)
+            ServerError::UserAlreadyExists => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                ClientError::LOGIN_FAIL,
+                None,
+            ),
+            ServerError::SurveyFail(x) => (
+                StatusCode::BAD_REQUEST,
+                ClientError::INVALID_PARAMS,
+                Some(x),
+            ),
+            ServerError::Database(x) => (
+                StatusCode::BAD_REQUEST,
+                ClientError::INVALID_PARAMS,
+                Some(x),
+            ),
+            ServerError::MissingCredentials => {
+                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, None)
             }
-            // CustomError::Database(_) => ,
-            // CustomError::LoginFail => todo!(),
-            // CustomError::AuthFailNoTokenCookie => todo!(),
-            _ => {
-                tracing::log::error!("Failed");
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    ClientError::SERVICE_ERROR,
-                )
+            ServerError::WrongCredentials => {
+                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, None)
             }
+            ServerError::AuthFailNoTokenCookie => {
+                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, None)
+            }
+            ServerError::AuthTokenCreationFail => {
+                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, None)
+            }
+            ServerError::PasswordDoesNotMatch => {
+                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, None)
+            }
+            ServerError::AuthFailTokenNotVerified(x) => {
+                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, Some(x))
+            }
+            ServerError::AuthFailTokenDecodeIssue => {
+                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, None)
+            }
+            ServerError::AuthFailTokenExpired => {
+                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, None)
+            } // CustomError::Database(_) => ,
+              // CustomError::LoginFail => (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL),
+              // CustomError::AuthFailNoTokenCookie => (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL),
+              // _ => {
+              //     tracing::log::error!("Failed");
+              //     (
+              //         StatusCode::INTERNAL_SERVER_ERROR,
+              //         ClientError::SERVICE_ERROR,
+              //     )
+              // }
         }
     }
 }

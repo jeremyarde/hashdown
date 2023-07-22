@@ -18,9 +18,9 @@ CREATE TABLE surveys (
     created_at TIMESTAMP WITH TIME ZONE,
     modified_at TIMESTAMP WITH TIME ZONE,
     version TEXT,
-    parse_version TEXT,
+    parse_version TEXT
     
-    foreign key(user_id) references users(user_id)
+    -- foreign key(user_id) references users(user_id)
 );
 
 CREATE TABLE surveys_submissions (

@@ -235,6 +235,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 pub struct SurveyModel {
     pub id: i32,
+    pub survey_id: String,
     pub user_id: String,
     pub created_at: DateTime<Utc>,
     pub modified_at: DateTime<Utc>,

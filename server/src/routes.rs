@@ -102,24 +102,30 @@ pub mod routes {
         let client_status_error = service_error.map(|se| se.client_status_and_error());
 
         // -- If client error, build the new reponse.
-        let error_response = client_status_error
-            .as_ref()
-            .map(|(status_code, client_error)| {
-                let client_error_body = json!({
-                    "error": {
-                        "type": client_error.as_ref(),
-                        "req_uuid": uuid.to_string(),
-                    }
+        let error_response =
+            client_status_error
+                .as_ref()
+                .map(|(status_code, client_error, message)| {
+                    let client_error_body = json!({
+                        "error": {
+                            "type": client_error.as_ref(),
+                            "req_uuid": uuid.to_string(),
+                            "message": message,
+                        }
+                    });
+
+                    info!("    ->> client_error_body: {client_error_body}");
+
+                    // Build the new response from the client_error_body
+                    (*status_code, Json(client_error_body)).into_response()
                 });
 
-                info!("    ->> client_error_body: {client_error_body}");
-
-                // Build the new response from the client_error_body
-                (*status_code, Json(client_error_body)).into_response()
-            });
-
         // Build and log the server log line.
-        let client_error = client_status_error.unzip().1;
+        // let client_error = client_status_error.unzip().1;
+        let client_error = match client_status_error {
+            Some(x) => Some(x.1),
+            None => None,
+        };
         log_request(uuid, req_method, uri, ctx, service_error, client_error)
             .await
             .expect("Did not log request properly");
@@ -139,7 +145,7 @@ pub mod routes {
     //     println!("logging request...");
     // }
 
-    #[tracing::instrument]
+    // #[tracing::instrument]
     #[axum::debug_handler]
     pub async fn create_survey(
         headers: HeaderMap,
@@ -173,12 +179,13 @@ pub mod routes {
 
         let survey = SurveyModel {
             id: 0,
+            survey_id: nanoid_gen(12),
+            plaintext: parsed_survey.plaintext.clone(),
             user_id: user_id.to_owned(),
             created_at: metadata.created_at,
             modified_at: metadata.modified_at,
-            plaintext: parsed_survey.plaintext,
-            parse_version: parsed_survey.parse_version,
             version: "fixme".to_string(),
+            parse_version: parsed_survey.parse_version.clone(),
         };
 
         // let new_survey = SurveyBuilder::default()
@@ -199,7 +206,7 @@ pub mod routes {
 
         // return Ok(json!(response));
 
-        return Ok(Json(json!({ "survey": insert_result })));
+        return Ok(Json(json!({ "survey": parsed_survey })));
     }
 
     #[derive(Deserialize, Serialize, Debug)]

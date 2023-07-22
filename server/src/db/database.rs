@@ -281,9 +281,9 @@ impl Database {
         // let now = chrono::offset::Utc::now();
         // let nowstr = now.to_string();
         let res = sqlx::query_as::<_, SurveyModel>( 
-            r#"insert into surveys (plaintext, user_id, created_at, modified_at, version, parse_version)
+            r#"insert into surveys (plaintext, user_id, created_at, modified_at, version, parse_version, survey_id)
             values
-            ($1, $2, $3, $4, $5, $6)
+            ($1, $2, $3, $4, $5, $6, $7)
             returning *
             "#)
             .bind(survey.plaintext)
@@ -291,8 +291,8 @@ impl Database {
             .bind(survey.created_at)
             .bind(survey.modified_at)
             .bind(survey.version)
-            .bind(survey.parse_version
-        ).fetch_one(&self.pool).await?;
+            .bind(survey.parse_version)
+            .bind(survey.survey_id).fetch_one(&self.pool).await?;
 
         // let res = survey.insert(&self.pool).await?;
 
