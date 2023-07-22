@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -13,6 +11,8 @@ import * as z from "zod";
 import { markdown_to_form_wasm } from '../../backend/pkg/markdownparser';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from './components/ui/form'
 import { Input } from './components/ui/input'
+import { RadioGroup, RadioGroupItem } from './components/ui/radio-group';
+// import { RadioGroup, RadioGroupItem } from './components/ui/radio-group'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -20,62 +20,193 @@ function App() {
   return (
     <>
       <GenericForm></GenericForm>
-      <Button onClick={() => setCount((count) => count + 1)}>Click me</Button>
     </>
   )
 }
 
+/**
+ * The complete Triforce, or one or more components of the Triforce.
+ * @typedef {Object} Question
+ * @property {string} value - Indicates whether the Courage component is present.
+ * @property {string} id - Indicates whether the Power component is present.
+ * @property {Array<Option>} options - Indicates whether the Wisdom component is present.
+ */
+
+
+/**
+ * The complete Triforce, or one or more components of the Triforce.
+ * @typedef {Object} Option
+ * @property {string} text - Indicates whether the Courage component is present.
+ * @property {string} id - Indicates whether the Power component is present.
+ */
+
+
 
 function GenericForm() {
-  let [survey, setSurvey] = useState(markdown_to_form_wasm("- test\n  - option"));
+  let [survey, setSurvey] = useState(markdown_to_form_wasm("# A survey title here\n- q1\n  - option 1"));
+  // setSurvey(() => markdown_to_form_wasm("# title\n- q1\n  - option 1"));
 
   // let schema = survey.questions.map();
 
 
   let objects = {};
-  let x = survey.questions.forEach(element => {
+  let defaultValues = {};
+  survey.questions.forEach(element => {
     console.log(element);
     objects[element.id] = z.string().min(10, { message: "Hey, longer please" });
+    defaultValues[element.id] = "";
   });
-  // const formSchema = z.object(objects);
-  const formSchema = z.object({ username: z.string() });
 
+  console.log(`survey: ${JSON.stringify(survey)}`);
+  console.log(`default: ${JSON.stringify(defaultValues)}`);
+  console.log(`objects: ${JSON.stringify(objects)}`);
+  console.log(`keys: ${JSON.stringify(Object.keys(objects))}`);
+
+
+  const formSchema = z.object(objects);
+  // const formSchema = z.object({ username: z.string() });
+
+  // const form = useForm<z.infer<typeof formSchema>>({
+  //   resolver: zodResolver(formSchema),
+  //   defaultValues: {
+  //     username: "",
+  //   },
+  // });
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema)
+    resolver: zodResolver(formSchema),
+    defaultValues: defaultValues,
   });
 
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    console.log(values)
+    console.log(`submit:`)
+    console.log(values);
   }
+
+  /**
+   * 
+   * @param {Question} question 
+   */
+  function formelements(question) {
+    return (<FormField
+      key={question.id}
+      control={form.control}
+      name={question.id}
+      render={({ field }) => {
+        return question.options.map((option) => {
+          return (<FormItem>
+            <FormLabel>{option.text}</FormLabel>
+            <FormControl>
+              <RadioGroup
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                className="flex flex-col space-y-1"
+              >
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormControl>
+                    <RadioGroupItem value="all" />
+                  </FormControl>
+                  <FormLabel className="font-normal">
+                    All new messages
+                  </FormLabel>
+                </FormItem>
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormControl>
+                    <RadioGroupItem value="mentions" />
+                  </FormControl>
+                  <FormLabel className="font-normal">
+                    Direct messages and mentions
+                  </FormLabel>
+                </FormItem>
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormControl>
+                    <RadioGroupItem value="none" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Nothing</FormLabel>
+                </FormItem>
+              </RadioGroup>
+            </FormControl>
+            <FormDescription>
+              {question.id}
+            </FormDescription>
+            <FormMessage />
+          </FormItem>)
+        })
+      }}
+    />)
+  }
+
+
 
   return (
     <>
+      <h2>{survey.title}</h2>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Username</FormLabel>
-                <FormControl>
-                  <Input placeholder="shadcn" {...field} />
-                </FormControl>
-                <FormDescription>
-                  This is your public display name.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit">Submit</Button>
+          {survey.questions.map((question) =>
+            formelements(question))
+          }
+          <Button type="submit" > Submit</Button>
         </form>
-      </Form>
-      {JSON.stringify(x)}
-      {JSON.stringify(survey, null, 2)}
+      </Form >
+      {/* {JSON.stringify(x)}
+      {JSON.stringify(survey, null, 2)} */}
+
+      {/* <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="items"
+          render={() => (
+            <FormItem>
+              <div className="mb-4">
+                <FormLabel className="text-base">Sidebar</FormLabel>
+                <FormDescription>
+                  Select the items you want to display in the sidebar.
+                </FormDescription>
+              </div>
+              {items.map((item) => (
+                <FormField
+                  key={item.id}
+                  control={form.control}
+                  name="items"
+                  render={({ field }) => {
+                    return (
+                      <FormItem
+                        key={item.id}
+                        className="flex flex-row items-start space-x-3 space-y-0"
+                      >
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes(item.id)}
+                            onCheckedChange={(checked) => {
+                              return checked
+                                ? field.onChange([...field.value, item.id])
+                                : field.onChange(
+                                    field.value?.filter(
+                                      (value) => value !== item.id
+                                    )
+                                  )
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          {item.label}
+                        </FormLabel>
+                      </FormItem>
+                    )
+                  }}
+                />
+              ))}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit">Submit</Button>
+      </form>
+    </Form> */}
     </>)
 }
 
