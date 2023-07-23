@@ -43,7 +43,8 @@ function App() {
 
 
 function GenericForm() {
-  let [survey, setSurvey] = useState(markdown_to_form_wasm("# A survey title here\n- q1\n  - option 1"));
+  let [survey, setSurvey] = useState(markdown_to_form_wasm("# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"));
+  // let [survey, setSurvey] = useState(markdown_to_form_wasm("# A survey title here\n- q1\n  - option 1\n  - option 2"));
   // setSurvey(() => markdown_to_form_wasm("# title\n- q1\n  - option 1"));
 
   // let schema = survey.questions.map();
@@ -53,14 +54,15 @@ function GenericForm() {
   let defaultValues = {};
   survey.questions.forEach(element => {
     console.log(element);
-    objects[element.id] = z.string().min(10, { message: "Hey, longer please" });
+    // objects[element.id] = z.string().min(10, { message: "Hey, longer please" });
+    objects[element.id] = z.enum(element.options.map((option) => option.text), { required_error: "Please select an option" });
     defaultValues[element.id] = "";
   });
 
-  console.log(`survey: ${JSON.stringify(survey)}`);
-  console.log(`default: ${JSON.stringify(defaultValues)}`);
-  console.log(`objects: ${JSON.stringify(objects)}`);
-  console.log(`keys: ${JSON.stringify(Object.keys(objects))}`);
+  // console.log(`survey: ${JSON.stringify(survey)}`);
+  // console.log(`default: ${JSON.stringify(defaultValues)}`);
+  // console.log(`objects: ${JSON.stringify(objects)}`);
+  // console.log(`keys: ${JSON.stringify(Object.keys(objects))}`);
 
 
   const formSchema = z.object(objects);
@@ -95,48 +97,45 @@ function GenericForm() {
       control={form.control}
       name={question.id}
       render={({ field }) => {
-        return question.options.map((option) => {
-          return (<FormItem>
-            <FormLabel>{option.text}</FormLabel>
+
+
+        // return question.options.map((option) => {
+        return (
+          <FormItem>
+            <FormLabel>{question.value}</FormLabel>
             <FormControl>
               <RadioGroup
                 onValueChange={field.onChange}
                 defaultValue={field.value}
                 className="flex flex-col space-y-1"
               >
-                <FormItem className="flex items-center space-x-3 space-y-0">
-                  <FormControl>
-                    <RadioGroupItem value="all" />
-                  </FormControl>
-                  <FormLabel className="font-normal">
-                    All new messages
-                  </FormLabel>
-                </FormItem>
-                <FormItem className="flex items-center space-x-3 space-y-0">
-                  <FormControl>
-                    <RadioGroupItem value="mentions" />
-                  </FormControl>
-                  <FormLabel className="font-normal">
-                    Direct messages and mentions
-                  </FormLabel>
-                </FormItem>
-                <FormItem className="flex items-center space-x-3 space-y-0">
-                  <FormControl>
-                    <RadioGroupItem value="none" />
-                  </FormControl>
-                  <FormLabel className="font-normal">Nothing</FormLabel>
-                </FormItem>
+                {question.options.map((option) => {
+                  return (
+                    <FormItem
+                      className="flex items-center space-x-3 space-y-0"
+                    >
+                      <FormControl>
+                        <RadioGroupItem value={option.text} />
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        {option.id}: {option.text}
+                      </FormLabel>
+                    </FormItem>
+                  )
+                })}
               </RadioGroup>
             </FormControl>
             <FormDescription>
               {question.id}
             </FormDescription>
             <FormMessage />
-          </FormItem>)
-        })
-      }}
-    />)
+          </FormItem>
+        )
+      }} />)
   }
+
+
+
 
 
 
@@ -144,7 +143,7 @@ function GenericForm() {
     <>
       <h2>{survey.title}</h2>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6 flex ">
           {survey.questions.map((question) =>
             formelements(question))
           }
