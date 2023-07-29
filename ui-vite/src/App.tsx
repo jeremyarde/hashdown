@@ -95,7 +95,7 @@ function GenericForm({ plaintext, survey }) {
         key={question.id}
         control={form.control}
         name={question.id}
-        className="flex text-left"
+        className="flex "
         render={({ field }) => {
 
 
@@ -112,7 +112,7 @@ function GenericForm({ plaintext, survey }) {
                   {question.options.map((option) => {
                     return (
                       <FormItem
-                      // className="flex items-center space-x-3 space-y-0"
+                        className="flex items-center space-x-3 w-full"
                       >
                         <FormControl>
                           <RadioGroupItem value={option.text} />
@@ -144,20 +144,20 @@ function GenericForm({ plaintext, survey }) {
 
 
   return (
-    <><div className='flex flex-col items-start'>
-      <h2>id: {survey.id}</h2>
-      <h2>{survey.title}</h2>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6 justify-start items-start"
-        >
-          {survey.questions.map((question) =>
-            formelements(question))
-          }
-          <Button className="" type="submit" >Submit</Button>
-        </form>
-      </Form >
-    </div>
+    <>
+      <div className='flex flex-col justify-start items-start w-full'>
+        <h2 className='w-full'>id: {survey.id}: {survey.title}</h2>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6 w-full"
+          >
+            {survey.questions.map((question) =>
+              formelements(question))
+            }
+            <Button className="" type="submit" >Submit</Button>
+          </form>
+        </Form >
+      </div>
     </>)
 }
 
