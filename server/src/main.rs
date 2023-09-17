@@ -146,28 +146,6 @@ mod tests {
         let token = signup_or_login(&mut router).await;
         println!("{}", token);
 
-        // let request = LoginPayload {
-        //     email: "jere".to_string(),
-        //     password: "mypassword".to_string(),
-        // };
-
-        // let request: Request<Body> = Request::builder()
-        //     .method("POST")
-        //     .uri(client_url)
-        //     // .header("x-auth-token", "mytoken")
-        //     // .body(Body::empty())
-        //     .header("content-type", "application/json")
-        //     .body(Body::from(serde_json::to_vec(&json!(request)).unwrap()))
-        //     .unwrap();
-
-        // let response = router.borrow_mut().oneshot(request).await.unwrap();
-
-        // dbg!(&response);
-        // assert!(response.status() == 200);
-        // let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-        // let body: Value = serde_json::from_slice(&body).expect("Failed to deserialize messages");
-        // assert!(body.get("auth_token").is_some());
-
         // List surveys
         let client_url = format!("http://localhost:3000{}", "/surveys");
         println!("Sending create survey with headers...");
