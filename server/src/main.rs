@@ -71,6 +71,7 @@ mod tests {
     };
     use dotenvy::dotenv;
     use lettre::transport::smtp::client::{Tls, TlsParameters};
+    use markdownparser::nanoid_gen;
     use mime::{Mime, APPLICATION_JSON};
     use reqwest::{header::CONTENT_TYPE, Client, StatusCode};
 
@@ -284,7 +285,7 @@ mod tests {
 
         let results = response.json::<Value>().await.unwrap();
         dbg!(&results);
-        assert_eq!(results, json!({"result": true}))
+        assert!(results.get("auth_token").is_some())
     }
 
     #[tokio::test]
@@ -304,8 +305,9 @@ mod tests {
 
         println!("Sending req to: {client_url}");
 
+        let username = nanoid_gen(5);
         let request: LoginPayload = LoginPayload {
-            email: "jere".to_string(),
+            email: username.clone(),
             password: "mypassword".to_string(),
         };
 
@@ -316,22 +318,18 @@ mod tests {
             .await
             .expect("Should recieve repsonse from app");
 
-        let results = response.text().await.unwrap();
-        // let results = response.json::<Value>().await;
-        assert_eq!(results, "yo".to_string());
-        // assert_eq!(
-        //     &response.json::<Value>().await.unwrap(),
-        //     json!({"result": false}).get("result").unwrap()
-        // )
+        let results = response.json::<Value>().await.unwrap();
+        assert_eq!(results.get("email").unwrap(), &username);
+        assert!(results.get("auth_token").is_some());
 
         // attempt to login
-        let url = "/login";
+        let url = "/auth/login";
         let client_url = format!("http://{}{}", "localhost:3000", url);
 
         println!("Sending req to: {client_url}");
 
         let request = LoginPayload {
-            email: "jere".to_string(),
+            email: username,
             password: "failpassword".to_string(),
         };
 
@@ -340,7 +338,7 @@ mod tests {
             .json(&request)
             .send()
             .await
-            .expect("Should recieve repsonse from app");
+            .expect("Should recieve response from app");
 
         dbg!(&response);
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
