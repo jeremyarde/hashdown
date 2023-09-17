@@ -69,6 +69,17 @@ pub mod routes {
         ServerError, ServerState,
     };
 
+    #[derive(Deserialize, Serialize, Debug)]
+    pub struct ListSurveyResponse {
+        pub surveys: Vec<SurveyModel>,
+    }
+
+    #[derive(Deserialize, Debug, Serialize)]
+    pub struct LoginPayload {
+        pub email: String,
+        pub password: String,
+    }
+
     pub fn get_routes(state: ServerState) -> anyhow::Result<Router> {
         let routes = Router::new()
             .route(&format!("/surveys"), post(create_survey).get(list_survey))
@@ -76,6 +87,7 @@ pub mod routes {
             // .route(&format!("/surveys/test"), post(test_survey))
             .route(&format!("/auth/login"), post(authorize))
             .route("/auth/signup", post(signup))
+            .route("/ping", get(ping))
             .layer(middleware::map_response(main_response_mapper))
             // .layer(middleware::from_fn(propagate_header))
             .with_state(state);
@@ -145,7 +157,13 @@ pub mod routes {
     //     println!("logging request...");
     // }
 
-    // #[tracing::instrument]
+    #[tracing::instrument]
+    #[axum::debug_handler]
+    pub async fn ping() -> anyhow::Result<Json<Value>, ServerError> {
+        return Ok(Json(json!({"result": "Ok"})));
+    }
+
+    #[tracing::instrument]
     #[axum::debug_handler]
     pub async fn create_survey(
         headers: HeaderMap,
@@ -386,20 +404,8 @@ pub mod routes {
         Ok(Json(json!(resp)))
     }
 
-    #[derive(Deserialize, Serialize, Debug)]
-    pub struct ListSurveyResponse {
-        pub surveys: Vec<SurveyModel>,
-    }
-
-    #[derive(Deserialize, Debug, Serialize)]
-    pub struct LoginPayload {
-        pub email: String,
-        pub password: String,
-    }
-
+    #[axum::debug_handler]
     pub async fn signup(
-        // cookies: Cookies,
-        // ctx: Option<Ctext>,
         state: State<ServerState>,
         payload: Json<LoginPayload>,
     ) -> anyhow::Result<Json<Value>, ServerError> {

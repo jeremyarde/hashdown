@@ -39,51 +39,6 @@ static KEYS: Lazy<Keys> = Lazy::new(|| {
     Keys::new(secret.as_bytes())
 });
 
-// pub async fn mw_ctx_resolver<B>(
-//     _state: State<ServerState>,
-//     // cookies: Cookies,
-//     headers: HeaderMap,
-//     mut req: Request<B>,
-//     next: Next<B>,
-// ) -> Result<Response, ServerError> {
-//     println!("->> {:<12} - mw_ctx_resolver", "MIDDLEWARE");
-//     // const AUTH_TOKEN: &str = "x-auth-token";
-//     // let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string())
-
-//     info!("Checking for auth token in headers");
-//     // todo: actually validate the auth token
-//     // let result_ctx = match headers
-//     //     .get(AUTH_TOKEN)
-//     //     .ok_or(ServerError::AuthFailNoTokenCookie)
-//     //     .and_then(|x| parse_token(x.to_owned()))
-//     // {
-//     //     Ok(token) => {
-//     //         info!("Auth token was found, validating...");
-//     //         validate_jwt_claim(token)
-//     //     }
-//     //     Err(e) => Err(e),
-//     // };
-//     let auth_token = match headers.get("x-auth-token") {
-//         Some(x) => x.to_str().expect("Auth token was not a string").to_string(),
-//         None => "".to_string(),
-//     };
-
-//     if auth_token == "".to_string() {
-//         return Err(ServerError::AuthFailNoTokenCookie);
-//     }
-
-//     // let auth_token = cookies.get("x-auth-token").map(|c| c.value().to_string());
-//     // let jwt = auth_token.ok_or(ServerError::AuthFailNoTokenCookie)?;
-//     let jwt_claim = validate_jwt_claim(auth_token)?;
-
-//     let context = Ctext::new(jwt_claim.uid);
-
-//     // Store the ctx_result in the request extension.
-//     req.extensions_mut().insert(context);
-
-//     Ok(next.run(req).await)
-// }
-
 #[async_trait]
 impl<S: Send + Sync> FromRequestParts<S> for Ctext {
     type Rejection = ServerError;

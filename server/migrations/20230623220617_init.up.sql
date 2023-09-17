@@ -13,17 +13,26 @@ CREATE TABLE users (
 CREATE TABLE surveys (
     id SERIAL PRIMARY KEY,
     survey_id TEXT not null unique,
-    plaintext TEXT,
     user_id TEXT,
     created_at TIMESTAMP WITH TIME ZONE,
     modified_at TIMESTAMP WITH TIME ZONE,
+    plaintext TEXT,
     version TEXT,
     parse_version TEXT
     
     -- foreign key(user_id) references users(user_id)
 );
 
-CREATE TABLE surveys_submissions (
+create table questions (
+    id serial primary key, 
+    survey_id text not null,
+    question_id text not null unique,
+    question_type text,
+
+    foreign key(survey_id) references surveys(survey_id)
+);
+
+CREATE TABLE responses (
     id SERIAL PRIMARY KEY,
     submitted_at TIMESTAMP WITH TIME ZONE,
     answers JSON,
@@ -47,9 +56,11 @@ INSERT INTO users (user_id, email, password_hash) VALUES (
     'testuserid', 'fake', ''
 );
 
-INSERT INTO surveys (survey_id, plaintext, user_id)
+INSERT INTO surveys (survey_id, plaintext, user_id, created_at)
 VALUES (
-        'testsurveyid', '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
-        'testuserid'
+        'testsurveyid', 
+        '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
+        'testuserid',
+        "2023-09-17 02:50:27.567946+00"
     );
 

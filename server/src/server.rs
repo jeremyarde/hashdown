@@ -80,7 +80,7 @@ impl ServerApplication {
         let db_url = ConnectionDetails(uri);
         let db = Database::new(in_memory, db_url)
             .await
-            .expect("Database was not created. Probably an error in the migrations.");
+            .expect("Error connecting to database");
         let state = ServerState {
             db: db,
             mail: Mailer::new(),
@@ -111,29 +111,16 @@ impl ServerApplication {
 
         // build our application with a route
         let app = Router::new()
-            // .route(&format!("/surveys"), post(create_survey).get(list_survey))
-            // .with_state(state.clone())
-            // .merge(get_routes(state.clone()))
             .merge(get_routes(state).unwrap())
-            // .layer(Extension(state))
-            // .layer(middleware::map_response(main_response_mapper))
-            // .layer(CookieManagerLayer::new())
-            // .layer(CorsLayer::very_permissive())
             .layer(corslayer)
-            // .with_state(state)
-            // .route(&format!("/surveys/test"), post(test_survey))
-            // .route(&format!("/surveys/:id"), get(get_survey))
-            // .route(&format!("/submit"), post(submit_survey))
-            // .route("login", post(api_login))
-            // .layer(DefaultBodyLimit::disable())
-            // .layer(RequestBodyLimitLayer::new(1 * 1024 * 1024 /* 250mb */))
             .layer(TraceLayer::new_for_http());
-        // let app = app.merge(routes_static());
 
         return app;
     }
 
     pub async fn new() -> ServerApplication {
+        info!("Spinning up the server.");
+
         // const V1: &str = "v1";
         tracing_subscriber::fmt::try_init();
 
@@ -160,6 +147,7 @@ impl ServerApplication {
         });
         // let oauth_client = oauth_client();
 
+        info!("Server is running...");
         return ServerApplication {
             base_url: addr,
             server: server,

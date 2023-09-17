@@ -13,3 +13,4 @@ server/dev.env
 
 server/surveyapp.db-*
 server/.env
+research/

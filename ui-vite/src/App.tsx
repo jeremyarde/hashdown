@@ -13,6 +13,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from './components/ui/input'
 import { RadioGroup, RadioGroupItem } from './components/ui/radio-group';
 import { Textarea } from './components/ui/textarea';
+import { Alert, AlertDescription, AlertTitle } from './components/ui/alert';
 // import { RadioGroup, RadioGroupItem } from './components/ui/radio-group'
 
 function App() {
@@ -22,11 +23,14 @@ function App() {
   return (
     <>
       <div className='grid grid-cols-2 gap-5'>
-        <Textarea className='w-full' cols={10} value={formtext} onChange={(evt) => {
-          let value = evt.target.value;
-          console.log(`Set text value: ${JSON.stringify(value)}`);
-          setFormtext(value);
-        }} />
+        <div>
+
+          <Textarea className='w-full h-full' cols={10} value={formtext} onChange={(evt) => {
+            let value = evt.target.value;
+            console.log(`Set text value: ${JSON.stringify(value)}`);
+            setFormtext(value);
+          }} />
+        </div>
         <GenericForm key={'testkey'} plaintext={formtext} survey={survey}></GenericForm>
 
       </div>
@@ -53,6 +57,7 @@ function App() {
 
 
 function GenericForm({ plaintext, survey }) {
+  let [submittedValues, setSubmittedValues] = useState(null);
   // let [survey, setSurvey] = useState(markdown_to_form_wasm("# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"));
   // let [survey, setSurvey] = useState(markdown_to_form_wasm("# A survey title here\n- q1\n  - option 1\n  - option 2"));
   // let [survey, setSurvey] = useState(markdown_to_form_wasm(plaintext));
@@ -83,6 +88,8 @@ function GenericForm({ plaintext, survey }) {
     // ✅ This will be type-safe and validated.
     console.log(`submit:`)
     console.log(values);
+    setSubmittedValues((prev) => values);
+
   }
 
   /**
@@ -95,13 +102,13 @@ function GenericForm({ plaintext, survey }) {
         key={question.id}
         control={form.control}
         name={question.id}
-        className="flex "
+        className="flex text-left justify-start"
         render={({ field }) => {
 
 
           // return question.options.map((option) => {
           return (
-            <FormItem>
+            <FormItem className='flex flex-col w-full text-left'>
               <FormLabel>{question.value}</FormLabel>
               <FormControl>
                 <RadioGroup
@@ -117,9 +124,7 @@ function GenericForm({ plaintext, survey }) {
                         <FormControl>
                           <RadioGroupItem value={option.text} />
                         </FormControl>
-                        <FormLabel
-                        // className="font-normal"
-                        >
+                        <FormLabel className=''>
                           {option.id}: {option.text}
                         </FormLabel>
                       </FormItem>
@@ -138,15 +143,10 @@ function GenericForm({ plaintext, survey }) {
     )
   }
 
-
-
-
-
-
   return (
     <>
       <div className='flex flex-col justify-start items-start w-full'>
-        <h2 className='w-full'>id: {survey.id}: {survey.title}</h2>
+        <h2 className='w-full text-left'>id: {survey.id} - {survey.title}</h2>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-6 w-full"
@@ -154,10 +154,17 @@ function GenericForm({ plaintext, survey }) {
             {survey.questions.map((question) =>
               formelements(question))
             }
-            <Button className="" type="submit" >Submit</Button>
+            <Button className="bg-slate-400 rounded hover:bg-slate-150" type="submit" >Submit</Button>
           </form>
         </Form >
       </div>
+      <Alert>
+        {/* <Terminal className="h-4 w-4" /> */}
+        <AlertTitle>Heads up!</AlertTitle>
+        <AlertDescription>
+          {submittedValues}
+        </AlertDescription>
+      </Alert>
     </>)
 }
 

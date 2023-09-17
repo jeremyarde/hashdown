@@ -2804,6 +2804,7 @@ dependencies = [
  "axum",
  "chrono",
  "dotenvy",
+ "hyper",
  "jsonwebtoken",
  "lettre",
  "markdownparser",

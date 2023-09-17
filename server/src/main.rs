@@ -54,28 +54,24 @@ async fn main() -> anyhow::Result<()> {
 
     dotenvy::from_filename("./server/.env")?;
 
-    info!("Spinning up the server.");
     let server_app = ServerApplication::new().await;
-    info!("Server is running...");
     try_join!(server_app.server).unwrap();
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use std::{borrow::BorrowMut, collections::HashMap};
 
+    use anyhow::{anyhow, Error};
     use axum::{
-        http::{HeaderMap, HeaderValue},
-        Json,
+        body::Body,
+        http::{HeaderMap, HeaderValue, Request},
+        Json, Router,
     };
-    // use db::models::{
-    //     AnswerDetails, AnswerType, CreateAnswersRequest, CreateAnswersResponse, CreateSurveyRequest,
-    // };
     use dotenvy::dotenv;
     use lettre::transport::smtp::client::{Tls, TlsParameters};
-    use markdownparser::ParsedSurvey;
-    // use markdownparser::{markdown_to_form, markdown_to_form_wasm};
+    use mime::{Mime, APPLICATION_JSON};
     use reqwest::{header::CONTENT_TYPE, Client, StatusCode};
 
     use serde_json::{json, Value};
@@ -109,68 +105,95 @@ mod tests {
 
     #[serial]
     #[tokio::test]
-    async fn list_survey_test() {
-        // dotenvy::from_filename("./server/.env").unwrap();
+    async fn test_setup_server() {
         setup_environment();
-
-        let app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
         router.ready().await.unwrap();
 
-        let client = get_client().await;
-
-        let auth_token = get_auth_token(&client).await;
-
-        // let results = response.text().await;
-
-        // List surveys
-        let client_url = format!("http://{}{}", app.base_url.to_string(), "/surveys");
-
+        let client_url = format!("http://localhost:3000{}", "/ping");
         println!("Client sending to: {client_url}");
 
-        // TODO! Send issues to request for headers???
-        let request = client
-            .post(&client_url)
-            .header("Cookie", format!("x-auth-token={auth_token}"))
-            .json(&CreateSurveyRequest {
-                plaintext: "- another\n - this one".to_string(),
-            })
-            .build()
+        let request = Request::builder()
+            .method("GET")
+            .uri(client_url)
+            // .header("x-auth-token", "mytoken")
+            .body(Body::empty())
+            // .body(Body::from(
+            //     serde_json::to_vec(&json!([1, 2, 3, 4])).unwrap(),
+            // ))
             .unwrap();
 
+        let response = router.borrow_mut().oneshot(request).await.unwrap();
+
+        dbg!(&response);
+        assert!(response.status() != 500);
+        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        let body: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(body, json!({ "result": "Ok" }));
+    }
+
+    #[serial]
+    #[tokio::test]
+    async fn test_create_survey() {
+        setup_environment();
+        let mut router = ServerApplication::get_router().await;
+        router.ready().await.unwrap();
+
+        let client_url = format!("http://localhost:3000{}", "/auth/login");
+        println!("Client sending to: {client_url}");
+
+        let token = signup_or_login(&mut router).await;
+
+        // let request = LoginPayload {
+        //     email: "jere".to_string(),
+        //     password: "mypassword".to_string(),
+        // };
+
+        // let request: Request<Body> = Request::builder()
+        //     .method("POST")
+        //     .uri(client_url)
+        //     // .header("x-auth-token", "mytoken")
+        //     // .body(Body::empty())
+        //     .header("content-type", "application/json")
+        //     .body(Body::from(serde_json::to_vec(&json!(request)).unwrap()))
+        //     .unwrap();
+
+        // let response = router.borrow_mut().oneshot(request).await.unwrap();
+
+        // dbg!(&response);
+        // assert!(response.status() == 200);
+        // let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        // let body: Value = serde_json::from_slice(&body).expect("Failed to deserialize messages");
+        // assert!(body.get("auth_token").is_some());
+
+        // List surveys
+        let client_url = format!("http://localhost:3000{}", "/surveys");
         println!("Sending create survey with headers...");
-        dbg!(&request);
 
-        // println!("Sending request={request:#?}");
-
-        let response = client.execute(request).await.unwrap();
-
-        let results: CreateSurveyResponse = response.json().await.unwrap();
-
-        assert_eq!(results.survey.survey.plaintext, "- another\n - this one");
-
-        // call list
-        let listresponse = client
-            .get(&client_url)
-            .header("Cookie", format!("x-auth-token={auth_token}"))
-            .send()
-            .await
+        let create_request: Request<Body> = Request::builder()
+            .method("POST")
+            .uri(client_url)
+            .header("x-auth-token", token)
+            // .body(Body::empty())
+            .header("content-type", "application/json")
+            .body(Body::from(
+                serde_json::to_vec(&json!({"plaintext": "- this is a survey"})).unwrap(),
+            ))
             .unwrap();
+        let response = router.borrow_mut().oneshot(create_request).await.unwrap();
 
-        let listresults: ListSurveyResponse = listresponse
-            .json()
-            .await
-            .expect("Could not turn response to json");
+        let list_response: Value =
+            serde_json::from_slice(&hyper::body::to_bytes(response.into_body()).await.unwrap())
+                .unwrap();
 
-        assert_eq!(listresults.surveys.len(), 1);
-        assert_eq!(listresults.surveys[0].plaintext, "- another\n - this one");
+        dbg!(&list_response);
+        assert!(list_response.is_object());
     }
 
     #[tokio::test]
     #[serial]
     async fn create_survey_test() {
         setup_environment();
-        // dotenvy::from_filename("./server/.env").unwrap();
 
         let _app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
@@ -181,7 +204,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let auth_token = get_auth_token(&client).await;
+        let auth_token = signup_or_login(&mut router).await;
 
         let client_url = format!("http://{}{}", "localhost:3000", "/surveys");
         // let client_url = format!("/surveys");
@@ -218,35 +241,14 @@ mod tests {
 
         println!("Client sending to: {client_url}");
 
-        // let request = CreateAnswersRequest {
-        //     // id: "1".to_string(),
-        //     // id: None,
-        //     // survey_id: "testsurveyid".to_string(),
-        //     // survey_version: "0".to_string(),
-        //     // start_time: "now()".to_string(),
-        //     answers: json!([{"first": "answer"}]),
-        // };
-        // let exjson = json!([{"first": "answer"}]);
-        // let request_test = "- test question\n - this one";
         let response = client
             .post(&client_url)
-            // .json(&request)
             .json(&json!([{"first": "answer"}]))
             .send()
             .await
             .expect("Should recieve repsonse from app");
 
-        // let json: Value = response.json().await.unwrap();
         println!("{:?}", response.text().await);
-        //         .json::<Result<CreateAnswersResponse, CustomError>>()
-        //         .await
-        // );
-        // println!("{:?}", response.json::<CreateAnswersResponse>().await);
-        // let results = response.json().await.unwrap();
-        // assert!(json.get("answer_id") != None);
-        // assert!(json.get("answer_id").unwrap() != "");
-
-        // assert!();
     }
 
     #[tokio::test]
@@ -280,13 +282,10 @@ mod tests {
 
         // dbg!(response.headers());
 
-        let results = response.text().await;
+        let results = response.json::<Value>().await.unwrap();
         // let results = response.json::<Value>().await;
-        dbg!(results);
-        // assert_eq!(
-        //     &response.json::<Value>().await.unwrap(),
-        //     json!({"result": false}).get("result").unwrap()
-        // )
+        dbg!(&results);
+        assert_eq!(results, json!({"result": false}))
     }
 
     #[tokio::test]
@@ -301,7 +300,7 @@ mod tests {
 
         let client = get_client().await;
 
-        let url = "/signup";
+        let url = "/auth/signup";
         let client_url = format!("http://{}{}", "localhost:3000", url);
 
         println!("Sending req to: {client_url}");
@@ -318,9 +317,9 @@ mod tests {
             .await
             .expect("Should recieve repsonse from app");
 
-        let results = response.text().await;
+        let results = response.text().await.unwrap();
         // let results = response.json::<Value>().await;
-        dbg!(results);
+        assert_eq!(results, "yo".to_string());
         // assert_eq!(
         //     &response.json::<Value>().await.unwrap(),
         //     json!({"result": false}).get("result").unwrap()
@@ -343,6 +342,7 @@ mod tests {
             .send()
             .await
             .expect("Should recieve repsonse from app");
+
         dbg!(&response);
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 
@@ -367,76 +367,52 @@ mod tests {
         dbg!(results);
     }
 
-    #[serial]
-    #[tokio::test]
-    async fn test_client_only() {
-        setup_environment();
-
-        let client = get_client().await;
-
-        let client_url = format!("http://{}{}", "localhost:3000", "/surveys");
-
-        println!("Client sending to: {client_url}");
-
-        let auth_token = get_auth_token(&client).await;
-
-        // TODO! Send issues to request for headers???
-        let request = client
-            .post(&client_url)
-            // .headers(headers)
-            // .header("x-user-id", "testuser")
-            .json(&CreateSurveyRequest {
-                plaintext: "- another\n - this one".to_string(),
-            })
-            .header("Cookie", format!("x-auth-token={auth_token}"))
-            .build()
-            .unwrap();
-        println!("Sending request={request:#?}");
-
-        let response = client.execute(request).await.unwrap();
-
-        let results: CreateSurveyResponse = response.json().await.unwrap();
-
-        assert_eq!(results.survey.survey.plaintext, "- another\n - this one");
-
-        //call list
-        let listresponse = client.get(&client_url).send().await.unwrap();
-        let listresults: ListSurveyResponse = listresponse.json().await.unwrap();
-
-        assert_eq!(listresults.surveys.len(), 1);
-        assert_eq!(listresults.surveys[0].plaintext, "- another\n - this one");
-    }
-
-    async fn get_auth_token(client: &Client) -> String {
-        // Login
-        let url = "/signup";
-        let client_url = format!("http://{}{}", "localhost:3000", url);
-
-        println!("Sending req to: {client_url}");
-
-        let request: LoginPayload = LoginPayload {
+    async fn signup_or_login(router: &mut Router) -> String {
+        // Attempt signup
+        let credentials_payload = LoginPayload {
             email: "jere".to_string(),
             password: "mypassword".to_string(),
         };
 
-        let response = client
-            .post(&client_url)
-            .json(&request)
-            .send()
-            .await
-            .expect("Should recieve response from app");
+        let client_url = format!("http://localhost:3000{}", "/auth/signup");
+        println!("Client sending to: {client_url}");
+        let request: Request<Body> = Request::builder()
+            .method("POST")
+            .uri(client_url)
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::to_vec(&json!(credentials_payload)).unwrap(),
+            ))
+            .unwrap();
 
-        println!("Response after logging in:");
-        dbg!(&response);
-        let auth_token = response
-            .json::<Value>()
-            .await
-            .expect("Auth token to json broken.")
-            .get("auth_token")
-            .expect("Auth token was not found in response")
-            .to_string();
+        let response = router.borrow_mut().oneshot(request).await.unwrap();
 
-        return auth_token;
+        if response.status() == 200 {
+            println!("Was able to signup, returning token");
+            let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+            let body: Value = serde_json::from_slice(&body).unwrap();
+            assert_eq!(body, json!({ "auth_token": "Ok" }));
+            return body.get("auth_token").unwrap().to_string();
+        }
+        println!("Was NOT able to signup, attempting login...");
+
+        let client_url = format!("http://localhost:3000{}", "/auth/login");
+        println!("Client sending to: {client_url}");
+        let request: Request<Body> = Request::builder()
+            .method("POST")
+            .uri(client_url)
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::to_vec(&json!(credentials_payload)).unwrap(),
+            ))
+            .unwrap();
+
+        let response = router.borrow_mut().oneshot(request).await.unwrap();
+
+        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        let body: Value = serde_json::from_slice(&body).unwrap();
+        assert!(body.get("auth_token").is_some());
+        return body.get("auth_token").unwrap().to_string();
     }
 
     // #[test]
