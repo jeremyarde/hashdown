@@ -143,6 +143,7 @@ mod tests {
         println!("Client sending to: {client_url}");
 
         let token = signup_or_login(&mut router).await;
+        println!("{}", token);
 
         // let request = LoginPayload {
         //     email: "jere".to_string(),
@@ -173,7 +174,7 @@ mod tests {
         let create_request: Request<Body> = Request::builder()
             .method("POST")
             .uri(client_url)
-            .header("x-auth-token", token)
+            .header("x-auth-token", token.to_string())
             // .body(Body::empty())
             .header("content-type", "application/json")
             .body(Body::from(
@@ -188,6 +189,7 @@ mod tests {
 
         dbg!(&list_response);
         assert!(list_response.is_object());
+        assert!(list_response.get("error").is_none());
     }
 
     #[tokio::test]
@@ -260,7 +262,7 @@ mod tests {
         let mut router = ServerApplication::get_router().await;
         router.ready().await.unwrap();
 
-        let url = "/login";
+        let url = "/auth/login";
         let client = get_client().await;
         let client_url = format!("http://{}{}", "localhost:3000", url);
 
@@ -280,12 +282,9 @@ mod tests {
             .await
             .expect("Should recieve repsonse from app");
 
-        // dbg!(response.headers());
-
         let results = response.json::<Value>().await.unwrap();
-        // let results = response.json::<Value>().await;
         dbg!(&results);
-        assert_eq!(results, json!({"result": false}))
+        assert_eq!(results, json!({"result": true}))
     }
 
     #[tokio::test]
@@ -392,7 +391,12 @@ mod tests {
             let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
             let body: Value = serde_json::from_slice(&body).unwrap();
             assert_eq!(body, json!({ "auth_token": "Ok" }));
-            return body.get("auth_token").unwrap().to_string();
+            return body
+                .get("auth_token")
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_string();
         }
         println!("Was NOT able to signup, attempting login...");
 
@@ -408,11 +412,16 @@ mod tests {
             .unwrap();
 
         let response = router.borrow_mut().oneshot(request).await.unwrap();
-
         let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
         let body: Value = serde_json::from_slice(&body).unwrap();
+        dbg!(&body);
         assert!(body.get("auth_token").is_some());
-        return body.get("auth_token").unwrap().to_string();
+        return body
+            .get("auth_token")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .to_string();
     }
 
     // #[test]

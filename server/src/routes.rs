@@ -184,17 +184,6 @@ pub mod routes {
 
         let metadata = Metadata::new();
 
-        // let survey_model = SurveyModelBuilder::default()
-        //     .plaintext(parsed_survey.plaintext.clone())
-        //     .parse_version(parsed_survey.parse_version.clone())
-        //     .user_id(user_id.to_string())
-        //     .created_at(metadata.created_at.clone())
-        //     .modified_at(metadata.modified_at.clone())
-        //     .version(metadata.version.clone())
-        //     .id(0)
-        //     .build()
-        //     .expect("Could not create survey model");
-
         let survey = SurveyModel {
             id: 0,
             survey_id: nanoid_gen(12),
@@ -245,9 +234,7 @@ pub mod routes {
     pub async fn submit_survey(
         State(state): State<ServerState>,
         Path(survey_id): Path<String>,
-        // mut multipart: Multipart,
-        // ctx: Option<Ctext>,
-        // extract::Json(payload): extract::Json<CreateAnswersRequest>,
+        ctx: Option<Ctext>,
         Json(payload): extract::Json<Value>, // for urlencoded
     ) -> Result<Json<Value>, ServerError> {
         info!("->> submit_survey");
@@ -506,9 +493,9 @@ pub mod routes {
         let username = payload.email.clone();
         let logged_in = true;
 
-        info!("     ->> Success logging in");
+        println!("     ->> Success logging in");
         Ok(Json(
-            json!({"result": logged_in, "username": username, "auth_token": jwt}),
+            json!({"result": logged_in, "username": username, "auth_token": &jwt}),
         ))
     }
 

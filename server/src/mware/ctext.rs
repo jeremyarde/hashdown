@@ -56,30 +56,23 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctext {
             .expect("Could not extract headers");
 
         let auth_token = match headers.get("x-auth-token") {
-            Some(x) => x.to_str().expect("Auth token was not a string").to_string(),
-            None => "".to_string(),
+            Some(x) => {
+                println!("Parsing header auth token: {:?}", &x);
+                x.to_str().expect("Auth token was not a string")
+            }
+            None => "",
         };
 
+        println!("Parsed auth_token: {:?}", &auth_token);
+
         if auth_token == "".to_string() {
+            info!(" ->> Auth header was not present");
             return Err(ServerError::AuthFailNoTokenCookie);
         }
 
-        // let auth_token = cookies.get("x-auth-token").map(|c| c.value().to_string());
-        // let jwt = auth_token.ok_or(ServerError::AuthFailNoTokenCookie)?;
         let jwt_claim = validate_jwt_claim(auth_token)?;
 
         Ok(Ctext::new(jwt_claim.uid))
-    }
-}
-
-#[tracing::instrument]
-fn parse_token(token: String) -> Result<String, ServerError> {
-    info!("->> parse_token");
-    info!("parsing auth token");
-    let user_id = token.split("user_id=").nth(0);
-    match user_id {
-        Some(x) => return Ok(x.to_string()),
-        None => return Err(ServerError::AuthFailNoTokenCookie),
     }
 }
 
@@ -118,7 +111,7 @@ pub struct JwtResult {
 fn validate_jwt_claim(
     // payload: &Json<LoginPayload>,
     // key: &[u8; 10],
-    jwt_token: String,
+    jwt_token: &str,
 ) -> anyhow::Result<Claims, ServerError> {
     info!("->> validate_jwt_claim");
 
