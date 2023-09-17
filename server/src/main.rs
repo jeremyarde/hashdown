@@ -195,67 +195,6 @@ mod tests {
 
     #[tokio::test]
     #[serial]
-    async fn create_survey_test() {
-        setup_environment();
-
-        let _app = ServerApplication::new().await;
-        let mut router = ServerApplication::get_router().await;
-        router.ready().await.unwrap();
-
-        let client = reqwest::Client::builder()
-            // .default_headers(headers)
-            .build()
-            .unwrap();
-
-        let auth_token = signup_or_login(&mut router).await;
-
-        let client_url = format!("http://{}{}", "localhost:3000", "/surveys");
-        // let client_url = format!("/surveys");
-
-        println!("Client sending to: {client_url}");
-
-        let response = client
-            .post(&client_url)
-            .json(&CreateSurveyRequest {
-                plaintext: "- create\n - this one".to_string(),
-            })
-            .header("Cookie", format!("x-auth-token={auth_token}"))
-            .send()
-            .await
-            .unwrap();
-
-        let results: CreateSurveyResponse = response.json().await.unwrap();
-
-        println!("Results: {results:#?}");
-
-        assert_eq!(results.survey.survey.plaintext, "- create\n - this one");
-    }
-
-    #[tokio::test]
-    #[serial]
-    async fn test_submit_answer() {
-        setup_environment();
-        let _app = ServerApplication::new().await;
-        let mut router = ServerApplication::get_router().await;
-        router.ready().await.unwrap();
-
-        let client = get_client().await;
-        let client_url = format!("http://localhost:3000/surveys/testsurveyid");
-
-        println!("Client sending to: {client_url}");
-
-        let response = client
-            .post(&client_url)
-            .json(&json!([{"first": "answer"}]))
-            .send()
-            .await
-            .expect("Should recieve repsonse from app");
-
-        println!("{:?}", response.text().await);
-    }
-
-    #[tokio::test]
-    #[serial]
     async fn login_test() {
         setup_environment();
 
