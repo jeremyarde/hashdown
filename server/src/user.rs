@@ -11,14 +11,14 @@ struct UserLogin {
 pub async fn login(State(state): State<ServerState>) -> impl IntoResponse {
     prinln!("Logging in");
 
-
     let pool = state.db.pool;
 
-    let res: Vec<SurveyModel> = sqlx::query_as::<_, UserLogin>("select * from users where users.username = $1")
-        .bind()
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+    let res: Vec<SurveyModel> =
+        sqlx::query_as::<_, UserLogin>("select * from users where users.username = $1")
+            .bind()
+            .fetch_one(&pool)
+            .await
+            .unwrap();
 
     // let count: i64 = sqlx::query_scalar("select count(id) from surveys")
     //     .fetch_one(&pool)
@@ -37,9 +37,6 @@ pub async fn login(State(state): State<ServerState>) -> impl IntoResponse {
     // (StatusCode::OK, Json(json!({ "surveys": res })))
     (StatusCode::OK, Json(listresp))
 }
-
-
-
 
 // Session is optional
 async fn index(user: Option<User>) -> impl IntoResponse {

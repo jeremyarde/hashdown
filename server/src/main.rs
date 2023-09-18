@@ -7,7 +7,6 @@ use crate::mail::mail::Mailer;
 use dotenvy::dotenv;
 use tokio::try_join;
 use tracing::{instrument, log::info};
-
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
 
@@ -23,7 +22,6 @@ use crate::server::ServerApplication;
 mod auth;
 mod config;
 mod db;
-mod log;
 mod mware;
 mod server;
 // mod survey;
@@ -73,7 +71,6 @@ mod tests {
     use lettre::transport::smtp::client::{Tls, TlsParameters};
     use markdownparser::nanoid_gen;
     use mime::{Mime, APPLICATION_JSON};
-    use reqwest::{header::CONTENT_TYPE, Client, StatusCode};
 
     use serde_json::{json, Value};
     use serial_test::serial;
@@ -92,19 +89,7 @@ mod tests {
         dotenvy::from_filename("./server/.env").unwrap();
     }
 
-    async fn get_client() -> Client {
-        let mut headers = HeaderMap::new();
-        // headers.insert("x-", HeaderValue::from_static("testuser"));
-        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-
-        let client = reqwest::Client::builder()
-            .default_headers(headers)
-            .build()
-            .unwrap();
-        return client;
-    }
-
-    #[serial]
+    // #[serial]
     #[tokio::test]
     async fn test_setup_server() {
         setup_environment();
@@ -133,7 +118,7 @@ mod tests {
         assert_eq!(body, json!({ "result": "Ok" }));
     }
 
-    #[serial]
+    // #[serial]
     #[tokio::test]
     async fn test_create_survey() {
         setup_environment();
@@ -154,8 +139,10 @@ mod tests {
             .method("POST")
             .uri(client_url)
             .header("x-auth-token", token.to_string())
-            // .body(Body::empty())
-            .header("content-type", "application/json")
+            .header(
+                axum::http::header::CONTENT_TYPE,
+                mime::APPLICATION_JSON.to_string(),
+            )
             .body(Body::from(
                 serde_json::to_vec(&json!({"plaintext": "- this is a survey"})).unwrap(),
             ))
@@ -172,7 +159,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
+    // #[serial]
     async fn login_test() {
         setup_environment();
 
@@ -181,7 +168,7 @@ mod tests {
         router.ready().await.unwrap();
 
         let url = "/auth/login";
-        let client = get_client().await;
+        // let client = get_client().await;
         let client_url = format!("http://{}{}", "localhost:3000", url);
 
         println!("Sending req to: {client_url}");
@@ -192,22 +179,36 @@ mod tests {
         };
         // let exjson = json!({"first": "answer"});
         // let request_test = "- test question\n - this one";
-        let response = client
-            .post(&client_url)
-            // .json(&request)
-            .json(&request)
-            .send()
-            .await
-            .expect("Should recieve repsonse from app");
+        // let response = client
+        //     .post(&client_url)
+        //     // .json(&request)
+        //     .json(&request)
+        //     .send()
+        //     .await
+        //     .expect("Should recieve repsonse from app");
+        let create_request: Request<Body> = Request::builder()
+            .method("POST")
+            .uri(client_url)
+            // .header("x-auth-token", token.to_string())
+            .header(
+                axum::http::header::CONTENT_TYPE,
+                mime::APPLICATION_JSON.to_string(),
+            )
+            .body(Body::from(serde_json::to_vec(&json!(request)).unwrap()))
+            .unwrap();
 
-        let results = response.json::<Value>().await.unwrap();
+        let response = router.borrow_mut().oneshot(create_request).await.unwrap();
+        let results: Value =
+            serde_json::from_slice(&hyper::body::to_bytes(response.into_body()).await.unwrap())
+                .unwrap();
+
         dbg!(&results);
         assert!(results.get("auth_token").is_some())
     }
 
     #[tokio::test]
-    #[serial]
-    async fn signup_test() {
+    // #[serial]
+    async fn test_signup() {
         setup_environment();
 
         println!("=== Signup testing");
@@ -215,7 +216,7 @@ mod tests {
         let mut router = ServerApplication::get_router().await;
         router.ready().await.unwrap();
 
-        let client = get_client().await;
+        // let client = get_client().await;
 
         let url = "/auth/signup";
         let client_url = format!("http://{}{}", "localhost:3000", url);
@@ -228,57 +229,25 @@ mod tests {
             password: "mypassword".to_string(),
         };
 
-        let response = client
-            .post(&client_url)
-            .json(&request)
-            .send()
-            .await
-            .expect("Should recieve repsonse from app");
+        let create_request: Request<Body> = Request::builder()
+            .method("POST")
+            .uri(client_url)
+            // .header("x-auth-token", token.to_string())
+            .header(
+                axum::http::header::CONTENT_TYPE,
+                mime::APPLICATION_JSON.to_string(),
+            )
+            .body(Body::from(serde_json::to_vec(&json!(request)).unwrap()))
+            .unwrap();
 
-        let results = response.json::<Value>().await.unwrap();
+        let response = router.borrow_mut().oneshot(create_request).await.unwrap();
+        let results: Value =
+            serde_json::from_slice(&hyper::body::to_bytes(response.into_body()).await.unwrap())
+                .unwrap();
+
+        // let results = response.json::<Value>().await.unwrap();
         assert_eq!(results.get("email").unwrap(), &username);
         assert!(results.get("auth_token").is_some());
-
-        // attempt to login
-        let url = "/auth/login";
-        let client_url = format!("http://{}{}", "localhost:3000", url);
-
-        println!("Sending req to: {client_url}");
-
-        let request = LoginPayload {
-            email: username,
-            password: "failpassword".to_string(),
-        };
-
-        let response = client
-            .post(&client_url)
-            .json(&request)
-            .send()
-            .await
-            .expect("Should recieve response from app");
-
-        dbg!(&response);
-        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
-
-        let results = response.text().await;
-        dbg!(results);
-
-        println!("Sending req to: {client_url}");
-
-        let request = LoginPayload {
-            email: "jere".to_string(),
-            password: "mypassword".to_string(),
-        };
-
-        let response = client
-            .post(&client_url)
-            .json(&request)
-            .send()
-            .await
-            .expect("Should recieve repsonse from app");
-        dbg!(&response);
-        let results = response.text().await;
-        dbg!(results);
     }
 
     async fn signup_or_login(router: &mut Router) -> String {

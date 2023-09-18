@@ -20,26 +20,16 @@ pub mod routes {
         Extension, Form, Router,
     };
 
-    use db::database::CreateUserRequest;
     use lettre::message::header::Date;
     use markdownparser::{nanoid_gen, parse_markdown_v3};
-    // use oauth2::basic::BasicClient;
 
-    // use ormlite::Model;
-    // use ormlite::model::Model;
-    // use reqwest::header;
-    use serde::{Deserialize, Serialize};
-    use serde_json::{json, Value};
-    // use tower_cookies::{Cookie, Cookies};
-    use tracing::{debug, log::info};
-    // use uuid::Uuid;
-    // use sqlx::{Sqlite, SqlitePool};
-    // use tower_http::http::cors::CorsLayer;
     use axum::{
         extract::{self, State},
         http::StatusCode,
         Json,
     };
+    use serde::{Deserialize, Serialize};
+    use serde_json::{json, Value};
     use tower_http::{
         auth::require_authorization::Bearer,
         cors::{Any, CorsLayer},
@@ -47,25 +37,19 @@ pub mod routes {
         services::ServeDir,
         trace::TraceLayer,
     };
+    use tracing::{debug, log::info};
     use uuid::Uuid;
 
-    // use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, SurveyBuilder};
-
     use crate::{
-        auth::{validate_credentials, AuthError},
-        db::{self, database::CreateAnswersModel},
-        log::log_request,
-        mware::{
-            self,
-            ctext::{
-                create_jwt_claim,
-                create_jwt_token,
-                // mw_ctx_resolver,
-                Claims,
-                Ctext,
-            },
+        db::database::{CreateAnswersModel, CreateUserRequest},
+        error::main_response_mapper,
+        mware::ctext::{
+            create_jwt_claim,
+            create_jwt_token,
+            // mw_ctx_resolver,
+            Ctext,
         },
-        server::{CreateSurveyResponse, SurveyModel},
+        server::SurveyModel,
         ServerError, ServerState,
     };
 
@@ -82,10 +66,9 @@ pub mod routes {
 
     pub fn get_routes(state: ServerState) -> anyhow::Result<Router> {
         let routes = Router::new()
-            .route(&format!("/surveys"), post(create_survey).get(list_survey))
+            .route("/surveys", post(create_survey).get(list_survey))
             .route("/surveys/:id", get(get_survey).post(submit_survey))
-            // .route(&format!("/surveys/test"), post(test_survey))
-            .route(&format!("/auth/login"), post(authorize))
+            .route("/auth/login", post(authorize))
             .route("/auth/signup", post(signup))
             .route("/ping", get(ping))
             .layer(middleware::map_response(main_response_mapper))
@@ -99,63 +82,6 @@ pub mod routes {
         let mut res = next.run(req).await;
         res
     }
-
-    async fn main_response_mapper(
-        ctx: Option<Ctext>,
-        uri: Uri,
-        req_method: Method,
-        res: Response,
-    ) -> Response {
-        println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
-        let uuid = Uuid::new_v4();
-
-        // -- Get the eventual response error.
-        let service_error = res.extensions().get::<ServerError>();
-        let client_status_error = service_error.map(|se| se.client_status_and_error());
-
-        // -- If client error, build the new reponse.
-        let error_response =
-            client_status_error
-                .as_ref()
-                .map(|(status_code, client_error, message)| {
-                    let client_error_body = json!({
-                        "error": {
-                            "type": client_error.as_ref(),
-                            "req_uuid": uuid.to_string(),
-                            "message": message,
-                        }
-                    });
-
-                    info!("    ->> client_error_body: {client_error_body}");
-
-                    // Build the new response from the client_error_body
-                    (*status_code, Json(client_error_body)).into_response()
-                });
-
-        // Build and log the server log line.
-        // let client_error = client_status_error.unzip().1;
-        let client_error = match client_status_error {
-            Some(x) => Some(x.1),
-            None => None,
-        };
-        log_request(uuid, req_method, uri, ctx, service_error, client_error)
-            .await
-            .expect("Did not log request properly");
-
-        info!("Mapped response, returning...");
-        error_response.unwrap_or(res)
-    }
-
-    // async fn log_request(
-    //     uuid: Uuid,
-    //     req_method: Method,
-    //     uri: Uri,
-    //     ctx: Option<Ctext>,
-    //     service_error: Option<&ServerError>,
-    //     client_error: Option<crate::error::ClientError>,
-    // ) {
-    //     println!("logging request...");
-    // }
 
     #[tracing::instrument]
     #[axum::debug_handler]
@@ -195,13 +121,6 @@ pub mod routes {
             parse_version: parsed_survey.parse_version.clone(),
         };
 
-        // let new_survey = SurveyBuilder::default()
-        //     .metadata(metadata)
-        //     .survey(parsed_survey)
-        //     .user_id(Some(user_id.to_owned()))
-        //     .build()
-        //     .expect("Could not create new survey model");
-
         let insert_result = state
             .db
             .create_survey(survey)
@@ -209,9 +128,6 @@ pub mod routes {
             .expect("Should create survey in database");
 
         info!("     ->> Inserted survey");
-        // let response = CreateSurveyResponse { survey: new_survey };
-
-        // return Ok(json!(response));
 
         return Ok(Json(json!({ "survey": parsed_survey })));
     }
@@ -223,13 +139,7 @@ pub mod routes {
         Radio { id: String, value: String },
     }
 
-    // #[derive(Deserialize, Serialize, Debug)]
-    // pub enum Answers {
-    //     id: String,
-    //     value: Answer,
-    // }
-
-    // #[tracing::instrument]
+    #[tracing::instrument]
     #[axum::debug_handler]
     pub async fn submit_survey(
         State(state): State<ServerState>,
@@ -432,20 +342,6 @@ pub mod routes {
 
         let jwt_claim = create_jwt_claim(user.email.clone(), "somerole-pleasechange")?;
 
-        // let auth_cookie = Cookie::build("x-auth-token", jwt_claim.token.clone())
-        //     // .domain("localhost")
-        //     .same_site(tower_cookies::cookie::SameSite::Strict)
-        //     .expires(
-        //         tower_cookies::cookie::time::OffsetDateTime::from_unix_timestamp(
-        //             jwt_claim.expires as i64,
-        //         )
-        //         .unwrap(),
-        //     )
-        //     .secure(true)
-        //     .http_only(true)
-        //     .finish();
-        // cookies.add(auth_cookie);
-
         return Ok(Json(
             json!({"email": user.email, "auth_token": jwt_claim.token}),
         ));
@@ -498,6 +394,4 @@ pub mod routes {
             json!({"result": logged_in, "username": username, "auth_token": &jwt}),
         ))
     }
-
-    // TODO: this is neat: https://github.com/jbertovic/svelte-axum-project/blob/main/back_end/src/services.rs
 }

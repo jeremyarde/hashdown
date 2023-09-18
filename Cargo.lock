@@ -2813,7 +2813,6 @@ dependencies = [
  "once_cell",
  "postgres-types",
  "rand",
- "reqwest",
  "serde",
  "serde_json",
  "serde_with",
