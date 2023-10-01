@@ -8,6 +8,8 @@ use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP};
 pub fn Login(cx: Scope) -> Element {
     let app_state = use_atom_ref(&cx, APP);
     let show_login = use_state(cx, move || false);
+    let show_signup = use_state(cx, move || false);
+
     // let myclient = use_atom_state(cx, CLIENT);
 
     let onsubmit = move |evt: FormEvent, client: reqwest::Client| {
@@ -15,6 +17,7 @@ pub fn Login(cx: Scope) -> Element {
             to_owned![app_state];
 
             async move {
+                let url = "http://localhost:3000/auth/login";
                 let request: LoginPayload = LoginPayload {
                     email: evt.values["email"].to_string(),
                     password: evt.values["password"].to_string(),
@@ -24,27 +27,10 @@ pub fn Login(cx: Scope) -> Element {
                     .read()
                     .client
                     // let resp = reqwest::Client::new()
-                    .post("http://localhost:3000/login")
+                    .post(url)
                     .json(&request)
                     .send()
                     .await;
-
-                // let url = "/signup";
-                // let client_url = format!("http://{}{}", "localhost:8080", url);
-
-                // println!("Sending req to: {client_url}");
-
-                // let request: LoginPayload = LoginPayload {
-                //     email: "jere".to_string(),
-                //     password: "mypassword".to_string(),
-                // };
-
-                // let response = client
-                //     .post(&client_url)
-                //     .json(&request)
-                //     .send()
-                //     .await
-                //     .expect("Should recieve response from app");
 
                 match resp {
                     // Parse data from here, such as storing a response token
@@ -54,9 +40,10 @@ pub fn Login(cx: Scope) -> Element {
                         match response.get("auth_token") {
                             Some(x) => {
                                 info!("Logged in successfully");
+                                info!("REMOVE ME: token {x}");
                                 app_state.write().user = Some(UserContext {
                                     username: request.email,
-                                    token: x.to_string(),
+                                    token: x.as_str().unwrap().to_string(),
                                     cookie: "".to_string(),
                                 });
                             }
@@ -103,7 +90,7 @@ pub fn Login(cx: Scope) -> Element {
         cx.spawn({
             to_owned![app_state];
             async move {
-                let url = "/signup";
+                let url = "/auth/signup";
                 let client_url = format!("http://{}{}", "localhost:3000", url);
 
                 println!("Sending req to: {client_url}");
@@ -125,7 +112,10 @@ pub fn Login(cx: Scope) -> Element {
 
     cx.render(rsx! {
         button { onclick: move |evt| show_login.modify(|curr| if *curr { false } else { true }),
-            "Login"
+            "login"
+        }
+        button { onclick: move |evt| show_signup.modify(|curr| if *curr { false } else { true }),
+            "signup"
         }
         if *show_login.get() {
             rsx!{
@@ -140,9 +130,11 @@ pub fn Login(cx: Scope) -> Element {
                         input { r#type: "password", id: "password", name: "password" }
                         label { "Password" }
                         br {}
-                        button { "Login" }
-                    }
-                }
+                        button {
+                            "Login"
+                        }
+
+                }}
 
                 // div {
                 //     h1 { "Signup" }
@@ -159,6 +151,26 @@ pub fn Login(cx: Scope) -> Element {
                 //         button { "Signup" }
                 //     }
                 // }
+            }
+        }
+        if *show_signup.get() {
+            rsx!{
+                div {
+                    form {
+                        onsubmit: move |evt| onsubmit_signup(evt, app_state.read().client.clone()),
+                        class: "login-form",
+                        prevent_default: "onsubmit", // Prevent the default behavior of <form> to post
+                        input { r#type: "text", id: "email", name: "email" }
+                        label { "email" }
+                        br {}
+                        input { r#type: "password", id: "password", name: "password" }
+                        label { "Password" }
+                        br {}
+                        button {
+                            "signup"
+                        }
+
+                }}
             }
         }
     })

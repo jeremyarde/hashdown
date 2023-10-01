@@ -46,7 +46,10 @@ pub mod mainapp {
     // use types::SurveyDto;
 
     // use gloo_timers::future::TimeoutFuture;
-    use reqwest::{header, Client, RequestBuilder};
+    use reqwest::{
+        header::{self, HeaderValue},
+        Client, RequestBuilder,
+    };
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize)]
@@ -343,13 +346,71 @@ pub mod mainapp {
     }
 
     pub fn ListSurvey(cx: Scope) -> Element {
+        let surveys = use_state(cx, move || vec![]);
+        let app_state = use_atom_ref(&cx, APP);
+        let error = use_state(cx, move || "");
+        let onsubmit = move |evt| {
+            cx.spawn({
+                to_owned![app_state, error, surveys];
+                async move {
+                    let token = match app_state.read().user.clone() {
+                        Some(user) => user.token,
+                        None => {
+                            error.set("Error listing surveys");
+                            info!("Did not get user");
+                            return;
+                        }
+                    };
+                    // token = token.trim_matches('"').to_string();
+                    let resp = reqwest::Client::new()
+                        .get("http://localhost:3000/surveys")
+                        .header("x-auth-token", token)
+                        .send()
+                        .await;
+
+                    match resp {
+                        // Parse data from here, such as storing a response token
+                        Ok(data) => {
+                            info!("successful!");
+                            // let jsondata = data.json().await.unwrap();
+
+                            let jsonsurveys = data.json::<Value>().await.unwrap();
+                            let surveydata =
+                                jsonsurveys.get("surveys").unwrap().as_array().unwrap();
+                            surveys.set(surveydata.to_owned());
+                            // surveys.set(
+                            //     *data
+                            //         .json::<Value>()
+                            //         .await
+                            //         .unwrap()
+                            //         .get("surveys")
+                            //         .unwrap()
+                            //         .as_array()
+                            //         .unwrap(),
+                        }
+
+                        //Handle any errors from the fetch here
+                        Err(_err) => {
+                            info!("failed - could not get data.")
+                        }
+                    }
+                }
+            });
+        };
+
         cx.render(rsx! {
             div {
                 "ListSurvey component"
-                button { onclick: move |evt| {}, "My Surveys" }
+                button { onclick: move |evt| { onsubmit(evt) }, "My Surveys" }
             }
             div {
-
+                {surveys.iter().map(|survey: &Value| {
+                    rsx!(
+                        div{
+                            "{survey:?}"
+                        }
+                    )
+                })}
             }
         })
     }
@@ -384,7 +445,9 @@ pub mod mainapp {
                             let token_text = token
                                 .get("auth_token")
                                 .expect("Did not find auth_token in signup result");
-                            let new_user = UserContext::from(token_text.to_string());
+                            info!("REMOVE ME: token_text: {token_text}");
+                            let new_user =
+                                UserContext::from(token_text.as_str().unwrap().to_string());
                             info!("new user context: {token} {token_text} {new_user:?}");
 
                             app_state.write().user = Some(new_user);
