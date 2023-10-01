@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use dioxus::{html::button, prelude::*};
 use fermi::{use_atom_ref, use_atom_state};
 use log::info;
 use serde_json::{json, Value};
@@ -7,6 +7,7 @@ use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP};
 
 pub fn Login(cx: Scope) -> Element {
     let app_state = use_atom_ref(&cx, APP);
+    let show_login = use_state(cx, move || false);
     // let myclient = use_atom_state(cx, CLIENT);
 
     let onsubmit = move |evt: FormEvent, client: reqwest::Client| {
@@ -123,10 +124,12 @@ pub fn Login(cx: Scope) -> Element {
     };
 
     cx.render(rsx! {
-        if app_state.read().show_login {
+        button { onclick: move |evt| show_login.modify(|curr| if *curr { false } else { true }),
+            "Login"
+        }
+        if *show_login.get() {
             rsx!{
                 div {
-                    h1 { "Login" }
                     form {
                         onsubmit: move |evt| onsubmit(evt, app_state.read().client.clone()),
                         class: "login-form",

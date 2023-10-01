@@ -29,7 +29,6 @@ use crate::{
     db::{self, database::ConnectionDetails},
     mail::mail::Mailer,
     routes::routes::{
-        authorize,
         create_survey,
         get_routes,
         get_survey,

@@ -130,7 +130,7 @@ pub mod mainapp {
                 client: client,
                 user: None,
                 survey: Survey::new(),
-                show_login: false,
+                show_login: true,
                 state: AppError::NotLoggedIn,
             }
         }
@@ -342,6 +342,18 @@ pub mod mainapp {
         pub password: String,
     }
 
+    pub fn ListSurvey(cx: Scope) -> Element {
+        cx.render(rsx! {
+            div {
+                "ListSurvey component"
+                button { onclick: move |evt| {}, "My Surveys" }
+            }
+            div {
+
+            }
+        })
+    }
+
     pub fn Navbar(cx: Scope) -> Element {
         let app_state = use_atom_ref(&cx, APP);
 
@@ -417,9 +429,19 @@ pub mod mainapp {
         let editor_state = use_state(cx, || "".to_string());
 
         cx.render(rsx!(
-            div { class: "flex h-screen w-screen items-center justify-center bg-gray-200",
+            div {
+                h1 { "Why is this not showing up" }
+                ul {
+                    li { Login {} }
+                }
+            }
+            div {
+            }
+            // div { class: "flex h-screen w-screen items-center justify-center bg-gray-200",
+            div { class: "",
                 div { class: "", self::Editor {} }
                 div { class: "", RenderSurvey {} }
+                div { ListSurvey {} }
             }
         ))
     }
