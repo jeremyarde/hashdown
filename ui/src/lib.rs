@@ -349,6 +349,8 @@ pub mod mainapp {
         let surveys = use_state(cx, move || vec![]);
         let app_state = use_atom_ref(&cx, APP);
         let error = use_state(cx, move || "");
+        let is_visible = use_state(cx, move || false);
+
         let onsubmit = move |evt| {
             cx.spawn({
                 to_owned![app_state, error, surveys];
@@ -402,16 +404,27 @@ pub mod mainapp {
             div {
                 "ListSurvey component"
                 button { onclick: move |evt| { onsubmit(evt) }, "My Surveys" }
+                button { onclick: move |evt| if *is_visible.get() { is_visible.set(false) } else { is_visible.set(true) },
+                    if *is_visible.get() {"hide"} else {"show"}
+                }
             }
-            div {
-                {surveys.iter().map(|survey: &Value| {
-                    rsx!(
-                        div{
-                            "{survey:?}"
-                        }
-                    )
-                })}
-            }
+            if *is_visible.get() {
+                rsx!{
+                    div {
+                    {if surveys.is_empty() {
+                        rsx!(div{"No surveys"})
+                    } else {
+                        {rsx!(
+                            surveys.iter().map(|survey: &Value| {
+                            rsx!(
+                                div{
+                                    "{survey:?}"
+                                }
+                            )
+                        }))}
+                    }}
+                }}
+        }
         })
     }
 
