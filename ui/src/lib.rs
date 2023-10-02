@@ -447,67 +447,33 @@ pub mod mainapp {
     pub fn Navbar(cx: Scope) -> Element {
         let app_state = use_atom_ref(&cx, &APP);
 
-        let signup = move |authmethod: String| {
-            cx.spawn({
-                to_owned![app_state];
-                async move {
-                    info!("Attempting signup...");
-                    // info!("Questions save: {:?}", question_state);
-
-                    match app_state
-                        .read()
-                        .client
-                        .post(format!("http://localhost:3000/{authmethod}"))
-                        .json(&LoginPayload {
-                            email: "a@a.a".to_string(),
-                            password: "a".to_string(),
-                        })
-                        .send()
-                        .await
-                    {
-                        Ok(x) => {
-                            info!("signup success: {x:?}");
-                            let token = x
-                                .json::<Value>()
-                                .await
-                                .expect("Could not deserialize signup result");
-                            let token_text = token
-                                .get("auth_token")
-                                .expect("Did not find auth_token in signup result");
-                            info!("REMOVE ME: token_text: {token_text}");
-                            let new_user =
-                                UserContext::from(token_text.as_str().unwrap().to_string());
-                            info!("new user context: {token} {token_text} {new_user:?}");
-
-                            app_state.write().user = Some(new_user);
-                        }
-                        Err(x) => info!("error: {x:?}"),
-                    };
-                }
-            })
-        };
-
         cx.render(rsx! {
-            div { class: "flex flex-row bg-red-500 p-1 justify-between",
-                div { class: "justify-start items-start", "Logo HERE" }
-                div { class: "flex justify-end",
-                    button {
-                        class: "",
-                        // onclick: move |e| {signup()}
-                        onclick: move |evt| {
-                            info!("Pushed login :)");
-                            evt.stop_propagation();
-                        },
-                        "login"
+            // div { class: "flex flex-row bg-red-500 p-1 justify-between",
+            //     div { class: "justify-start items-start", "Logo HERE" }
+            //     div { class: "flex justify-end",
+            //         Link { }
+            //         button {
+            //             class: "bg-green-400",
+            //             onclick: move |evt| {
+            //                 info!("Pushed publish :)");
+            //                 signup("signup".to_string());
+            //                 evt.stop_propagation();
+            //             },
+            //             "signup"
+            //         }
+            //     }
+            // }
+
+            nav {
+                ul {
+                    li {
+                        Link { to: Route::App {}, "Home" }
                     }
-                    button {
-                        class: "bg-green-400",
-                        onclick: move |evt| {
-                            info!("Pushed publish :)");
-                            signup("signup".to_string());
-                            evt.stop_propagation();
-                        },
-                        "signup"
+                    li {
+                        Link { to: Route::Login {}, "Login" }
+                    }
+                    li {
+                        Link { to: Route::ListSurvey {}, "Surveys" }
                     }
                 }
             }
@@ -516,12 +482,16 @@ pub mod mainapp {
 
     #[derive(Routable, Clone)]
     enum Route {
+        #[layout(Navbar)]
+        #[route("/")]
+        App {},
+        #[end_layout]
         #[route("/login")]
         Login {},
         #[route("/surveys")]
         ListSurvey {},
-        #[route("/")]
-        App {},
+        // #[route("/")]
+        // App {},
     }
 
     pub fn App(cx: Scope) -> Element {
@@ -530,23 +500,24 @@ pub mod mainapp {
         // let editor_state = use_atom_ref(cx, EDITOR);
         let editor_state = use_state(cx, || "".to_string());
 
-        cx.render(rsx!(
-            div {
-                ul {
-                    li {
-                        Link { to: Route::Login {}, "Login" }
-                        Login {}
-                    }
-                    li { ListSurvey {} }
-                }
-            }
-            div {
-            }
-            // div { class: "flex h-screen w-screen items-center justify-center bg-gray-200",
-            div { class: "",
-                div { class: "", self::Editor {} }
-                div { class: "", RenderSurvey {} }
-            }
-        ))
+        render! { Router::<Route> {} }
+                // cx.render(rsx!(
+        //     div {
+        //         ul {
+        //             li {
+        //                 Link { to: Route::Login {}, "Login" }
+        //                 Login {}
+        //             }
+        //             li { ListSurvey {} }
+        //         }
+        //     }
+        //     div {
+        //     }
+        //     // div { class: "flex h-screen w-screen items-center justify-center bg-gray-200",
+        //     div { class: "",
+        //         div { class: "", self::Editor {} }
+        //         div { class: "", RenderSurvey {} }
+        //     }
+        // ))
     }
 }

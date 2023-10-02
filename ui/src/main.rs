@@ -29,6 +29,9 @@ fn main() {
     #[cfg(target_arch = "wasm32")]
     dioxus_web::launch(mainapp::App);
 
+    // #[cfg(not(target_arch = "wasm32"))]
+    // dioxus_desktop::launch(mainapp::App);
+
     // dioxus_web::launch_cfg(mainapp::App, Config::new());
     // server_side()
     // dioxus::web::launch_cfg(app, |c| c.into());
