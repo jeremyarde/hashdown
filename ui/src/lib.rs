@@ -380,15 +380,6 @@ pub mod mainapp {
                             let surveydata =
                                 jsonsurveys.get("surveys").unwrap().as_array().unwrap();
                             surveys.set(surveydata.to_owned());
-                            // surveys.set(
-                            //     *data
-                            //         .json::<Value>()
-                            //         .await
-                            //         .unwrap()
-                            //         .get("surveys")
-                            //         .unwrap()
-                            //         .as_array()
-                            //         .unwrap(),
                         }
 
                         //Handle any errors from the fetch here
@@ -400,12 +391,26 @@ pub mod mainapp {
             });
         };
 
+        let logged_in = app_state.read().user.is_some();
+
         cx.render(rsx! {
             div {
-                "ListSurvey component"
-                button { onclick: move |evt| { onsubmit(evt) }, "My Surveys" }
-                button { onclick: move |evt| if *is_visible.get() { is_visible.set(false) } else { is_visible.set(true) },
-                    if *is_visible.get() {"hide"} else {"show"}
+                if logged_in {
+                    rsx!{
+                        button {
+                            onclick: move |evt| {
+                                is_visible.set(true);
+                            },
+                            "my surveys"
+                        }
+                        button { 
+                            onclick: move |evt| { 
+                                if *is_visible.get() { is_visible.set(false) } else { is_visible.set(true) }
+                                onsubmit(evt);
+                            },
+                            if *is_visible.get() {"hide"} else {"show"}
+                        }
+                    }
                 }
             }
             if *is_visible.get() {
@@ -416,9 +421,11 @@ pub mod mainapp {
                     } else {
                         {rsx!(
                             surveys.iter().map(|survey: &Value| {
+                            let short = survey.get("id").unwrap();
                             rsx!(
                                 div{
-                                    "{survey:?}"
+                                    "{short:?}",
+                                    button {"details"}
                                 }
                             )
                         }))}
@@ -506,9 +513,9 @@ pub mod mainapp {
 
         cx.render(rsx!(
             div {
-                h1 { "Why is this not showing up" }
                 ul {
                     li { Login {} }
+                    li { ListSurvey {} }
                 }
             }
             div {
@@ -517,7 +524,6 @@ pub mod mainapp {
             div { class: "",
                 div { class: "", self::Editor {} }
                 div { class: "", RenderSurvey {} }
-                div { ListSurvey {} }
             }
         ))
     }
