@@ -23,8 +23,8 @@ pub enum Answer {
 #[inline_props]
 pub fn RenderSurvey(cx: Scope) -> Element {
     // let app_state = use_atom_ref(cx, APP);
-    let editor_state = use_atom_state(cx, EDITOR);
-    let survey_state = use_atom_state(cx, SURVEY);
+    let editor_state = use_atom_state(cx, &EDITOR);
+    let survey_state = use_atom_state(cx, &SURVEY);
 
     cx.render(rsx! {
         div { class: "flex flex-col",

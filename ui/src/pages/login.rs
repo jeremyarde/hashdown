@@ -1,3 +1,4 @@
+use dioxus::prelude::*;
 use dioxus::{html::button, prelude::*};
 use fermi::{use_atom_ref, use_atom_state};
 use log::info;
@@ -6,7 +7,7 @@ use serde_json::{json, Value};
 use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP};
 
 pub fn Login(cx: Scope) -> Element {
-    let app_state = use_atom_ref(&cx, APP);
+    let app_state = use_atom_ref(&cx, &APP);
     let show_login = use_state(cx, move || false);
     let show_signup = use_state(cx, move || false);
 
@@ -19,8 +20,8 @@ pub fn Login(cx: Scope) -> Element {
             async move {
                 let url = "http://localhost:3000/auth/login";
                 let request: LoginPayload = LoginPayload {
-                    email: evt.values["email"].to_string(),
-                    password: evt.values["password"].to_string(),
+                    email: evt.values["email"].get(0).unwrap().to_owned(),
+                    password: evt.values["password"].get(0).unwrap().to_owned(),
                 };
 
                 let resp = app_state
@@ -96,8 +97,8 @@ pub fn Login(cx: Scope) -> Element {
                 println!("Sending req to: {client_url}");
 
                 let request: LoginPayload = LoginPayload {
-                    email: evt.values["email"].to_string(),
-                    password: evt.values["password"].to_string(),
+                    email: evt.values["email"].get(0).unwrap().to_owned(),
+                    password: evt.values["password"].get(0).unwrap().to_owned(),
                 };
 
                 let response = client

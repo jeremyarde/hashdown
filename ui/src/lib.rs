@@ -6,6 +6,8 @@ use pages::survey::RenderSurvey;
 
 // #![feature(async_closure)]
 pub mod mainapp {
+    use dioxus::prelude::*;
+    use dioxus_router::prelude::*;
     use std::{
         collections::HashMap,
         error,
@@ -13,7 +15,6 @@ pub mod mainapp {
         time::{self, Instant},
     };
 
-    use dioxus_router::{Link, Redirect, Route, Router};
     use gloo_timers::{callback::Timeout, future::TimeoutFuture};
     // use console_log::log;
     use log::info;
@@ -143,23 +144,23 @@ pub mod mainapp {
     //     fn new() -> SurveyDto {}
     // }
 
-    pub static APP: AtomRef<AppState> = |_| AppState::new();
-    pub static SURVEY: Atom<Survey> = |_| Survey::new();
+    pub static APP: AtomRef<AppState> = AtomRef(|_| AppState::new());
+    pub static SURVEY: Atom<Survey> = Atom(|_| Survey::new());
     // static CLIENT: Atom<reqwest::Client> = |_| reqwest::Client::new();
-    pub static EDITOR: Atom<String> = |_| String::from("");
-    static REQ_TIMEOUT: Atom<TimeoutFuture> = |_| TimeoutFuture::new(2000);
+    pub static EDITOR: Atom<String> = Atom(|_| String::from(""));
+    static REQ_TIMEOUT: Atom<TimeoutFuture> = Atom(|_| TimeoutFuture::new(2000));
 
     const FORMINPUT_KEY: &str = "forminput";
 
     fn Editor(cx: Scope) -> Element {
-        let editor_state = use_atom_state(&cx, EDITOR);
-        let toast_visible = use_atom_state(&cx, TOAST);
-        let survey_state = use_atom_state(&cx, SURVEY);
+        let editor_state = use_atom_state(&cx, &EDITOR);
+        let toast_visible = use_atom_state(&cx, &TOAST);
+        let survey_state = use_atom_state(&cx, &SURVEY);
 
         // let question_state = use_atom_state(&cx, APP);
-        let app_state = use_atom_ref(&cx, APP);
+        let app_state = use_atom_ref(&cx, &APP);
         // let send_request_timeout = use_atom_state(&cx, REQ_TIMEOUT);
-        let send_req_timeout = use_atom_state(&cx, REQ_TIMEOUT);
+        let send_req_timeout = use_atom_state(&cx, &REQ_TIMEOUT);
         let some_timeout = use_state(&cx, || TimeoutFuture::new(2000));
         let create_survey = move |content: String, client: Client| {
             cx.spawn({
@@ -199,7 +200,8 @@ pub mod mainapp {
             })
         };
 
-        let post_questions = move |content| {
+        let post_questions = move |content: Vec<String>| {
+            info!("post_questions: {:?}", content);
             cx.spawn({
                 to_owned![toast_visible, app_state];
 
@@ -218,7 +220,7 @@ pub mod mainapp {
                         .read()
                         .client
                         .post("http://localhost:3000/surveys")
-                        .json(&CreateSurvey { plaintext: content })
+                        .json(&CreateSurvey { plaintext: content.get(0).unwrap().to_owned() })
                         // .bearer_auth(token.clone())
                         .header("x-auth-token", token)
                         .send()
@@ -235,8 +237,9 @@ pub mod mainapp {
             })
         };
 
-        let editor_survey = move |content: String| {
-            match ParsedSurvey::from(content) {
+        let editor_survey = move |content: Vec<String>| {
+            info!("editor survey content: {:?}", content);
+            match ParsedSurvey::from(content.get(0).unwrap().to_owned()) {
                 Ok(x) => {
                     info!("Parsed: {x:#?}");
                     app_state.write().survey = Survey::from(x.clone());
@@ -262,8 +265,8 @@ pub mod mainapp {
                     oninput: move |e| {
                         let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
                         editor_survey(formvalue.clone());
-                        info!("onchange results: {:?}", formvalue);
-                        editor_state.modify(|curr| { formvalue });
+                        info!("onchange results - editor_state formvalue: {:?}", formvalue);
+                        editor_state.modify(|curr| { formvalue.get(0).unwrap().to_owned() });
                     },
                     textarea {
                         class: " bg-transparent resize w-full focus:outline-none border border-emerald-800 focus:border-blue-300",
@@ -282,10 +285,10 @@ pub mod mainapp {
         })
     }
 
-    static TOAST: Atom<bool> = |_| false;
+    static TOAST: Atom<bool> = Atom(|_| false);
 
     fn Toast(cx: Scope) -> Element {
-        let toast_visible = use_atom_state(&cx, TOAST);
+        let toast_visible = use_atom_state(&cx, &TOAST);
 
         let timer = async move {
             cx.spawn({
@@ -347,7 +350,7 @@ pub mod mainapp {
 
     pub fn ListSurvey(cx: Scope) -> Element {
         let surveys = use_state(cx, move || vec![]);
-        let app_state = use_atom_ref(&cx, APP);
+        let app_state = use_atom_ref(&cx, &APP);
         let error = use_state(cx, move || "");
         let is_visible = use_state(cx, move || false);
 
@@ -399,6 +402,7 @@ pub mod mainapp {
                     rsx!{
                         button {
                             onclick: move |evt| {
+                                onsubmit(evt);
                                 is_visible.set(true);
                             },
                             "my surveys"
@@ -422,10 +426,15 @@ pub mod mainapp {
                         {rsx!(
                             surveys.iter().map(|survey: &Value| {
                             let short = survey.get("id").unwrap();
+                            let survey_id = survey.get("id").unwrap();
                             rsx!(
                                 div{
                                     "{short:?}",
                                     button {"details"}
+                                    a {
+                                        href: "http://localhost:3000/surveys/{survey_id}", 
+                                        "test"
+                                    }
                                 }
                             )
                         }))}
@@ -436,7 +445,7 @@ pub mod mainapp {
     }
 
     pub fn Navbar(cx: Scope) -> Element {
-        let app_state = use_atom_ref(&cx, APP);
+        let app_state = use_atom_ref(&cx, &APP);
 
         let signup = move |authmethod: String| {
             cx.spawn({
@@ -505,16 +514,29 @@ pub mod mainapp {
         })
     }
 
+    #[derive(Routable, Clone)]
+    enum Route {
+        #[route("/login")]
+        Login {},
+        #[route("/surveys")]
+        ListSurvey {},
+        #[route("/")]
+        App {},
+    }
+
     pub fn App(cx: Scope) -> Element {
         use_init_atom_root(cx);
-        let app_state = use_atom_ref(cx, APP);
+        let app_state = use_atom_ref(cx, &APP);
         // let editor_state = use_atom_ref(cx, EDITOR);
         let editor_state = use_state(cx, || "".to_string());
 
         cx.render(rsx!(
             div {
                 ul {
-                    li { Login {} }
+                    li {
+                        Link { to: Route::Login {}, "Login" }
+                        Login {}
+                    }
                     li { ListSurvey {} }
                 }
             }

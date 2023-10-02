@@ -15,26 +15,26 @@ version = "0.1.0"
 # tokio = { version = "1.24.2", features = ["time"] }
 # wasm-logger = "0.2.0"
 console_error_panic_hook = "0.1.7"
-gloo-timers = "0.2.6"
+gloo-timers = {version = "0.3", features = ["futures"]}
 reqwest = {version = "0.11.17", features = [
   "json", #   "cookies",
 ]}
 serde = {version = "1.0.152", features = ["derive"]}
 
 # web = "0.2.12"
-dioxus = {version = "0.3.2", features = []}
-dioxus-web = {version = "0.3.1", features = []}
+dioxus = { version = "0.4", features = [] }
+dioxus-web = {version = "0.4", features = []}
 # dioxus-router = { version = "0.3.0", features = ["web"] }
 # console_log = "1.0.0"
 # dioxus-cli = "0.3.1"
 anyhow = "1.0.71"
-dioxus-logger = "0.4.1"
-dioxus-ssr = "0.3.0"
-fermi = "0.3.0"
+dioxus-logger = "0.4"
+dioxus-router = "0.4.1"
+# dioxus-ssr = "0.4"
+fermi = "0.4"
 log = "0.4.17"
 markdownparser = {path = "../backend"}
 serde_json = "1.0.97"
-dioxus-router = "0.3.0"
 # tracing = "0.1.37"
 # wasm-logger = "0.2.0"
 # dioxus-html = "0.3.1"
