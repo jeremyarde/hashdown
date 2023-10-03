@@ -466,32 +466,57 @@ pub mod mainapp {
 
             nav {
                 ul {
-                    li {
-                        Link { to: Route::App {}, "Home" }
-                    }
-                    li {
-                        Link { to: Route::Login {}, "Login" }
-                    }
-                    li {
-                        Link { to: Route::ListSurvey {}, "Surveys" }
-                    }
+                    // li {
+                    //     GoBackButton { "Back" }
+                    // }
+                    // li {
+                    //     Link { to: Route::App {}, "Home" }
+                    // }
+                    // li {
+                    //     Link { to: Route::Login {}, "Login" }
+                    // }
+                    // li {
+                    //     Link { to: Route::ListSurvey {}, "Surveys" }
+                    // }
+
+                    li { a { href: "http://localhost:8080/", "home" } }
+                    li { a { href: "http://localhost:8080/login", "login" } }
+                    li { a { href: "http://ocalhost:8080/signup", "signup" } }
+                    li { a { href: "http://localhost:8080/surveys", "surveys" } }
                 }
             }
         })
     }
 
-    #[derive(Routable, Clone)]
-    enum Route {
-        #[layout(Navbar)]
-        #[route("/")]
-        App {},
-        #[end_layout]
-        #[route("/login")]
-        Login {},
-        #[route("/surveys")]
-        ListSurvey {},
-        // #[route("/")]
-        // App {},
+    // #[derive(Routable, Clone)]
+    // enum Route {
+    //     #[layout(Navbar)]
+    //         #[route("/")]
+    //         App {},
+    //         #[route("/login")]
+    //         Login {},
+    //         #[route("/surveys")]
+    //         ListSurvey {},
+    //     #[end_layout]
+    //     // #[route("/")]
+    //     // App {},
+    // }
+
+    pub fn SyntaxExample(cx: Scope) -> Element {
+        let example_text = "
+# Survey title
+- First 
+  - multiple choice 1
+  - multiple choice 2
+  - multiple choice 3
+- Second question [checkbox]
+  - checkbox 1
+  - checkbox 2
+        ";
+        render! {
+            p { style: "white-space: pre-line", example_text }
+            p { style: "", example_text }
+        }
     }
 
     pub fn App(cx: Scope) -> Element {
@@ -500,24 +525,23 @@ pub mod mainapp {
         // let editor_state = use_atom_ref(cx, EDITOR);
         let editor_state = use_state(cx, || "".to_string());
 
-        render! { Router::<Route> {} }
-                // cx.render(rsx!(
-        //     div {
-        //         ul {
-        //             li {
-        //                 Link { to: Route::Login {}, "Login" }
-        //                 Login {}
-        //             }
-        //             li { ListSurvey {} }
-        //         }
-        //     }
-        //     div {
-        //     }
-        //     // div { class: "flex h-screen w-screen items-center justify-center bg-gray-200",
-        //     div { class: "",
-        //         div { class: "", self::Editor {} }
-        //         div { class: "", RenderSurvey {} }
-        //     }
-        // ))
+        // render! { Router::<Route> {} }
+        cx.render(rsx!(
+            div {
+                // Navbar {}
+                ul {
+                    li { Login {} }
+                    li { ListSurvey {} }
+                }
+            }
+            div {
+            }
+            // div { class: "flex h-screen w-screen items-center justify-center bg-gray-200",
+            div { class: "",
+                div { class: "", self::Editor {} }
+                div { class: "", RenderSurvey {} }
+                div { class: "", SyntaxExample {} }
+            }
+        ))
     }
 }

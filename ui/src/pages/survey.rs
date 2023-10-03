@@ -26,6 +26,37 @@ pub fn RenderSurvey(cx: Scope) -> Element {
     let editor_state = use_atom_state(cx, &EDITOR);
     let survey_state = use_atom_state(cx, &SURVEY);
 
+    let submit_survey = move |evt: FormEvent| {
+        cx.spawn({
+            // to_owned![app_state];
+            async move {
+                let url = "/answer";
+                let client_url = format!("http://{}{}", "localhost:3000", url);
+
+                println!("Sending req to: {client_url}");
+
+                // let request: LoginPayload = LoginPayload {
+                //     email: evt.values["email"].get(0).unwrap().to_owned(),
+                //     password: evt.values["password"].get(0).unwrap().to_owned(),
+                // };
+                let formdata = evt.values.clone();
+                info!("submit form details: {:?}", formdata);
+
+                // let resp = reqwest::Client::new()
+                // .get("http://localhost:3000/surveys")
+                // .header("x-auth-token", token)
+                // .send()
+                // .await;
+
+                // let response = client
+                //     .post(&client_url)
+                //     .json(&request)
+                //     .send()
+                //     .await
+                //     .expect("Should recieve response from app");
+            }
+        });
+    };
     cx.render(rsx! {
         div { class: "flex flex-col",
             form {
@@ -33,7 +64,7 @@ pub fn RenderSurvey(cx: Scope) -> Element {
                 // action: "http://localhost:3000/surveys/test",
                 // enctype: "application/x-www-form-urlencoded",
                 // method: "post",
-                prevent_default: "onsubmit",
+                // prevent_default: "onsubmit",
                 onsubmit: move |evt| {
                     info!("submitting survey result: {:?}", evt.values);
                 },
@@ -52,7 +83,7 @@ pub fn RenderSurvey(cx: Scope) -> Element {
                     }
 
                 }}),
-                button { class: "", r#type: "submit", "Submit" }
+                button { class: "", onsubmit: move |evt| submit_survey(evt), r#type: "submit", "Submit" }
             }
         }
     })

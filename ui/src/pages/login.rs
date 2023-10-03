@@ -124,7 +124,8 @@ pub fn Login(cx: Scope) -> Element {
                     form {
                         onsubmit: move |evt| onsubmit(evt, app_state.read().client.clone()),
                         class: "login-form",
-                        prevent_default: "onsubmit", // Prevent the default behavior of <form> to post
+                        // action: ""
+                        // prevent_default: "onsubmit", // Prevent the default behavior of <form> to post
                         input { r#type: "text", id: "email", name: "email" }
                         label { "email" }
                         br {}
