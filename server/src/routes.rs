@@ -1,10 +1,6 @@
 pub mod routes {
-    
 
-    
-    
     use chrono::{DateTime, Utc};
-    
 
     use axum::{
         extract::{Path, Query},
@@ -12,10 +8,10 @@ pub mod routes {
         middleware::{self, Next},
         response::IntoResponse,
         response::Response,
-        routing::{get, post}, Router,
+        routing::{get, post},
+        Router,
     };
 
-    
     use markdownparser::{nanoid_gen, parse_markdown_v3};
 
     use axum::{
@@ -25,9 +21,8 @@ pub mod routes {
     };
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
-    
+
     use tracing::{debug, log::info};
-    
 
     use crate::{
         auth::{self},
@@ -66,7 +61,6 @@ pub mod routes {
     }
 
     async fn propagate_header<B>(req: Request<B>, next: Next<B>) -> Response {
-        
         next.run(req).await
     }
 
