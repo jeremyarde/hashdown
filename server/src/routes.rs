@@ -61,6 +61,8 @@ pub mod routes {
         let routes = Router::new()
             .route("/surveys", post(create_survey).get(list_survey))
             .route("/surveys/:id", get(get_survey).post(submit_survey))
+            // .route("/responses", post(submit_response))
+            // .route("/responses/:id", get(responses::list_response))
             .route("/auth/login", post(auth::authorize))
             .route("/auth/signup", post(auth::signup))
             .route("/ping", get(ping))
