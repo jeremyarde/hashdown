@@ -21,18 +21,14 @@ pub struct EnvConfig {
 
 impl EnvConfig {
     pub(crate) fn new() -> Self {
-        return EnvConfig {
+        EnvConfig {
             stage: Stage::from(
                 dotenvy::var("STAGE").expect("Stage environment variable should be set."),
             ),
-        };
+        }
     }
 
     pub(crate) fn is_dev(&self) -> bool {
-        if self.stage == Stage::DEV {
-            true
-        } else {
-            false
-        }
+        self.stage == Stage::DEV
     }
 }

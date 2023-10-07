@@ -1,12 +1,12 @@
-use axum::http::StatusCode;
+
 use config::EnvConfig;
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
 
 use crate::mail::mail::Mailer;
-use dotenvy::dotenv;
+
 use tokio::try_join;
-use tracing::{instrument, log::info};
+use tracing::{instrument};
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
 
@@ -25,7 +25,7 @@ mod db;
 mod mware;
 mod server;
 // mod survey;
-use anyhow;
+
 use db::database::Database;
 
 mod error;
@@ -59,29 +59,25 @@ async fn main() -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use std::{borrow::BorrowMut, collections::HashMap};
+    use std::{borrow::BorrowMut};
 
-    use anyhow::{anyhow, Error};
+    
     use axum::{
         body::Body,
-        http::{HeaderMap, HeaderValue, Request},
-        Json, Router,
+        http::{Request}, Router,
     };
-    use dotenvy::dotenv;
-    use lettre::transport::smtp::client::{Tls, TlsParameters};
+    
+    
     use markdownparser::nanoid_gen;
-    use mime::{Mime, APPLICATION_JSON};
+    
 
     use serde_json::{json, Value};
-    use serial_test::serial;
+    
     use tower::ServiceExt;
-    use tracing::info;
+    
 
     use crate::{
-        db,
-        mware::ctext::AUTH_TOKEN,
-        routes::routes::{CreateSurveyRequest, ListSurveyResponse, LoginPayload},
-        server::CreateSurveyResponse,
+        routes::routes::{LoginPayload},
         ServerApplication,
     };
 

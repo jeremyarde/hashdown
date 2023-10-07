@@ -1,6 +1,6 @@
 use axum::response::IntoResponse;
 use axum::{http::StatusCode, response::Response};
-use axum::{Json, Server};
+use axum::{Json};
 use hyper::{Method, Uri};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -82,7 +82,7 @@ impl IntoResponse for ServerError {
         println!("->> {:<12} - {self:?}", "INTO_RES");
         let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
         response.extensions_mut().insert(self);
-        return response;
+        response
     }
 }
 

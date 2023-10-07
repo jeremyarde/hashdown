@@ -1,23 +1,21 @@
 pub mod routes {
-    use std::collections::HashMap;
+    
 
-    use anyhow::Context;
-    use argon2::{password_hash::rand_core::OsRng, PasswordHasher, PasswordVerifier};
+    
+    
     use chrono::{DateTime, Utc};
-    use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+    
 
     use axum::{
-        body::Body,
-        extract::{DefaultBodyLimit, Multipart, Path, Query},
-        http::{self, HeaderMap, HeaderName, HeaderValue, Method, Request, Uri},
+        extract::{Path, Query},
+        http::{HeaderMap, Request},
         middleware::{self, Next},
         response::IntoResponse,
         response::Response,
-        routing::{get, get_service, post, MethodRouter},
-        Extension, Form, Router,
+        routing::{get, post}, Router,
     };
 
-    use lettre::message::header::Date;
+    
     use markdownparser::{nanoid_gen, parse_markdown_v3};
 
     use axum::{
@@ -27,18 +25,12 @@ pub mod routes {
     };
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
-    use tower_http::{
-        auth::require_authorization::Bearer,
-        cors::{Any, CorsLayer},
-        limit::RequestBodyLimitLayer,
-        services::ServeDir,
-        trace::TraceLayer,
-    };
+    
     use tracing::{debug, log::info};
-    use uuid::Uuid;
+    
 
     use crate::{
-        auth::{self, signup},
+        auth::{self},
         db::database::CreateAnswersModel,
         error::main_response_mapper,
         mware::ctext::Ctext,
@@ -70,12 +62,12 @@ pub mod routes {
             // .layer(middleware::from_fn(propagate_header))
             .with_state(state);
 
-        return Ok(routes);
+        Ok(routes)
     }
 
     async fn propagate_header<B>(req: Request<B>, next: Next<B>) -> Response {
-        let mut res = next.run(req).await;
-        res
+        
+        next.run(req).await
     }
 
     #[tracing::instrument]
@@ -116,7 +108,7 @@ pub mod routes {
             parse_version: parsed_survey.parse_version.clone(),
         };
 
-        let insert_result = state
+        let _insert_result = state
             .db
             .create_survey(survey)
             .await
@@ -146,7 +138,7 @@ pub mod routes {
         debug!("    ->> survey: {:#?}", payload);
 
         // json version
-        let survey = match state
+        let _survey = match state
             .db
             .get_survey(&survey_id)
             .await
@@ -177,7 +169,7 @@ pub mod routes {
             // created_at: "".to_string(),
         };
 
-        let answer_result = state
+        state
             .db
             .create_answer(create_answer_model)
             .await
@@ -247,7 +239,7 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn get_survey(
         State(_state): State<ServerState>,
-        ctx: Option<Ctext>,
+        _ctx: Option<Ctext>,
         // authorization: TypedHeader<Authorization<Bearer>>,
         Path(survey_id): Path<String>,
         Query(query): Query<GetSurveyQuery>,

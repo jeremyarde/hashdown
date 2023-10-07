@@ -16,7 +16,7 @@ use argon2::password_hash::SaltString;
 
 use argon2::Argon2;
 
-use argon2;
+
 
 use tracing::log::info;
 
@@ -30,7 +30,7 @@ use crate::ServerState;
 
 use axum::extract::State;
 
-use axum;
+
 
 use argon2::PasswordVerifier;
 
@@ -46,9 +46,9 @@ pub async fn validate_credentials(
         PasswordHash::new(&expected_password_hash).expect("Should hash password properly");
     match Argon2::default().verify_password(password_candidate.as_bytes(), &expected_password_hash)
     {
-        Ok(x) => return Ok(()),
-        Err(e) => return Err(ServerError::PasswordDoesNotMatch),
-    };
+        Ok(_x) => Ok(()),
+        Err(_e) => Err(ServerError::PasswordDoesNotMatch),
+    }
 }
 
 #[axum::debug_handler]
@@ -73,7 +73,7 @@ pub async fn signup(
     let hash = argon2
         .hash_password(payload.password.as_bytes(), &salt)
         .unwrap();
-    let password_hash_string = hash.to_string();
+    let _password_hash_string = hash.to_string();
 
     let user = match state
         .db
@@ -92,9 +92,9 @@ pub async fn signup(
 
     let jwt_claim = create_jwt_claim(user.email.clone(), "somerole-pleasechange")?;
 
-    return Ok(Json(
+    Ok(Json(
         json!({"email": user.email, "auth_token": jwt_claim.token}),
-    ));
+    ))
 }
 
 pub async fn authorize(
@@ -128,7 +128,7 @@ pub async fn authorize(
     let argon2 = argon2::Argon2::default();
 
     let hash = PasswordHash::new(&user.password_hash).unwrap();
-    let is_correct = match argon2.verify_password(&payload.password.as_bytes(), &hash) {
+    let is_correct = match argon2.verify_password(payload.password.as_bytes(), &hash) {
         Ok(_) => true,
         Err(_) => return Err(ServerError::AuthPasswordsDoNotMatch),
     };

@@ -1,13 +1,11 @@
 use std::{
-    collections::HashMap,
-    fmt::{self, Display},
-    str::FromStr,
+    fmt::{self},
 };
 
-use anyhow::{self, Context};
+use anyhow::{self};
 
 use chrono::{DateTime, Utc};
-use markdownparser::{nanoid_gen, parse_markdown_v3, Metadata, Survey};
+use markdownparser::{nanoid_gen};
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -39,7 +37,7 @@ use tracing::{info, instrument};
 
 use crate::server::SurveyModel;
 
-use super::models;
+
 
 // mod models;
 
@@ -67,7 +65,7 @@ impl Settings {
     fn default() -> Settings {
         Settings {
             base_path: None,
-            nanoid_length: Some(12 as usize),
+            nanoid_length: Some(12_usize),
         }
     }
 }
@@ -148,7 +146,7 @@ impl Database {
         //     .await?;
 
         Ok(Database {
-            pool: pool,
+            pool,
             settings: Settings::default(),
         })
     }
@@ -206,7 +204,7 @@ impl Database {
     pub async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel> {
         println!("->> create_user");
 
-        let time = chrono::Utc::now();
+        let _time = chrono::Utc::now();
         // let user = UserModel {
         //     // id: todo!(),
         //     email: request.email,
@@ -230,7 +228,7 @@ impl Database {
         .fetch_one(&self.pool)
         .await?;
 
-        return Ok(user);
+        Ok(user)
     }
 
     pub async fn get_user_by_email(&self, email: String) -> anyhow::Result<UserModel> {
@@ -256,7 +254,7 @@ impl Database {
         // let result = UserModel::from_row(&row_result).expect("Could not turn row into user model");
 
         info!("Successfully found user");
-        return Ok(res);
+        Ok(res)
     }
 
     pub async fn get_survey(&self, survey_id: &String) -> anyhow::Result<Option<SurveyModel>> {
@@ -308,7 +306,7 @@ impl Database {
     pub async fn create_answer(&self, answer: CreateAnswersModel) -> anyhow::Result<()> {
         info!("Creating answers in database");
 
-        let res = sqlx::query(
+        let _res = sqlx::query(
             r#"insert into surveys_submissions (survey_id, submitted_at, answers)
         values
         ($1, $2, $3, $4)
@@ -325,7 +323,7 @@ impl Database {
 
         // info!("created rows={}", res.rows_affected());
 
-        return Ok(());
+        Ok(())
     }
 }
 

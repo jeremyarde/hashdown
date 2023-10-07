@@ -1,4 +1,4 @@
-use lettre::{transport::smtp, SmtpTransport};
+use lettre::{SmtpTransport};
 
 #[derive(Clone)]
 pub struct Mailer {
@@ -18,12 +18,12 @@ impl Mailer {
     pub fn new() -> Self {
         use lettre::message::header::ContentType;
         use lettre::transport::smtp::authentication::Credentials;
-        use lettre::{Message, SmtpTransport, Transport};
+        use lettre::{Message, SmtpTransport};
         let from_email = "Test FROM <test@jeremyarde.com>";
         let to_email = "Test TO <test@jeremyarde.com>";
         let smtp_server = "email-smtp.us-east-1.amazonaws.com";
 
-        let email = Message::builder()
+        let _email = Message::builder()
             .from(from_email.parse().unwrap())
             // .reply_to("Yuin <yuin@domain.tld>".parse().unwrap())
             .to(to_email.parse().unwrap())
@@ -44,11 +44,11 @@ impl Mailer {
             // .tls(Tls::Wrapper(TlsParameters::builder(domain)))
             .build();
 
-        return Mailer {
+        Mailer {
             smtp: mailer,
             test_from: from_email.to_string(),
             smtp_server_url: smtp_server.to_string(),
             test_to: to_email.to_string(),
-        };
+        }
     }
 }

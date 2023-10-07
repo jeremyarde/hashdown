@@ -1,10 +1,8 @@
 use anyhow::Context;
 use async_trait::async_trait;
 use axum::{
-    extract::{FromRequestParts, State},
-    http::{HeaderMap, Request},
-    middleware::Next,
-    response::Response,
+    extract::{FromRequestParts},
+    http::{HeaderMap},
     RequestPartsExt,
 };
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
@@ -13,10 +11,10 @@ use serde::{Deserialize, Serialize};
 // use tower_cookies::{Cookie, Cookies};
 use once_cell::sync::Lazy;
 use sqlx::FromRow;
-use tower_http::auth;
-use tracing::{debug, log::info};
 
-use crate::{db, ServerError, ServerState};
+use tracing::{log::info};
+
+use crate::{db, ServerError};
 
 struct Keys {
     encoding: EncodingKey,
@@ -65,7 +63,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctext {
 
         println!("Parsed auth_token: {:?}", &auth_token);
 
-        if auth_token == "".to_string() {
+        if auth_token.is_empty() {
             info!(" ->> Auth header was not present");
             return Err(ServerError::AuthFailNoTokenCookie);
         }
@@ -118,7 +116,7 @@ fn validate_jwt_claim(
     // let key = b"privatekey";
     let decode_key = &KEYS.decoding;
     let decode_result =
-        match decode::<Claims>(&jwt_token, &decode_key, &Validation::new(Algorithm::HS256)) {
+        match decode::<Claims>(jwt_token, decode_key, &Validation::new(Algorithm::HS256)) {
             Ok(x) => {
                 info!("jwt was decoded properly");
                 x.claims
@@ -156,14 +154,14 @@ pub fn create_jwt_claim(
         .with_context(|| "Could not turn time into timestamp")
     {
         Ok(x) => x,
-        Err(e) => return Err(ServerError::WrongCredentials),
+        Err(_e) => return Err(ServerError::WrongCredentials),
     };
     let expire: usize = match (nowutc + chrono::Duration::minutes(5))
         .timestamp()
         .try_into()
     {
         Ok(x) => x,
-        Err(e) => return Err(ServerError::WrongCredentials),
+        Err(_e) => return Err(ServerError::WrongCredentials),
     };
 
     let claim = Claims {
@@ -204,7 +202,7 @@ impl Ctext {
     }
 
     pub fn new(user_id: String) -> Self {
-        return Ctext { user_id };
+        Ctext { user_id }
     }
 }
 
@@ -216,14 +214,14 @@ pub fn create_jwt_token(user: db::database::UserModel) -> Result<String, ServerE
         .with_context(|| "Could not turn time into timestamp")
     {
         Ok(x) => x,
-        Err(e) => return Err(ServerError::WrongCredentials),
+        Err(_e) => return Err(ServerError::WrongCredentials),
     };
     let expire: usize = match (nowutc + chrono::Duration::minutes(5))
         .timestamp()
         .try_into()
     {
         Ok(x) => x,
-        Err(e) => return Err(ServerError::WrongCredentials),
+        Err(_e) => return Err(ServerError::WrongCredentials),
     };
     let claims = Claims {
         sub: "myemailsub@email.com".to_string(),

@@ -1,24 +1,20 @@
 use axum::{
-    extract::{DefaultBodyLimit, Multipart, Query},
-    http::{self, HeaderMap, HeaderName, HeaderValue, Method},
-    middleware,
-    response::{IntoResponse, Response},
-    Extension, Router,
+    http::{self, HeaderName, Method}, Router,
 };
 use chrono::{DateTime, Utc};
 use db::database::Database;
-use markdownparser::{nanoid_gen, parse_markdown_v3, MetadataBuilder, Survey};
+use markdownparser::{Survey};
 
 use sqlx::FromRow;
 // use ormlite::Model;
-use tokio::{fs, task::JoinHandle};
+use tokio::{task::JoinHandle};
 
 use tracing::log::info;
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
 // use tower_http::http::cors::CorsLayer;
 use tower_http::{
-    cors::{Any, CorsLayer},
+    cors::{CorsLayer},
     trace::TraceLayer,
 };
 // use yewui::runapp;
@@ -29,11 +25,7 @@ use crate::{
     db::{self, database::ConnectionDetails},
     mail::mail::Mailer,
     routes::routes::{
-        create_survey,
         get_routes,
-        get_survey,
-        list_survey,
-        submit_survey,
         // test_survey,
     },
     ServerState,
@@ -65,15 +57,9 @@ pub struct ServerApplication {
 
 impl ServerApplication {
     pub async fn get_router() -> Router {
-        let in_memory = if dotenvy::var("DATABASE_IN_MEMORY")
+        let in_memory = dotenvy::var("DATABASE_IN_MEMORY")
             .expect("Could not find `DATABASE_IN_MEMORY` env variable")
-            .trim()
-            == "true"
-        {
-            true
-        } else {
-            false
-        };
+            .trim() == "true";
 
         let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
         let db_url = ConnectionDetails(uri);
@@ -81,7 +67,7 @@ impl ServerApplication {
             .await
             .expect("Error connecting to database");
         let state = ServerState {
-            db: db,
+            db,
             mail: Mailer::new(),
             config: EnvConfig::new(),
         };
@@ -109,12 +95,12 @@ impl ServerApplication {
             .allow_origin(origins);
 
         // build our application with a route
-        let app = Router::new()
+        
+
+        Router::new()
             .merge(get_routes(state).unwrap())
             .layer(corslayer)
-            .layer(TraceLayer::new_for_http());
-
-        return app;
+            .layer(TraceLayer::new_for_http())
     }
 
     pub async fn new() -> ServerApplication {
@@ -147,11 +133,11 @@ impl ServerApplication {
         // let oauth_client = oauth_client();
 
         info!("Server is running...");
-        return ServerApplication {
+        ServerApplication {
             base_url: addr,
-            server: server,
+            server,
             // oauth_client: None,
-        };
+        }
     }
 }
 
@@ -167,17 +153,13 @@ pub struct CreateSurveyResponse {
 
 impl CreateSurveyResponse {
     fn from(survey: Survey) -> Self {
-        CreateSurveyResponse { survey: survey }
+        CreateSurveyResponse { survey }
     }
 }
 
 use std::{collections::HashMap, net::SocketAddr};
 
-use axum::{
-    extract::{self, Path, State},
-    http::StatusCode,
-    Json,
-};
+
 // use markdownparser::{markdown_to_form, parse_markdown_v3, Survey};
 use serde::{Deserialize, Serialize};
 
@@ -261,11 +243,11 @@ struct Answer {
 }
 
 mod test {
-    use std::collections::HashMap;
+    
 
-    use crate::{db, ServerState};
-    use axum::extract::{multipart, Multipart};
-    use db::database::Database;
+    
+    
+    
 
     // #[tokio::test]
     // async fn test_create_answer() {
