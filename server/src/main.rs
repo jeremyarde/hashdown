@@ -1,4 +1,3 @@
-
 use config::EnvConfig;
 // use ormlite::FromRow;
 // use ormlite::{model::ModelBuilder, Model};
@@ -6,7 +5,7 @@ use config::EnvConfig;
 use crate::mail::mail::Mailer;
 
 use tokio::try_join;
-use tracing::{instrument};
+use tracing::instrument;
 // use uuid::Uuid;
 // use sqlx::{Sqlite, SqlitePool};
 
@@ -31,6 +30,7 @@ use db::database::Database;
 mod error;
 mod mail;
 mod routes;
+mod survey_responses;
 
 pub use self::{error::ServerError, routes::*};
 
@@ -59,27 +59,17 @@ async fn main() -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use std::{borrow::BorrowMut};
+    use std::borrow::BorrowMut;
 
-    
-    use axum::{
-        body::Body,
-        http::{Request}, Router,
-    };
-    
-    
+    use axum::{body::Body, http::Request, Router};
+
     use markdownparser::nanoid_gen;
-    
 
     use serde_json::{json, Value};
-    
-    use tower::ServiceExt;
-    
 
-    use crate::{
-        routes::routes::{LoginPayload},
-        ServerApplication,
-    };
+    use tower::ServiceExt;
+
+    use crate::{routes::routes::LoginPayload, ServerApplication};
 
     fn setup_environment() {
         dotenvy::from_filename("./server/.env").unwrap();

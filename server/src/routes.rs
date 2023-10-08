@@ -30,6 +30,7 @@ pub mod routes {
         error::main_response_mapper,
         mware::ctext::Ctext,
         server::SurveyModel,
+        survey_responses::survey_responses::{self, submit_response},
         ServerError, ServerState,
     };
 
@@ -48,8 +49,8 @@ pub mod routes {
         let routes = Router::new()
             .route("/surveys", post(create_survey).get(list_survey))
             .route("/surveys/:id", get(get_survey).post(submit_survey))
-            // .route("/responses", post(submit_response))
-            // .route("/responses/:id", get(responses::list_response))
+            .route("/responses", post(submit_response))
+            .route("/responses/:id", get(survey_responses::list_response))
             .route("/auth/login", post(auth::authorize))
             .route("/auth/signup", post(auth::signup))
             .route("/ping", get(ping))
@@ -236,7 +237,6 @@ pub mod routes {
         _ctx: Option<Ctext>,
         // authorization: TypedHeader<Authorization<Bearer>>,
         Path(survey_id): Path<String>,
-        Query(query): Query<GetSurveyQuery>,
     ) -> impl IntoResponse {
         let db_response = _state
             .db
@@ -244,8 +244,6 @@ pub mod routes {
             .await
             .expect("Did not find survey in db");
         // let response = CreateSurveyResponse::from(insert_result);
-        info!("query: {query:#?}");
-        println!("query: {query:#?}");
 
         // let results = transform_response(db_response, query);
         (StatusCode::OK, Json(db_response))

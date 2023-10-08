@@ -1,65 +1,36 @@
 use axum::{
-    http::{self, HeaderName, Method}, Router,
+    http::{self, HeaderName, Method},
+    Router,
 };
 use chrono::{DateTime, Utc};
 use db::database::Database;
-use markdownparser::{Survey};
+use markdownparser::Survey;
 
 use sqlx::FromRow;
-// use ormlite::Model;
-use tokio::{task::JoinHandle};
+use tokio::task::JoinHandle;
 
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::log::info;
-// use uuid::Uuid;
-// use sqlx::{Sqlite, SqlitePool};
-// use tower_http::http::cors::CorsLayer;
-use tower_http::{
-    cors::{CorsLayer},
-    trace::TraceLayer,
-};
-// use yewui::runapp;
 
-// use crate::answer::post_answer;
 use crate::{
     config::EnvConfig,
     db::{self, database::ConnectionDetails},
     mail::mail::Mailer,
-    routes::routes::{
-        get_routes,
-        // test_survey,
-    },
+    routes::routes::get_routes,
     ServerState,
 };
 
-// use tower_http::trace::TraceLayer;
-// use tower::http
 pub struct ServerApplication {
     pub base_url: SocketAddr,
     pub server: JoinHandle<()>,
-    // pub oauth_client: Option<BasicClient>,
 }
-
-// async fn uiapp(State(_state): State<ServerState>) -> impl IntoResponse {
-//     println!("Rendering ui app, curr state: {_state:?}");
-
-//     Html(mainapp::dioxusapp().await)
-//     // Html("This is great")
-// }
-// use include_dir::{include_dir, Dir};
-
-// static STATIC_DIR: Dir<'_> = include_dir!("./ui/public");
-
-// async fn runyew() -> impl IntoResponse {
-//     Html(runapp().await)
-// }
-// use self::routes;
-// mod routes;
 
 impl ServerApplication {
     pub async fn get_router() -> Router {
         let in_memory = dotenvy::var("DATABASE_IN_MEMORY")
             .expect("Could not find `DATABASE_IN_MEMORY` env variable")
-            .trim() == "true";
+            .trim()
+            == "true";
 
         let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
         let db_url = ConnectionDetails(uri);
@@ -95,7 +66,6 @@ impl ServerApplication {
             .allow_origin(origins);
 
         // build our application with a route
-        
 
         Router::new()
             .merge(get_routes(state).unwrap())
@@ -107,7 +77,7 @@ impl ServerApplication {
         info!("Spinning up the server.");
 
         // const V1: &str = "v1";
-        tracing_subscriber::fmt::try_init();
+        let _ = tracing_subscriber::fmt::try_init();
 
         // tracing_subscriber::registry()
         //     .with(
@@ -158,7 +128,6 @@ impl CreateSurveyResponse {
 }
 
 use std::{collections::HashMap, net::SocketAddr};
-
 
 // use markdownparser::{markdown_to_form, parse_markdown_v3, Survey};
 use serde::{Deserialize, Serialize};
@@ -243,11 +212,6 @@ struct Answer {
 }
 
 mod test {
-    
-
-    
-    
-    
 
     // #[tokio::test]
     // async fn test_create_answer() {

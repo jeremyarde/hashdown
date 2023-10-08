@@ -276,6 +276,7 @@ enum ParseError {
 pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
     const VERSION: &str = "0";
 
+    let survey_id = nanoid_gen(NANOID_LEN);
     let plaintext = contents.clone();
     let mut questions = vec![];
     let mut curr_question_text: &str = "";
@@ -362,7 +363,7 @@ pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
     //     text: "test".to_string(),
     // };
 
-    let survey = ParsedSurvey::from_details(title, &plaintext, questions);
+    let survey = ParsedSurvey::from_details(&survey_id, title, &plaintext, questions);
 
     return Ok(survey);
     // return JsValue::from(value);
@@ -370,6 +371,7 @@ pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ParsedSurvey {
+    pub id: String,
     pub title: String,
     pub plaintext: String,
     pub questions: Vec<Question>,
@@ -381,10 +383,11 @@ impl ParsedSurvey {
         return parse_markdown_v3(plaintext);
     }
 
-    fn from_details(title: &str, plaintext: &str, questions: Vec<Question>) -> Self {
+    fn from_details(id: &str, title: &str, plaintext: &str, questions: Vec<Question>) -> Self {
         let title = title.replace("# ", "");
 
         ParsedSurvey {
+            id: id.to_owned(),
             title: title.to_owned(),
             plaintext: plaintext.to_owned(),
             questions: questions,
@@ -397,6 +400,7 @@ impl ParsedSurvey {
             plaintext: "".to_owned(),
             questions: vec![],
             parse_version: "".to_string(),
+            id: "fakeid".to_string(),
         }
     }
 }

@@ -22,15 +22,15 @@ pub enum Answer {
 
 #[inline_props]
 pub fn RenderSurvey(cx: Scope) -> Element {
-    // let app_state = use_atom_ref(cx, APP);
+    let app_state = use_atom_ref(cx, &APP);
     let editor_state = use_atom_state(cx, &EDITOR);
     let survey_state = use_atom_state(cx, &SURVEY);
 
-    let submit_survey = move |evt: FormEvent| {
+    let submit_survey = move |evt: FormEvent, survey_id: String, user_token: String| {
         cx.spawn({
             // to_owned![app_state];
             async move {
-                let url = "/answer";
+                let url = "/responses";
                 let client_url = format!("http://{}{}", "localhost:3000", url);
 
                 println!("Sending req to: {client_url}");
@@ -39,14 +39,20 @@ pub fn RenderSurvey(cx: Scope) -> Element {
                 //     email: evt.values["email"].get(0).unwrap().to_owned(),
                 //     password: evt.values["password"].get(0).unwrap().to_owned(),
                 // };
-                let formdata = evt.values.clone();
+                let mut formdata = evt.values.clone();
                 info!("submit form details: {:?}", formdata);
+                // formdata['survey_id'] =
+                let mut request_form: Value =
+                    json!({"survey_id": survey_id, "responses": formdata});
 
-                // let resp = reqwest::Client::new()
-                // .get("http://localhost:3000/surveys")
-                // .header("x-auth-token", token)
-                // .send()
-                // .await;
+                let resp = reqwest::Client::new()
+                    .post(client_url)
+                    .json(&json!(request_form))
+                    .header("x-auth-token", user_token)
+                    .send()
+                    .await;
+
+                info!("response from submit: {:?}", resp);
 
                 // let response = client
                 //     .post(&client_url)
@@ -57,6 +63,7 @@ pub fn RenderSurvey(cx: Scope) -> Element {
             }
         });
     };
+    let survey_id = survey_state.survey.id.clone();
     cx.render(rsx! {
         div { class: "flex flex-col",
             form {
@@ -67,6 +74,11 @@ pub fn RenderSurvey(cx: Scope) -> Element {
                 // prevent_default: "onsubmit",
                 onsubmit: move |evt| {
                     info!("submitting survey result: {:?}", evt.values);
+                    submit_survey(
+                        evt,
+                        survey_id.clone().to_owned(),
+                        app_state.read().user.as_ref().unwrap().token.clone().to_owned(),
+                    )
                 },
                 onchange: move |evt| {
                     info!("form: {:#?}", evt.data);
@@ -83,7 +95,16 @@ pub fn RenderSurvey(cx: Scope) -> Element {
                     }
 
                 }}),
-                button { class: "", onsubmit: move |evt| submit_survey(evt), r#type: "submit", "Submit" }
+                button {
+                    class: "",
+                    // onsubmit: move |evt| submit_survey(
+                    //     evt,
+                    //     survey_id.clone().to_owned(),
+                    //     app_state.read().user.as_ref().unwrap().token.clone().to_owned(),
+                    // ),
+                    r#type: "submit",
+                    "Submit response"
+                }
             }
         }
     })

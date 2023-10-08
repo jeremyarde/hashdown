@@ -16,8 +16,6 @@ use argon2::password_hash::SaltString;
 
 use argon2::Argon2;
 
-
-
 use tracing::log::info;
 
 use crate::ServerError;
@@ -29,8 +27,6 @@ use axum::Json;
 use crate::ServerState;
 
 use axum::extract::State;
-
-
 
 use argon2::PasswordVerifier;
 
@@ -58,14 +54,23 @@ pub async fn signup(
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> signup");
 
-    match state
+    // match state
+    //     .db
+    //     .get_user_by_email(payload.email.clone())
+    //     .await
+    //     .with_context(|| "Checking if user already exists")
+    // {
+    //     Ok(_) => return Err(ServerError::UserAlreadyExists),
+    //     Err(_) => {}
+    // };
+
+    if let Ok(_) = state
         .db
         .get_user_by_email(payload.email.clone())
         .await
         .with_context(|| "Checking if user already exists")
     {
-        Ok(_) => return Err(ServerError::UserAlreadyExists),
-        Err(_) => {}
+        return Err(ServerError::UserAlreadyExists);
     };
 
     let argon2 = argon2::Argon2::default();

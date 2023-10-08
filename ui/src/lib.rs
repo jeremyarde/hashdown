@@ -426,7 +426,7 @@ pub mod mainapp {
                         {rsx!(
                             surveys.iter().map(|survey: &Value| {
                             let short = survey.get("id").unwrap();
-                            let survey_id = survey.get("id").unwrap();
+                            let survey_id = survey.get("survey_id").unwrap().as_str().unwrap();
                             rsx!(
                                 div{
                                     "{short:?}",
