@@ -1,15 +1,19 @@
 use axum::{
+    error_handling::HandleErrorLayer,
     http::{self, HeaderName, Method},
     Router,
 };
 use chrono::{DateTime, Utc};
 use db::database::Database;
+use hyper::StatusCode;
 use markdownparser::Survey;
 
 use sqlx::FromRow;
 use tokio::task::JoinHandle;
 
-use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use tower::ServiceBuilder;
+use tower_http::{cors::CorsLayer, trace::TraceLayer, BoxError};
+use tower_sessions::{cookie::time::Duration, MemoryStore, SessionManagerLayer};
 use tracing::log::info;
 
 use crate::{
@@ -67,10 +71,26 @@ impl ServerApplication {
 
         // build our application with a route
 
+        let session_store = MemoryStore::default();
+        // let session_store = PostgresStore::new(pool);
+        // session_store.migrate().await?;
+        // let deletion_task
+
+        let session_service = ServiceBuilder::new()
+            .layer(HandleErrorLayer::new(|_: BoxError| async {
+                StatusCode::BAD_REQUEST
+            }))
+            .layer(
+                SessionManagerLayer::new(session_store)
+                    .with_secure(false)
+                    .with_max_age(Duration::seconds(10)),
+            );
+
         Router::new()
             .merge(get_routes(state).unwrap())
             .layer(corslayer)
             .layer(TraceLayer::new_for_http())
+            .layer(session_service)
     }
 
     pub async fn new() -> ServerApplication {
