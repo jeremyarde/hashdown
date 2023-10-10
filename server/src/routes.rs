@@ -7,20 +7,22 @@ pub mod routes {
         http::{HeaderMap, Request},
         middleware::{self, Next},
         response::IntoResponse,
-        response::Response,
+        response::{Html, Response},
         routing::{get, post},
         Router,
     };
 
-    use markdownparser::{nanoid_gen, parse_markdown_v3};
-
+    // use dioxus::prelude::{Component, Element, VirtualDom};
     use axum::{
         extract::{self, State},
         http::StatusCode,
         Json,
     };
+    use dioxus::prelude::*;
+    use markdownparser::{nanoid_gen, parse_markdown_v3};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
+    use ui::mainapp::App;
 
     use tracing::{debug, log::info};
 
@@ -32,6 +34,15 @@ pub mod routes {
         server::SurveyModel,
         survey_responses::survey_responses::{self, submit_response},
         ServerError, ServerState,
+    };
+
+    #[derive(Serialize)]
+    struct CreateSurvey {
+        plaintext: String,
+    }
+
+    use markdownparser::{
+        parse_markdown_v3, ParsedSurvey, Question, QuestionOption, QuestionType, Questions, Survey,
     };
 
     #[derive(Deserialize, Serialize, Debug)]
@@ -54,6 +65,8 @@ pub mod routes {
             .route("/auth/login", post(auth::authorize))
             .route("/auth/signup", post(auth::signup))
             .route("/ping", get(ping))
+            .route("/ssr", get(ssr))
+            .route("/editor", get(editor_route))
             .layer(middleware::map_response(main_response_mapper))
             // .layer(middleware::from_fn(propagate_header))
             .with_state(state);
@@ -63,6 +76,164 @@ pub mod routes {
 
     async fn propagate_header<B>(req: Request<B>, next: Next<B>) -> Response {
         next.run(req).await
+    }
+
+    pub async fn editor_route() -> Html<String> {
+        fn Editor(cx: Scope) -> Element {
+            const FORMINPUT_KEY: &str = "forminput";
+            let editor_state = use_state(&cx, &EDITOR);
+            let survey_state = use_state(&cx, &SURVEY);
+            let send_req_timeout = use_state(&cx, &REQ_TIMEOUT);
+            let app_state = use_state(&cx, &APP);
+
+            // let question_state = use_atom_state(&cx, APP);
+            // let send_request_timeout = use_atom_state(&cx, REQ_TIMEOUT);
+            // let some_timeout = use_state(&cx, || TimeoutFuture::new(2000));
+            let create_survey = move |content: String, client: Client| {
+                cx.spawn({
+                    to_owned![editor_state, app_state, send_req_timeout];
+                    if app_state.read().user.is_none() {
+                        info!("Not logged in yet.");
+                        return;
+                    }
+                    // timeout.get()
+                    async move {
+                        let something = send_req_timeout.get();
+                        let token = app_state.read().user.clone().unwrap().token;
+                        // timeout.await;
+                        // TimeoutFuture::new(2000).await;
+                        // let t = Timeou
+                        info!("Attempting to save questions...");
+                        // info!("Questions save: {:?}", question_state);
+                        match app_state
+                            .read()
+                            .client
+                            .post("http://localhost:3000/surveys")
+                            .json(&CreateSurvey {
+                                plaintext: editor_state.get().clone(),
+                            })
+                            // .bearer_auth(token)
+                            .send()
+                            .await
+                        {
+                            Ok(x) => {
+                                info!("success: {x:?}");
+                            }
+                            Err(x) => info!("error: {x:?}"),
+                        }
+
+                        // timeout = Timeout::new(1000, callback)
+                    }
+                })
+            };
+
+            let post_questions = move |content: Vec<String>| {
+                info!("post_questions: {:?}", content);
+                cx.spawn({
+                    to_owned![app_state];
+
+                    if app_state.read().user.is_none() {
+                        info!("user token is not set");
+                        return;
+                    }
+
+                    let mut token = app_state.read().user.clone().unwrap().token;
+                    token = token.trim_matches('"').to_string();
+                    async move {
+                        info!("Attempting to save questions...");
+                        info!("Publishing content, app_state: {:?}", app_state.read());
+                        // info!("Questions save: {:?}", question_state);
+                        match app_state
+                            .read()
+                            .client
+                            .post("http://localhost:3000/surveys")
+                            .json(&CreateSurvey {
+                                plaintext: content.get(0).unwrap().to_owned(),
+                            })
+                            // .bearer_auth(token.clone())
+                            .header("x-auth-token", token)
+                            .send()
+                            .await
+                        {
+                            Ok(x) => {
+                                info!("success: {x:?}");
+                                info!("should show toast now");
+                            }
+                            Err(x) => info!("error: {x:?}"),
+                        };
+                    }
+                })
+            };
+
+            let editor_survey = move |content: Vec<String>| {
+                info!("editor survey content: {:?}", content);
+                match ParsedSurvey::from(content.get(0).unwrap().to_owned()) {
+                    Ok(x) => {
+                        info!("Parsed: {x:#?}");
+                        app_state.write().survey = Survey::from(x.clone());
+                        survey_state.modify(|curr| Survey::from(x));
+                    }
+                    Err(_) => {}
+                };
+            };
+
+            cx.render(rsx! {
+                div { class: "w-full h-full",
+                    form {
+                        class: "border border-red-600 flex flex-col",
+                        prevent_default: "onsubmit",
+                        // action: "localhost:3000/survey",
+                        onsubmit: move |evt| {
+                            info!("Pushed publish :)");
+                            let formvalue = evt.values.get(FORMINPUT_KEY).clone().unwrap().clone();
+                            post_questions(formvalue);
+                            evt.stop_propagation();
+                        },
+                        oninput: move |e| {
+                            let formvalue = e.values.get(FORMINPUT_KEY).clone().unwrap().clone();
+                            editor_survey(formvalue.clone());
+                            info!("onchange results - editor_state formvalue: {:?}", formvalue);
+                            editor_state.modify(|curr| { formvalue.get(0).unwrap().to_owned() });
+                        },
+                        textarea {
+                            class: " bg-transparent resize w-full focus:outline-none border border-emerald-800 focus:border-blue-300",
+                            required: "",
+                            rows: "8",
+                            placeholder: "Write your survey here",
+                            name: FORMINPUT_KEY
+                        }
+                        button { class: "hover:bg-slate-600 transition bg-slate-500",
+                            // r#type: "submit",
+                            "Publish"
+                        }
+                    }
+                }
+            })
+        }
+
+        let app: Component = |cx| Editor(cx);
+
+        let mut vdom = VirtualDom::new(app);
+        let _ = vdom.rebuild();
+
+        let text = dioxus_ssr::render(&vdom);
+
+        // render the VirtualDom to HTML
+        Html(text)
+    }
+
+    #[tracing::instrument]
+    #[axum::debug_handler]
+    pub async fn ssr() -> anyhow::Result<Html<String>, ServerError> {
+        let app: Component = |cx| App(cx);
+
+        let mut vdom = VirtualDom::new(app);
+        let _ = vdom.rebuild();
+
+        let text = dioxus_ssr::render(&vdom);
+
+        // render the VirtualDom to HTML
+        Ok(Html(text))
     }
 
     #[tracing::instrument]

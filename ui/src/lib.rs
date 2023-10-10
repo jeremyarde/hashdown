@@ -425,11 +425,11 @@ pub mod mainapp {
                     } else {
                         {rsx!(
                             surveys.iter().map(|survey: &Value| {
-                            let short = survey.get("id").unwrap();
+                            // let short = survey.get("id").unwrap();
                             let survey_id = survey.get("survey_id").unwrap().as_str().unwrap();
                             rsx!(
                                 div{
-                                    "{short:?}",
+                                    "{survey_id:?}",
                                     button {"details"}
                                     a {
                                         href: "http://localhost:3000/surveys/{survey_id}", 
@@ -540,7 +540,6 @@ pub mod mainapp {
             div { class: "",
                 div { class: "", self::Editor {} }
                 div { class: "", RenderSurvey {} }
-                div { class: "", SyntaxExample {} }
             }
         ))
     }
