@@ -24,8 +24,33 @@ pub enum Answer {
 pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
     // let app_state = use_atom_ref(cx, &APP);
     let app_state = use_shared_state::<AppState>(cx).unwrap();
-    let editor_state = use_state(cx, || "".to_string());
-    let survey_state = use_state(cx, || Survey::new());
+    // let editor_state = use_state(cx, || "".to_string());
+    // let survey_state = use_state(cx, || Survey::new());
+    let survey_state = use_future(
+        cx,
+        (survey_id, &app_state.read().user.clone().unwrap().token),
+        |(survey_id, user_token)| async move {
+            let url = "/responses";
+            let client_url = format!("http://{}{}", "localhost:3000/surveys/", survey_id);
+
+            println!("Sending req to: {client_url}");
+            // formdata['survey_id'] =
+            // let mut request_form: Value = json!({"survey_id": survey_id, });
+
+            let resp = reqwest::Client::new()
+                .get(client_url)
+                // .json(&json!(request_form))
+                .header("x-auth-token", user_token)
+                .send()
+                .await;
+
+            info!("response from submit: {:?}", resp);
+
+            let jsonresponse = resp.unwrap().json().await.unwrap();
+            let survey: ParsedSurvey = serde_json::from_value(jsonresponse).unwrap();
+            return survey;
+        },
+    );
 
     let submit_survey = move |evt: FormEvent, survey_id: String, user_token: String| {
         cx.spawn({
@@ -64,7 +89,7 @@ pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
             }
         });
     };
-    let survey_id = survey_state.survey.id.clone();
+
     cx.render(rsx! {
         div { class: "flex flex-col",
             form {
@@ -84,9 +109,9 @@ pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
                 onchange: move |evt| {
                     info!("form: {:#?}", evt.data);
                 },
-                h1 { "title: {survey_state.survey.title:?}" }
+                h1 { "title: {survey_state.value().unwrap().title:?}" }
                 // app_state.read().survey.survey.questions.iter().map(|question| {
-                survey_state.survey.questions.iter().map(|question| {
+                survey_state.value().unwrap().questions.iter().map(|question| {
                     info!("curr question: {:?}" ,question);
                     // let curr_state = answer_state.get().get(&question.id.clone()).unwrap();
                     rsx!{

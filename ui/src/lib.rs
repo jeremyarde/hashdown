@@ -5,11 +5,8 @@ mod pages;
 // #![feature(async_closure)]
 pub mod mainapp {
     use dioxus_router::prelude::*;
-    use dioxus::prelude::*;
+    use dioxus::{prelude::*, html::EventData};
     use std::{
-        collections::HashMap,
-        error,
-        str::FromStr,
         time::{self, Instant},
     };
     // use gloo_timers::{callback::Timeout, future::TimeoutFuture};
@@ -26,6 +23,12 @@ pub mod mainapp {
 
     use serde_json::{json, Value};
 
+
+    #[derive(Deserialize, Debug, Serialize)]
+    pub struct LoginPayload {
+        pub email: String,
+        pub password: String,
+    }
 
     // use dioxus_router::{Link, Route, Router};
     // use dioxus_router::{Link, Route, Router};
@@ -88,14 +91,9 @@ pub mod mainapp {
 
     #[derive(Debug)]
     pub struct AppState {
-        // questions: Questions,
         pub input_text: String,
         pub client: Client,
-        // surveys: Vec<Survey>,
-        // pub surveys: Vec<SurveyDto>,
-        // pub curr_survey: SurveyDto,
         pub user: Option<UserContext>,
-        // auth_token: String,
         pub show_login: bool,
         pub survey: Survey,
         pub state: AppError,
@@ -137,18 +135,9 @@ pub mod mainapp {
         }
     }
 
-    // impl SuveyDto {
-    //     fn new() -> SurveyDto {}
-    // }
-
-    // pub static APP: AtomRef<AppState> = AtomRef(|_| AppState::new());
-    // pub static SURVEY: Atom<Survey> = Atom(|_| Survey::new());
-    // // static CLIENT: Atom<reqwest::Client> = |_| reqwest::Client::new();
-    // pub static EDITOR: Atom<String> = Atom(|_| String::from(""));
-    // static REQ_TIMEOUT: Atom<TimeoutFuture> = Atom(|_| TimeoutFuture::new(2000));
-
     const FORMINPUT_KEY: &str = "forminput";
 
+    #[component]
     fn Editor(cx: Scope) -> Element {
         let editor_state = use_state(&cx, || "".to_string());
         let toast_visible = use_state(&cx, || false);
@@ -283,6 +272,7 @@ pub mod mainapp {
     }
 
 
+    #[component]
     fn Toast(cx: Scope) -> Element {
         let toast_visible = use_state(&cx,|| false);
 
@@ -337,12 +327,6 @@ pub mod mainapp {
         })
     }
 
-    #[derive(Deserialize, Debug, Serialize)]
-    pub struct LoginPayload {
-        pub email: String,
-        pub password: String,
-    }
-
     #[component]
     pub fn ListSurvey(cx: Scope) -> Element {
         let mut surveys = use_ref(cx,  || vec![]);
@@ -391,7 +375,7 @@ pub mod mainapp {
             });
         };
 
-        let get_surveys = move |evt, survey_id| {
+        let get_surveys = move |evt: EventData, survey_id: String| {
             cx.spawn({
                 to_owned![app_state, error, surveys];
                 async move {
@@ -463,12 +447,21 @@ pub mod mainapp {
                             rsx!(
                             surveys.read().iter().map(|survey: &Value| {
                             let survey_id = survey.get("survey_id").unwrap().as_str().unwrap().clone().to_owned();
+                            let version = survey.get("version").unwrap().as_str().unwrap().clone().to_owned();
+
                             rsx!(
                                 div{
-                                    "{survey_id:?}",
-                                    button {onclick: move |evt| {
-                                        get_surveys(evt, survey_id.clone());
-                                    }, "details"}
+                                    "{survey_id} - version: {version}"
+                                    li {
+                                        Link { to: Route::RenderSurvey {survey_id}, "View survey" }
+                                    }
+                                    // "{survey_id:?}",
+                                //     button {
+                                //         onclick: move |evt| {
+                                //         get_surveys(evt, survey_id.clone());
+                                //     }, 
+                                //     "details"
+                                // }
                                 }
                             )
                         }))
@@ -479,6 +472,7 @@ pub mod mainapp {
         })
     }
 
+    #[component]
     pub fn Navbar(cx: Scope) -> Element {
         // let app_state = use_atom_ref(&cx, &APP);
         let app_state = use_shared_state::<AppState>(cx).unwrap();
@@ -524,6 +518,7 @@ pub mod mainapp {
     }
 
 
+    #[component]
     pub fn SyntaxExample(cx: Scope) -> Element {
         let example_text = "
 # Survey title
@@ -541,6 +536,16 @@ pub mod mainapp {
         }
     }
 
+    #[component]
+fn Home(cx: Scope) -> Element {
+    render!(
+        h1 { "Home" }
+        div { class: "", self::Editor {} }
+        div { class: "", RenderSurvey { survey_id: "test".to_string() } }
+    )
+}
+
+    #[component]
     pub fn App(cx: Scope) -> Element {
         // use_init_atom_root(cx);
         use_shared_state_provider(cx, || AppState::new());
@@ -551,22 +556,20 @@ pub mod mainapp {
         let editor_state = use_state(cx, || "".to_string());
 
         // render! { Router::<Route> {} }
-        cx.render(rsx!(
+        render!(
             div {
                 // Navbar {}
                 ul {
-                    li { Login {} }
-                    li { ListSurvey {} }
+                    // li { Login {} }
+                    // li { ListSurvey {} }
                 }
             }
             div {
             }
             // div { class: "flex h-screen w-screen items-center justify-center bg-gray-200",
-            div { class: "",
-                div { class: "", self::Editor {} }
-                div { class: "", RenderSurvey { survey_id: "test".to_string() } }
-            }
-        ))
+            div { class: "" }
+            div { Router::<Route> {} }
+        )
     }                                                                                                                                               
 
     // ANCHOR: router
@@ -575,7 +578,7 @@ pub mod mainapp {
 enum Route {
     #[layout(Header)]
         #[route("/")]
-        App {},
+        Home {},
         #[route("/surveys")] 
         ListSurvey {},
         #[route("/surveys/:survey_id")]
@@ -599,10 +602,15 @@ fn Header(cx: Scope) -> Element {
         h1 { "Your app here" }
         ul {
             li {
-                Link { to: Route::App {}, "home" }
+                Link { to: Route::Home {}, "home" }
+                "home link"
             }
             li {
                 Link { to: Route::Login {}, "login" }
+                "login link"
+            }
+            li {
+                Link { to: Route::ListSurvey {}, "my surveys" }
             }
         }
         Outlet::<Route> {}
