@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use dioxus::prelude::*;
-use fermi::{use_atom_ref, use_atom_state, use_init_atom_root, use_set, Atom, AtomRef};
+
 use log::info;
 use markdownparser::{ParsedSurvey, Question, QuestionOption, QuestionType, Survey};
 use reqwest::Client;
@@ -20,8 +20,8 @@ pub enum Answer {
 // static ANSWERS: Atom<HashSet<Answer>> = |_| HashSet::new();
 // static ANSWERS: AtomRef<HashMap<String, Answer>> = |_| HashMap::new();
 
-#[inline_props]
-pub fn RenderSurvey(cx: Scope) -> Element {
+#[component]
+pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
     // let app_state = use_atom_ref(cx, &APP);
     let app_state = use_shared_state::<AppState>(cx).unwrap();
     let editor_state = use_state(cx, || "".to_string());

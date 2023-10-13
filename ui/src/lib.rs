@@ -1,8 +1,6 @@
 #![allow(non_snake_case)]
 
 mod pages;
-use pages::login::Login;
-use pages::survey::RenderSurvey;
 
 // #![feature(async_closure)]
 pub mod mainapp {
@@ -14,7 +12,6 @@ pub mod mainapp {
         str::FromStr,
         time::{self, Instant},
     };
-
     // use gloo_timers::{callback::Timeout, future::TimeoutFuture};
     // use console_log::log;
     use log::info;
@@ -26,12 +23,9 @@ pub mod mainapp {
         html::{button, fieldset, legend, style},
         prelude::*,
     };
-    use fermi::{use_atom_ref, use_atom_state, Atom, AtomRef, AtomRoot};
 
-    use fermi::use_init_atom_root;
     use serde_json::{json, Value};
 
-    use crate::pages::{login::Login, survey::{RenderSurvey, self}};
 
     // use dioxus_router::{Link, Route, Router};
     // use dioxus_router::{Link, Route, Router};
@@ -52,6 +46,9 @@ pub mod mainapp {
         Client, RequestBuilder,
     };
     use serde::{Deserialize, Serialize};
+
+    use crate::pages::survey::RenderSurvey;
+    use crate::pages::login::Login;
 
     #[derive(Serialize)]
     struct CreateSurvey {
@@ -285,7 +282,6 @@ pub mod mainapp {
         })
     }
 
-    static TOAST: Atom<bool> = Atom(|_| false);
 
     fn Toast(cx: Scope) -> Element {
         let toast_visible = use_state(&cx,|| false);
@@ -347,6 +343,7 @@ pub mod mainapp {
         pub password: String,
     }
 
+    #[component]
     pub fn ListSurvey(cx: Scope) -> Element {
         let mut surveys = use_ref(cx,  || vec![]);
         // let app_state = use_atom_ref(&cx, &APP);
@@ -526,23 +523,6 @@ pub mod mainapp {
         })
     }
 
-    // #[derive(Routable, Clone)]
-    // enum Route {
-    //     #[layout(Navbar)]
-    //         #[route("/")]
-    //         App {},
-    //         #[route("/login")]
-    //         Login {},
-    //         #[route("/surveys")]
-    //         ListSurvey {},
-    //     #[end_layout]
-    //     // #[route("/")]
-    //     // App {},
-    // }
-
-
-
-
 
     pub fn SyntaxExample(cx: Scope) -> Element {
         let example_text = "
@@ -584,11 +564,59 @@ pub mod mainapp {
             // div { class: "flex h-screen w-screen items-center justify-center bg-gray-200",
             div { class: "",
                 div { class: "", self::Editor {} }
-                div { class: "", RenderSurvey {} }
+                div { class: "", RenderSurvey { survey_id: "test".to_string() } }
             }
         ))
-    }
+    }                                                                                                                                               
 
+    // ANCHOR: router
+#[derive(Routable, Clone)]
+#[rustfmt::skip]
+enum Route {
+    #[layout(Header)]
+        #[route("/")]
+        App {},
+        #[route("/surveys")] 
+        ListSurvey {},
+        #[route("/surveys/:survey_id")]
+        RenderSurvey { survey_id: String },
+        // #[route("signup")]
+        // Login {},
+        // #[redirect("/signup", || login::Login {})]
+        #[route("/login")]
+        Login {},
+        
+        #[route("/:..route")]
+        PageNotFound {
+            route: Vec<String>,
+        },
+}
+// ANCHOR_END: router
+
+#[component]
+fn Header(cx: Scope) -> Element {
+    render! {
+        h1 { "Your app here" }
+        ul {
+            li {
+                Link { to: Route::App {}, "home" }
+            }
+            li {
+                Link { to: Route::Login {}, "login" }
+            }
+        }
+        Outlet::<Route> {}
+    }
+}
+
+#[component]
+fn PageNotFound(cx: Scope, route: Vec<String>) -> Element {
+    render! {
+        h1 { "Page not found" }
+        p { "We are terribly sorry, but the page you requested doesn't exist." }
+        pre { color: "red", "log:\nattemped to navigate to: {route:?}" }
+    }
+}
 
 
     

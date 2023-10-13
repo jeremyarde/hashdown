@@ -1,11 +1,12 @@
 use dioxus::prelude::*;
 use dioxus::{html::button, prelude::*};
-use fermi::{use_atom_ref, use_atom_state};
+
 use log::info;
 use serde_json::{json, Value};
 
 use crate::mainapp::{AppError, AppState, LoginPayload, UserContext};
 
+#[component]
 pub fn Login(cx: Scope) -> Element {
     let app_state = use_shared_state::<AppState>(cx).unwrap();
     let show_login = use_state(cx, move || false);
