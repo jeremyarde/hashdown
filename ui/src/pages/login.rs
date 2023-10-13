@@ -4,10 +4,10 @@ use fermi::{use_atom_ref, use_atom_state};
 use log::info;
 use serde_json::{json, Value};
 
-use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP};
+use crate::mainapp::{AppError, AppState, LoginPayload, UserContext};
 
 pub fn Login(cx: Scope) -> Element {
-    let app_state = use_atom_ref(&cx, &APP);
+    let app_state = use_shared_state::<AppState>(cx).unwrap();
     let show_login = use_state(cx, move || false);
     let show_signup = use_state(cx, move || false);
 

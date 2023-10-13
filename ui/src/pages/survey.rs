@@ -3,12 +3,12 @@ use std::collections::{HashMap, HashSet};
 use dioxus::prelude::*;
 use fermi::{use_atom_ref, use_atom_state, use_init_atom_root, use_set, Atom, AtomRef};
 use log::info;
-use markdownparser::{ParsedSurvey, Question, QuestionOption, QuestionType};
+use markdownparser::{ParsedSurvey, Question, QuestionOption, QuestionType, Survey};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::mainapp::{AppError, AppState, LoginPayload, UserContext, APP, EDITOR, SURVEY};
+use crate::mainapp::{AppError, AppState, LoginPayload, UserContext};
 
 #[derive(Deserialize, Serialize, Debug, Hash)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -22,9 +22,10 @@ pub enum Answer {
 
 #[inline_props]
 pub fn RenderSurvey(cx: Scope) -> Element {
-    let app_state = use_atom_ref(cx, &APP);
-    let editor_state = use_atom_state(cx, &EDITOR);
-    let survey_state = use_atom_state(cx, &SURVEY);
+    // let app_state = use_atom_ref(cx, &APP);
+    let app_state = use_shared_state::<AppState>(cx).unwrap();
+    let editor_state = use_state(cx, || "".to_string());
+    let survey_state = use_state(cx, || Survey::new());
 
     let submit_survey = move |evt: FormEvent, survey_id: String, user_token: String| {
         cx.spawn({

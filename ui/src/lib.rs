@@ -6,8 +6,8 @@ use pages::survey::RenderSurvey;
 
 // #![feature(async_closure)]
 pub mod mainapp {
-    use dioxus::prelude::*;
     use dioxus_router::prelude::*;
+    use dioxus::prelude::*;
     use std::{
         collections::HashMap,
         error,
@@ -15,7 +15,7 @@ pub mod mainapp {
         time::{self, Instant},
     };
 
-    use gloo_timers::{callback::Timeout, future::TimeoutFuture};
+    // use gloo_timers::{callback::Timeout, future::TimeoutFuture};
     // use console_log::log;
     use log::info;
     // use db::database::Database;
@@ -31,7 +31,7 @@ pub mod mainapp {
     use fermi::use_init_atom_root;
     use serde_json::{json, Value};
 
-    use crate::pages::{login::Login, survey::RenderSurvey};
+    use crate::pages::{login::Login, survey::{RenderSurvey, self}};
 
     // use dioxus_router::{Link, Route, Router};
     // use dioxus_router::{Link, Route, Router};
@@ -111,7 +111,7 @@ pub mod mainapp {
     }
 
     impl AppState {
-        fn new() -> Self {
+        pub fn new() -> Self {
             // let db = Database::new(false).;
 
             let mut headers = header::HeaderMap::new();
@@ -144,34 +144,34 @@ pub mod mainapp {
     //     fn new() -> SurveyDto {}
     // }
 
-    pub static APP: AtomRef<AppState> = AtomRef(|_| AppState::new());
-    pub static SURVEY: Atom<Survey> = Atom(|_| Survey::new());
-    // static CLIENT: Atom<reqwest::Client> = |_| reqwest::Client::new();
-    pub static EDITOR: Atom<String> = Atom(|_| String::from(""));
-    static REQ_TIMEOUT: Atom<TimeoutFuture> = Atom(|_| TimeoutFuture::new(2000));
+    // pub static APP: AtomRef<AppState> = AtomRef(|_| AppState::new());
+    // pub static SURVEY: Atom<Survey> = Atom(|_| Survey::new());
+    // // static CLIENT: Atom<reqwest::Client> = |_| reqwest::Client::new();
+    // pub static EDITOR: Atom<String> = Atom(|_| String::from(""));
+    // static REQ_TIMEOUT: Atom<TimeoutFuture> = Atom(|_| TimeoutFuture::new(2000));
 
     const FORMINPUT_KEY: &str = "forminput";
 
     fn Editor(cx: Scope) -> Element {
-        let editor_state = use_atom_state(&cx, &EDITOR);
-        let toast_visible = use_atom_state(&cx, &TOAST);
-        let survey_state = use_atom_state(&cx, &SURVEY);
+        let editor_state = use_state(&cx, || "".to_string());
+        let toast_visible = use_state(&cx, || false);
+        let survey_state = use_state(&cx, || Survey::new());
 
         // let question_state = use_atom_state(&cx, APP);
-        let app_state = use_atom_ref(&cx, &APP);
+        // let app_state = use_atom_ref(&cx, &APP);
+        let app_state = use_shared_state::<AppState>(cx).unwrap();
         // let send_request_timeout = use_atom_state(&cx, REQ_TIMEOUT);
-        let send_req_timeout = use_atom_state(&cx, &REQ_TIMEOUT);
-        let some_timeout = use_state(&cx, || TimeoutFuture::new(2000));
+        // let send_req_timeout = use_atom_state(&cx, &REQ_TIMEOUT);
         let create_survey = move |content: String, client: Client| {
             cx.spawn({
-                to_owned![editor_state, app_state, send_req_timeout];
+                to_owned![editor_state, app_state];
                 if app_state.read().user.is_none() {
                     info!("Not logged in yet.");
                     return;
                 }
                 // timeout.get()
                 async move {
-                    let something = send_req_timeout.get();
+                    // let something = send_req_timeout.get();
                     let token = app_state.read().user.clone().unwrap().token;
                     // timeout.await;
                     // TimeoutFuture::new(2000).await;
@@ -214,7 +214,7 @@ pub mod mainapp {
                 token = token.trim_matches('"').to_string();
                 async move {
                     info!("Attempting to save questions...");
-                    info!("Publishing content, app_state: {:?}", app_state.read());
+                    info!("Publishing content,");
                     // info!("Questions save: {:?}", question_state);
                     match app_state
                         .read()
@@ -288,7 +288,7 @@ pub mod mainapp {
     static TOAST: Atom<bool> = Atom(|_| false);
 
     fn Toast(cx: Scope) -> Element {
-        let toast_visible = use_atom_state(&cx, &TOAST);
+        let toast_visible = use_state(&cx,|| false);
 
         let timer = async move {
             cx.spawn({
@@ -300,7 +300,6 @@ pub mod mainapp {
                     //     toast_visible.set(false);
                     // })
                     // .forget();
-                    TimeoutFuture::new(1_000).await;
                     toast_visible.set(false);
                 }
             })
@@ -349,10 +348,11 @@ pub mod mainapp {
     }
 
     pub fn ListSurvey(cx: Scope) -> Element {
-        let surveys = use_state(cx, move || vec![]);
-        let app_state = use_atom_ref(&cx, &APP);
-        let error = use_state(cx, move || "");
-        let is_visible = use_state(cx, move || false);
+        let mut surveys = use_ref(cx,  || vec![]);
+        // let app_state = use_atom_ref(&cx, &APP);
+        let app_state = use_shared_state::<AppState>(cx).unwrap();
+        let error = use_state(cx, || "");
+        let is_visible = use_state(cx,  || false);
 
         let onsubmit = move |evt| {
             cx.spawn({
@@ -394,6 +394,45 @@ pub mod mainapp {
             });
         };
 
+        let get_surveys = move |evt, survey_id| {
+            cx.spawn({
+                to_owned![app_state, error, surveys];
+                async move {
+                    let token = match app_state.read().user.clone() {
+                        Some(user) => user.token,
+                        None => {
+                            error.set("Error listing surveys");
+                            info!("Did not get user");
+                            return;
+                        }
+                    };
+                    // token = token.trim_matches('"').to_string();
+                    let resp = reqwest::Client::new()
+                        .get(format!("http://localhost:3000/surveys/{}", survey_id))
+                        .header("x-auth-token", token)
+                        .send()
+                        .await;
+
+                    match resp {
+                        // Parse data from here, such as storing a response token
+                        Ok(data) => {
+                            info!("successful!");
+                            // let jsondata = data.json().await.unwrap();
+
+                            let jsonsurveys = data.json::<Value>().await.unwrap();
+
+                            info!("get_surveys: {}", jsonsurveys);
+                        }
+
+                        //Handle any errors from the fetch here
+                        Err(_err) => {
+                            info!("failed - could not get data.")
+                        }
+                    }
+                }
+            })
+        };
+
         let logged_in = app_state.read().user.is_some();
 
         cx.render(rsx! {
@@ -420,24 +459,23 @@ pub mod mainapp {
             if *is_visible.get() {
                 rsx!{
                     div {
-                    {if surveys.is_empty() {
+                    {if surveys.read().is_empty() {
                         rsx!(div{"No surveys"})
                     } else {
-                        {rsx!(
-                            surveys.iter().map(|survey: &Value| {
-                            // let short = survey.get("id").unwrap();
-                            let survey_id = survey.get("survey_id").unwrap().as_str().unwrap();
+                        {
+                            rsx!(
+                            surveys.read().iter().map(|survey: &Value| {
+                            let survey_id = survey.get("survey_id").unwrap().as_str().unwrap().clone().to_owned();
                             rsx!(
                                 div{
                                     "{survey_id:?}",
-                                    button {"details"}
-                                    a {
-                                        href: "http://localhost:3000/surveys/{survey_id}", 
-                                        "test"
-                                    }
+                                    button {onclick: move |evt| {
+                                        get_surveys(evt, survey_id.clone());
+                                    }, "details"}
                                 }
                             )
-                        }))}
+                        }))
+                    }
                     }}
                 }}
         }
@@ -445,8 +483,8 @@ pub mod mainapp {
     }
 
     pub fn Navbar(cx: Scope) -> Element {
-        let app_state = use_atom_ref(&cx, &APP);
-
+        // let app_state = use_atom_ref(&cx, &APP);
+        let app_state = use_shared_state::<AppState>(cx).unwrap();
         cx.render(rsx! {
             // div { class: "flex flex-row bg-red-500 p-1 justify-between",
             //     div { class: "justify-start items-start", "Logo HERE" }
@@ -502,6 +540,10 @@ pub mod mainapp {
     //     // App {},
     // }
 
+
+
+
+
     pub fn SyntaxExample(cx: Scope) -> Element {
         let example_text = "
 # Survey title
@@ -520,8 +562,11 @@ pub mod mainapp {
     }
 
     pub fn App(cx: Scope) -> Element {
-        use_init_atom_root(cx);
-        let app_state = use_atom_ref(cx, &APP);
+        // use_init_atom_root(cx);
+        use_shared_state_provider(cx, || AppState::new());
+        // let app_state = use_atom_ref(cx, &APP);
+        let app_state = use_shared_state::<AppState>(cx).unwrap();
+
         // let editor_state = use_atom_ref(cx, EDITOR);
         let editor_state = use_state(cx, || "".to_string());
 
@@ -543,4 +588,8 @@ pub mod mainapp {
             }
         ))
     }
+
+
+
+    
 }
