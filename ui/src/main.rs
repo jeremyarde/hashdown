@@ -1,12 +1,12 @@
 use dioxus_web::Config;
 use log::LevelFilter;
-use ui::mainapp::{self, AppState, ListSurvey};
+use ui::mainapp::{self, AppState};
 
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
 
 mod pages;
-use pages::login;
+use pages::auth;
 
 fn main() {
     // css

@@ -19,7 +19,6 @@ pub mod routes {
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use tower_sessions::Session;
-    use ui::mainapp::App;
 
     use tracing::{debug, log::info};
 

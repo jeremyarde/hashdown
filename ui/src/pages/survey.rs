@@ -1,6 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
-use dioxus::prelude::*;
+use dioxus::{html::EventData, prelude::*};
+use dioxus_router::prelude::*;
 
 use log::info;
 use markdownparser::{ParsedSurvey, Question, QuestionOption, QuestionType, Survey};
@@ -8,7 +9,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::mainapp::{AppError, AppState, LoginPayload, UserContext};
+use crate::mainapp::{AppError, AppState, LoginPayload, Route, UserContext};
 
 #[derive(Deserialize, Serialize, Debug, Hash)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -17,8 +18,136 @@ pub enum Answer {
     Radio { id: String, value: String },
 }
 
-// static ANSWERS: Atom<HashSet<Answer>> = |_| HashSet::new();
-// static ANSWERS: AtomRef<HashMap<String, Answer>> = |_| HashMap::new();
+#[component]
+pub fn ListSurvey(cx: Scope) -> Element {
+    let app_state = use_shared_state::<AppState>(cx).unwrap();
+    let error = use_state(cx, || "");
+    let is_visible = use_state(cx, || false);
+
+    // let mut surveys = use_ref(cx,  || vec![]);
+    let surveys = use_future(cx, (&app_state.read().user), |(user)| async move {
+        if user.is_none() {
+            return HashMap::new();
+        }
+        let user_token = user.unwrap().token;
+        // let url = "/responses";
+        let client_url = format!("http://{}", "localhost:3000/surveys");
+
+        println!("Sending req to: {client_url}");
+
+        let resp = reqwest::Client::new()
+            .get(client_url)
+            // .json(&json!(request_form))
+            .header("x-auth-token", user_token)
+            .send()
+            .await;
+
+        info!("response from submit: {:?}", resp);
+
+        let jsonresponse: HashMap<String, Vec<Value>> = resp.unwrap().json().await.unwrap();
+
+        return jsonresponse;
+    });
+
+    let onsubmit = move |evt| {
+        surveys.restart();
+    };
+
+    let get_surveys = move |evt: EventData, survey_id: String| {
+        cx.spawn({
+            to_owned![app_state, error, surveys];
+            async move {
+                let token = match app_state.read().user.clone() {
+                    Some(user) => user.token,
+                    None => {
+                        error.set("Error listing surveys");
+                        info!("Did not get user");
+                        return;
+                    }
+                };
+                // token = token.trim_matches('"').to_string();
+                let resp = reqwest::Client::new()
+                    .get(format!("http://localhost:3000/surveys/{}", survey_id))
+                    .header("x-auth-token", token)
+                    .send()
+                    .await;
+
+                match resp {
+                    // Parse data from here, such as storing a response token
+                    Ok(data) => {
+                        info!("successful!");
+                        // let jsondata = data.json().await.unwrap();
+
+                        let jsonsurveys = data.json::<Value>().await.unwrap();
+
+                        info!("get_surveys: {}", jsonsurveys);
+                    }
+
+                    //Handle any errors from the fetch here
+                    Err(_err) => {
+                        info!("failed - could not get data.")
+                    }
+                }
+            }
+        })
+    };
+
+    let logged_in = app_state.read().user.is_some();
+    let curr_surveys: HashMap<String, Vec<Value>> = if surveys.value().is_some() {
+        surveys.value().unwrap().to_owned()
+    } else {
+        HashMap::new()
+    };
+
+    render! {
+        div {
+            if logged_in {
+                        rsx!{
+                            button {
+                                onclick: move |evt| {
+                                    onsubmit(evt);
+                                    is_visible.set(true);
+                                },
+                                "my surveys"
+                            }
+                            button {
+                                onclick: move |evt| {
+                                    if *is_visible.get() { is_visible.set(false) } else { is_visible.set(true) }
+                                    onsubmit(evt);
+                                },
+                                if *is_visible.get() {"hide"} else {"show"}
+                            }
+                        }
+                    }
+        }
+        if *is_visible.get() {
+            // let curr_surveys = surveys.
+                    rsx!{
+                        div {
+                            if surveys.value().is_none() {
+                                    rsx!(div{"No surveys"})
+                                } else {
+                                    rsx!{
+                                        curr_surveys.get("surveys").unwrap_or(&vec![]).iter().map(|survey: &Value| {
+                                            let survey_id = survey.get("survey_id").unwrap().as_str().unwrap().to_owned();
+                                            let version = survey.get("version").unwrap().as_str().unwrap().to_owned();
+
+                                            rsx!(
+                                                div{
+                                                    "{survey_id} - version: {version}"
+                                                    li {
+                                                        Link { to: Route::RenderSurvey {survey_id}, "View survey" }
+                                                    }
+                                                }
+                                            )
+                                        })
+                                    }
+                                }
+                        }
+                    }
+                }
+    }
+}
 
 #[component]
 pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
@@ -28,8 +157,12 @@ pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
     // let survey_state = use_state(cx, || Survey::new());
     let survey_state = use_future(
         cx,
-        (survey_id, &app_state.read().user.clone().unwrap().token),
-        |(survey_id, user_token)| async move {
+        (survey_id, &app_state.read().user),
+        |(survey_id, user)| async move {
+            if user.is_none() {
+                return None;
+            }
+            let user_token = user.unwrap().token;
             let url = "/responses";
             let client_url = format!("http://{}{}", "localhost:3000/surveys/", survey_id);
 
@@ -48,7 +181,7 @@ pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
 
             let jsonresponse = resp.unwrap().json().await.unwrap();
             let survey: ParsedSurvey = serde_json::from_value(jsonresponse).unwrap();
-            return survey;
+            return Some(survey);
         },
     );
 
@@ -90,7 +223,7 @@ pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
         });
     };
 
-    cx.render(rsx! {
+    render! {
         div { class: "flex flex-col",
             form {
                 // action: "http://localhost:3000/surveys/{survey_to_render.survey.metadata.id}",
@@ -109,18 +242,23 @@ pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
                 onchange: move |evt| {
                     info!("form: {:#?}", evt.data);
                 },
-                h1 { "title: {survey_state.value().unwrap().title:?}" }
-                // app_state.read().survey.survey.questions.iter().map(|question| {
-                survey_state.value().unwrap().questions.iter().map(|question| {
-                    info!("curr question: {:?}" ,question);
-                    // let curr_state = answer_state.get().get(&question.id.clone()).unwrap();
+                if survey_state.value().is_some() {
+                    let survey = survey_state.value().unwrap().as_ref().unwrap();
+                    let rendered_questions = survey.questions.iter().map(|question| {
+                        info!("curr question: {:?}" ,question);
+                        // let curr_state = answer_state.get().get(&question.id.clone()).unwrap();
+                        rsx!{
+                            Question {
+                                question: question,
+                            }
+                        }}
+                    );
+
                     rsx!{
-
-                    Question {
-                        question: question,
+                        h1 { "title: {survey.title:?}" }
+                        {rendered_questions}
                     }
-
-                }}),
+                }
                 button {
                     class: "",
                     // onsubmit: move |evt| submit_survey(
@@ -133,7 +271,7 @@ pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
                 }
             }
         }
-    })
+    }
 }
 
 #[derive(Props, PartialEq)]

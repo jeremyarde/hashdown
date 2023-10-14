@@ -4,9 +4,10 @@ mod pages;
 
 // #![feature(async_closure)]
 pub mod mainapp {
+    use dioxus::{html::EventData, prelude::*};
     use dioxus_router::prelude::*;
-    use dioxus::{prelude::*, html::EventData};
     use std::{
+        collections::HashMap,
         time::{self, Instant},
     };
     // use gloo_timers::{callback::Timeout, future::TimeoutFuture};
@@ -22,7 +23,6 @@ pub mod mainapp {
     };
 
     use serde_json::{json, Value};
-
 
     #[derive(Deserialize, Debug, Serialize)]
     pub struct LoginPayload {
@@ -50,15 +50,17 @@ pub mod mainapp {
     };
     use serde::{Deserialize, Serialize};
 
+    use crate::pages::auth::Login;
+    use crate::pages::auth::Signup;
+    use crate::pages::survey::ListSurvey;
     use crate::pages::survey::RenderSurvey;
-    use crate::pages::login::Login;
 
     #[derive(Serialize)]
     struct CreateSurvey {
         plaintext: String,
     }
 
-    #[derive(Serialize, Debug, Clone)]
+    #[derive(Serialize, Debug, Clone, PartialEq)]
     pub struct UserContext {
         pub username: String,
         pub token: String,
@@ -206,7 +208,9 @@ pub mod mainapp {
                         .read()
                         .client
                         .post("http://localhost:3000/surveys")
-                        .json(&CreateSurvey { plaintext: content.get(0).unwrap().to_owned() })
+                        .json(&CreateSurvey {
+                            plaintext: content.get(0).unwrap().to_owned(),
+                        })
                         // .bearer_auth(token.clone())
                         .header("x-auth-token", token)
                         .send()
@@ -271,10 +275,9 @@ pub mod mainapp {
         })
     }
 
-
     #[component]
     fn Toast(cx: Scope) -> Element {
-        let toast_visible = use_state(&cx,|| false);
+        let toast_visible = use_state(&cx, || false);
 
         let timer = async move {
             cx.spawn({
@@ -328,151 +331,6 @@ pub mod mainapp {
     }
 
     #[component]
-    pub fn ListSurvey(cx: Scope) -> Element {
-        let mut surveys = use_ref(cx,  || vec![]);
-        // let app_state = use_atom_ref(&cx, &APP);
-        let app_state = use_shared_state::<AppState>(cx).unwrap();
-        let error = use_state(cx, || "");
-        let is_visible = use_state(cx,  || false);
-
-        let onsubmit = move |evt| {
-            cx.spawn({
-                to_owned![app_state, error, surveys];
-                async move {
-                    let token = match app_state.read().user.clone() {
-                        Some(user) => user.token,
-                        None => {
-                            error.set("Error listing surveys");
-                            info!("Did not get user");
-                            return;
-                        }
-                    };
-                    // token = token.trim_matches('"').to_string();
-                    let resp = reqwest::Client::new()
-                        .get("http://localhost:3000/surveys")
-                        .header("x-auth-token", token)
-                        .send()
-                        .await;
-
-                    match resp {
-                        // Parse data from here, such as storing a response token
-                        Ok(data) => {
-                            info!("successful!");
-                            // let jsondata = data.json().await.unwrap();
-
-                            let jsonsurveys = data.json::<Value>().await.unwrap();
-                            let surveydata =
-                                jsonsurveys.get("surveys").unwrap().as_array().unwrap();
-                            surveys.set(surveydata.to_owned());
-                        }
-
-                        //Handle any errors from the fetch here
-                        Err(_err) => {
-                            info!("failed - could not get data.")
-                        }
-                    }
-                }
-            });
-        };
-
-        let get_surveys = move |evt: EventData, survey_id: String| {
-            cx.spawn({
-                to_owned![app_state, error, surveys];
-                async move {
-                    let token = match app_state.read().user.clone() {
-                        Some(user) => user.token,
-                        None => {
-                            error.set("Error listing surveys");
-                            info!("Did not get user");
-                            return;
-                        }
-                    };
-                    // token = token.trim_matches('"').to_string();
-                    let resp = reqwest::Client::new()
-                        .get(format!("http://localhost:3000/surveys/{}", survey_id))
-                        .header("x-auth-token", token)
-                        .send()
-                        .await;
-
-                    match resp {
-                        // Parse data from here, such as storing a response token
-                        Ok(data) => {
-                            info!("successful!");
-                            // let jsondata = data.json().await.unwrap();
-
-                            let jsonsurveys = data.json::<Value>().await.unwrap();
-
-                            info!("get_surveys: {}", jsonsurveys);
-                        }
-
-                        //Handle any errors from the fetch here
-                        Err(_err) => {
-                            info!("failed - could not get data.")
-                        }
-                    }
-                }
-            })
-        };
-
-        let logged_in = app_state.read().user.is_some();
-
-        cx.render(rsx! {
-            div {
-                if logged_in {
-                    rsx!{
-                        button {
-                            onclick: move |evt| {
-                                onsubmit(evt);
-                                is_visible.set(true);
-                            },
-                            "my surveys"
-                        }
-                        button { 
-                            onclick: move |evt| { 
-                                if *is_visible.get() { is_visible.set(false) } else { is_visible.set(true) }
-                                onsubmit(evt);
-                            },
-                            if *is_visible.get() {"hide"} else {"show"}
-                        }
-                    }
-                }
-            }
-            if *is_visible.get() {
-                rsx!{
-                    div {
-                    {if surveys.read().is_empty() {
-                        rsx!(div{"No surveys"})
-                    } else {
-                        {
-                            rsx!(
-                            surveys.read().iter().map(|survey: &Value| {
-                            let survey_id = survey.get("survey_id").unwrap().as_str().unwrap().clone().to_owned();
-                            let version = survey.get("version").unwrap().as_str().unwrap().clone().to_owned();
-
-                            rsx!(
-                                div{
-                                    "{survey_id} - version: {version}"
-                                    li {
-                                        Link { to: Route::RenderSurvey {survey_id}, "View survey" }
-                                    }
-                                    // "{survey_id:?}",
-                                //     button {
-                                //         onclick: move |evt| {
-                                //         get_surveys(evt, survey_id.clone());
-                                //     }, 
-                                //     "details"
-                                // }
-                                }
-                            )
-                        }))
-                    }
-                    }}
-                }}
-        }
-        })
-    }
-
-    #[component]
     pub fn Navbar(cx: Scope) -> Element {
         // let app_state = use_atom_ref(&cx, &APP);
         let app_state = use_shared_state::<AppState>(cx).unwrap();
@@ -517,7 +375,6 @@ pub mod mainapp {
         })
     }
 
-
     #[component]
     pub fn SyntaxExample(cx: Scope) -> Element {
         let example_text = "
@@ -537,23 +394,21 @@ pub mod mainapp {
     }
 
     #[component]
-fn Home(cx: Scope) -> Element {
-    render!(
-        h1 { "Home" }
-        div { class: "", self::Editor {} }
-        div { class: "", RenderSurvey { survey_id: "test".to_string() } }
-    )
-}
+    fn Home(cx: Scope) -> Element {
+        let app_state = use_shared_state::<AppState>(cx).unwrap();
+
+        render!( h1 { "Home" } )
+    }
 
     #[component]
     pub fn App(cx: Scope) -> Element {
         // use_init_atom_root(cx);
         use_shared_state_provider(cx, || AppState::new());
         // let app_state = use_atom_ref(cx, &APP);
-        let app_state = use_shared_state::<AppState>(cx).unwrap();
+        // let app_state = use_shared_state::<AppState>(cx).unwrap();
 
         // let editor_state = use_atom_ref(cx, EDITOR);
-        let editor_state = use_state(cx, || "".to_string());
+        // let editor_state = use_state(cx, || "".to_string());
 
         // render! { Router::<Route> {} }
         render!(
@@ -570,12 +425,12 @@ fn Home(cx: Scope) -> Element {
             div { class: "" }
             div { Router::<Route> {} }
         )
-    }                                                                                                                                               
+    }
 
     // ANCHOR: router
-#[derive(Routable, Clone)]
+    #[derive(Routable, Clone)]
 #[rustfmt::skip]
-enum Route {
+pub enum Route {
     #[layout(Header)]
         #[route("/")]
         Home {},
@@ -588,44 +443,64 @@ enum Route {
         // #[redirect("/signup", || login::Login {})]
         #[route("/login")]
         Login {},
+
+        #[route("/signup")]
+        Signup {},
+        #[route("/editor")]
+        Editor {},
         
         #[route("/:..route")]
         PageNotFound {
             route: Vec<String>,
         },
 }
-// ANCHOR_END: router
+    // ANCHOR_END: router
 
-#[component]
-fn Header(cx: Scope) -> Element {
-    render! {
-        h1 { "Your app here" }
-        ul {
-            li {
-                Link { to: Route::Home {}, "home" }
-                "home link"
+    #[component]
+    fn Header(cx: Scope) -> Element {
+        let app_state = use_shared_state::<AppState>(cx).unwrap();
+
+        render! {
+            ul {
+                li {
+                    Link { to: Route::Home {}, "home" }
+                }
+                if app_state.read().user.is_none() {
+                    render!{
+                        li {
+                            Link { to: Route::Login {}, "login" }
+                        }
+                        li {
+                            Link { to: Route::Signup {}, "signup" }
+                        }
+                    }
+                }
+
+                if app_state.read().user.is_some() {
+                    // render !{
+                    //     div { class: "", self::Editor {} }
+                    //     div { class: "", RenderSurvey { survey_id: "test".to_string() } }
+                    // }
+                    render !{
+                        li {
+                            Link { to: Route::Editor  {}, "Editor" }
+                        }
+                        li {
+                            Link { to: Route::ListSurvey {}, "my surveys" }
+                        }
+                    }
+                }
             }
-            li {
-                Link { to: Route::Login {}, "login" }
-                "login link"
-            }
-            li {
-                Link { to: Route::ListSurvey {}, "my surveys" }
-            }
+            Outlet::<Route> {}
         }
-        Outlet::<Route> {}
     }
-}
 
-#[component]
-fn PageNotFound(cx: Scope, route: Vec<String>) -> Element {
-    render! {
-        h1 { "Page not found" }
-        p { "We are terribly sorry, but the page you requested doesn't exist." }
-        pre { color: "red", "log:\nattemped to navigate to: {route:?}" }
+    #[component]
+    fn PageNotFound(cx: Scope, route: Vec<String>) -> Element {
+        render! {
+            h1 { "Page not found" }
+            p { "We are terribly sorry, but the page you requested doesn't exist." }
+            pre { color: "red", "log:\nattemped to navigate to: {route:?}" }
+        }
     }
-}
-
-
-    
 }
