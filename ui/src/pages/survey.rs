@@ -49,7 +49,7 @@ pub fn ListSurvey(cx: Scope) -> Element {
         return jsonresponse;
     });
 
-    let onsubmit = move |evt| {
+    let onsubmit = move |evt: EventData| {
         surveys.restart();
     };
 
@@ -100,52 +100,29 @@ pub fn ListSurvey(cx: Scope) -> Element {
     };
 
     render! {
-        div {
-            if logged_in {
+        rsx!{
+            div {
+                if surveys.value().is_none() {
+                        rsx!(div{"No surveys"})
+                    } else {
                         rsx!{
-                            button {
-                                onclick: move |evt| {
-                                    onsubmit(evt);
-                                    is_visible.set(true);
-                                },
-                                "my surveys"
-                            }
-                            button {
-                                onclick: move |evt| {
-                                    if *is_visible.get() { is_visible.set(false) } else { is_visible.set(true) }
-                                    onsubmit(evt);
-                                },
-                                if *is_visible.get() {"hide"} else {"show"}
-                            }
-                        }
-                    }
-        }
-        if *is_visible.get() {
-            // let curr_surveys = surveys.
-                    rsx!{
-                        div {
-                            if surveys.value().is_none() {
-                                    rsx!(div{"No surveys"})
-                                } else {
-                                    rsx!{
-                                        curr_surveys.get("surveys").unwrap_or(&vec![]).iter().map(|survey: &Value| {
-                                            let survey_id = survey.get("survey_id").unwrap().as_str().unwrap().to_owned();
-                                            let version = survey.get("version").unwrap().as_str().unwrap().to_owned();
+                            curr_surveys.get("surveys").unwrap_or(&vec![]).iter().map(|survey: &Value| {
+                                let survey_id = survey.get("survey_id").unwrap().as_str().unwrap().to_owned();
+                                let version = survey.get("version").unwrap().as_str().unwrap().to_owned();
 
-                                            rsx!(
-                                                div{
-                                                    "{survey_id} - version: {version}"
-                                                    li {
-                                                        Link { to: Route::RenderSurvey {survey_id}, "View survey" }
-                                                    }
-                                                }
-                                            )
-                                        })
+                                rsx!(
+                                    div{
+                                        "{survey_id} - version: {version}"
+                                        li {
+                                            Link { to: Route::RenderSurvey {survey_id}, "View survey" }
+                                        }
                                     }
-                                }
+                                )
+                            })
                         }
                     }
-                }
+            }
+        }
     }
 }
 

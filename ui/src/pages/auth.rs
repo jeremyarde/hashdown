@@ -205,11 +205,13 @@ pub fn Signup(cx: Scope) -> Element {
     };
 
     render! {
-
         div {
             form {
                 onsubmit: move |evt| onsubmit(evt, app_state.read().client.clone()),
                 class: "signup-form",
+                input { r#type: "text", id: "first_name", name: "first_name" }
+                label { "First name" }
+                br {}
                 input { r#type: "text", id: "email", name: "email" }
                 label { "email" }
                 br {}
