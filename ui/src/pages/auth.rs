@@ -1,11 +1,12 @@
 use dioxus::prelude::*;
 use dioxus::{html::button, prelude::*};
 
+use dioxus_router::prelude::{use_navigator, NavigationTarget};
 use log::info;
 use serde::Serialize;
 use serde_json::{json, Value};
 
-use crate::mainapp::{AppError, AppState, LoginPayload, UserContext};
+use crate::mainapp::{AppError, AppState, LoginPayload, Route, UserContext};
 
 #[derive(Serialize, Debug)]
 pub struct SignupPayload {
@@ -19,6 +20,8 @@ pub struct SignupPayload {
 #[component]
 pub fn Login(cx: Scope) -> Element {
     let app_state = use_shared_state::<AppState>(cx).unwrap();
+    let nav = use_navigator(cx);
+
     let show_login = use_state(cx, move || false);
     let show_signup = use_state(cx, move || false);
 
@@ -101,6 +104,10 @@ pub fn Login(cx: Scope) -> Element {
         });
     };
 
+    if app_state.read().user.is_some() {
+        nav.replace(Route::Home {});
+    }
+
     cx.render(rsx! {
         rsx!{
                 div {
@@ -145,6 +152,7 @@ pub fn Login(cx: Scope) -> Element {
 #[component]
 pub fn Signup(cx: Scope) -> Element {
     let app_state = use_shared_state::<AppState>(cx).unwrap();
+    let nav = use_navigator(cx);
     let show_login = use_state(cx, move || false);
     let show_signup = use_state(cx, move || false);
 
@@ -204,7 +212,13 @@ pub fn Signup(cx: Scope) -> Element {
         });
     };
 
+    if app_state.read().user.is_some() {
+        nav.replace(Route::Home {});
+    }
+
     render! {
+
+        rsx!{
         div {
             form {
                 onsubmit: move |evt| onsubmit(evt, app_state.read().client.clone()),
@@ -221,5 +235,6 @@ pub fn Signup(cx: Scope) -> Element {
                 button { "Login" }
             }
         }
+    }
     }
 }

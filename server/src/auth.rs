@@ -4,11 +4,13 @@ use crate::routes::routes::LoginPayload;
 use anyhow::Context;
 use argon2::{PasswordHash, PasswordHasher};
 
+use chrono::{DateTime, Utc};
 use serde_json::json;
+use tower_sessions::session;
 
 use crate::mware::ctext::create_jwt_claim;
 
-use crate::db::database::CreateUserRequest;
+use crate::db::database::{CreateUserRequest, Session};
 
 use argon2::password_hash::rand_core::OsRng;
 
@@ -100,6 +102,21 @@ pub async fn signup(
     Ok(Json(
         json!({"email": user.email, "auth_token": jwt_claim.token}),
     ))
+}
+
+fn validate_session(
+    session_id: String,
+    state: State<ServerState>,
+    payload: Json<LoginPayload>,
+) -> anyhow::Result<Session, ServerError> {
+    // get session from database using existing Session
+    let curr_session = state.db.get_session(session_id);
+
+    Ok(Session {
+        session_id: "fake".to_string(),
+        active_period_expires_at: Utc::now(),
+        idle_period_expires_at: Utc::now(),
+    })
 }
 
 pub async fn authorize(

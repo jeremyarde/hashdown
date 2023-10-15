@@ -4,12 +4,14 @@ mod pages;
 
 // #![feature(async_closure)]
 pub mod mainapp {
+    use chrono::{DateTime, Utc};
     use dioxus::{html::EventData, prelude::*};
     use dioxus_router::prelude::*;
     use std::{
         collections::HashMap,
         time::{self, Instant},
     };
+
     // use gloo_timers::{callback::Timeout, future::TimeoutFuture};
     // use console_log::log;
     use log::info;
@@ -101,10 +103,26 @@ pub mod mainapp {
         pub state: AppError,
     }
 
+    pub struct Session {
+        session_id: String,
+        active_period_expires_at: DateTime<Utc>,
+        idle_period_expires_at: DateTime<Utc>,
+    }
+
     impl AppState {
         fn set_user(&mut self, user: UserContext) {
             self.user = Some(user);
         }
+
+        // fn validate_session(session_id: Session) -> Session {
+        //     // get session from database using existing Session
+
+        //     Session {
+        //         session_id: "fake".to_string(),
+        //         active_period_expires_at: Utc::now(),
+        //         idle_period_expires_at: Utc::now(),
+        //     }
+        // }
     }
 
     impl AppState {

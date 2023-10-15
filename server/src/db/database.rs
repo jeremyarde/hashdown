@@ -2,7 +2,7 @@ use std::{
     fmt::{self},
 };
 
-use anyhow::{self};
+use anyhow::{self, Context};
 
 use chrono::{DateTime, Utc};
 use markdownparser::{nanoid_gen};
@@ -35,7 +35,7 @@ use tracing::{info, instrument};
 //     pub metadata: Metadata,
 // }
 
-use crate::server::SurveyModel;
+use crate::{server::SurveyModel, ServerError};
 
 
 
@@ -200,6 +200,13 @@ pub struct CreateUserRequest {
     pub password_hash: String,
 }
 
+#[derive(Serialize, Debug, Clone, FromRow)]
+pub struct Session {
+    pub session_id: String,
+    pub active_period_expires_at: DateTime<Utc>,
+    pub idle_period_expires_at: DateTime<Utc>,
+}
+
 impl Database {
     pub async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel> {
         println!("->> create_user");
@@ -324,6 +331,65 @@ impl Database {
         // info!("created rows={}", res.rows_affected());
 
         Ok(())
+    }
+
+    pub async fn get_session(&self, session_id: String) -> anyhow::Result<Session, ServerError> {
+        let curr_session = match sqlx::query_as::<_, Session>(
+            r#"select * from sessions where sessions.session_id = $1"#
+        ).bind(session_id).fetch_one(&self.pool).await {
+            Ok(x) => x,
+            Err(_) => return Err(ServerError::AuthFailTokenNotVerified("User session not available".to_string())),
+        };
+
+        return Ok(curr_session);
+    }
+
+    pub async fn validate_session(&self, session_id: String) -> anyhow::Result<Option<Session>, ServerError> {
+        let curr_session = match sqlx::query_as::<_, Session>(
+            r#"select * from sessions where sessions.session_id = $1"#
+        ).bind(session_id).fetch_one(&self.pool).await {
+            Ok(x) => x,
+            Err(_) => return Err(ServerError::AuthFailTokenNotVerified("User session not available".to_string())),
+        };
+
+
+        Ok(Some(Session {
+            session_id: "fake".to_string(),
+            active_period_expires_at: Utc::now(),
+            idle_period_expires_at: Utc::now(),
+        }))
+    }
+
+    pub async fn new_session(&self, user_id: String) -> anyhow::Result<Option<Session>, ServerError> {
+        let session_token = nanoid_gen(32);
+
+        let nowutc = chrono::Utc::now();
+        let now: usize = match nowutc
+            .timestamp()
+            .try_into()
+            .with_context(|| "Could not turn time into timestamp")
+        {
+            Ok(x) => x,
+            Err(_e) => return Err(ServerError::WrongCredentials),
+        };
+        let expire: usize = match (nowutc + chrono::Duration::minutes(5))
+            .timestamp()
+            .try_into()
+        {
+            Ok(x) => x,
+            Err(_e) => return Err(ServerError::WrongCredentials),
+        };
+
+        let curr_session = sqlx::query_as::<_, Session>(
+            r#"insert into sessions (session_token, user_id) values ($1, $2) returning *"#
+        ).bind(session_token).bind(user_id).fetch_one(&self.pool).await.unwrap();
+
+
+        Ok(Some(Session {
+            session_id: "fake".to_string(),
+            active_period_expires_at: Utc::now(),
+            idle_period_expires_at: Utc::now(),
+        }))
     }
 }
 

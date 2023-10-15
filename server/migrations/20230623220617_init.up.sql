@@ -63,4 +63,11 @@ VALUES (
         'testuserid',
         "2023-09-17 02:50:27.567946+00"
     );
+    create table sesssions (
+        id serial primary key,
+        session_token TEXT,
+        user_id TEXT NOT NULl,
+
+        foreign key(user_id) references users(user_id)
+    )
 
