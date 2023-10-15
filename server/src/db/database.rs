@@ -4,7 +4,7 @@ use std::{
 
 use anyhow::{self, Context};
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, Duration};
 use markdownparser::{nanoid_gen};
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
@@ -202,6 +202,7 @@ pub struct CreateUserRequest {
 
 #[derive(Serialize, Debug, Clone, FromRow)]
 pub struct Session {
+    pub user_id: String,
     pub session_id: String,
     pub active_period_expires_at: DateTime<Utc>,
     pub idle_period_expires_at: DateTime<Utc>,
@@ -345,12 +346,26 @@ impl Database {
     }
 
     pub async fn validate_session(&self, session_id: String) -> anyhow::Result<Option<Session>, ServerError> {
-        let curr_session = match sqlx::query_as::<_, Session>(
-            r#"select * from sessions where sessions.session_id = $1"#
-        ).bind(session_id).fetch_one(&self.pool).await {
+        // let curr_session = match sqlx::query_as::<_, Session>(
+        //     r#"select * from sessions where sessions.session_id = $1"#
+        // ).bind(session_id).fetch_one(&self.pool).await {
+        //     Ok(x) => x,
+        //     Err(_) => return Err(ServerError::AuthFailTokenNotVerified("User session not available".to_string())),
+        // };
+        let session = match self.get_session(session_id).await {
             Ok(x) => x,
-            Err(_) => return Err(ServerError::AuthFailTokenNotVerified("User session not available".to_string())),
+            Err(_) => return Err(ServerError::AuthFailNoTokenCookie),
         };
+
+        if Utc::now() > session.idle_period_expires_at {
+            return Err(ServerError::AuthFailTokenExpired);
+        }
+
+        if Utc::now() > session.active_period_expires_at {
+            let new_active_expires = Utc::now() + Duration::hours(1);
+            let new_idle_expires = Utc::now() + Duration::hours(3);
+            self.update_session(Session { session_id, active_period_expires_at: todo!(), idle_period_expires_at: todo!() })
+        }
 
 
         Ok(Some(Session {
@@ -358,6 +373,14 @@ impl Database {
             active_period_expires_at: Utc::now(),
             idle_period_expires_at: Utc::now(),
         }))
+    }
+
+    pub async fn update_session(&self, session: Session) -> anyhow::Result<Session, ServerError> {
+        let curr_session = sqlx::query_as::<_, Session>(
+            r#"update sessions set active_expires_at = $1, set idle_expires_at = $2 where sessions.session_id = $3 and sessions.user_id = $4 returning *"#
+        ).bind(session.active_period_expires_at).bind(session.idle_period_expires_at).bind(session.session_id).bind(session.user_id).fetch_one(&self.pool).await.unwrap();
+        
+        return Ok(curr_session);
     }
 
     pub async fn new_session(&self, user_id: String) -> anyhow::Result<Option<Session>, ServerError> {

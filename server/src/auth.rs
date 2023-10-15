@@ -104,6 +104,17 @@ pub async fn signup(
     ))
 }
 
+async fn update_session(
+    session_id: String,
+    state: State<ServerState>,
+) -> anyhow::Result<Session, ServerError> {
+    // get session from database using existing Session
+    let curr_session = state.db.get_session(session_id).await?;
+    let new_session = state.db.update_session(curr_session).await?;
+
+    Ok(new_session)
+}
+
 fn validate_session(
     session_id: String,
     state: State<ServerState>,
@@ -116,6 +127,7 @@ fn validate_session(
         session_id: "fake".to_string(),
         active_period_expires_at: Utc::now(),
         idle_period_expires_at: Utc::now(),
+        user_id: todo!(),
     })
 }
 
