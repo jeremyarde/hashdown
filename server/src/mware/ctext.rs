@@ -1,10 +1,6 @@
 use anyhow::Context;
 use async_trait::async_trait;
-use axum::{
-    extract::{FromRequestParts},
-    http::{HeaderMap},
-    RequestPartsExt,
-};
+use axum::{extract::FromRequestParts, http::HeaderMap, RequestPartsExt};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 // use ormlite::Model;
 use serde::{Deserialize, Serialize};
@@ -12,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use once_cell::sync::Lazy;
 use sqlx::FromRow;
 
-use tracing::{log::info};
+use tracing::log::info;
 
 use crate::{db, ServerError};
 
@@ -60,8 +56,16 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctext {
             }
             None => "",
         };
-
         println!("Parsed auth_token: {:?}", &auth_token);
+
+        let session_token = match headers.get("session_token") {
+            Some(x) => {
+                println!("Parsing header auth token: {:?}", &x);
+                x.to_str().expect("Auth token was not a string")
+            }
+            None => "",
+        };
+        info!("Session token: ${session_token}");
 
         if auth_token.is_empty() {
             info!(" ->> Auth header was not present");

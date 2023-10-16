@@ -59,10 +59,10 @@ pub mod routes {
             .route("/surveys/:id", get(get_survey).post(submit_survey))
             .route("/responses", post(submit_response))
             .route("/responses/:id", get(survey_responses::list_response))
-            .route("/auth/login", post(auth::authorize))
+            .route("/auth/login", post(auth::login))
             .route("/auth/signup", post(auth::signup))
             .route("/ping", get(ping))
-            .route("/session", get(handler))
+            // .route("/session", get(handler))
             .layer(middleware::map_response(main_response_mapper))
             // .layer(middleware::from_fn(propagate_header))
             .with_state(state);
@@ -72,24 +72,6 @@ pub mod routes {
 
     async fn propagate_header<B>(req: Request<B>, next: Next<B>) -> Response {
         next.run(req).await
-    }
-
-    const COUNTER_KEY: &str = "counter";
-
-    #[derive(Serialize, Deserialize, Default)]
-    struct Counter(usize);
-
-    async fn handler(session: Session) -> impl IntoResponse {
-        let counter: Counter = session
-            .get(COUNTER_KEY)
-            .expect("Could not deserialize.")
-            .unwrap_or_default();
-
-        session
-            .insert(COUNTER_KEY, counter.0 + 1)
-            .expect("Could not serialize.");
-
-        format!("Current count: {}", counter.0)
     }
 
     #[tracing::instrument]

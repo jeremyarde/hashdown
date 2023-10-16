@@ -1,11 +1,14 @@
 use axum::{
     error_handling::HandleErrorLayer,
-    http::{self, HeaderName, Method},
+    extract::State,
+    http::{self, HeaderName, HeaderValue, Method},
+    middleware::{self, Next},
+    response::Response,
     Router,
 };
 use chrono::{DateTime, Utc};
 use db::database::Database;
-use hyper::StatusCode;
+use hyper::{Request, StatusCode};
 use markdownparser::Survey;
 
 use sqlx::FromRow;
@@ -13,15 +16,17 @@ use tokio::task::JoinHandle;
 
 use tower::ServiceBuilder;
 use tower_http::{cors::CorsLayer, trace::TraceLayer, BoxError};
-use tower_sessions::{cookie::time::Duration, MemoryStore, SessionManagerLayer};
+
+use tower_sessions::{cookie::time::Duration, MemoryStore, PostgresStore, SessionManagerLayer};
 use tracing::log::info;
 
 use crate::{
+    auth::{validate_session, validate_session_middleware},
     config::EnvConfig,
     db::{self, database::ConnectionDetails},
     mail::mail::Mailer,
     routes::routes::get_routes,
-    ServerState,
+    ServerError, ServerState,
 };
 
 pub struct ServerApplication {
@@ -71,26 +76,31 @@ impl ServerApplication {
 
         // build our application with a route
 
-        let session_store = MemoryStore::default();
-        // let session_store = PostgresStore::new(pool);
-        // session_store.migrate().await?;
+        // let session_store = MemoryStore::default();
+        let session_store = PostgresStore::new(state.db.pool.clone());
+        session_store.migrate().await.unwrap();
         // let deletion_task
 
-        let session_service = ServiceBuilder::new()
-            .layer(HandleErrorLayer::new(|_: BoxError| async {
-                StatusCode::BAD_REQUEST
-            }))
-            .layer(
-                SessionManagerLayer::new(session_store)
-                    .with_secure(false)
-                    .with_max_age(Duration::seconds(10)),
-            );
+        // let session_service = ServiceBuilder::new()
+        //     .layer(HandleErrorLayer::new(|_: BoxError| async {
+        //         StatusCode::BAD_REQUEST
+        //     }))
+        //     .layer(
+        //         SessionManagerLayer::new(session_store)
+        //             .with_secure(true)
+        //             .with_max_age(Duration::minutes(10)),
+        //     );
+
+        let auth_session_service = ServiceBuilder::new().layer(middleware::from_fn_with_state(
+            state.clone(),
+            validate_session_middleware,
+        ));
 
         Router::new()
             .merge(get_routes(state).unwrap())
             .layer(corslayer)
             .layer(TraceLayer::new_for_http())
-            .layer(session_service)
+            .layer(auth_session_service)
     }
 
     pub async fn new() -> ServerApplication {
@@ -130,11 +140,6 @@ impl ServerApplication {
         }
     }
 }
-
-// pub fn routes_static() -> Router {
-//     let router = Router::new().nest_service("/", get_service(ServeDir::new("./")));
-//     return router;
-// }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateSurveyResponse {

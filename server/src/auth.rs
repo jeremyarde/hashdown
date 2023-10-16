@@ -4,8 +4,21 @@ use crate::routes::routes::LoginPayload;
 use anyhow::Context;
 use argon2::{PasswordHash, PasswordHasher};
 
-use chrono::{DateTime, Utc};
+use axum::headers::authorization::Bearer;
+use axum::headers::Authorization;
+// use axum::extract::TypedHeader;
+// use axum::headers::authorization::{Authorization, Bearer};
+use axum::{http::StatusCode, response::Redirect};
+use axum_extra::extract::cookie::CookieJar;
+
+use axum::http::HeaderValue;
+use axum::middleware::Next;
+use axum::response::Response;
+use chrono::{DateTime, Duration, Utc};
+use hyper::{HeaderMap, Request};
+use markdownparser::nanoid_gen;
 use serde_json::json;
+use tower_sessions::cookie::Cookie;
 use tower_sessions::session;
 
 use crate::mware::ctext::create_jwt_claim;
@@ -24,7 +37,7 @@ use crate::ServerError;
 
 use serde_json::Value;
 
-use axum::Json;
+use axum::{Json, TypedHeader};
 
 use crate::ServerState;
 
@@ -53,18 +66,9 @@ pub async fn validate_credentials(
 pub async fn signup(
     state: State<ServerState>,
     payload: Json<LoginPayload>,
+    jar: CookieJar,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> signup");
-
-    // match state
-    //     .db
-    //     .get_user_by_email(payload.email.clone())
-    //     .await
-    //     .with_context(|| "Checking if user already exists")
-    // {
-    //     Ok(_) => return Err(ServerError::UserAlreadyExists),
-    //     Err(_) => {}
-    // };
 
     if let Ok(_) = state
         .db
@@ -99,45 +103,93 @@ pub async fn signup(
 
     let jwt_claim = create_jwt_claim(user.email.clone(), "somerole-pleasechange")?;
 
+    let session = state.db.create_session(user.user_id);
+
+    jar.add(Cookie::new("session_id", session_id));
+
     Ok(Json(
         json!({"email": user.email, "auth_token": jwt_claim.token}),
     ))
 }
 
-async fn update_session(
-    session_id: String,
+pub async fn validate_session(
+    headers: HeaderMap,
+    // session_id: String,
+    // extract(session_token):
     state: State<ServerState>,
 ) -> anyhow::Result<Session, ServerError> {
-    // get session from database using existing Session
-    let curr_session = state.db.get_session(session_id).await?;
-    let new_session = state.db.update_session(curr_session).await?;
+    info!("->> Validating session");
 
-    Ok(new_session)
+    // let session_id = headers.get("session_token");
+    let session_id = "this is a fake".to_string();
+
+    // get session from database using existing Session
+    let curr_session = match state.db.get_session(session_id.clone()).await {
+        Ok(x) => x,
+        Err(_) => {
+            state.db.delete_session(session_id).await?;
+            return Err(ServerError::AuthFailTokenDecodeIssue);
+        }
+    };
+
+    if Utc::now() > curr_session.idle_period_expires_at {
+        return Err(ServerError::AuthFailTokenExpired);
+    }
+
+    if Utc::now() > curr_session.active_period_expires_at {
+        let new_active_expires = Utc::now() + Duration::hours(1);
+        let new_idle_expires = Utc::now() + Duration::hours(2);
+        let updated_session = state
+            .db
+            .update_session(Session {
+                session_id: curr_session.session_id,
+                active_period_expires_at: new_active_expires,
+                idle_period_expires_at: new_idle_expires,
+                user_id: curr_session.user_id,
+            })
+            .await?;
+        return Ok(updated_session);
+    }
+    return Err(ServerError::AuthFailNoTokenCookie);
 }
 
-fn validate_session(
-    session_id: String,
-    state: State<ServerState>,
-    payload: Json<LoginPayload>,
-) -> anyhow::Result<Session, ServerError> {
-    // get session from database using existing Session
-    let curr_session = state.db.get_session(session_id);
-
-    Ok(Session {
-        session_id: "fake".to_string(),
-        active_period_expires_at: Utc::now(),
-        idle_period_expires_at: Utc::now(),
-        user_id: todo!(),
-    })
+async fn create_session(
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+    jar: CookieJar,
+) -> Result<(CookieJar, Redirect), StatusCode> {
+    if let Some(session_id) = authorize_and_create_session(auth.token()).await {
+        Ok((
+            // the updated jar must be returned for the changes
+            // to be included in the response
+            jar.add(Cookie::new("session_id", session_id)),
+            Redirect::to("/me"),
+        ))
+    } else {
+        Err(StatusCode::UNAUTHORIZED)
+    }
 }
 
-pub async fn authorize(
-    // cookies: Cookies,
+// async fn me(jar: CookieJar) -> Result<(), StatusCode> {
+//     if let Some(session_id) = jar.get("session_id") {
+//         // fetch and render user...
+//     } else {
+//         Err(StatusCode::UNAUTHORIZED)
+//     }
+// }
+
+async fn authorize_and_create_session(token: &str) -> Option<String> {
+    // authorize the user and create a session...
+    return Some("test".to_string());
+}
+
+pub async fn login(
+    // cookies: Cookie,
+    // cookies: axum_extra::extract::
     // ctx: Result<Ctext, CustomError>,
     state: State<ServerState>,
     payload: Json<LoginPayload>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
-    info!("->> api_login");
+    info!("->> login");
     info!("Payload: {payload:#?}");
 
     if payload.email.is_empty() || payload.password.is_empty() {
@@ -174,7 +226,55 @@ pub async fn authorize(
     let logged_in = true;
 
     println!("     ->> Success logging in");
+
     Ok(Json(
         json!({"result": logged_in, "username": username, "auth_token": &jwt}),
     ))
+}
+
+pub async fn validate_session_middleware<B>(
+    State(state): State<ServerState>,
+    // you can add more extractors here but the last
+    // extractor must implement `FromRequest` which
+    // `Request` does
+    mut request: Request<B>,
+    next: Next<B>,
+) -> anyhow::Result<Response, ServerError> {
+    info!("--> validate_session_middleware - THIS IS GOOD");
+    // do something with `request`...
+
+    let session_header = request
+        .headers()
+        .get("session_token")
+        .and_then(|header| header.to_str().ok());
+
+    let session_header = if let Some(session_header) = session_header {
+        Some(session_header)
+    } else {
+        // return Err(ServerError::MissingCredentials);
+        None
+    };
+
+    if session_header.is_some() {
+        match state
+            .db
+            .get_session(session_header.unwrap().to_owned())
+            .await
+        {
+            Ok(x) => {
+                request.headers_mut().insert(
+                    "session_token",
+                    HeaderValue::from_str(&x.session_id.clone())
+                        .expect("Session Id is not available"),
+                );
+                request.extensions_mut().insert(x);
+                return Ok(next.run(request).await);
+            }
+            Err(_) => return Err(ServerError::AuthFailNoTokenCookie),
+        }
+    }
+
+    info!(" --> validate_session_middleware - no session available!");
+
+    return Ok(next.run(request).await);
 }

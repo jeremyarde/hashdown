@@ -335,44 +335,62 @@ impl Database {
     }
 
     pub async fn get_session(&self, session_id: String) -> anyhow::Result<Session, ServerError> {
-        let curr_session = match sqlx::query_as::<_, Session>(
+        // let curr_session: Session = match sqlx::query(
+        //     r#"select * from sessions where sessions.session_id = $1"#
+        // ).bind(session_id).execute(&self.pool).await {
+        //     Ok(x) => {
+        //         if x.rows_affected() == 1 {
+        //             return Ok(Some(x.into()));
+        //         } else if x.rows_affected() == 0 {
+        //             return Ok(None);
+        //         }
+        //     },
+        //     Err(error) => {
+        //         return Err(ServerError::AuthFailTokenNotVerified("User session not available".to_string()));
+        //     },
+        // };
+
+        let curr_session: Session = match sqlx::query_as::<_, Session>(
             r#"select * from sessions where sessions.session_id = $1"#
         ).bind(session_id).fetch_one(&self.pool).await {
-            Ok(x) => x,
-            Err(_) => return Err(ServerError::AuthFailTokenNotVerified("User session not available".to_string())),
+            Ok(x) => {
+                info!("GET_SESSION - found");
+                return Ok(x)
+            },
+            Err(error) => {
+                info!("GET_SESSION - not found");
+                return Err(ServerError::AuthFailTokenNotVerified("User session not available".to_string()));
+            },
         };
 
-        return Ok(curr_session);
     }
 
-    pub async fn validate_session(&self, session_id: String) -> anyhow::Result<Option<Session>, ServerError> {
-        // let curr_session = match sqlx::query_as::<_, Session>(
-        //     r#"select * from sessions where sessions.session_id = $1"#
-        // ).bind(session_id).fetch_one(&self.pool).await {
-        //     Ok(x) => x,
-        //     Err(_) => return Err(ServerError::AuthFailTokenNotVerified("User session not available".to_string())),
-        // };
-        let session = match self.get_session(session_id).await {
-            Ok(x) => x,
-            Err(_) => return Err(ServerError::AuthFailNoTokenCookie),
-        };
+    pub async fn create_session(&self, user_id: String) -> anyhow::Result<Session, ServerError> {
+        let session_token = nanoid_gen(32);
 
-        if Utc::now() > session.idle_period_expires_at {
-            return Err(ServerError::AuthFailTokenExpired);
-        }
-
-        if Utc::now() > session.active_period_expires_at {
-            let new_active_expires = Utc::now() + Duration::hours(1);
-            let new_idle_expires = Utc::now() + Duration::hours(3);
-            self.update_session(Session { session_id, active_period_expires_at: todo!(), idle_period_expires_at: todo!() })
-        }
+        let new_active_expires = Utc::now() + Duration::hours(1);
+        let new_idle_expires = Utc::now() + Duration::hours(2);
+        let updated_session = state
+            .db
+            .update_session(Session {
+                session_id: curr_session.session_id,
+                active_period_expires_at: new_active_expires,
+                idle_period_expires_at: new_idle_expires,
+                user_id: curr_session.user_id,
+            })
+            .await?;
 
 
-        Ok(Some(Session {
-            session_id: "fake".to_string(),
-            active_period_expires_at: Utc::now(),
-            idle_period_expires_at: Utc::now(),
-        }))
+        let new_session = sqlx::query_as::<_, Session>(
+            r#"insert into sessions (session_token, user_id, active_period_expires_at, idle_period_expires_at) values ($1, $2, $3, $4) returning *"#
+        ).bind(session_token).bind(user_id).bind(expire).fetch_one(&self.pool).await.unwrap();
+
+
+        // let new_session = sqlx::query_as::<_, Session>(
+        //     r#"update sessions set active_expires_at = $1, set idle_expires_at = $2 where sessions.session_id = $3 and sessions.user_id = $4 returning *"#
+        // ).bind(session.active_period_expires_at).bind(session.idle_period_expires_at).bind(session.session_id).bind(session.user_id).fetch_one(&self.pool).await.unwrap();
+        
+        return Ok(new_session);
     }
 
     pub async fn update_session(&self, session: Session) -> anyhow::Result<Session, ServerError> {
@@ -383,37 +401,36 @@ impl Database {
         return Ok(curr_session);
     }
 
-    pub async fn new_session(&self, user_id: String) -> anyhow::Result<Option<Session>, ServerError> {
-        let session_token = nanoid_gen(32);
-
-        let nowutc = chrono::Utc::now();
-        let now: usize = match nowutc
-            .timestamp()
-            .try_into()
-            .with_context(|| "Could not turn time into timestamp")
-        {
-            Ok(x) => x,
-            Err(_e) => return Err(ServerError::WrongCredentials),
-        };
-        let expire: usize = match (nowutc + chrono::Duration::minutes(5))
-            .timestamp()
-            .try_into()
-        {
-            Ok(x) => x,
-            Err(_e) => return Err(ServerError::WrongCredentials),
-        };
-
-        let curr_session = sqlx::query_as::<_, Session>(
-            r#"insert into sessions (session_token, user_id) values ($1, $2) returning *"#
-        ).bind(session_token).bind(user_id).fetch_one(&self.pool).await.unwrap();
-
-
-        Ok(Some(Session {
-            session_id: "fake".to_string(),
-            active_period_expires_at: Utc::now(),
-            idle_period_expires_at: Utc::now(),
-        }))
+    pub async fn delete_session(&self, session_id: String) -> anyhow::Result<bool, ServerError> {
+        let result = sqlx::query(
+            r#"delete from sessions where sessions.session_id = $1"#
+        ).bind(session_id).execute(&self.pool).await.unwrap();
+        
+        if result.rows_affected() == 1 {
+            return Ok(true);
+        } else {
+            return Err(ServerError::AuthFailTokenExpired);
+        }
     }
+
+    // pub async fn new_session(&self, user_id: String) -> anyhow::Result<Option<Session>, ServerError> {
+    //     let session_token = nanoid_gen(32);
+
+    //     let nowutc = chrono::Utc::now();
+    //     let expire = (nowutc + chrono::Duration::minutes(5));
+
+    //     let curr_session = sqlx::query_as::<_, Session>(
+    //         r#"insert into sessions (session_token, user_id, active_period_expires_at, idle_period_expires_at) values ($1, $2, $3, $4) returning *"#
+    //     ).bind(session_token).bind(user_id).bind(expire).fetch_one(&self.pool).await.unwrap();
+
+
+    //     Ok(Some(Session {
+    //         session_id: "fake".to_string(),
+    //         active_period_expires_at: Utc::now(),
+    //         idle_period_expires_at: Utc::now(),
+    //         user_id,
+    //     }))
+    // }
 }
 
 #[cfg(test)]
