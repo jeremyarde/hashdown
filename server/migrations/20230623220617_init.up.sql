@@ -61,13 +61,13 @@ VALUES (
         'testsurveyid', 
         '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
         'testuserid',
-        "2023-09-17 02:50:27.567946+00"
+        '2023-09-17 02:50:27.567946+00'
     );
 
-create table sesssions (
+create table user_sessions (
     id serial primary key,
-    session_token TEXT,
-    user_id TEXT NOT NULl,
+    session_id TEXT unique,
+    user_id TEXT NOT NULl unique,
     active_period_expires_at TIMESTAMP with time ZONE,
     idle_period_expires_at timestamp with time zone,
 

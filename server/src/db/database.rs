@@ -183,7 +183,7 @@ pub struct CreateAnswersModel {
     pub answers: Value,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
 pub struct UserModel {
     pub id: i32,
     pub email: String,
@@ -366,36 +366,37 @@ impl Database {
     }
 
     pub async fn create_session(&self, user_id: String) -> anyhow::Result<Session, ServerError> {
-        let session_token = nanoid_gen(32);
+        let session_id = nanoid_gen(32);
 
         let new_active_expires = Utc::now() + Duration::hours(1);
         let new_idle_expires = Utc::now() + Duration::hours(2);
-        let updated_session = state
-            .db
-            .update_session(Session {
-                session_id: curr_session.session_id,
-                active_period_expires_at: new_active_expires,
-                idle_period_expires_at: new_idle_expires,
-                user_id: curr_session.user_id,
-            })
-            .await?;
 
+        let new_session = match sqlx::query_as::<_, Session>(
+            r#"
+            insert into user_sessions (session_id, user_id, active_period_expires_at, idle_period_expires_at) 
+            values ($1, $2, $3, $4)
+            ON conflict (user_id) do update 
+            set session_id = $1, active_period_expires_at = $3, idle_period_expires_at = $4 
+            where user_sessions.user_id = $2 returning *"#
+        )
+        .bind(session_id)
+        .bind(user_id)
+        .bind(new_active_expires)
+        .bind(new_idle_expires)
+        .fetch_one(&self.pool).await {
+            Ok(x) => x,
+            Err(err) => {
+                info!("create session failed...");
+                return Err(ServerError::Database(err.to_string()));
+            }
+        };
 
-        let new_session = sqlx::query_as::<_, Session>(
-            r#"insert into sessions (session_token, user_id, active_period_expires_at, idle_period_expires_at) values ($1, $2, $3, $4) returning *"#
-        ).bind(session_token).bind(user_id).bind(expire).fetch_one(&self.pool).await.unwrap();
-
-
-        // let new_session = sqlx::query_as::<_, Session>(
-        //     r#"update sessions set active_expires_at = $1, set idle_expires_at = $2 where sessions.session_id = $3 and sessions.user_id = $4 returning *"#
-        // ).bind(session.active_period_expires_at).bind(session.idle_period_expires_at).bind(session.session_id).bind(session.user_id).fetch_one(&self.pool).await.unwrap();
-        
         return Ok(new_session);
     }
 
     pub async fn update_session(&self, session: Session) -> anyhow::Result<Session, ServerError> {
         let curr_session = sqlx::query_as::<_, Session>(
-            r#"update sessions set active_expires_at = $1, set idle_expires_at = $2 where sessions.session_id = $3 and sessions.user_id = $4 returning *"#
+            r#"update user_sessions sessions set active_period_expires_at = $1, idle_period_expires_at = $2 where sessions.session_id = $3 and sessions.user_id = $4 returning *"#
         ).bind(session.active_period_expires_at).bind(session.idle_period_expires_at).bind(session.session_id).bind(session.user_id).fetch_one(&self.pool).await.unwrap();
         
         return Ok(curr_session);
@@ -403,7 +404,7 @@ impl Database {
 
     pub async fn delete_session(&self, session_id: String) -> anyhow::Result<bool, ServerError> {
         let result = sqlx::query(
-            r#"delete from sessions where sessions.session_id = $1"#
+            r#"delete from user_sessions sessions where sessions.session_id = $1"#
         ).bind(session_id).execute(&self.pool).await.unwrap();
         
         if result.rows_affected() == 1 {
@@ -412,25 +413,6 @@ impl Database {
             return Err(ServerError::AuthFailTokenExpired);
         }
     }
-
-    // pub async fn new_session(&self, user_id: String) -> anyhow::Result<Option<Session>, ServerError> {
-    //     let session_token = nanoid_gen(32);
-
-    //     let nowutc = chrono::Utc::now();
-    //     let expire = (nowutc + chrono::Duration::minutes(5));
-
-    //     let curr_session = sqlx::query_as::<_, Session>(
-    //         r#"insert into sessions (session_token, user_id, active_period_expires_at, idle_period_expires_at) values ($1, $2, $3, $4) returning *"#
-    //     ).bind(session_token).bind(user_id).bind(expire).fetch_one(&self.pool).await.unwrap();
-
-
-    //     Ok(Some(Session {
-    //         session_id: "fake".to_string(),
-    //         active_period_expires_at: Utc::now(),
-    //         idle_period_expires_at: Utc::now(),
-    //         user_id,
-    //     }))
-    // }
 }
 
 #[cfg(test)]

@@ -21,6 +21,11 @@ cargo watch -- cargo run
 
 ## Database
 
+resetting the database
+
+sqlx migrate revert && sqlx migrate run
+
+
 sqlx migrate revert
 sqlx migrate run
 

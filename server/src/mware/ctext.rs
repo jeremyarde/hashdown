@@ -58,14 +58,14 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctext {
         };
         println!("Parsed auth_token: {:?}", &auth_token);
 
-        let session_token = match headers.get("session_token") {
+        let session_id = match headers.get("session_id") {
             Some(x) => {
                 println!("Parsing header auth token: {:?}", &x);
                 x.to_str().expect("Auth token was not a string")
             }
             None => "",
         };
-        info!("Session token: ${session_token}");
+        info!("Session token: ${session_id}");
 
         if auth_token.is_empty() {
             info!(" ->> Auth header was not present");

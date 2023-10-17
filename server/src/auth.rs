@@ -13,7 +13,7 @@ use axum_extra::extract::cookie::CookieJar;
 
 use axum::http::HeaderValue;
 use axum::middleware::Next;
-use axum::response::Response;
+use axum::response::{IntoResponse, Response};
 use chrono::{DateTime, Duration, Utc};
 use hyper::{HeaderMap, Request};
 use markdownparser::nanoid_gen;
@@ -65,8 +65,8 @@ pub async fn validate_credentials(
 #[axum::debug_handler]
 pub async fn signup(
     state: State<ServerState>,
-    payload: Json<LoginPayload>,
     jar: CookieJar,
+    payload: Json<LoginPayload>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> signup");
 
@@ -86,6 +86,8 @@ pub async fn signup(
         .unwrap();
     let _password_hash_string = hash.to_string();
 
+    let mut transactions = state.db.pool.begin().await.unwrap();
+
     let user = match state
         .db
         .create_user(CreateUserRequest {
@@ -101,26 +103,29 @@ pub async fn signup(
         }
     };
 
-    let jwt_claim = create_jwt_claim(user.email.clone(), "somerole-pleasechange")?;
+    let jwt_claim: crate::mware::ctext::JwtResult =
+        create_jwt_claim(user.email.clone(), "somerole-pleasechange")?;
 
-    let session = state.db.create_session(user.user_id);
+    let session = state.db.create_session(user.user_id).await?;
 
-    jar.add(Cookie::new("session_id", session_id));
+    let transaction_result = transactions.commit().await;
+
+    let _ = jar.add(Cookie::new("session_id", session.session_id.clone()));
 
     Ok(Json(
-        json!({"email": user.email, "auth_token": jwt_claim.token}),
+        json!({"email": user.email, "auth_token": jwt_claim.token, "session_id": session.session_id}),
     ))
 }
 
 pub async fn validate_session(
     headers: HeaderMap,
     // session_id: String,
-    // extract(session_token):
+    // extract(session_id):
     state: State<ServerState>,
 ) -> anyhow::Result<Session, ServerError> {
     info!("->> Validating session");
 
-    // let session_id = headers.get("session_token");
+    // let session_id = headers.get("session_id");
     let session_id = "this is a fake".to_string();
 
     // get session from database using existing Session
@@ -187,8 +192,10 @@ pub async fn login(
     // cookies: axum_extra::extract::
     // ctx: Result<Ctext, CustomError>,
     state: State<ServerState>,
+    jar: CookieJar,
+    headers: HeaderMap,
     payload: Json<LoginPayload>,
-) -> anyhow::Result<Json<Value>, ServerError> {
+) -> impl IntoResponse {
     info!("->> login");
     info!("Payload: {payload:#?}");
 
@@ -219,17 +226,30 @@ pub async fn login(
         Err(_) => return Err(ServerError::AuthPasswordsDoNotMatch),
     };
     println!("      ->> password matches={is_correct}");
-    let jwt = create_jwt_token(user)?;
+    let jwt = create_jwt_token(user.clone())?;
 
     // TODO: create success body
     let username = payload.email.clone();
-    let logged_in = true;
+    // let logged_in = true;
 
     println!("     ->> Success logging in");
 
-    Ok(Json(
-        json!({"result": logged_in, "username": username, "auth_token": &jwt}),
-    ))
+    let session = state.db.create_session(user.user_id.clone()).await?;
+
+    jar.add(Cookie::new("session_id", session.session_id.clone()));
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "session_id",
+        HeaderValue::from_str(&session.session_id).unwrap(),
+    );
+
+    return Ok((
+        headers,
+        Json(
+            json!({"email": username, "auth_token": "not implemented", "session_id": session.session_id}),
+        ),
+    ));
 }
 
 pub async fn validate_session_middleware<B>(
@@ -245,7 +265,7 @@ pub async fn validate_session_middleware<B>(
 
     let session_header = request
         .headers()
-        .get("session_token")
+        .get("session_id")
         .and_then(|header| header.to_str().ok());
 
     let session_header = if let Some(session_header) = session_header {
@@ -263,7 +283,7 @@ pub async fn validate_session_middleware<B>(
         {
             Ok(x) => {
                 request.headers_mut().insert(
-                    "session_token",
+                    "session_id",
                     HeaderValue::from_str(&x.session_id.clone())
                         .expect("Session Id is not available"),
                 );
