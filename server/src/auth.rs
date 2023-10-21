@@ -102,13 +102,19 @@ pub async fn signup(
 pub async fn validate_session(
     headers: HeaderMap,
     // session_id: String,
+    jar: CookieJar,
     // extract(session_id):
     state: State<ServerState>,
-) -> anyhow::Result<Session, ServerError> {
+) -> anyhow::Result<Option<Session>, ServerError> {
     info!("->> Validating session");
 
-    // let session_id = headers.get("session_id");
-    let session_id = "this is a fake".to_string();
+    let session_header = if let Some(x) = jar.get(SESSION_ID_KEY) {
+        x
+    } else {
+        return Ok(None);
+    };
+
+    let session_id = session_header.to_string();
 
     // get session from database using existing Session
     let curr_session = match state.db.get_session(session_id.clone()).await {
@@ -135,38 +141,28 @@ pub async fn validate_session(
                 user_id: curr_session.user_id,
             })
             .await?;
-        return Ok(updated_session);
+        return Ok(Some(updated_session));
     }
     return Err(ServerError::AuthFailNoTokenCookie);
 }
 
-async fn create_session(
-    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+pub async fn logout(
+    state: State<ServerState>,
     jar: CookieJar,
-) -> Result<(CookieJar, Redirect), StatusCode> {
-    if let Some(session_id) = authorize_and_create_session(auth.token()).await {
-        Ok((
-            // the updated jar must be returned for the changes
-            // to be included in the response
-            jar.add(Cookie::new("session_id", session_id)),
-            Redirect::to("/me"),
-        ))
+    headers: HeaderMap,
+    // payload: Json<LoginPayload>,
+) -> impl IntoResponse {
+    info!("->> logout");
+
+    let session_header = if let Some(x) = jar.get(SESSION_ID_KEY) {
+        x.to_owned()
     } else {
-        Err(StatusCode::UNAUTHORIZED)
-    }
-}
+        return Err(ServerError::AuthFailNoTokenCookie);
+    };
 
-// async fn me(jar: CookieJar) -> Result<(), StatusCode> {
-//     if let Some(session_id) = jar.get("session_id") {
-//         // fetch and render user...
-//     } else {
-//         Err(StatusCode::UNAUTHORIZED)
-//     }
-// }
-
-async fn authorize_and_create_session(token: &str) -> Option<String> {
-    // authorize the user and create a session...
-    return Some("test".to_string());
+    state.db.delete_session(session_header.clone().to_string());
+    &jar.remove(session_header);
+    return Ok(());
 }
 
 pub async fn login(
@@ -192,7 +188,9 @@ pub async fn login(
         Ok(x) => x,
         Err(_) => {
             info!("Did not find user in database");
-            return Err(ServerError::WrongCredentials);
+            return Err(ServerError::UserDoesNotExist(
+                "User does not exist".to_string(),
+            ));
         }
     };
 
@@ -226,6 +224,8 @@ pub async fn login(
         SESSION_ID_KEY,
         HeaderValue::from_str(&session.session_id).unwrap(),
     );
+
+    // Redirect::to("/me");
 
     return Ok((
         headers,

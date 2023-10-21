@@ -1,5 +1,6 @@
 -- Add migration script here
-CREATE TABLE users (
+create schema mdp;
+CREATE table mdp.users (
     id SERIAL PRIMARY KEY,
     user_id TEXT not null unique,
     email TEXT NOT NULL UNIQUE,
@@ -10,7 +11,7 @@ CREATE TABLE users (
     verified BOOLEAN DEFAULT false
 );
 
-CREATE TABLE surveys (
+CREATE table mdp.surveys (
     id SERIAL PRIMARY KEY,
     survey_id TEXT not null unique,
     user_id TEXT,
@@ -23,7 +24,7 @@ CREATE TABLE surveys (
     -- foreign key(user_id) references users(user_id)
 );
 
-create table questions (
+create table mdp.questions (
     id serial primary key, 
     survey_id text not null,
     question_id text not null unique,
@@ -32,7 +33,7 @@ create table questions (
     foreign key(survey_id) references surveys(survey_id)
 );
 
-CREATE TABLE responses (
+CREATE table mdp.responses (
     id SERIAL PRIMARY KEY,
     submitted_at TIMESTAMP WITH TIME ZONE,
     answers JSON,
@@ -41,7 +42,7 @@ CREATE TABLE responses (
     foreign key(survey_id) references surveys(survey_id)
 );
 
-create table pageviews (
+create table mdp.pageviews (
     id serial primary key,
     page_url TEXT not null,
     created_at TIMESTAMP WITH TIME ZONE,
@@ -52,19 +53,7 @@ create table pageviews (
     user_agent TEXT
 );
 
-INSERT INTO users (user_id, email, password_hash, verified) VALUES (
-    'testuserid', 'fake', '', true
-);
-
-INSERT INTO surveys (survey_id, plaintext, user_id, created_at)
-VALUES (
-        'testsurveyid', 
-        '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
-        'testuserid',
-        '2023-09-17 02:50:27.567946+00'
-    );
-
-create table user_sessions (
+create table mdp.sessions (
     id serial primary key,
     session_id TEXT unique,
     user_id TEXT NOT NULl unique,
@@ -74,3 +63,17 @@ create table user_sessions (
     foreign key(user_id) references users(user_id)
 );
 
+INSERT INTO mdp.users (user_id, email, password_hash, verified) VALUES (
+    'testuserid', 
+    'test@test.com', 
+    '$argon2id$v=19$m=19456,t=2,p=1$JaOOu6OXcVP+B9IUlHX34Q$JGxXSdEtM90s58YlwkIDXn9WfoJTpueOvJrhBlKNF9c', 
+    true
+);
+
+INSERT INTO mdp.surveys (survey_id, plaintext, user_id, created_at)
+VALUES (
+        'testsurveyid', 
+        '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
+        'testuserid',
+        '2023-09-17 02:50:27.567946+00'
+    );

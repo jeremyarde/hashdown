@@ -18,8 +18,9 @@ pub enum ServerError {
     Database(String),
 
     // Auth
-    MissingCredentials,
     UserAlreadyExists,
+    UserDoesNotExist(String),
+    MissingCredentials,
     WrongCredentials,
     AuthPasswordsDoNotMatch,
     AuthFailNoTokenCookie,
@@ -29,6 +30,9 @@ pub enum ServerError {
     AuthFailTokenDecodeIssue,
     AuthFailTokenExpired,
     UserEmailNotVerified(String),
+
+    // Sessions
+    SessionNotFound(String),
 }
 
 pub async fn main_response_mapper(
@@ -140,6 +144,10 @@ impl ServerError {
             ServerError::UserEmailNotVerified(x) => {
                 (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, Some(x))
             }
+            ServerError::UserDoesNotExist(x) => {
+                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, Some(x))
+            }
+            _ => (StatusCode::BAD_REQUEST, ClientError::SERVICE_ERROR, None),
         }
     }
 }
