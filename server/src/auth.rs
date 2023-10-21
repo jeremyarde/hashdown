@@ -13,10 +13,12 @@ use axum_extra::extract::cookie::CookieJar;
 use axum::http::HeaderValue;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use chrono::{Duration, Utc};
+use chrono::{Duration, Offset, Utc};
+use hyper::header::SET_COOKIE;
 use hyper::{HeaderMap, Request};
 
 use serde_json::json;
+use sqlx::types::time::OffsetDateTime;
 use tower_sessions::cookie::Cookie;
 
 use crate::db::database::{CreateUserRequest, Session};
@@ -165,7 +167,7 @@ pub async fn logout(
 pub async fn login(
     state: State<ServerState>,
     jar: CookieJar,
-    _headers: HeaderMap,
+    // headers: HeaderMap,
     payload: Json<LoginPayload>,
 ) -> impl IntoResponse {
     info!("->> login");
@@ -214,15 +216,27 @@ pub async fn login(
 
     let session = state.db.create_session(user.user_id.clone()).await?;
 
-    let _ = jar.add(Cookie::new(SESSION_ID_KEY, session.session_id.clone()));
+    // let _ = jar.add(Cookie::new(SESSION_ID_KEY, session.session_id.clone()));
 
     let mut headers = HeaderMap::new();
+    headers.insert(
+        SET_COOKIE,
+        HeaderValue::from_str(format!("{}={}", SESSION_ID_KEY, &session.session_id).as_str())
+            .unwrap(),
+    );
+
     headers.insert(
         SESSION_ID_KEY,
         HeaderValue::from_str(&session.session_id).unwrap(),
     );
 
-    // Redirect::to("/me");
+    let offset =
+        OffsetDateTime::from_unix_timestamp(session.active_period_expires_at.timestamp()).unwrap();
+    let session_cookie = Cookie::build("session_id", session.session_id.clone())
+        .http_only(true)
+        .expires(offset)
+        .finish();
+    let _ = jar.add(session_cookie);
 
     return Ok((
         headers,

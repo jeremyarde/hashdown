@@ -41,7 +41,6 @@ pub fn Login(cx: Scope) -> Element {
                 let resp = app_state
                     .read()
                     .client
-                    // let resp = reqwest::Client::new()
                     .post(url)
                     .json(&request)
                     .send()
@@ -50,23 +49,38 @@ pub fn Login(cx: Scope) -> Element {
                 match resp {
                     // Parse data from here, such as storing a response token
                     Ok(data) => {
-                        println!("Login successful!");
-                        let response: Value = data.json().await.expect("Login data was not json");
-                        match response.get("auth_token") {
-                            Some(x) => {
-                                info!("Logged in successfully");
-                                info!("REMOVE ME: token {x}");
-                                app_state.write().user = Some(UserContext {
-                                    username: request.email,
-                                    token: x.as_str().unwrap().to_string(),
-                                    cookie: "".to_string(),
-                                });
-                            }
-                            None => {
-                                info!("Did not log in, could not find auth token");
-                                app_state.write().user = None;
-                            }
+                        info!("Login successful!");
+                        info!("Response data: {:?}", data);
+
+                        for cookie in data.headers().into_iter() {
+                            info!("response head: {:#?}", cookie);
                         }
+                        let headers = data.headers().clone();
+                        info!("login response headers: {:?}", headers);
+
+                        let response = data.text().await.expect("something");
+                        info!("Response data: {:#?}", response);
+
+                        // let response: Value = data.json().await.expect("Login data was not json");
+
+                        // match headers.get("session_id") {
+                        //     Some(x) => {
+                        //         info!("Logged in successfully");
+                        //         info!("REMOVE ME: token {x:?}");
+                        //         app_state.write().user = Some(UserContext {
+                        //             email: response.get("email").unwrap().to_string(),
+                        //             token: x.to_str().unwrap().to_string(),
+                        //         });
+                        //         app_state.write().state =
+                        //             AppError::Generic(format!("Login successful: {:?}", x));
+                        //     }
+                        //     None => {
+                        //         info!("Did not log in, could not find auth token");
+                        //         app_state.write().user = None;
+                        //         app_state.write().state =
+                        //             AppError::Generic(format!("Login unsuccessful"));
+                        //     }
+                        // }
                     }
 
                     //Handle any errors from the fetch here
@@ -94,12 +108,18 @@ pub fn Login(cx: Scope) -> Element {
                     password: evt.values["password"].get(0).unwrap().to_owned(),
                 };
 
-                let response = client
-                    .post(&client_url)
-                    .json(&request)
-                    .send()
-                    .await
-                    .expect("Should recieve response from app");
+                let response = match client.post(&client_url).json(&request).send().await {
+                    Ok(x) => {
+                        info!("Sign up successful?");
+                        app_state.write().state =
+                            AppError::Generic(format!("Signup successful: {:?}", x));
+                    }
+                    Err(x) => {
+                        info!("Failed to signup");
+                        app_state.write().state =
+                            AppError::Generic(format!("Failed to signup: {}", x));
+                    }
+                };
             }
         });
     };
@@ -183,29 +203,33 @@ pub fn Signup(cx: Scope) -> Element {
                     // Parse data from here, such as storing a response token
                     Ok(data) => {
                         println!("Signup successful!");
-                        let response: Value = data.json().await.expect("Login data was not json");
-                        match response.get("auth_token") {
+                        let session_header = data.headers().clone();
+
+                        let response = data.json::<Value>().await.expect("Login data was not json");
+
+                        match session_header.get("session_id") {
                             Some(x) => {
                                 info!("Logged in successfully");
-                                info!("REMOVE ME: token {x}");
+                                info!("REMOVE ME: token {x:?}");
                                 app_state.write().user = Some(UserContext {
-                                    username: request.email_address,
-                                    token: x.as_str().unwrap().to_string(),
-                                    cookie: "".to_string(),
+                                    email: response.get("email").unwrap().to_string(),
+                                    token: x.to_str().unwrap().to_string(),
                                 });
+                                app_state.write().state =
+                                    AppError::Generic(format!("Signup success: {:?}", x));
                             }
                             None => {
                                 info!("Did not log in, could not find auth token");
                                 app_state.write().user = None;
+                                app_state.write().state =
+                                    AppError::Generic(format!("Failed to signup"));
                             }
                         }
                     }
 
                     //Handle any errors from the fetch here
-                    Err(_err) => {
-                        println!(
-                            "Login failed - you need a login server running on localhost:8080."
-                        )
+                    Err(err) => {
+                        info!("Error: {err:?}");
                     }
                 }
             }

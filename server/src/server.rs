@@ -14,15 +14,16 @@ use tokio::task::JoinHandle;
 use tower::ServiceBuilder;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
-use tower_sessions::{PostgresStore};
+use tower_sessions::PostgresStore;
 use tracing::log::info;
 
 use crate::{
-    auth::{validate_session_middleware},
+    auth::validate_session_middleware,
     config::EnvConfig,
     db::{self, database::ConnectionDetails},
     mail::mail::Mailer,
-    routes::routes::get_routes, ServerState,
+    routes::routes::get_routes,
+    ServerState,
 };
 
 pub struct ServerApplication {
@@ -65,6 +66,8 @@ impl ServerApplication {
                 http::header::ACCEPT,
                 // http::header::AUTHORIZATION,
                 HeaderName::from_static("x-auth-token"),
+                HeaderName::from_static("x-sid"),
+                HeaderName::from_static("session_id"),
             ])
             // .allow_headers(Any)
             .allow_credentials(true)
@@ -73,8 +76,8 @@ impl ServerApplication {
         // build our application with a route
 
         // let session_store = MemoryStore::default();
-        let session_store = PostgresStore::new(state.db.pool.clone());
-        session_store.migrate().await.unwrap();
+        // let session_store = PostgresStore::new(state.db.pool.clone());
+        // session_store.migrate().await.unwrap();
         // let deletion_task
 
         // let session_service = ServiceBuilder::new()

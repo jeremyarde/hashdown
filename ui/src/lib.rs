@@ -9,6 +9,7 @@ pub mod mainapp {
     use dioxus_router::prelude::*;
     use std::{
         collections::HashMap,
+        fmt::Display,
         time::{self, Instant},
     };
 
@@ -64,33 +65,34 @@ pub mod mainapp {
 
     #[derive(Serialize, Debug, Clone, PartialEq)]
     pub struct UserContext {
-        pub username: String,
+        pub email: String,
         pub token: String,
-        pub cookie: String,
+        // pub cookie: String,
     }
 
     impl UserContext {
         fn new() -> Self {
             return Self {
-                username: "jeremy".to_string(),
+                email: "jeremy".to_string(),
                 token: "".to_string(),
-                cookie: "".to_string(),
+                // cookie: "".to_string(),
             };
         }
 
         fn from(token: String) -> Self {
             return Self {
-                username: "jeremy".to_string(),
+                email: "jeremy".to_string(),
                 token: token.trim().replace("\"", "").to_owned(),
-                cookie: "".to_string(),
+                // cookie: "".to_string(),
             };
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub enum AppError {
         NotLoggedIn,
         Idle,
+        Generic(String),
     }
 
     #[derive(Debug)]
@@ -153,6 +155,8 @@ pub mod mainapp {
                 state: AppError::NotLoggedIn,
             }
         }
+
+        pub fn get_client(&self) {}
     }
 
     const FORMINPUT_KEY: &str = "forminput";
@@ -238,8 +242,13 @@ pub mod mainapp {
                             info!("success: {x:?}");
                             info!("should show toast now");
                             toast_visible.set(true);
+                            app_state.write().state =
+                                AppError::Generic("Successfulling saved questions".to_string());
                         }
-                        Err(x) => info!("error: {x:?}"),
+                        Err(x) => {
+                            info!("error: {x:?}");
+                            app_state.write().state = AppError::Generic(x.to_string());
+                        }
                     };
                 }
             })
@@ -368,28 +377,26 @@ pub mod mainapp {
             //         }
             //     }
             // }
+            h1 { format!("App Errors: {:?}", app_state.read().state) }
 
-            nav {
-                ul {
-                    // li {
-                    //     GoBackButton { "Back" }
-                    // }
-                    // li {
-                    //     Link { to: Route::App {}, "Home" }
-                    // }
-                    // li {
-                    //     Link { to: Route::Login {}, "Login" }
-                    // }
-                    // li {
-                    //     Link { to: Route::ListSurvey {}, "Surveys" }
-                    // }
-
-                    li { a { href: "http://localhost:8080/", "home" } }
-                    li { a { href: "http://localhost:8080/login", "login" } }
-                    li { a { href: "http://ocalhost:8080/signup", "signup" } }
-                    li { a { href: "http://localhost:8080/surveys", "surveys" } }
-                }
-            }
+            nav { ul {
+                // li {
+                //     GoBackButton { "Back" }
+                // }
+                // li {
+                //     Link { to: Route::App {}, "Home" }
+                // }
+                // li {
+                //     Link { to: Route::Login {}, "Login" }
+                // }
+                // li {
+                //     Link { to: Route::ListSurvey {}, "Surveys" }
+                // }
+                // li { a { href: "http://localhost:8080/", "home" } }
+                // li { a { href: "http://localhost:8080/login", "login" } }
+                // li { a { href: "http://ocalhost:8080/signup", "signup" } }
+                // li { a { href: "http://localhost:8080/surveys", "surveys" } }
+            } }
         })
     }
 
@@ -430,17 +437,8 @@ pub mod mainapp {
 
         // render! { Router::<Route> {} }
         render!(
-            div {
-                // Navbar {}
-                ul {
-                    // li { Login {} }
-                    // li { ListSurvey {} }
-                }
-            }
-            div {
-            }
+            div { Navbar {} }
             // div { class: "flex h-screen w-screen items-center justify-center bg-gray-200",
-            div { class: "" }
             div { Router::<Route> {} }
         )
     }

@@ -408,10 +408,6 @@ impl Database {
     }
 
     pub async fn delete_session(&self, session_id: String) -> anyhow::Result<bool, ServerError> {
-        // let result = sqlx::query(
-        //     r#"delete from mdp.sessions sessions where sessions.session_id = $1"#
-        // ).bind(session_id).execute(&self.pool).await.unwrap();
-
         let result = sqlx::query!(
             r#"delete from mdp.sessions sessions where sessions.session_id = $1"#,
             session_id).execute(&self.pool).await.expect(&format!("Did not delete session: {}", &session_id.as_str()));
