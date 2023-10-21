@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -14,7 +14,153 @@ import { Input } from './components/ui/input'
 import { RadioGroup, RadioGroupItem } from './components/ui/radio-group';
 import { Textarea } from './components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from './components/ui/alert';
-// import { RadioGroup, RadioGroupItem } from './components/ui/radio-group'
+
+
+function ListSurveys() {
+  const [surveys, setSurveys] = useState(undefined);
+  const [error, setError] = useState('');
+
+  // useEffect(() => {
+  //   async function getSurveys() {
+  //     const response = await fetch("http://localhost:3000/surveys", {
+  //       method: "GET",
+  //       headers: {
+  //         // "Content-Type": "application/json",
+  //         credentials: "same-origin"
+  //       },
+  //     });
+
+  //     const result = await response.json();
+  //     console.log('data: ', result);
+  //     if (result.error) {
+  //       console.log('failed to get survesy: ', result.error);
+  //       setError(result.type);
+  //     } else {
+  //       setSurveys(result);
+  //     }
+  //   }
+
+  //   getSurveys();
+  // }, [surveys, error]);
+
+  async function getSurveys() {
+    const response = await fetch("http://localhost:3000/surveys", {
+      method: "GET",
+      headers: {
+        // "Content-Type": "application/json",
+        credentials: "include"
+      },
+    });
+
+    const result = await response.json();
+    console.log('data: ', result);
+    if (result.error) {
+      console.log('failed to get survesy: ', result.error);
+      setError(result.type);
+    } else {
+      setSurveys(result);
+    }
+  }
+
+  return (
+    <>
+      <div className='bg-green-300'>
+
+        <Button onClick={(evt) => {
+          console.log('clicked button');
+          setError('');
+          getSurveys();
+        }}>My Surveys</Button>
+        <div>
+          Surveys
+          {[surveys]}
+        </div>
+        <div className='bg-red-600'>
+          Errors
+          {[error]}
+        </div>
+      </div>
+    </>
+  )
+
+}
+
+
+
+function Login() {
+  const formSchema = z.object({
+    email: z.string().min(2).max(50),
+    password: z.string()
+  });
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
+  const onSubmit = async (evt) => {
+    console.log(evt);
+    try {
+      const response = await fetch("http://localhost:3000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(evt),
+      });
+
+      const result = await response.json();
+      const headers = await response.headers;
+      console.log("Success:", result, headers);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+
+  }
+
+  return (
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-1">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input placeholder="shadcn" {...field} />
+                </FormControl>
+
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>password</FormLabel>
+                <FormControl>
+                  <Input placeholder="shadcn" {...field} />
+                </FormControl>
+                {/* <FormDescription>
+                  password here
+                </FormDescription> */}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit">Submit</Button>
+        </form>
+      </Form>
+    </>
+  );
+}
+
 
 function App() {
   const [formtext, setFormtext] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"');
@@ -23,6 +169,10 @@ function App() {
   return (
     <>
       <div className='grid grid-cols-2 gap-5'>
+        <div>
+          <Login></Login>
+          <ListSurveys></ListSurveys>
+        </div>
         <div>
 
           <Textarea className='w-full h-full' cols={10} value={formtext} onChange={(evt) => {
@@ -40,22 +190,10 @@ function App() {
 
 /**
  * The complete Triforce, or one or more components of the Triforce.
- * @typedef {Object} Question
- * @property {string} value - Indicates whether the Courage component is present.
- * @property {string} id - Indicates whether the Power component is present.
- * @property {Array<Option>} options - Indicates whether the Wisdom component is present.
- */
-
-
-/**
- * The complete Triforce, or one or more components of the Triforce.
  * @typedef {Object} Option
  * @property {string} text - Indicates whether the Courage component is present.
  * @property {string} id - Indicates whether the Power component is present.
  */
-
-
-
 function GenericForm({ plaintext, survey }) {
   let [submittedValues, setSubmittedValues] = useState(null);
   // let [survey, setSurvey] = useState(markdown_to_form_wasm("# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"));

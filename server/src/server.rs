@@ -12,7 +12,10 @@ use sqlx::FromRow;
 use tokio::task::JoinHandle;
 
 use tower::ServiceBuilder;
-use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use tower_http::{
+    cors::{Any, CorsLayer},
+    trace::TraceLayer,
+};
 
 use tower_sessions::PostgresStore;
 use tracing::log::info;
@@ -56,6 +59,7 @@ impl ServerApplication {
                 "http://localhost:3000".parse().unwrap(),
                 "http://localhost:3001".parse().unwrap(),
                 "http://localhost:8080".parse().unwrap(),
+                "http://localhost:5173".parse().unwrap(),
                 // "http://api.example.com".parse().unwrap(),
             ]);
         }
@@ -65,13 +69,15 @@ impl ServerApplication {
                 http::header::CONTENT_TYPE,
                 http::header::ACCEPT,
                 // http::header::AUTHORIZATION,
+                http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
                 HeaderName::from_static("x-auth-token"),
                 HeaderName::from_static("x-sid"),
                 HeaderName::from_static("session_id"),
             ])
             // .allow_headers(Any)
             .allow_credentials(true)
-            .allow_origin(origins);
+            .allow_origin(origins)
+            .expose_headers([HeaderName::from_static("session_id"), Any]);
 
         // build our application with a route
 
