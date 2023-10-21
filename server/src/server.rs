@@ -1,32 +1,28 @@
 use axum::{
-    error_handling::HandleErrorLayer,
-    extract::State,
-    http::{self, HeaderName, HeaderValue, Method},
-    middleware::{self, Next},
-    response::Response,
+    http::{self, HeaderName, Method},
+    middleware::{self},
     Router,
 };
 use chrono::{DateTime, Utc};
 use db::database::Database;
-use hyper::{Request, StatusCode};
+
 use markdownparser::Survey;
 
 use sqlx::FromRow;
 use tokio::task::JoinHandle;
 
 use tower::ServiceBuilder;
-use tower_http::{cors::CorsLayer, trace::TraceLayer, BoxError};
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
-use tower_sessions::{cookie::time::Duration, MemoryStore, PostgresStore, SessionManagerLayer};
+use tower_sessions::{PostgresStore};
 use tracing::log::info;
 
 use crate::{
-    auth::{validate_session, validate_session_middleware},
+    auth::{validate_session_middleware},
     config::EnvConfig,
     db::{self, database::ConnectionDetails},
     mail::mail::Mailer,
-    routes::routes::get_routes,
-    ServerError, ServerState,
+    routes::routes::get_routes, ServerState,
 };
 
 pub struct ServerApplication {

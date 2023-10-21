@@ -2,7 +2,7 @@ use std::{
     fmt::{self},
 };
 
-use anyhow::{self, Context};
+use anyhow::{self};
 
 use chrono::{DateTime, Utc, Duration};
 use markdownparser::{nanoid_gen};
@@ -10,7 +10,7 @@ use markdownparser::{nanoid_gen};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::{FromRow, PgPool};
-use tower_sessions::session;
+
 // use models::CreateAnswersModel;
 // use chrono::Local;
 // use sqlx::{
@@ -351,14 +351,14 @@ impl Database {
         //     },
         // };
 
-        let curr_session: Session = match sqlx::query_as::<_, Session>(
+        let _curr_session: Session = match sqlx::query_as::<_, Session>(
             r#"select * from mdp.sessions where sessions.session_id = $1"#
         ).bind(session_id).fetch_one(&self.pool).await {
             Ok(x) => {
                 info!("GET_SESSION - found");
                 return Ok(x)
             },
-            Err(error) => {
+            Err(_error) => {
                 info!("GET_SESSION - not found");
                 return Err(ServerError::AuthFailTokenNotVerified("User session not available".to_string()));
             },

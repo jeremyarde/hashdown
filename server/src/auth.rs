@@ -1,28 +1,28 @@
 use crate::constants::SESSION_ID_KEY;
-use crate::mware::ctext::create_jwt_token;
+
 use crate::routes::routes::LoginPayload;
 
 use anyhow::Context;
 use argon2::{PasswordHash, PasswordHasher};
 
-use axum::headers::authorization::Bearer;
-use axum::headers::Authorization;
+
+
 // use axum::extract::TypedHeader;
 // use axum::headers::authorization::{Authorization, Bearer};
-use axum::{http::StatusCode, response::Redirect};
+
 use axum_extra::extract::cookie::CookieJar;
 
 use axum::http::HeaderValue;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use chrono::{DateTime, Duration, Utc};
+use chrono::{Duration, Utc};
 use hyper::{HeaderMap, Request};
-use markdownparser::nanoid_gen;
+
 use serde_json::json;
 use tower_sessions::cookie::Cookie;
-use tower_sessions::session;
 
-use crate::mware::ctext::create_jwt_claim;
+
+
 
 use crate::db::database::{CreateUserRequest, Session};
 
@@ -30,7 +30,7 @@ use argon2::password_hash::rand_core::OsRng;
 
 use argon2::password_hash::SaltString;
 
-use argon2::Argon2;
+
 
 use tracing::log::info;
 
@@ -38,7 +38,7 @@ use crate::ServerError;
 
 use serde_json::Value;
 
-use axum::{Json, TypedHeader};
+use axum::{Json};
 
 use crate::ServerState;
 
@@ -53,7 +53,7 @@ pub enum AuthError {
 #[axum::debug_handler]
 pub async fn signup(
     state: State<ServerState>,
-    jar: CookieJar,
+    _jar: CookieJar,
     payload: Json<LoginPayload>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> signup");
@@ -100,7 +100,7 @@ pub async fn signup(
 }
 
 pub async fn validate_session(
-    headers: HeaderMap,
+    _headers: HeaderMap,
     // session_id: String,
     jar: CookieJar,
     // extract(session_id):
@@ -149,7 +149,7 @@ pub async fn validate_session(
 pub async fn logout(
     state: State<ServerState>,
     jar: CookieJar,
-    headers: HeaderMap,
+    _headers: HeaderMap,
     // payload: Json<LoginPayload>,
 ) -> impl IntoResponse {
     info!("->> logout");
@@ -168,7 +168,7 @@ pub async fn logout(
 pub async fn login(
     state: State<ServerState>,
     jar: CookieJar,
-    headers: HeaderMap,
+    _headers: HeaderMap,
     payload: Json<LoginPayload>,
 ) -> impl IntoResponse {
     info!("->> login");

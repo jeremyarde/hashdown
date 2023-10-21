@@ -35,7 +35,7 @@ pub mod survey_responses {
         debug!("    ->> request: {:#?}", payload);
 
         // check survey exists
-        let survey = match state
+        let _survey = match state
             .db
             .get_survey(&payload.survey_id)
             .await
@@ -75,7 +75,7 @@ pub mod survey_responses {
         debug!("    ->> survey: {:#?}", payload);
 
         // json version
-        let survey = match state
+        let _survey = match state
             .db
             .get_survey(&survey_id)
             .await
@@ -106,7 +106,7 @@ pub mod survey_responses {
             // created_at: "".to_string(),
         };
 
-        let answer_result = state
+        let _answer_result = state
             .db
             .create_answer(create_answer_model)
             .await

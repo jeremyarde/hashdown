@@ -1,7 +1,7 @@
 use axum::response::IntoResponse;
 use axum::Json;
 use axum::{http::StatusCode, response::Response};
-use hyper::{Client, Method, Uri};
+use hyper::{Method, Uri};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tracing::info;

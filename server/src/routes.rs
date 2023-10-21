@@ -2,11 +2,11 @@ pub mod routes {
     use chrono::{DateTime, Utc};
 
     use axum::{
-        extract::{Path, Query},
+        extract::{Path},
         http::{HeaderMap, Request},
         middleware::{self, Next},
         response::IntoResponse,
-        response::{Html, Response},
+        response::{Response},
         routing::{get, post},
         Router,
     };
@@ -18,7 +18,7 @@ pub mod routes {
     };
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
-    use tower_sessions::Session;
+    
 
     use tracing::{debug, log::info};
 
@@ -38,8 +38,7 @@ pub mod routes {
     }
 
     use markdownparser::{
-        nanoid_gen, parse_markdown_v3, ParsedSurvey, Question, QuestionOption, QuestionType,
-        Questions, Survey,
+        nanoid_gen, parse_markdown_v3,
     };
 
     #[derive(Deserialize, Serialize, Debug)]
