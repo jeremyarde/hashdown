@@ -4,12 +4,12 @@ use derive_builder::Builder;
 // use rand::{thread_rng, Rng};
 // use nanoid::nanoid;
 use getrandom::getrandom;
-use regex::{Captures, Regex};
+use regex::{Regex};
 use serde::{Deserialize, Serialize};
 
-use anyhow::{anyhow, Error};
-use std::{collections::hash_map::RandomState, option};
-use tracing::{debug, info};
+use anyhow::{anyhow};
+use std::{collections::hash_map::RandomState};
+use tracing::{debug};
 
 use std::hash::{BuildHasher, Hasher};
 
@@ -286,7 +286,7 @@ pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
     let _question_num = 0;
     let mut title = "";
     let mut curr_line_type: LineType = LineType::Nothing;
-    let mut curr_line: &str;
+    let mut _curr_line: &str;
 
     for line in contents.lines() {
         // println!("Curr line: {line}");
@@ -329,7 +329,7 @@ pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
             }
             (LineType::Title, LineType::Nothing) => {
                 curr_line_type = LineType::Title;
-                title = line.clone();
+                title = line;
                 last_line_type = LineType::Title;
             }
             (LineType::Question, LineType::Title) => {
