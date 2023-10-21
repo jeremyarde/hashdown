@@ -52,8 +52,8 @@ create table pageviews (
     user_agent TEXT
 );
 
-INSERT INTO users (user_id, email, password_hash) VALUES (
-    'testuserid', 'fake', ''
+INSERT INTO users (user_id, email, password_hash, verified) VALUES (
+    'testuserid', 'fake', '', true
 );
 
 INSERT INTO surveys (survey_id, plaintext, user_id, created_at)

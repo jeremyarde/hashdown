@@ -1,3 +1,4 @@
+use crate::constants::SESSION_ID_KEY;
 use crate::mware::ctext::create_jwt_token;
 use crate::routes::routes::LoginPayload;
 
@@ -49,19 +50,6 @@ pub enum AuthError {
     PasswordDoNotMatch,
 }
 
-pub async fn validate_credentials(
-    expected_password_hash: String,
-    password_candidate: String,
-) -> anyhow::Result<(), ServerError> {
-    let expected_password_hash =
-        PasswordHash::new(&expected_password_hash).expect("Should hash password properly");
-    match Argon2::default().verify_password(password_candidate.as_bytes(), &expected_password_hash)
-    {
-        Ok(_x) => Ok(()),
-        Err(_e) => Err(ServerError::PasswordDoesNotMatch),
-    }
-}
-
 #[axum::debug_handler]
 pub async fn signup(
     state: State<ServerState>,
@@ -86,7 +74,7 @@ pub async fn signup(
         .unwrap();
     let _password_hash_string = hash.to_string();
 
-    let mut transactions = state.db.pool.begin().await.unwrap();
+    // let mut transactions = state.db.pool.begin().await.unwrap();
 
     let user = match state
         .db
@@ -103,18 +91,12 @@ pub async fn signup(
         }
     };
 
-    let jwt_claim: crate::mware::ctext::JwtResult =
-        create_jwt_claim(user.email.clone(), "somerole-pleasechange")?;
+    // Don't create a session for signing up - we need to verify email first
+    // let transaction_result = transactions.commit().await;
 
-    let session = state.db.create_session(user.user_id).await?;
+    // let _ = jar.add(Cookie::new("session_id", session.session_id.clone()));
 
-    let transaction_result = transactions.commit().await;
-
-    let _ = jar.add(Cookie::new("session_id", session.session_id.clone()));
-
-    Ok(Json(
-        json!({"email": user.email, "auth_token": jwt_claim.token, "session_id": session.session_id}),
-    ))
+    Ok(Json(json!({"email": user.email})))
 }
 
 pub async fn validate_session(
@@ -188,9 +170,6 @@ async fn authorize_and_create_session(token: &str) -> Option<String> {
 }
 
 pub async fn login(
-    // cookies: Cookie,
-    // cookies: axum_extra::extract::
-    // ctx: Result<Ctext, CustomError>,
     state: State<ServerState>,
     jar: CookieJar,
     headers: HeaderMap,
@@ -203,7 +182,7 @@ pub async fn login(
         return Err(ServerError::MissingCredentials);
     }
 
-    // look for email in database
+    // look for user in database
     let user = match state
         .db
         .get_user_by_email(payload.email.clone())
@@ -219,28 +198,32 @@ pub async fn login(
 
     // check if password matches
     let argon2 = argon2::Argon2::default();
-
     let hash = PasswordHash::new(&user.password_hash).unwrap();
-    let is_correct = match argon2.verify_password(payload.password.as_bytes(), &hash) {
+
+    match argon2.verify_password(payload.password.as_bytes(), &hash) {
         Ok(_) => true,
         Err(_) => return Err(ServerError::AuthPasswordsDoNotMatch),
     };
-    println!("      ->> password matches={is_correct}");
-    let jwt = create_jwt_token(user.clone())?;
+
+    match user.verified {
+        true => true,
+        false => {
+            return Err(ServerError::UserEmailNotVerified(
+                "Email not verified".to_string(),
+            ))
+        }
+    };
 
     // TODO: create success body
     let username = payload.email.clone();
-    // let logged_in = true;
-
-    println!("     ->> Success logging in");
 
     let session = state.db.create_session(user.user_id.clone()).await?;
 
-    jar.add(Cookie::new("session_id", session.session_id.clone()));
+    let _ = jar.add(Cookie::new(SESSION_ID_KEY, session.session_id.clone()));
 
     let mut headers = HeaderMap::new();
     headers.insert(
-        "session_id",
+        SESSION_ID_KEY,
         HeaderValue::from_str(&session.session_id).unwrap(),
     );
 
@@ -261,19 +244,11 @@ pub async fn validate_session_middleware<B>(
     next: Next<B>,
 ) -> anyhow::Result<Response, ServerError> {
     info!("--> validate_session_middleware - THIS IS GOOD");
-    // do something with `request`...
 
     let session_header = request
         .headers()
         .get("session_id")
         .and_then(|header| header.to_str().ok());
-
-    let session_header = if let Some(session_header) = session_header {
-        Some(session_header)
-    } else {
-        // return Err(ServerError::MissingCredentials);
-        None
-    };
 
     if session_header.is_some() {
         match state
@@ -283,18 +258,19 @@ pub async fn validate_session_middleware<B>(
         {
             Ok(x) => {
                 request.headers_mut().insert(
-                    "session_id",
+                    SESSION_ID_KEY,
                     HeaderValue::from_str(&x.session_id.clone())
                         .expect("Session Id is not available"),
                 );
                 request.extensions_mut().insert(x);
+                info!(" --> validate_session_middleware - found active session");
                 return Ok(next.run(request).await);
             }
             Err(_) => return Err(ServerError::AuthFailNoTokenCookie),
         }
     }
 
-    info!(" --> validate_session_middleware - no session available!");
+    info!(" --> validate_session_middleware - no session found");
 
     return Ok(next.run(request).await);
 }

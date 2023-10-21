@@ -1,7 +1,7 @@
 use axum::response::IntoResponse;
+use axum::Json;
 use axum::{http::StatusCode, response::Response};
-use axum::{Json};
-use hyper::{Method, Uri};
+use hyper::{Client, Method, Uri};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tracing::info;
@@ -28,6 +28,7 @@ pub enum ServerError {
     AuthFailTokenNotVerified(String),
     AuthFailTokenDecodeIssue,
     AuthFailTokenExpired,
+    UserEmailNotVerified(String),
 }
 
 pub async fn main_response_mapper(
@@ -135,6 +136,9 @@ impl ServerError {
             }
             ServerError::AuthFailTokenExpired => {
                 (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, None)
+            }
+            ServerError::UserEmailNotVerified(x) => {
+                (StatusCode::UNAUTHORIZED, ClientError::LOGIN_FAIL, Some(x))
             }
         }
     }

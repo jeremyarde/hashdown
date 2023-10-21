@@ -20,6 +20,7 @@ use crate::server::ServerApplication;
 // mod db;
 mod auth;
 mod config;
+mod constants;
 mod db;
 mod mware;
 mod server;
