@@ -138,9 +138,9 @@ impl Database {
             }
         };
 
-        // info!("Running migrations");
-        // sqlx::migrate!().run(&pool).await?;
-        // info!("Finished running migrations");
+        info!("Running migrations");
+        sqlx::migrate!().run(&pool).await?;
+        info!("Finished running migrations");
 
         // let settings = sqlx::query_as::<_, Settings>("select * from settings")
         //     .fetch_one(&mut pool)
@@ -191,9 +191,17 @@ pub struct UserModel {
     pub password_hash: String,
     pub created_at: DateTime<Utc>,
     pub modified_at: DateTime<Utc>,
-    pub verified: bool,
+    pub email_status: EmailStatus,
     pub user_id: String,
+    pub deleted_at: Option<DateTime<Utc>>,
     // pub user_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone , sqlx::Type)]
+#[sqlx(type_name = "email_status", rename_all = "snake_case")]
+pub enum EmailStatus {
+    Verified,
+    Unverified
 }
 
 pub struct CreateUserRequest {
@@ -203,6 +211,7 @@ pub struct CreateUserRequest {
 
 #[derive(Serialize, Debug, Clone, FromRow)]
 pub struct Session {
+    pub id: i32,
     pub user_id: String,
     pub session_id: String,
     pub active_period_expires_at: DateTime<Utc>,
@@ -249,8 +258,7 @@ impl Database {
         // .await?;
         info!("Search for user with email: {email:?}");
 
-        let res = sqlx::query_as::<_, UserModel>("select * from mdp.users where email = $1")
-            .bind(email)
+        let res = sqlx::query_as!(UserModel, r#"select id, user_id, email, password_hash, created_at, modified_at, deleted_at, email_status as "email_status: EmailStatus" from mdp.users where email = $1"#, email)
             .fetch_one(&self.pool)
             .await?;
 
@@ -352,7 +360,7 @@ impl Database {
         // };
 
         let _curr_session: Session = match sqlx::query_as::<_, Session>(
-            r#"select * from mdp.sessions where sessions.session_id = $1"#
+            r#"select * from mdp.sessions sessions where sessions.session_id = $1"#
         ).bind(session_id).fetch_one(&self.pool).await {
             Ok(x) => {
                 info!("GET_SESSION - found");
@@ -372,18 +380,14 @@ impl Database {
         let new_active_expires = Utc::now() + Duration::hours(1);
         let new_idle_expires = Utc::now() + Duration::hours(2);
 
-        let new_session = match sqlx::query_as::<_, Session>(
+        let new_session = match sqlx::query_as!(Session,
             r#"
-            insert into mdp.user_sessions sessions (session_id, user_id, active_period_expires_at, idle_period_expires_at) 
+            insert into mdp.sessions (session_id, user_id, active_period_expires_at, idle_period_expires_at) 
             values ($1, $2, $3, $4)
             ON conflict (user_id) do update 
             set session_id = $1, active_period_expires_at = $3, idle_period_expires_at = $4 
-            where user_sessions.user_id = $2 returning *"#
-        )
-        .bind(session_id)
-        .bind(user_id)
-        .bind(new_active_expires)
-        .bind(new_idle_expires)
+            where sessions.user_id = $2 returning *"#, 
+        session_id, user_id, new_active_expires, new_idle_expires)
         .fetch_one(&self.pool).await {
             Ok(x) => x,
             Err(err) => {

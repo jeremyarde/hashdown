@@ -5,8 +5,6 @@ use crate::routes::routes::LoginPayload;
 use anyhow::Context;
 use argon2::{PasswordHash, PasswordHasher};
 
-
-
 // use axum::extract::TypedHeader;
 // use axum::headers::authorization::{Authorization, Bearer};
 
@@ -21,24 +19,19 @@ use hyper::{HeaderMap, Request};
 use serde_json::json;
 use tower_sessions::cookie::Cookie;
 
-
-
-
 use crate::db::database::{CreateUserRequest, Session};
 
 use argon2::password_hash::rand_core::OsRng;
 
 use argon2::password_hash::SaltString;
 
-
-
 use tracing::log::info;
 
-use crate::ServerError;
+use crate::{db, ServerError};
 
 use serde_json::Value;
 
-use axum::{Json};
+use axum::Json;
 
 use crate::ServerState;
 
@@ -72,7 +65,7 @@ pub async fn signup(
     let hash = argon2
         .hash_password(payload.password.as_bytes(), &salt)
         .unwrap();
-    let _password_hash_string = hash.to_string();
+    // let _password_hash_string = hash.to_string();
 
     // let mut transactions = state.db.pool.begin().await.unwrap();
 
@@ -135,6 +128,7 @@ pub async fn validate_session(
         let updated_session = state
             .db
             .update_session(Session {
+                id: 0,
                 session_id: curr_session.session_id,
                 active_period_expires_at: new_active_expires,
                 idle_period_expires_at: new_idle_expires,
@@ -160,8 +154,11 @@ pub async fn logout(
         return Err(ServerError::AuthFailNoTokenCookie);
     };
 
-    state.db.delete_session(session_header.clone().to_string());
-    &jar.remove(session_header);
+    state
+        .db
+        .delete_session(session_header.clone().to_string())
+        .await?;
+    let _ = &jar.remove(session_header);
     return Ok(());
 }
 
@@ -196,16 +193,16 @@ pub async fn login(
 
     // check if password matches
     let argon2 = argon2::Argon2::default();
-    let hash = PasswordHash::new(&user.password_hash).unwrap();
+    let current_password_hash = PasswordHash::new(&user.password_hash).unwrap();
 
-    match argon2.verify_password(payload.password.as_bytes(), &hash) {
+    match argon2.verify_password(payload.password.as_bytes(), &current_password_hash) {
         Ok(_) => true,
         Err(_) => return Err(ServerError::AuthPasswordsDoNotMatch),
     };
 
-    match user.verified {
-        true => true,
-        false => {
+    match user.email_status {
+        db::database::EmailStatus::Verified => true,
+        _ => {
             return Err(ServerError::UserEmailNotVerified(
                 "Email not verified".to_string(),
             ))
