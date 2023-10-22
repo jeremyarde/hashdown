@@ -6,6 +6,7 @@ use axum::{
 use chrono::{DateTime, Utc};
 use db::database::Database;
 
+use hyper::header::CONTENT_ENCODING;
 use markdownparser::Survey;
 
 use sqlx::FromRow;
@@ -17,7 +18,7 @@ use tower_http::{
     trace::TraceLayer,
 };
 
-use tower_sessions::PostgresStore;
+// use tower_sessions::PostgresStore;
 use tracing::log::info;
 
 use crate::{
@@ -28,6 +29,9 @@ use crate::{
     routes::routes::get_routes,
     ServerState,
 };
+
+use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, net::SocketAddr};
 
 pub struct ServerApplication {
     pub base_url: SocketAddr,
@@ -68,16 +72,19 @@ impl ServerApplication {
             .allow_headers([
                 http::header::CONTENT_TYPE,
                 http::header::ACCEPT,
-                // http::header::AUTHORIZATION,
+                http::header::AUTHORIZATION,
                 http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
+                http::header::ACCESS_CONTROL_REQUEST_METHOD,
                 HeaderName::from_static("x-auth-token"),
                 HeaderName::from_static("x-sid"),
                 HeaderName::from_static("session_id"),
+                HeaderName::from_static("credentials"),
             ])
             // .allow_headers(Any)
             .allow_credentials(true)
             .allow_origin(origins)
-            .expose_headers([HeaderName::from_static("session_id"), Any]);
+            .expose_headers([CONTENT_ENCODING, HeaderName::from_static("session_id")]);
+        // .expose_headers([HeaderName::from_static("session_id")]);
 
         // build our application with a route
 
@@ -156,49 +163,6 @@ impl CreateSurveyResponse {
         CreateSurveyResponse { survey }
     }
 }
-
-use std::{collections::HashMap, net::SocketAddr};
-
-// use markdownparser::{markdown_to_form, parse_markdown_v3, Survey};
-use serde::{Deserialize, Serialize};
-
-// use ts_rs::TS;
-
-// use crate::{internal_error, ServerState};
-
-// #[derive(Debug, Serialize, Clone, FromRow, Deserialize)]
-// pub struct Survey {
-//     pub id: String,
-//     // nanoid: String,
-//     pub plaintext: String,
-//     // user_id: String,
-//     // created_at: String,
-//     // modified_at: String,
-//     // version: String,
-// }
-
-// impl Survey {
-//     pub fn from(text: String) -> Survey {
-//         return Survey {
-//             id: nanoid_gen(10),
-//             plaintext: text,
-//         };
-//     }
-// }
-
-// impl SurveyModel {
-//     fn to_survey(survey: &SurveyModel) -> Survey {
-//         let survey = survey.clone();
-//         let questions = markdown_to_form(survey.plaintext.clone()).questions;
-//         return Survey {
-//             survey: todo!(),
-//             metadata: todo!(),
-//             UserInfo: todo!(),
-//             // nanoid: markdownparser::nanoid_gen(),
-//             // parse_version: survey.parse_version,
-//         };
-//     }
-// }
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 pub struct SurveyModel {

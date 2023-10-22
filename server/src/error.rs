@@ -1,5 +1,5 @@
 use axum::response::IntoResponse;
-use axum::Json;
+use axum::{Json, Extension};
 use axum::{http::StatusCode, response::Response};
 use hyper::{Method, Uri};
 use serde::{Deserialize, Serialize};
@@ -36,7 +36,7 @@ pub enum ServerError {
 }
 
 pub async fn main_response_mapper(
-    ctx: Option<Ctext>,
+    ctx: Extension<Ctext>,
     uri: Uri,
     req_method: Method,
     res: Response,

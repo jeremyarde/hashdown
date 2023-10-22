@@ -37,7 +37,7 @@ rand = "0.8.5"
 serde = {version = "1.0.155", features = ["derive"]}
 serde_json = "1.0.94"
 sqlx = {version = "0.7.1", features = ["postgres", "chrono", "postgres", "uuid", "runtime-tokio"]}
-tower-sessions = {version = "0.2.4", features = ["postgres-store"]}
+# tower-sessions = {version = "0.2.4", features = ["postgres-store"]}
 
 [dev-dependencies]
 serial_test = "1.0.0"

@@ -28,7 +28,7 @@ pub mod survey_responses {
     #[axum::debug_handler]
     pub async fn submit_response(
         State(state): State<ServerState>,
-        ctx: Option<Ctext>,
+        // ctx: Option<Ctext>,
         Json(payload): extract::Json<SubmitResponseRequest>, // for urlencoded
     ) -> Result<Json<SubmitResponseResponse>, ServerError> {
         info!("->> submit_response");
@@ -68,7 +68,7 @@ pub mod survey_responses {
     pub async fn list_response(
         State(state): State<ServerState>,
         Path(survey_id): Path<String>,
-        ctx: Option<Ctext>,
+        // ctx: Option<Ctext>,
         Json(payload): extract::Json<Value>, // for urlencoded
     ) -> Result<Json<Value>, ServerError> {
         info!("->> submit_survey");

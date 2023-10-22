@@ -3,6 +3,10 @@ create schema if not exists mdp;
 
 CREATE TYPE mdp.email_status AS ENUM ('verified', 'unverified');
 
+CREATE table mdp.magic_links (
+    
+);
+
 CREATE table mdp.users (
     id SERIAL PRIMARY KEY,
     user_id TEXT not null unique,

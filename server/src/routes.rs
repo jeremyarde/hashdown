@@ -2,13 +2,13 @@ pub mod routes {
     use chrono::{DateTime, Utc};
 
     use axum::{
-        extract::{Path},
+        extract::Path,
         http::{HeaderMap, Request},
         middleware::{self, Next},
         response::IntoResponse,
-        response::{Response},
+        response::Response,
         routing::{get, post},
-        Router,
+        Extension, Router,
     };
 
     use axum::{
@@ -18,13 +18,12 @@ pub mod routes {
     };
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
-    
 
     use tracing::{debug, log::info};
 
     use crate::{
         auth::{self},
-        db::database::CreateAnswersModel,
+        db::database::{CreateAnswersModel, Session},
         error::main_response_mapper,
         mware::ctext::Ctext,
         server::SurveyModel,
@@ -37,9 +36,7 @@ pub mod routes {
         plaintext: String,
     }
 
-    use markdownparser::{
-        nanoid_gen, parse_markdown_v3,
-    };
+    use markdownparser::{nanoid_gen, parse_markdown_v3};
 
     #[derive(Deserialize, Serialize, Debug)]
     pub struct ListSurveyResponse {
@@ -60,6 +57,7 @@ pub mod routes {
             .route("/responses/:id", get(survey_responses::list_response))
             .route("/auth/login", post(auth::login))
             .route("/auth/signup", post(auth::signup))
+            // .route("/auth/verify-token", get(auth::validate_session))
             .route("/ping", get(ping))
             // .route("/session", get(handler))
             .layer(middleware::map_response(main_response_mapper))
@@ -84,16 +82,17 @@ pub mod routes {
     pub async fn create_survey(
         headers: HeaderMap,
         State(state): State<ServerState>,
-        ctx: Option<Ctext>,
+        ctx: Extension<Ctext>,
         extract::Json(payload): extract::Json<CreateSurveyRequest>,
     ) -> anyhow::Result<Json<Value>, ServerError> {
         info!("->> create_survey");
 
-        let user_id = match &ctx {
-            Some(x) => x.user_id(),
-            None => return Err(ServerError::AuthFailNoTokenCookie),
-        };
-        info!("Creating new survey for user={user_id:?}");
+        // let user_id = match &ctx {
+        //     Some(x) => x.user_id(),
+        //     None => return Err(ServerError::AuthFailNoTokenCookie),
+        // };
+
+        info!("Creating new survey for user={:?}", ctx.user_id);
         // Check that the survey is Ok
         let parsed_survey =
             parse_markdown_v3(payload.plaintext).expect("Could not parse the survey");
@@ -104,7 +103,7 @@ pub mod routes {
             id: 0,
             survey_id: nanoid_gen(12),
             plaintext: parsed_survey.plaintext.clone(),
-            user_id: user_id.to_owned(),
+            user_id: ctx.user_id.to_owned(),
             created_at: metadata.created_at,
             modified_at: metadata.modified_at,
             version: "fixme".to_string(),
@@ -134,7 +133,7 @@ pub mod routes {
     pub async fn submit_survey(
         State(state): State<ServerState>,
         Path(survey_id): Path<String>,
-        ctx: Option<Ctext>,
+        ctx: Extension<Ctext>,
         Json(payload): extract::Json<Value>, // for urlencoded
     ) -> Result<Json<Value>, ServerError> {
         info!("->> submit_survey");
@@ -242,7 +241,7 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn get_survey(
         State(_state): State<ServerState>,
-        _ctx: Option<Ctext>,
+        _ctx: Extension<Ctext>,
         // authorization: TypedHeader<Authorization<Bearer>>,
         Path(survey_id): Path<String>,
     ) -> impl IntoResponse {
@@ -261,17 +260,19 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn list_survey(
         state: State<ServerState>,
-        ctx: Option<Ctext>,
+        ctx: Extension<Ctext>,
         // State(state): State<ServerState>,
+        session: Extension<Session>,
         headers: HeaderMap,
     ) -> anyhow::Result<Json<Value>, ServerError> {
         println!("context: {:?}", ctx);
 
-        if ctx.is_none() {
-            return Err(ServerError::AuthFailNoTokenCookie);
-        }
+        // if ctx.is_none() {
+        //     return Err(ServerError::AuthFailNoTokenCookie);
+        // } else {
+        // }
 
-        let user_id = &ctx.expect("Context should be available").user_id().clone();
+        let user_id = &ctx.user_id().clone();
 
         println!("Getting surveys for user={user_id}");
         let pool = &state.db.pool;

@@ -10,7 +10,10 @@ use sqlx::FromRow;
 
 use tracing::log::info;
 
-use crate::{db, ServerError};
+use crate::{
+    db::{self, database::Session},
+    ServerError,
+};
 
 struct Keys {
     encoding: EncodingKey,
@@ -33,50 +36,50 @@ static KEYS: Lazy<Keys> = Lazy::new(|| {
     Keys::new(secret.as_bytes())
 });
 
-#[async_trait]
-impl<S: Send + Sync> FromRequestParts<S> for Ctext {
-    type Rejection = ServerError;
+// #[async_trait]
+// impl<S: Send + Sync> FromRequestParts<S> for Ctext {
+//     type Rejection = ServerError;
 
-    // #[tracing::instrument]
-    async fn from_request_parts(
-        parts: &mut axum::http::request::Parts,
-        _state: &S,
-    ) -> Result<Self, ServerError> {
-        info!("->> from_request_parts");
+//     // #[tracing::instrument]
+//     async fn from_request_parts(
+//         parts: &mut axum::http::request::Parts,
+//         _state: &S,
+//     ) -> Result<Self, ServerError> {
+//         info!("->> from_request_parts");
 
-        let headers = parts
-            .extract::<HeaderMap>()
-            .await
-            .expect("Could not extract headers");
+//         let headers = parts
+//             .extract::<HeaderMap>()
+//             .await
+//             .expect("Could not extract headers");
 
-        let auth_token = match headers.get("x-auth-token") {
-            Some(x) => {
-                println!("Parsing header auth token: {:?}", &x);
-                x.to_str().expect("Auth token was not a string")
-            }
-            None => "",
-        };
-        println!("Parsed auth_token: {:?}", &auth_token);
+//         let auth_token = match headers.get("x-auth-token") {
+//             Some(x) => {
+//                 println!("Parsing header auth token: {:?}", &x);
+//                 x.to_str().expect("Auth token was not a string")
+//             }
+//             None => "",
+//         };
+//         println!("Parsed auth_token: {:?}", &auth_token);
 
-        let session_id = match headers.get("session_id") {
-            Some(x) => {
-                println!("Parsing header auth token: {:?}", &x);
-                x.to_str().expect("Auth token was not a string")
-            }
-            None => "",
-        };
-        info!("Session token: ${session_id}");
+//         let session_id = match headers.get("session_id") {
+//             Some(x) => {
+//                 println!("Parsing header auth token: {:?}", &x);
+//                 x.to_str().expect("Auth token was not a string")
+//             }
+//             None => "",
+//         };
+//         info!("Session token: ${session_id}");
 
-        if auth_token.is_empty() {
-            info!(" ->> Auth header was not present");
-            return Err(ServerError::AuthFailNoTokenCookie);
-        }
+//         if auth_token.is_empty() {
+//             info!(" ->> Auth header was not present");
+//             return Err(ServerError::AuthFailNoTokenCookie);
+//         }
 
-        let jwt_claim = validate_jwt_claim(auth_token)?;
+//         let jwt_claim = validate_jwt_claim(auth_token)?;
 
-        Ok(Ctext::new(jwt_claim.uid))
-    }
-}
+//         Ok(Ctext::new(jwt_claim.uid, ))
+//     }
+// }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -196,7 +199,8 @@ pub fn create_jwt_claim(
 
 #[derive(Clone, Debug)]
 pub struct Ctext {
-    user_id: String,
+    pub user_id: String,
+    pub session: Session,
     // parse cookies in here?
 }
 
@@ -205,12 +209,12 @@ impl Ctext {
         &self.user_id
     }
 
-    pub fn new(user_id: String) -> Self {
-        Ctext { user_id }
+    pub fn new(user_id: String, session: Session) -> Self {
+        Ctext { user_id, session }
     }
 }
 
-pub fn create_jwt_token(user: db::database::UserModel) -> Result<String, ServerError> {
+pub fn create_jwt_token(user: &Ctext) -> Result<String, ServerError> {
     let nowutc = chrono::Utc::now();
     let now: usize = match nowutc
         .timestamp()
@@ -231,7 +235,7 @@ pub fn create_jwt_token(user: db::database::UserModel) -> Result<String, ServerE
         sub: "myemailsub@email.com".to_string(),
         exp: expire,
         iat: now,
-        uid: user.id.to_string(),
+        uid: user.user_id.to_string(),
         nbf: now,
         tenant: "".to_string(),
         role: "".to_owned(),
@@ -241,10 +245,10 @@ pub fn create_jwt_token(user: db::database::UserModel) -> Result<String, ServerE
     Ok(jwt)
 }
 
-#[derive(FromRow)]
-pub struct UserModel {
-    id: i32,
-}
+// #[derive(FromRow)]
+// pub struct UserModel {
+//     id: i32,
+// }
 
 #[derive(FromRow, Debug)]
 pub struct Person {

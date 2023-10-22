@@ -1,11 +1,14 @@
-use lettre::{SmtpTransport};
+use lettre::{
+    message::{header::ContentType, MessageBuilder},
+    Message, SmtpTransport, Transport,
+};
 
 #[derive(Clone)]
 pub struct Mailer {
-    smtp: SmtpTransport,
-    test_from: String,
+    mailer: SmtpTransport,
+    pub test_from: String,
     smtp_server_url: String,
-    test_to: String,
+    pub test_to: String,
 }
 
 impl std::fmt::Debug for Mailer {
@@ -19,18 +22,19 @@ impl Mailer {
         use lettre::message::header::ContentType;
         use lettre::transport::smtp::authentication::Credentials;
         use lettre::{Message, SmtpTransport};
+
         let from_email = "Test FROM <test@jeremyarde.com>";
         let to_email = "Test TO <test@jeremyarde.com>";
         let smtp_server = "email-smtp.us-east-1.amazonaws.com";
 
-        let _email = Message::builder()
-            .from(from_email.parse().unwrap())
-            // .reply_to("Yuin <yuin@domain.tld>".parse().unwrap())
-            .to(to_email.parse().unwrap())
-            .subject("Test email")
-            .header(ContentType::TEXT_PLAIN)
-            .body(String::from("Be happy!"))
-            .unwrap();
+        // let _email = Message::builder()
+        //     .from(from_email.parse().unwrap())
+        //     // .reply_to("Yuin <yuin@domain.tld>".parse().unwrap())
+        //     .to(to_email.parse().unwrap())
+        //     .subject("Test email")
+        //     .header(ContentType::TEXT_PLAIN)
+        //     .body(String::from("Be happy!"))
+        //     .unwrap();
 
         let creds = Credentials::new(
             dotenvy::var("SMTP_USERNAME").expect("smtp username should be set"),
@@ -45,10 +49,22 @@ impl Mailer {
             .build();
 
         Mailer {
-            smtp: mailer,
+            mailer: mailer,
             test_from: from_email.to_string(),
             smtp_server_url: smtp_server.to_string(),
             test_to: to_email.to_string(),
         }
+    }
+
+    pub fn send(&self, to: &str, from: &str, message: String) {
+        let email = Message::builder()
+            .from(from.parse().unwrap())
+            .to(to.parse().unwrap())
+            .subject("Test email")
+            .header(ContentType::TEXT_PLAIN)
+            .body(message)
+            .unwrap();
+
+        let response = &self.mailer.send(&email).expect("Email sent successfully");
     }
 }

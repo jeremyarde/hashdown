@@ -1,5 +1,6 @@
 use axum::http::Method;
 use axum::http::Uri;
+use axum::Extension;
 use serde::Serialize;
 use serde_with::skip_serializing_none;
 use uuid::Uuid;
@@ -26,7 +27,7 @@ pub async fn log_request(
     uuid: Uuid,
     req_method: Method,
     uri: Uri,
-    ctx: Option<Ctext>,
+    ctx: Extension<Ctext>,
     service_error: Option<&ServerError>,
     client_error: Option<ClientError>,
 ) -> anyhow::Result<()> {
@@ -45,7 +46,8 @@ pub async fn log_request(
         req_path: uri.to_string(),
         req_method: req_method.to_string(),
 
-        user_id: ctx.map(|c| c.user_id().clone()),
+        // user_id: ctx..map(|c| c.user_id().clone()),
+        user_id: Some(ctx.user_id.clone()),
 
         client_error_type: client_error.map(|e| e.as_ref().to_string()),
 

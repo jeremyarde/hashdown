@@ -48,8 +48,8 @@ function ListSurveys() {
       method: "GET",
       headers: {
         // "Content-Type": "application/json",
-        credentials: "include"
       },
+      credentials: 'include'
     });
 
     const result = await response.json();
@@ -108,6 +108,7 @@ function Login() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: 'include',
         body: JSON.stringify(evt),
       });
 
@@ -173,15 +174,14 @@ function App() {
           <Login></Login>
           <ListSurveys></ListSurveys>
         </div>
-        <div>
-
+        {/* <div>
           <Textarea className='w-full h-full' cols={10} value={formtext} onChange={(evt) => {
             let value = evt.target.value;
             console.log(`Set text value: ${JSON.stringify(value)}`);
             setFormtext(value);
           }} />
         </div>
-        <GenericForm key={'testkey'} plaintext={formtext} survey={survey}></GenericForm>
+        <GenericForm key={'testkey'} plaintext={formtext} survey={survey}></GenericForm> */}
 
       </div>
     </>
