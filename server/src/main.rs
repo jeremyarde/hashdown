@@ -191,6 +191,8 @@ mod tests {
         dbg!(&results);
 
         assert!(!session_value.is_empty());
+        assert!(session_value.len() > 10);
+
         assert!(results.get("auth_token").is_some())
     }
 
