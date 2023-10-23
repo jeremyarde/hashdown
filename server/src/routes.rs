@@ -3,7 +3,7 @@ pub mod routes {
 
     use axum::{
         extract::Path,
-        http::{HeaderMap, Request},
+        http::{self, HeaderMap, HeaderName, Request},
         middleware::{self, Next},
         response::IntoResponse,
         response::Response,
@@ -16,13 +16,16 @@ pub mod routes {
         http::StatusCode,
         Json,
     };
+    use hyper::{header::CONTENT_ENCODING, Method};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
 
+    use tower::ServiceBuilder;
+    use tower_http::{cors::CorsLayer, trace::TraceLayer};
     use tracing::{debug, log::info};
 
     use crate::{
-        auth::{self},
+        auth::{self, validate_session_middleware},
         db::database::{CreateAnswersModel, Session},
         error::main_response_mapper,
         mware::ctext::Ctext,
@@ -49,22 +52,76 @@ pub mod routes {
         pub password: String,
     }
 
-    pub fn get_routes(state: ServerState) -> anyhow::Result<Router> {
-        let routes = Router::new()
+    // pub fn get_router() -> anyhow::Result<Router> {
+    //     get_routes(state)
+    //     let auth_session_service = ServiceBuilder::new().layer(middleware::from_fn_with_state(
+    //         state.clone(),
+    //         validate_session_middleware,
+    //     ));
+
+    //     Router::new()
+    //         .merge(get_routes(state).unwrap())
+    //         .layer(corslayer)
+    //         .layer(TraceLayer::new_for_http())
+    //         .layer(auth_session_service)
+    // }
+
+    pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
+        let public_routes = Router::new()
+            .route("/auth/login", post(auth::login))
+            .route("/auth/signup", post(auth::signup))
+            .route("/ping", get(ping));
+
+        let auth_routes = Router::new()
             .route("/surveys", post(create_survey).get(list_survey))
             .route("/surveys/:id", get(get_survey).post(submit_survey))
             .route("/responses", post(submit_response))
-            .route("/responses/:id", get(survey_responses::list_response))
-            .route("/auth/login", post(auth::login))
-            .route("/auth/signup", post(auth::signup))
-            // .route("/auth/verify-token", get(auth::validate_session))
-            .route("/ping", get(ping))
-            // .route("/session", get(handler))
-            .layer(middleware::map_response(main_response_mapper))
-            // .layer(middleware::from_fn(propagate_header))
-            .with_state(state);
+            .route("/responses/:id", get(survey_responses::list_response));
 
-        Ok(routes)
+        let all = public_routes
+            .merge(auth_routes)
+            .layer(middleware::map_response(main_response_mapper))
+            .with_state(state.clone());
+
+        // let auth_session_service = ServiceBuilder::new().layer(middleware::from_fn_with_state(
+        //     state.clone(),
+        //     validate_session_middleware,
+        // ));
+
+        let mut origins = vec![];
+        info!("Starting app in stage={:?}", &state.config.stage);
+        if state.config.is_dev() {
+            origins.append(&mut vec![
+                "http://localhost:3000".parse().unwrap(),
+                "http://localhost:3001".parse().unwrap(),
+                "http://localhost:8080".parse().unwrap(),
+                "http://localhost:5173".parse().unwrap(),
+                // "http://api.example.com".parse().unwrap(),
+            ]);
+        }
+
+        let corslayer = CorsLayer::new()
+            .allow_methods([Method::POST, Method::GET])
+            .allow_headers([
+                http::header::CONTENT_TYPE,
+                http::header::ACCEPT,
+                http::header::AUTHORIZATION,
+                http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
+                http::header::ACCESS_CONTROL_REQUEST_METHOD,
+                HeaderName::from_static("x-auth-token"),
+                HeaderName::from_static("x-sid"),
+                HeaderName::from_static("session_id"),
+                HeaderName::from_static("credentials"),
+            ])
+            // .allow_headers(Any)
+            .allow_credentials(true)
+            .allow_origin(origins)
+            .expose_headers([CONTENT_ENCODING, HeaderName::from_static("session_id")]);
+
+        let router = all.layer(corslayer).layer(TraceLayer::new_for_http());
+        // .layer(auth_session_service);
+
+        Ok(router)
     }
 
     async fn propagate_header<B>(req: Request<B>, next: Next<B>) -> Response {
@@ -82,15 +139,15 @@ pub mod routes {
     pub async fn create_survey(
         headers: HeaderMap,
         State(state): State<ServerState>,
-        ctx: Extension<Ctext>,
+        Extension(ctx): Extension<Option<Ctext>>,
         extract::Json(payload): extract::Json<CreateSurveyRequest>,
     ) -> anyhow::Result<Json<Value>, ServerError> {
         info!("->> create_survey");
 
-        // let user_id = match &ctx {
-        //     Some(x) => x.user_id(),
-        //     None => return Err(ServerError::AuthFailNoTokenCookie),
-        // };
+        let ctx = match &ctx {
+            Some(x) => x,
+            None => return Err(ServerError::AuthFailNoTokenCookie),
+        };
 
         info!("Creating new survey for user={:?}", ctx.user_id);
         // Check that the survey is Ok
@@ -133,7 +190,7 @@ pub mod routes {
     pub async fn submit_survey(
         State(state): State<ServerState>,
         Path(survey_id): Path<String>,
-        ctx: Extension<Ctext>,
+        Extension(ctx): Extension<Option<Ctext>>,
         Json(payload): extract::Json<Value>, // for urlencoded
     ) -> Result<Json<Value>, ServerError> {
         info!("->> submit_survey");
@@ -241,7 +298,7 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn get_survey(
         State(_state): State<ServerState>,
-        _ctx: Extension<Ctext>,
+        Extension(ctx): Extension<Option<Ctext>>,
         // authorization: TypedHeader<Authorization<Bearer>>,
         Path(survey_id): Path<String>,
     ) -> impl IntoResponse {
@@ -260,17 +317,18 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn list_survey(
         state: State<ServerState>,
-        ctx: Extension<Ctext>,
+        Extension(ctx): Extension<Option<Ctext>>,
         // State(state): State<ServerState>,
         session: Extension<Session>,
         headers: HeaderMap,
     ) -> anyhow::Result<Json<Value>, ServerError> {
         println!("context: {:?}", ctx);
 
-        // if ctx.is_none() {
-        //     return Err(ServerError::AuthFailNoTokenCookie);
-        // } else {
-        // }
+        let ctx = if ctx.is_none() {
+            return Err(ServerError::AuthFailNoTokenCookie);
+        } else {
+            ctx.unwrap()
+        };
 
         let user_id = &ctx.user_id().clone();
 

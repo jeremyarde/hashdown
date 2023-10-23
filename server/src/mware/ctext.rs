@@ -210,7 +210,10 @@ impl Ctext {
     }
 
     pub fn new(user_id: String, session: Session) -> Self {
-        Ctext { user_id, session }
+        Ctext {
+            user_id: user_id,
+            session: session,
+        }
     }
 }
 

@@ -218,6 +218,12 @@ pub struct Session {
     pub idle_period_expires_at: DateTime<Utc>,
 }
 
+impl Session {
+    pub fn new() -> Self {
+        Session { id: 0, user_id: String::from(""), session_id: String::from(""), active_period_expires_at: chrono::Utc::now(), idle_period_expires_at: chrono::Utc::now() }
+    }
+}
+
 impl Database {
     pub async fn create_magic_link(&self, user: UserModel) -> anyhow::Result<()> {
         

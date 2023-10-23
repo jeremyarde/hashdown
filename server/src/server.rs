@@ -26,7 +26,7 @@ use crate::{
     config::EnvConfig,
     db::{self, database::ConnectionDetails},
     mail::mail::Mailer,
-    routes::routes::get_routes,
+    routes::routes::get_router,
     ServerState,
 };
 
@@ -56,34 +56,34 @@ impl ServerApplication {
             config: EnvConfig::new(),
         };
 
-        let mut origins = vec![];
-        info!("Starting app in stage={:?}", state.config.stage);
-        if state.config.is_dev() {
-            origins.append(&mut vec![
-                "http://localhost:3000".parse().unwrap(),
-                "http://localhost:3001".parse().unwrap(),
-                "http://localhost:8080".parse().unwrap(),
-                "http://localhost:5173".parse().unwrap(),
-                // "http://api.example.com".parse().unwrap(),
-            ]);
-        }
-        let corslayer = CorsLayer::new()
-            .allow_methods([Method::POST, Method::GET])
-            .allow_headers([
-                http::header::CONTENT_TYPE,
-                http::header::ACCEPT,
-                http::header::AUTHORIZATION,
-                http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
-                http::header::ACCESS_CONTROL_REQUEST_METHOD,
-                HeaderName::from_static("x-auth-token"),
-                HeaderName::from_static("x-sid"),
-                HeaderName::from_static("session_id"),
-                HeaderName::from_static("credentials"),
-            ])
-            // .allow_headers(Any)
-            .allow_credentials(true)
-            .allow_origin(origins)
-            .expose_headers([CONTENT_ENCODING, HeaderName::from_static("session_id")]);
+        // let mut origins = vec![];
+        // info!("Starting app in stage={:?}", state.config.stage);
+        // if state.config.is_dev() {
+        //     origins.append(&mut vec![
+        //         "http://localhost:3000".parse().unwrap(),
+        //         "http://localhost:3001".parse().unwrap(),
+        //         "http://localhost:8080".parse().unwrap(),
+        //         "http://localhost:5173".parse().unwrap(),
+        //         // "http://api.example.com".parse().unwrap(),
+        //     ]);
+        // }
+        // let corslayer = CorsLayer::new()
+        //     .allow_methods([Method::POST, Method::GET])
+        //     .allow_headers([
+        //         http::header::CONTENT_TYPE,
+        //         http::header::ACCEPT,
+        //         http::header::AUTHORIZATION,
+        //         http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
+        //         http::header::ACCESS_CONTROL_REQUEST_METHOD,
+        //         HeaderName::from_static("x-auth-token"),
+        //         HeaderName::from_static("x-sid"),
+        //         HeaderName::from_static("session_id"),
+        //         HeaderName::from_static("credentials"),
+        //     ])
+        //     // .allow_headers(Any)
+        //     .allow_credentials(true)
+        //     .allow_origin(origins)
+        //     .expose_headers([CONTENT_ENCODING, HeaderName::from_static("session_id")]);
         // .expose_headers([HeaderName::from_static("session_id")]);
 
         // build our application with a route
@@ -102,17 +102,8 @@ impl ServerApplication {
         //             .with_secure(true)
         //             .with_max_age(Duration::minutes(10)),
         //     );
-
-        let auth_session_service = ServiceBuilder::new().layer(middleware::from_fn_with_state(
-            state.clone(),
-            validate_session_middleware,
-        ));
-
-        Router::new()
-            .merge(get_routes(state).unwrap())
-            .layer(corslayer)
-            .layer(TraceLayer::new_for_http())
-            .layer(auth_session_service)
+        let router = get_router(state).unwrap();
+        return router;
     }
 
     pub async fn new() -> ServerApplication {

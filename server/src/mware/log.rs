@@ -27,7 +27,7 @@ pub async fn log_request(
     uuid: Uuid,
     req_method: Method,
     uri: Uri,
-    ctx: Extension<Ctext>,
+    Extension(ctx): Extension<Option<Ctext>>,
     service_error: Option<&ServerError>,
     client_error: Option<ClientError>,
 ) -> anyhow::Result<()> {
@@ -38,6 +38,12 @@ pub async fn log_request(
         .ok()
         .and_then(|mut v| v.get_mut("data").map(|v| v.take().to_string()));
 
+    // let ctx = if ctx.is_none() {
+    //     Ctext::new(None, None)
+    // } else {
+    //     ctx.unwrap()
+    // };
+
     // Create the RequestLogLine
     let log_line = RequestLogLine {
         uuid: uuid.to_string(),
@@ -47,7 +53,7 @@ pub async fn log_request(
         req_method: req_method.to_string(),
 
         // user_id: ctx..map(|c| c.user_id().clone()),
-        user_id: Some(ctx.user_id.clone()),
+        user_id: ctx.and_then(|x| Some(x.user_id)).or(None),
 
         client_error_type: client_error.map(|e| e.as_ref().to_string()),
 

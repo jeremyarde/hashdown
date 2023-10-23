@@ -175,7 +175,8 @@ pub async fn login(
     state: State<ServerState>,
     jar: CookieJar,
     // headers: HeaderMap,
-    ctext: Extension<Ctext>,
+    // ctext: Extension<Ctext>,
+    // ctext: Ctext,
     payload: Json<LoginPayload>,
 ) -> impl IntoResponse {
     info!("->> login");
@@ -334,7 +335,12 @@ pub async fn validate_session_middleware<B>(
 
     let session_id = match session_header {
         Some(x) => x.to_string(),
-        None => session_cookie.unwrap_or(return Ok(next.run(request).await)),
+        None => session_cookie.unwrap_or({
+            request
+                .extensions_mut()
+                .insert(Ctext::new("fake".to_string(), Session::new()));
+            return Ok(next.run(request).await);
+        }),
     };
 
     info!("Using session_id: {session_id:?}");

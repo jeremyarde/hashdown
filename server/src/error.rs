@@ -1,12 +1,13 @@
 use axum::response::IntoResponse;
-use axum::{Json, Extension};
 use axum::{http::StatusCode, response::Response};
+use axum::{Extension, Json};
 use hyper::{Method, Uri};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tracing::info;
 use uuid::Uuid;
 
+use crate::db::database::Session;
 use crate::mware::ctext::Ctext;
 use crate::mware::log::log_request;
 
@@ -36,11 +37,12 @@ pub enum ServerError {
 }
 
 pub async fn main_response_mapper(
-    ctx: Extension<Ctext>,
+    // Extension(ctx): Extension<Option<Ctext>>,
     uri: Uri,
     req_method: Method,
     res: Response,
 ) -> Response {
+    let ctx = Some(Ctext::new(String::from(""), Session::new()));
     println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
     let uuid = Uuid::new_v4();
 
@@ -73,9 +75,16 @@ pub async fn main_response_mapper(
         Some(x) => Some(x.1),
         None => None,
     };
-    log_request(uuid, req_method, uri, ctx, service_error, client_error)
-        .await
-        .expect("Did not log request properly");
+    log_request(
+        uuid,
+        req_method,
+        uri,
+        Extension(ctx),
+        service_error,
+        client_error,
+    )
+    .await
+    .expect("Did not log request properly");
 
     info!("Mapped response, returning...");
     error_response.unwrap_or(res)
