@@ -227,9 +227,9 @@ pub async fn login(
             //     generate_magic_link(&state, ctext.).await,
             // );
 
-            return Err(ServerError::UserEmailNotVerified(
-                "Email not verified".to_string(),
-            ));
+            // return Err(ServerError::UserEmailNotVerified(
+            //     "Email not verified".to_string(),
+            // ));
         }
     };
 

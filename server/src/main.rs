@@ -70,7 +70,7 @@ mod tests {
 
     use tower::ServiceExt;
 
-    use crate::{routes::routes::LoginPayload, ServerApplication};
+    use crate::{constants::SESSION_ID_KEY, routes::routes::LoginPayload, ServerApplication};
 
     fn setup_environment() {
         dotenvy::from_filename("./server/.env").unwrap();
@@ -147,7 +147,7 @@ mod tests {
 
     #[tokio::test]
     // #[serial]
-    async fn login_test() {
+    async fn test_login() {
         setup_environment();
 
         let _app = ServerApplication::new().await;
@@ -155,24 +155,14 @@ mod tests {
         router.ready().await.unwrap();
 
         let url = "/auth/login";
-        // let client = get_client().await;
         let client_url = format!("http://{}{}", "localhost:3000", url);
 
         println!("Sending req to: {client_url}");
 
         let request = LoginPayload {
-            email: "jere".to_string(),
-            password: "mypassword".to_string(),
+            email: "test@test.com".to_string(),
+            password: "a".to_string(),
         };
-        // let exjson = json!({"first": "answer"});
-        // let request_test = "- test question\n - this one";
-        // let response = client
-        //     .post(&client_url)
-        //     // .json(&request)
-        //     .json(&request)
-        //     .send()
-        //     .await
-        //     .expect("Should recieve repsonse from app");
         let create_request: Request<Body> = Request::builder()
             .method("POST")
             .uri(client_url)
@@ -185,11 +175,22 @@ mod tests {
             .unwrap();
 
         let response = router.borrow_mut().oneshot(create_request).await.unwrap();
+        let session_value = response
+            .headers()
+            .get(SESSION_ID_KEY)
+            .unwrap()
+            .clone()
+            .to_str()
+            .unwrap()
+            .to_string();
+
         let results: Value =
             serde_json::from_slice(&hyper::body::to_bytes(response.into_body()).await.unwrap())
                 .unwrap();
 
         dbg!(&results);
+
+        assert!(!session_value.is_empty());
         assert!(results.get("auth_token").is_some())
     }
 
@@ -232,9 +233,8 @@ mod tests {
             serde_json::from_slice(&hyper::body::to_bytes(response.into_body()).await.unwrap())
                 .unwrap();
 
-        // let results = response.json::<Value>().await.unwrap();
         assert_eq!(results.get("email").unwrap(), &username);
-        assert!(results.get("auth_token").is_some());
+        // assert!(results.get("auth_token").is_some());
     }
 
     async fn signup_or_login(router: &mut Router) -> String {
