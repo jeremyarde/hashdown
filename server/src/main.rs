@@ -125,7 +125,7 @@ mod tests {
         let create_request: Request<Body> = Request::builder()
             .method("POST")
             .uri(client_url)
-            .header("x-auth-token", token.to_string())
+            .header(SESSION_ID_KEY, token.to_string())
             .header(
                 axum::http::header::CONTENT_TYPE,
                 mime::APPLICATION_JSON.to_string(),
@@ -136,9 +136,14 @@ mod tests {
             .unwrap();
         let response = router.borrow_mut().oneshot(create_request).await.unwrap();
 
-        let list_response: Value =
-            serde_json::from_slice(&hyper::body::to_bytes(response.into_body()).await.unwrap())
-                .unwrap();
+        assert_ne!(response.status(), 500);
+        println!("{response:?}");
+        let list_response: Value = serde_json::from_slice(
+            &hyper::body::to_bytes(response.into_body())
+                .await
+                .expect("Should turn response into thing"),
+        )
+        .expect("Turn into serde value");
 
         dbg!(&list_response);
         assert!(list_response.is_object());
@@ -263,16 +268,9 @@ mod tests {
         let response = router.borrow_mut().oneshot(request).await.unwrap();
 
         if response.status() == 200 {
-            println!("Was able to signup, returning token");
-            let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-            let body: Value = serde_json::from_slice(&body).unwrap();
-            assert_eq!(body, json!({ "auth_token": "Ok" }));
-            return body
-                .get("auth_token")
-                .unwrap()
-                .as_str()
-                .unwrap()
-                .to_string();
+            let headers = response.headers().clone();
+            let session_id = headers.get(SESSION_ID_KEY).unwrap();
+            return session_id.to_str().unwrap().to_string();
         }
         println!("Was NOT able to signup, attempting login...");
 
@@ -288,16 +286,10 @@ mod tests {
             .unwrap();
 
         let response = router.borrow_mut().oneshot(request).await.unwrap();
-        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-        let body: Value = serde_json::from_slice(&body).unwrap();
-        dbg!(&body);
-        assert!(body.get("auth_token").is_some());
-        return body
-            .get("auth_token")
-            .unwrap()
-            .as_str()
-            .unwrap()
-            .to_string();
+        let headers = response.headers().clone();
+        let session_id = headers.get(SESSION_ID_KEY).unwrap();
+
+        return session_id.to_str().unwrap().to_string();
     }
 
     // #[test]

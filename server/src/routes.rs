@@ -26,6 +26,7 @@ pub mod routes {
 
     use crate::{
         auth::{self, validate_session_middleware},
+        constants::SESSION_ID_KEY,
         db::database::{CreateAnswersModel, Session},
         error::main_response_mapper,
         mware::ctext::Ctext,
@@ -139,17 +140,31 @@ pub mod routes {
     pub async fn create_survey(
         headers: HeaderMap,
         State(state): State<ServerState>,
-        Extension(ctx): Extension<Option<Ctext>>,
+        // Extension(ctx): Extension<Option<Ctext>>,
         extract::Json(payload): extract::Json<CreateSurveyRequest>,
     ) -> anyhow::Result<Json<Value>, ServerError> {
         info!("->> create_survey");
 
-        let ctx = match &ctx {
-            Some(x) => x,
-            None => return Err(ServerError::AuthFailNoTokenCookie),
-        };
+        // let ctx = Some(Ctext::new(String::from(""), Session::new()));
+        let session_id = headers
+            .get(SESSION_ID_KEY)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
+        let session = state
+            .db
+            .get_session(session_id)
+            .await
+            .map_err(|x| return x)
+            .unwrap();
 
-        info!("Creating new survey for user={:?}", ctx.user_id);
+        // let ctx = match &ctx {
+        //     Some(x) => x,
+        //     None => return Err(ServerError::AuthFailNoTokenCookie),
+        // };
+
+        info!("Creating new survey for user={:?}", session.user_id);
         // Check that the survey is Ok
         let parsed_survey =
             parse_markdown_v3(payload.plaintext).expect("Could not parse the survey");
@@ -160,7 +175,7 @@ pub mod routes {
             id: 0,
             survey_id: nanoid_gen(12),
             plaintext: parsed_survey.plaintext.clone(),
-            user_id: ctx.user_id.to_owned(),
+            user_id: session.user_id.to_owned(),
             created_at: metadata.created_at,
             modified_at: metadata.modified_at,
             version: "fixme".to_string(),
@@ -171,7 +186,12 @@ pub mod routes {
             .db
             .create_survey(survey)
             .await
-            .expect("Should create survey in database");
+            .map_err(|x| {
+                return ServerError::Database(
+                    format!("Could not create new survey: {x}").to_string(),
+                );
+            })
+            .unwrap();
 
         info!("     ->> Inserted survey");
 
