@@ -54,7 +54,7 @@ pub async fn signup(
     state: State<ServerState>,
     _jar: CookieJar,
     payload: Json<LoginPayload>,
-) -> anyhow::Result<Json<Value>, ServerError> {
+) -> impl IntoResponse {
     info!("->> signup");
 
     if let Ok(_) = state
@@ -93,59 +93,13 @@ pub async fn signup(
     // Don't create a session for signing up - we need to verify email first
     // let transaction_result = transactions.commit().await;
 
+    let session = state.db.create_session(user.user_id.clone()).await?;
+
     // let _ = jar.add(Cookie::new("session_id", session.session_id.clone()));
+    let headers = get_session_headers(&session);
 
-    Ok(Json(json!({"email": user.email})))
+    return Ok((headers, Json(json!({"email": user.email}))));
 }
-
-// #[axum::debug_handler]
-// pub async fn validate_session(
-//     _headers: HeaderMap,
-//     // session_id: String,
-//     jar: CookieJar,
-//     // extract(session_id):
-//     state: State<ServerState>,
-// ) -> impl IntoResponse {
-//     info!("->> Validating session");
-
-//     let session_header = if let Some(x) = jar.get(SESSION_ID_KEY) {
-//         x
-//     } else {
-//         return Ok(None);
-//     };
-
-//     let session_id = session_header.to_string();
-
-//     // get session from database using existing Session
-//     let curr_session = match state.db.get_session(session_id.clone()).await {
-//         Ok(x) => x,
-//         Err(_) => {
-//             state.db.delete_session(session_id).await?;
-//             return Err(ServerError::AuthFailTokenDecodeIssue);
-//         }
-//     };
-
-//     if Utc::now() > curr_session.idle_period_expires_at {
-//         return Err(ServerError::AuthFailTokenExpired);
-//     }
-
-//     if Utc::now() > curr_session.active_period_expires_at {
-//         let new_active_expires = Utc::now() + Duration::hours(1);
-//         let new_idle_expires = Utc::now() + Duration::hours(2);
-//         let updated_session = state
-//             .db
-//             .update_session(Session {
-//                 id: 0,
-//                 session_id: curr_session.session_id,
-//                 active_period_expires_at: new_active_expires,
-//                 idle_period_expires_at: new_idle_expires,
-//                 user_id: curr_session.user_id,
-//             })
-//             .await?;
-//         return Ok(updated_session);
-//     }
-//     return Err(ServerError::AuthFailNoTokenCookie);
-// }
 
 #[axum::debug_handler]
 pub async fn logout(
@@ -240,17 +194,7 @@ pub async fn login(
 
     // let _ = jar.add(Cookie::new(SESSION_ID_KEY, session.session_id.clone()));
 
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        SET_COOKIE,
-        HeaderValue::from_str(format!("{}={}", SESSION_ID_KEY, &session.session_id).as_str())
-            .unwrap(),
-    );
-
-    headers.insert(
-        SESSION_ID_KEY,
-        HeaderValue::from_str(&session.session_id).unwrap(),
-    );
+    let headers = get_session_headers(&session);
 
     // let offset =
     //     OffsetDateTime::from_unix_timestamp(session.active_period_expires_at.timestamp()).unwrap();
@@ -277,6 +221,21 @@ async fn generate_magic_link(state: &ServerState, ctext: Ctext) -> String {
     let magic_link = format!("http://localhost:5173/auth/verify?token={jwt}");
 
     return magic_link;
+}
+
+pub fn get_session_headers(session: &Session) -> HeaderMap {
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        SET_COOKIE,
+        HeaderValue::from_str(format!("{}={}", SESSION_ID_KEY, &session.session_id).as_str())
+            .unwrap(),
+    );
+
+    headers.insert(
+        SESSION_ID_KEY,
+        HeaderValue::from_str(&session.session_id).unwrap(),
+    );
+    return headers;
 }
 
 pub async fn validate_session_middleware<B>(

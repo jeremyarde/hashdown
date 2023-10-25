@@ -231,11 +231,14 @@ mod tests {
             .unwrap();
 
         let response = router.borrow_mut().oneshot(create_request).await.unwrap();
+        let headers = response.headers().clone();
+
         let results: Value =
             serde_json::from_slice(&hyper::body::to_bytes(response.into_body()).await.unwrap())
                 .unwrap();
 
         assert_eq!(results.get("email").unwrap(), &username);
+        assert!(headers.contains_key(SESSION_ID_KEY));
         // assert!(results.get("auth_token").is_some());
     }
 
