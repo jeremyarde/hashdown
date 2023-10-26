@@ -292,15 +292,21 @@ pub async fn validate_session_middleware<B>(
     info!("Session header: {session_header:?}");
     info!("Session cookies: {session_cookie:?}");
 
-    let session_id = match session_header {
-        Some(x) => x.to_string(),
-        None => session_cookie.unwrap_or({
-            request
-                .extensions_mut()
-                .insert(Ctext::new("fake".to_string(), Session::new()));
-            return Ok(next.run(request).await);
-        }),
-    };
+    // let session_id = match session_header {
+    //     Some(x) => x.to_string(),
+    //     None => session_cookie.unwrap_or({
+
+    //     }),
+    // };
+
+    // request
+    //     .extensions_mut()
+    //     .insert(Ctext::new("fake".to_string(), Session::new()));
+    // return Ok(next.run(request).await);
+
+    let session_id = session_header
+        .expect("Header should be available")
+        .to_string();
 
     info!("Using session_id: {session_id:?}");
 
@@ -317,7 +323,9 @@ pub async fn validate_session_middleware<B>(
         return Err(ServerError::AuthFailTokenExpired);
     }
 
+    info!("Current session: {:?}", curr_session);
     if Utc::now() > curr_session.active_period_expires_at {
+        info!("session not active anymore?");
         let new_active_expires = Utc::now() + Duration::hours(1);
         let new_idle_expires = Utc::now() + Duration::hours(2);
         let updated_session = state
@@ -330,14 +338,36 @@ pub async fn validate_session_middleware<B>(
                 user_id: curr_session.user_id,
             })
             .await?;
-        // return Ok(updated_session);
+        info!("Putting Ctext into extensions");
         request.extensions_mut().insert(updated_session.clone());
         request.extensions_mut().insert(Ctext {
-            user_id: "".to_string(),
+            user_id: updated_session.user_id.to_string(),
             session: updated_session,
         });
+        return Ok(next.run(request).await);
+    } else {
+        // remove this later
+        info!("remove me at some point?");
+        let new_active_expires = Utc::now() + Duration::hours(1);
+        let new_idle_expires = Utc::now() + Duration::hours(2);
+        let updated_session = state
+            .db
+            .update_session(Session {
+                id: 0,
+                session_id: curr_session.session_id,
+                active_period_expires_at: new_active_expires,
+                idle_period_expires_at: new_idle_expires,
+                user_id: curr_session.user_id,
+            })
+            .await?;
+        info!("Putting Ctext into extensions");
+        request.extensions_mut().insert(updated_session.clone());
+        request.extensions_mut().insert(Ctext {
+            user_id: updated_session.user_id.to_string(),
+            session: updated_session,
+        });
+        return Ok(next.run(request).await);
     }
-    // return Err(ServerError::AuthFailNoTokenCookie);
 
-    return Ok(next.run(request).await);
+    // return Ok(next.run(request).await);
 }

@@ -77,7 +77,11 @@ pub mod routes {
             .route("/surveys", post(create_survey).get(list_survey))
             .route("/surveys/:id", get(get_survey).post(submit_survey))
             .route("/responses", post(submit_response))
-            .route("/responses/:id", get(survey_responses::list_response));
+            .route("/responses/:id", get(survey_responses::list_response))
+            .route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                validate_session_middleware,
+            ));
 
         let all = public_routes
             .merge(auth_routes)
@@ -318,7 +322,7 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn get_survey(
         State(_state): State<ServerState>,
-        Extension(ctx): Extension<Option<Ctext>>,
+        // Extension(ctx): Extension<Option<Ctext>>,
         // authorization: TypedHeader<Authorization<Bearer>>,
         Path(survey_id): Path<String>,
     ) -> impl IntoResponse {
@@ -337,29 +341,31 @@ pub mod routes {
     #[axum::debug_handler]
     pub async fn list_survey(
         state: State<ServerState>,
-        Extension(ctx): Extension<Option<Ctext>>,
+        // Extension(ctx): Extension<Option<Ctext>>,
         // State(state): State<ServerState>,
-        session: Extension<Session>,
+        Extension(session): Extension<Ctext>,
         headers: HeaderMap,
     ) -> anyhow::Result<Json<Value>, ServerError> {
-        println!("context: {:?}", ctx);
+        info!("->> list_survey");
+        // println!("context: {:?}", ctx);
 
-        let ctx = if ctx.is_none() {
-            return Err(ServerError::AuthFailNoTokenCookie);
-        } else {
-            ctx.unwrap()
-        };
+        // let ctx = if ctx.is_none() {
+        //     return Err(ServerError::AuthFailNoTokenCookie);
+        // } else {
+        //     ctx.unwrap()
+        // };
 
-        let user_id = &ctx.user_id().clone();
+        // let user_id = &ctx.user_id().clone();
 
-        println!("Getting surveys for user={user_id}");
+        println!("Getting surveys for user={}", session.user_id);
         let pool = &state.db.pool;
 
         let res: Vec<SurveyModel> =
             sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.user_id = $1")
-                .bind(user_id)
+                .bind(session.user_id.clone())
                 .fetch_all(pool)
                 .await
+                .map_err(|err| ServerError::Database(err.to_string()))
                 .unwrap();
 
         let resp = ListSurveyResponse { surveys: res };
