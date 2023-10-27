@@ -16,47 +16,23 @@ import { Textarea } from './components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from './components/ui/alert';
 
 
+const base_url = "http://localhost:3000/api";
+
 function ListSurveys() {
   const [surveys, setSurveys] = useState(undefined);
   const [error, setError] = useState('');
 
-  // useEffect(() => {
-  //   async function getSurveys() {
-  //     const response = await fetch("http://localhost:3000/surveys", {
-  //       method: "GET",
-  //       headers: {
-  //         // "Content-Type": "application/json",
-  //         credentials: "same-origin"
-  //       },
-  //     });
-
-  //     const result = await response.json();
-  //     console.log('data: ', result);
-  //     if (result.error) {
-  //       console.log('failed to get survesy: ', result.error);
-  //       setError(result.type);
-  //     } else {
-  //       setSurveys(result);
-  //     }
-  //   }
-
-  //   getSurveys();
-  // }, [surveys, error]);
-
   async function getSurveys() {
-    const response = await fetch("http://localhost:3000/surveys", {
+    const response = await fetch(`${base_url}/surveys`, {
       method: "GET",
-      headers: {
-        // "Content-Type": "application/json",
-      },
-      credentials: 'include'
+      credentials: 'same-origin'
     });
 
     const result = await response.json();
     console.log('data: ', result);
     if (result.error) {
-      console.log('failed to get survesy: ', result.error);
-      setError(result.type);
+      console.log('failed to get surveys: ', result);
+      setError(result.message ?? 'Generic error getting surveys');
     } else {
       setSurveys(result);
     }
@@ -68,7 +44,7 @@ function ListSurveys() {
 
         <Button onClick={(evt) => {
           console.log('clicked button');
-          setError('');
+          // setError('');
           getSurveys();
         }}>My Surveys</Button>
         <div>
@@ -76,8 +52,10 @@ function ListSurveys() {
           {[surveys]}
         </div>
         <div className='bg-red-600'>
-          Errors
-          {[error]}
+          Errors?
+          <div>
+            {error ? error : 'No errors'}
+          </div>
         </div>
       </div>
     </>
@@ -103,12 +81,12 @@ function Login() {
   const onSubmit = async (evt) => {
     console.log(evt);
     try {
-      const response = await fetch("http://localhost:3000/auth/login", {
+      const response = await fetch(`${base_url}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: 'same-origin',
         body: JSON.stringify(evt),
       });
 

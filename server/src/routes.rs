@@ -69,15 +69,15 @@ pub mod routes {
 
     pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         let public_routes = Router::new()
-            .route("/auth/login", post(auth::login))
-            .route("/auth/signup", post(auth::signup))
-            .route("/ping", get(ping));
+            .route("/api/auth/login", post(auth::login))
+            .route("/api/auth/signup", post(auth::signup))
+            .route("/api/ping", get(ping));
 
         let auth_routes = Router::new()
-            .route("/surveys", post(create_survey).get(list_survey))
-            .route("/surveys/:id", get(get_survey).post(submit_survey))
-            .route("/responses", post(submit_response))
-            .route("/responses/:id", get(survey_responses::list_response))
+            .route("/api/surveys", post(create_survey).get(list_survey))
+            .route("/api/surveys/:id", get(get_survey).post(submit_survey))
+            .route("/api/responses", post(submit_response))
+            .route("/api/responses/:id", get(survey_responses::list_response))
             .route_layer(middleware::from_fn_with_state(
                 state.clone(),
                 validate_session_middleware,
@@ -97,8 +97,8 @@ pub mod routes {
         info!("Starting app in stage={:?}", &state.config.stage);
         if state.config.is_dev() {
             origins.append(&mut vec![
-                "http://localhost:3000".parse().unwrap(),
-                "http://localhost:3001".parse().unwrap(),
+                // "http://localhost:3000".parse().unwrap(),
+                // "http://localhost:3001".parse().unwrap(),
                 "http://localhost:8080".parse().unwrap(),
                 "http://localhost:5173".parse().unwrap(),
                 // "http://api.example.com".parse().unwrap(),

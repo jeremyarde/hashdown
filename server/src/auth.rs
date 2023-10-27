@@ -9,6 +9,7 @@ use argon2::{PasswordHash, PasswordHasher};
 // use axum::extract::TypedHeader;
 // use axum::headers::authorization::{Authorization, Bearer};
 
+use axum::headers::Server;
 use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::{cookie, CookieJar};
 
@@ -96,7 +97,7 @@ pub async fn signup(
     let session = state.db.create_session(user.user_id.clone()).await?;
 
     // let _ = jar.add(Cookie::new("session_id", session.session_id.clone()));
-    let headers = get_session_headers(&session);
+    let headers = create_session_headers(&session);
 
     return Ok((headers, Json(json!({"email": user.email}))));
 }
@@ -194,7 +195,7 @@ pub async fn login(
 
     // let _ = jar.add(Cookie::new(SESSION_ID_KEY, session.session_id.clone()));
 
-    let headers = get_session_headers(&session);
+    let headers = create_session_headers(&session);
 
     // let offset =
     //     OffsetDateTime::from_unix_timestamp(session.active_period_expires_at.timestamp()).unwrap();
@@ -223,18 +224,38 @@ async fn generate_magic_link(state: &ServerState, ctext: Ctext) -> String {
     return magic_link;
 }
 
-pub fn get_session_headers(session: &Session) -> HeaderMap {
+pub fn create_session_headers(session: &Session) -> HeaderMap {
     let mut headers = HeaderMap::new();
-    headers.insert(
-        SET_COOKIE,
-        HeaderValue::from_str(format!("{}={}", SESSION_ID_KEY, &session.session_id).as_str())
-            .unwrap(),
-    );
+    // headers.insert(
+    //     SET_COOKIE,
+    //     HeaderValue::from_str(format!("{}={}", SESSION_ID_KEY, &session.session_id).as_str())
+    //         .unwrap(),
+    // );
+    // let session_cookie = Cookie::build("session_id", session.session_id.clone())
+    //     // .domain("http://localhost:3000")
+    //     .path("/")
+    //     .http_only(true)
+    //     .secure(true)
+    //     .finish();
 
+    // let session_key = session_cookie.name().to_owned();
+    // let session_value = session_cookie.to_string();
+
+    // headers.insert(
+    //     SESSION_ID_KEY,
+    //     HeaderValue::from_str(&session.session_id).unwrap(),
+    // );
     headers.insert(
         SESSION_ID_KEY,
-        HeaderValue::from_str(&session.session_id).unwrap(),
+        HeaderValue::from_str(&format!(
+            "session_id={}; HttpOnly; Secure; Path=/",
+            session.session_id
+        ))
+        .unwrap(),
     );
+
+    info!("Session_id: {headers:?}");
+
     return headers;
 }
 
@@ -304,9 +325,10 @@ pub async fn validate_session_middleware<B>(
     //     .insert(Ctext::new("fake".to_string(), Session::new()));
     // return Ok(next.run(request).await);
 
-    let session_id = session_header
-        .expect("Header should be available")
-        .to_string();
+    let session_id = match session_header {
+        Some(x) => x.to_string(),
+        None => return Err(ServerError::AuthFailNoTokenCookie),
+    };
 
     info!("Using session_id: {session_id:?}");
 
