@@ -6,7 +6,7 @@ import { useContext, useState } from "react";
 import { log } from "console";
 import { redirect } from "@tanstack/react-router";
 import { indexRoute } from "./main";
-import { GlobalStateContext } from "./App";
+import { GlobalState, GlobalStateContext } from "./App";
 
 /**
 * v0 by Vercel.
@@ -18,7 +18,7 @@ export function Login() {
     const [password, setPassword] = useState('');
     const [loggedIn, setLoggedIn] = useState(false);
 
-    let globalState = useContext(GlobalStateContext);
+    let globalState: GlobalState = useContext(GlobalStateContext);
 
     const onSubmit = async (event) => {
         event.preventDefault();
@@ -38,16 +38,10 @@ export function Login() {
 
             if (response.status === 200) {
                 const result = await response.json();
-                const headers = await response.headers;
-                const session_header = headers.get(SESSION_TOKEN_KEY);
+                const session_header = response.headers.get(SESSION_TOKEN_KEY);
 
-                console.log('headers: ', headers)
-                console.log('session header: ', session_header)
                 setLoggedIn(true);
                 globalState.setToken(session_header);
-                console.log("Success:", result, headers);
-                console.log('global state after login: ', JSON.stringify(globalState))
-                // setToken(response.headers.get(SESSION_TOKEN_KEY));
             }
 
             redirect({

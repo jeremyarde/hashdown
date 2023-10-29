@@ -10,19 +10,15 @@ import { Link, Outlet } from "@tanstack/react-router"
 export function Navbar() {
     return (
         <>
-            <div className="flex items-center justify-between p-0">
+            <div className="flex items-center justify-between p-2 w-full shadow-md">
                 <div>
                     <Link className="text-2xl font-bold" to="/">
                         <span>Form MD</span>
                     </Link>
                 </div>
                 <div className="flex items-center space-x-4">
-                    {/* {pages.map(page => {
-                        return (
-                            <Button variant="outline"><Link to={page}>Login</Link></Button>
-                        )
-                    })} */}
                     <Button variant="outline"><Link to="/login">Login</Link></Button>
+                    <Button variant="outline"><Link to="/editor">Editor</Link></Button>
                     <Button variant="outline"><Link to="/surveys">Surveys</Link></Button>
                     <Select>
                         <SelectTrigger>

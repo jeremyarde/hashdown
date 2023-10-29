@@ -7,8 +7,6 @@ export type EditorProps = {
 }
 
 export function Editor({ editorContent, setEditorContent }: EditorProps) {
-    // let [editorText, setEditorText] = useState('');
-
 
     return (
         <>

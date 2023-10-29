@@ -14,19 +14,12 @@ import {
 import { Login } from './Login.tsx'
 import { Navbar } from './Navbar.tsx'
 import { ListSurveys } from './pages/ListSurveys.tsx'
+import { Editor } from './pages/Editor.tsx'
 
 // Create a root route
 const rootRoute = new RootRoute({
   component: App,
 })
-
-
-// Create an index route
-// export const indexRoute = new Route({
-//   getParentRoute: () => rootRoute,
-//   path: '/',
-//   component: App,
-// })
 
 const loginRoute = new Route({
   getParentRoute: () => rootRoute,
@@ -40,11 +33,26 @@ const surveysRoute = new Route({
   component: ListSurveys,
 })
 
+const editorRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: '/editor',
+  component: Editor,
+})
+
+const renderSurveyRoute = new Route({
+  getParentRoute: () => surveysRoute,
+  path: '$surveyId',
+  component: ListSurveys,
+})
+
 
 // Create the route tree using your routes
 const routeTree = rootRoute.addChildren([
   // indexRoute, 
-  loginRoute, surveysRoute]);
+  editorRoute,
+  loginRoute,
+  surveysRoute.addChildren([renderSurveyRoute])
+]);
 
 // Create the router using your route tree
 const router = new Router({ routeTree })

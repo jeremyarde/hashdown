@@ -12,7 +12,7 @@ import { Navbar } from './Navbar';
 import { Login } from './Login';
 
 
-type GlobalState = {
+export type GlobalState = {
   token: string;
   setToken: React.Dispatch<React.SetStateAction<string>>,
 }
@@ -31,7 +31,6 @@ export function App() {
 
   return (
     <>
-      <input onChange={e => { setToken(e.target.value); console.log('token: ', token); }}></input>
       <GlobalStateContext.Provider value={globalState}>
         <Navbar ></Navbar>
         <div className="h-screen w-full flex">
