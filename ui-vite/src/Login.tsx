@@ -39,9 +39,12 @@ export function Login() {
             if (response.status === 200) {
                 const result = await response.json();
                 const headers = await response.headers;
+                const session_header = headers.get(SESSION_TOKEN_KEY);
 
+                console.log('headers: ', headers)
+                console.log('session header: ', session_header)
                 setLoggedIn(true);
-                globalState?.setToken(headers.get(SESSION_TOKEN_KEY));
+                globalState.setToken(session_header);
                 console.log("Success:", result, headers);
                 console.log('global state after login: ', JSON.stringify(globalState))
                 // setToken(response.headers.get(SESSION_TOKEN_KEY));
@@ -58,6 +61,7 @@ export function Login() {
 
     return (
         <>
+            <input onChange={e => console.log('checking global state: ', JSON.stringify(globalState))}></input>
             {!loggedIn &&
                 <div className="min-h-screen flex items-center justify-center" >
                     <div className="max-w-sm rounded-lg shadow-lg bg-white p-6 space-y-6 border border-gray-200 dark:border-gray-700" >

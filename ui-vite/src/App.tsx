@@ -12,8 +12,11 @@ import { Navbar } from './Navbar';
 import { Login } from './Login';
 
 
-
-export const GlobalStateContext = createContext(null);
+type GlobalState = {
+  token: string;
+  setToken: React.Dispatch<React.SetStateAction<string>>,
+}
+export const GlobalStateContext = createContext();
 
 
 export function App() {
@@ -21,13 +24,14 @@ export function App() {
   const survey = markdown_to_form_wasm(formtext);
   const [token, setToken] = useState('');
 
-  let globalState = {
+  let globalState: GlobalState = {
     token: token,
     setToken: setToken,
   }
 
   return (
     <>
+      <input onChange={e => { setToken(e.target.value); console.log('token: ', token); }}></input>
       <GlobalStateContext.Provider value={globalState}>
         <Navbar ></Navbar>
         <div className="h-screen w-full flex">

@@ -360,13 +360,14 @@ pub mod routes {
         println!("Getting surveys for user={}", session.user_id);
         let pool = &state.db.pool;
 
-        let res: Vec<SurveyModel> =
-            sqlx::query_as::<_, SurveyModel>("select * from surveys where surveys.user_id = $1")
-                .bind(session.user_id.clone())
-                .fetch_all(pool)
-                .await
-                .map_err(|err| ServerError::Database(err.to_string()))
-                .unwrap();
+        let res = sqlx::query_as::<_, SurveyModel>(
+            "select * from mdp.surveys where mdp.surveys.user_id = $1",
+        )
+        .bind(session.user_id.clone())
+        .fetch_all(pool)
+        .await
+        .map_err(|err| return ServerError::Database(err.to_string()))
+        .unwrap();
 
         let resp = ListSurveyResponse { surveys: res };
 
