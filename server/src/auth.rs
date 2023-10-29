@@ -241,18 +241,18 @@ pub fn create_session_headers(session: &Session) -> HeaderMap {
     // let session_key = session_cookie.name().to_owned();
     // let session_value = session_cookie.to_string();
 
-    // headers.insert(
-    //     SESSION_ID_KEY,
-    //     HeaderValue::from_str(&session.session_id).unwrap(),
-    // );
     headers.insert(
         SESSION_ID_KEY,
-        HeaderValue::from_str(&format!(
-            "session_id={}; HttpOnly; Secure; Path=/",
-            session.session_id
-        ))
-        .unwrap(),
+        HeaderValue::from_str(&session.session_id).unwrap(),
     );
+    // headers.insert(
+    //     SET_COOKIE,
+    //     HeaderValue::from_str(&format!(
+    //         "session_id={}; HttpOnly; Secure; Path=/",
+    //         session.session_id
+    //     ))
+    //     .unwrap(),
+    // );
 
     info!("Session_id: {headers:?}");
 
@@ -308,7 +308,7 @@ pub async fn validate_session_middleware<B>(
 
     let session_cookie = jar
         .get(SESSION_ID_KEY)
-        .and_then(|cookie| Some(cookie.to_string()));
+        .and_then(|cookie| Some(cookie.value()));
 
     info!("Session header: {session_header:?}");
     info!("Session cookies: {session_cookie:?}");

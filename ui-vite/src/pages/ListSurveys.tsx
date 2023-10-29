@@ -1,15 +1,22 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Button } from '../components/ui/button';
-import { base_url } from '../App';
+import { BASE_URL } from '@/lib/constants';
+import { GlobalStateContext } from '@/App';
+
 
 export function ListSurveys() {
     const [surveys, setSurveys] = useState(undefined);
     const [error, setError] = useState('');
+    let globalState = useContext(GlobalStateContext);
+
 
     async function getSurveys() {
-        const response = await fetch(`${base_url}/surveys`, {
+        const response = await fetch(`${BASE_URL}/surveys`, {
             method: "GET",
-            credentials: 'same-origin'
+            credentials: 'include',
+            headers: {
+                'session_id': globalState?.token ?? '',
+            }
         });
 
         const result = await response.json();

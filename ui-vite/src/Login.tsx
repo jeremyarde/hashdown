@@ -1,85 +1,81 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./components/ui/form";
 import { Input } from "./components/ui/input";
 import { Button } from "./components/ui/button";
+import { Label } from "./components/ui/label";
+import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
+import { useContext, useState } from "react";
+import { log } from "console";
+import { redirect } from "@tanstack/react-router";
+import { indexRoute } from "./main";
+import { GlobalStateContext } from "./App";
 
+/**
+* v0 by Vercel.
+* @see https://v0.dev/t/XNlTLb7
+*/
 
-function Login() {
-    const formSchema = z.object({
-        email: z.string().min(2).max(50),
-        password: z.string()
-    });
+export function Login() {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [loggedIn, setLoggedIn] = useState(false);
 
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            email: "",
-            password: "",
-        },
-    })
-    const onSubmit = async (evt) => {
-        console.log(evt);
+    let globalState = useContext(GlobalStateContext);
+
+    const onSubmit = async (event) => {
+        event.preventDefault();
+        const loginPayload = JSON.stringify({ email: username, password: password });
+        console.log('login component')
+        console.log(loginPayload);
+        console.log(globalState)
         try {
-            const response = await fetch(`${base_url}/auth/login`, {
+            const response = await fetch(`${BASE_URL}/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                credentials: 'same-origin',
-                body: JSON.stringify(evt),
+                credentials: 'include',
+                body: loginPayload,
             });
 
-            const result = await response.json();
-            const headers = await response.headers;
-            console.log("Success:", result, headers);
+            if (response.status === 200) {
+                const result = await response.json();
+                const headers = await response.headers;
+
+                setLoggedIn(true);
+                globalState?.setToken(headers.get(SESSION_TOKEN_KEY));
+                console.log("Success:", result, headers);
+                console.log('global state after login: ', JSON.stringify(globalState))
+                // setToken(response.headers.get(SESSION_TOKEN_KEY));
+            }
+
+            redirect({
+                to: "/", replace: true
+            });
+
         } catch (error) {
             console.error("Error:", error);
         }
-
-    }
+    };
 
     return (
         <>
-            <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-1">
-                    <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Username</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="shadcn" {...field} />
-                                </FormControl>
-
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>password</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="shadcn" {...field} />
-                                </FormControl>
-                                {/* <FormDescription>
-                    password here
-                  </FormDescription> */}
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <Button type="submit">Submit</Button>
-                </form>
-            </Form>
+            {!loggedIn &&
+                <div className="min-h-screen flex items-center justify-center" >
+                    <div className="max-w-sm rounded-lg shadow-lg bg-white p-6 space-y-6 border border-gray-200 dark:border-gray-700" >
+                        <h1 className="text-3xl font-bold space-y-2" > Login </h1>
+                        < div className="space-y-4 text-left" >
+                            <form onSubmit={onSubmit}>
+                                <Label className="" htmlFor="email" > Email </Label>
+                                <Input id="email" placeholder="m@example.com" required type="email" onChange={e => setUsername(e.target.value)} />
+                                <Label className="" htmlFor="password" > Password </Label>
+                                <Input id="password" required type="password" onChange={e => setPassword(e.target.value)} />
+                                <Button className="border shadow-md p-2 w-full hover:bg-slate-400" type="submit" >
+                                    Login
+                                </Button>
+                            </form>
+                        </div>
+                    </div>
+                </div >
+            }
         </>
-    );
-}
+    )
+} 
