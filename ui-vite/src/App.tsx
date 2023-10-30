@@ -10,6 +10,7 @@ import { ListSurveys } from './pages/ListSurveys';
 import { RenderedForm } from './RenderedForm';
 import { Navbar } from './Navbar';
 import { Login } from './Login';
+import { Outlet } from '@tanstack/react-router';
 
 
 export type GlobalState = {
@@ -33,17 +34,7 @@ export function App() {
     <>
       <GlobalStateContext.Provider value={globalState}>
         <Navbar ></Navbar>
-        <div className="h-screen w-full flex">
-          <div className="w-1/2 border-r-2 p-4">
-            <Editor editorContent={formtext} setEditorContent={setFormtext}></Editor>
-          </div>
-          <div className="w-1/2 p-4">
-            <h1 className="text-2xl font-bold mb-4">Preview</h1>
-            <div className="border border-gray-300 p-4 rounded">
-              <RenderedForm plaintext={formtext} survey={survey} ></RenderedForm>
-            </div>
-          </div>
-        </div>
+        <Outlet />
       </GlobalStateContext.Provider >
     </>
   )

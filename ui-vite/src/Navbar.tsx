@@ -5,7 +5,7 @@
 // import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SelectTrigger, SelectItem, SelectGroup, SelectContent, Select } from "./components/ui/select"
-import { Link, Outlet } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 
 export function Navbar() {
     return (
@@ -17,9 +17,10 @@ export function Navbar() {
                     </Link>
                 </div>
                 <div className="flex items-center space-x-4">
-                    <Button variant="outline"><Link to="/login">Login</Link></Button>
-                    <Button variant="outline"><Link to="/editor">Editor</Link></Button>
-                    <Button variant="outline"><Link to="/surveys">Surveys</Link></Button>
+                    <Link to="/login">Login</Link>
+                    {/* <Button variant="outline"><Link to="/editor">Editor</Link></Button> */}
+                    <Link to="/surveys">Surveys</Link>
+                    <Link to="/editor">Editor</Link>
                     <Select>
                         <SelectTrigger>
                             <Button variant="outline">Menu</Button>
@@ -34,8 +35,6 @@ export function Navbar() {
                     </Select>
                 </div>
             </div >
-            <Outlet />
-
         </>
     )
 }

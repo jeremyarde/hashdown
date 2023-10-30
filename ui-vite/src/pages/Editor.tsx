@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { RenderedForm } from "../RenderedForm";
+import { BASE_URL } from "@/lib/constants";
+import { GlobalStateContext } from "@/App";
 
 export type EditorProps = {
     editorContent: string;
@@ -7,6 +9,23 @@ export type EditorProps = {
 }
 
 export function Editor({ editorContent, setEditorContent }: EditorProps) {
+    let globalState = useContext(GlobalStateContext);
+
+
+    async function submitSurvey(event) {
+        const response = await fetch(`${BASE_URL}/surveys`, {
+            method: "POST",
+            credentials: 'include',
+            headers: {
+                'content-type': 'application/json',
+                'session_id': globalState?.token ?? '',
+            },
+            body: JSON.stringify({ plaintext: editorContent })
+        });
+
+        const result = await response.json();
+        console.log('data: ', result);
+    };
 
     return (
         <>
@@ -16,6 +35,7 @@ export function Editor({ editorContent, setEditorContent }: EditorProps) {
                 placeholder="Enter form content here..."
                 value={editorContent}
                 onChange={evt => setEditorContent(evt.target.value)} />
+            <button className="bg-gray-400 outline p-2 rounded w-full" onClick={submitSurvey}>Save Survey</button>
         </>
     );
 }

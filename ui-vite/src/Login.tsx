@@ -3,9 +3,7 @@ import { Button } from "./components/ui/button";
 import { Label } from "./components/ui/label";
 import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
 import { useContext, useState } from "react";
-import { log } from "console";
 import { redirect } from "@tanstack/react-router";
-import { indexRoute } from "./main";
 import { GlobalState, GlobalStateContext } from "./App";
 
 /**
@@ -55,7 +53,6 @@ export function Login() {
 
     return (
         <>
-            <input onChange={e => console.log('checking global state: ', JSON.stringify(globalState))}></input>
             {!loggedIn &&
                 <div className="min-h-screen flex items-center justify-center" >
                     <div className="max-w-sm rounded-lg shadow-lg bg-white p-6 space-y-6 border border-gray-200 dark:border-gray-700" >
