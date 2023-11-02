@@ -11,7 +11,7 @@ import { GlobalState, GlobalStateContext } from "./App";
 * @see https://v0.dev/t/XNlTLb7
 */
 
-export function Login() {
+export function Signup() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loggedIn, setLoggedIn] = useState(false);
@@ -20,18 +20,18 @@ export function Login() {
 
     const onSubmit = async (event) => {
         event.preventDefault();
-        const loginPayload = JSON.stringify({ email: username, password: password });
+        const payload = JSON.stringify({ email: username, password: password });
         console.log('login component')
-        console.log(loginPayload);
+        console.log(payload);
         console.log(globalState)
         try {
-            const response = await fetch(`${BASE_URL}/auth/login`, {
+            const response = await fetch(`${BASE_URL}/auth/signup`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 credentials: 'include',
-                body: loginPayload,
+                body: payload,
             });
 
             if (response.status === 200) {
@@ -57,7 +57,7 @@ export function Login() {
                 <div className="min-h-screen flex items-center justify-center w-240" >
                     <div className="max-w-sm rounded-lg shadow-lg bg-white p-6 space-y-6 border border-gray-200 dark:border-gray-700" >
                         <h1 className="text-3xl font-bold space-y-2" >
-                            Login
+                            Signup
                         </h1>
                         < div className="space-y-4 text-left" >
                             <form onSubmit={onSubmit}>
@@ -66,11 +66,11 @@ export function Login() {
                                 <Label className="" htmlFor="password" > Password </Label>
                                 <Input id="password" required type="password" onChange={e => setPassword(e.target.value)} />
                                 <Button className="border shadow-md p-2 w-full hover:bg-slate-400" type="submit" >
-                                    Login
+                                    Signup
                                 </Button>
-                                <div className="text-center p-1">{"No account? "}
-                                    <Link className="underline" to="/signup">
-                                        Signup here
+                                <div className="text-center p-1">{"Already have an account? "}
+                                    <Link className="underline" to="/login">
+                                        Login here
                                     </Link>
                                 </div>
                             </form>

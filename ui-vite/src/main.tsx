@@ -10,6 +10,7 @@ import {
   Router,
   Route,
   RootRoute,
+  redirect,
 } from '@tanstack/react-router'
 import { Login } from './Login.tsx'
 import { Navbar } from './Navbar.tsx'
@@ -19,41 +20,13 @@ import { Editor } from './pages/Editor.tsx'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { RenderedForm } from './RenderedForm.tsx'
 import { markdown_to_form_wasm } from '../../backend/pkg/markdownparser'
+import { Signup } from './Signup.tsx'
 
 // Create a root route
 // const rootRoute = new RootRoute({
 //   component: App,
 // })
 const rootRoute = new RootRoute({
-  // component: () => {
-  //   return (
-  //     <>
-  //       <div className="p-2 flex gap-2 text-lg">
-  //         <Link
-  //           to="/"
-  //           activeProps={{
-  //             className: 'font-bold',
-  //           }}
-  //           activeOptions={{ exact: true }}
-  //         >
-  //           Home
-  //         </Link>{' '}
-  //         <Link
-  //           to={'/login'}
-  //           activeProps={{
-  //             className: 'font-bold',
-  //           }}
-  //         >
-  //           Posts
-  //         </Link>
-  //       </div>
-  //       <hr />
-  //       <Outlet />
-  //       {/* Start rendering router matches */}
-  //       <TanStackRouterDevtools position="bottom-right" />
-  //     </>
-  //   )
-  // },
   component: App
 })
 
@@ -61,10 +34,13 @@ const indexRoute = new Route({
   getParentRoute: () => rootRoute,
   path: '/',
   component: () => {
+    // redirect({
+    //   to: "/editor", replace: true
+    // });
     return (
-      <div className="p-2">
-        <h3>Welcome Home!</h3>
-      </div>
+      <>
+        <h1 className='flex top-10 text-center justify-center m-12'>The easiest way to create and share surveys</h1>
+      </>
     )
   },
 })
@@ -73,6 +49,12 @@ const loginRoute = new Route({
   getParentRoute: () => rootRoute,
   path: '/login',
   component: Login,
+})
+
+const signupRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: '/signup',
+  component: Signup,
 })
 
 const surveysRoute = new Route({
@@ -116,6 +98,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   editorRoute,
   loginRoute,
+  signupRoute,
   // surveysRoute.addChildren([renderSurveyRoute])
   surveysRoute
 ]);
