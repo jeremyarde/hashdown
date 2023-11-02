@@ -40,6 +40,7 @@ export function Login() {
 
                 setLoggedIn(true);
                 globalState.setToken(session_header);
+                window.sessionStorage.setItem(SESSION_TOKEN_KEY, session_header);
             }
 
             redirect({

@@ -23,7 +23,7 @@ export const GlobalStateContext = createContext();
 export function App() {
   const [formtext, setFormtext] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"');
   const survey = markdown_to_form_wasm(formtext);
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState(window.sessionStorage.getItem('session_id') ?? '');
 
   let globalState: GlobalState = {
     token: token,

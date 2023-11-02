@@ -40,6 +40,7 @@ const indexRoute = new Route({
     return (
       <>
         <h1 className='flex top-10 text-center justify-center m-12'>The easiest way to create and share surveys</h1>
+        <TanStackRouterDevtools />
       </>
     )
   },
@@ -127,6 +128,6 @@ if (!rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <RouterProvider router={router} />
-    </StrictMode>,
+    </StrictMode>
   )
 }

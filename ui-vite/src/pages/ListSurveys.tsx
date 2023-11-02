@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Button } from '../components/ui/button';
 import { BASE_URL } from '@/lib/constants';
 import { GlobalStateContext } from '@/App';
@@ -16,6 +16,9 @@ export function ListSurveys() {
     const [error, setError] = useState('');
     let globalState = useContext(GlobalStateContext);
 
+    useEffect(() => {
+        getSurveys();
+    }, [])
 
     async function getSurveys() {
         const response = await fetch(`${BASE_URL}/surveys`, {
@@ -40,13 +43,11 @@ export function ListSurveys() {
 
     return (
         <>
-            <div className='bg-green-300'>
-                <Button onClick={(evt) => {
-                    console.log('clicked button');
-                    getSurveys();
-                }}>My Surveys</Button>
+            <div className=''>
+                <h1>
+                    My Surveys
+                </h1>
                 <div>
-                    Surveys
                     <ul>
                         {surveys.map(survey => {
                             return (
@@ -58,16 +59,17 @@ export function ListSurveys() {
                                     <div className=''>
                                         Created at: {survey.created_at}
                                     </div>
-                                </li>
+                                </li >
                             )
                         })}
-                    </ul>
+                    </ul >
+
                 </div>
 
                 <div className='bg-red-600'>
                     {error ? error : ''}
                 </div>
-            </div>
+            </div >
         </>
     );
 }
