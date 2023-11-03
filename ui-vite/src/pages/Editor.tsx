@@ -2,6 +2,7 @@ import { useContext, useState } from "react";
 import { RenderedForm } from "../RenderedForm";
 import { BASE_URL } from "@/lib/constants";
 import { GlobalStateContext } from "@/App";
+import { redirect } from "@tanstack/react-router";
 
 export type EditorProps = {
     editorContent: string;
@@ -25,6 +26,10 @@ export function Editor({ editorContent, setEditorContent }: EditorProps) {
 
         const result = await response.json();
         console.log('data: ', result);
+
+        if (response.status === 401) {
+            redirect({ to: "/login", replace: true });
+        }
     };
 
     return (

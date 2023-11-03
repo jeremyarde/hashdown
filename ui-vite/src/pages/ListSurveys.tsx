@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { Button } from '../components/ui/button';
 import { BASE_URL } from '@/lib/constants';
 import { GlobalStateContext } from '@/App';
-import { Link } from '@tanstack/react-router';
+import { Link, redirect } from '@tanstack/react-router';
 
 
 type Survey = {
@@ -34,6 +34,9 @@ export function ListSurveys() {
         if (result.error) {
             console.log('failed to get surveys: ', result);
             setError(result.message ?? 'Generic error getting surveys');
+            if (response.status === 401) {
+                redirect({ to: "/login", replace: true });
+            }
         } else {
             console.log('Found surveys: ', result);
             setSurveys(result.surveys);
