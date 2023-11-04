@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from 'react-hook-form';
 import { Button } from './components/ui/button';
@@ -20,23 +20,31 @@ export type RenderedFormProps = {
 
 export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
     let [submittedValues, setSubmittedValues] = useState(null);
+    // let [form, setForm] = useState(undefined);
 
+    console.log(`render - survey: ${JSON.stringify(survey)}`)
     let objects = {};
     let defaultValues = {};
-    survey.questions.forEach(element => {
-        console.log(element);
+    const questions = survey?.questions ?? [];
+    questions.forEach(element => {
+        // console.log(element);
         // objects[element.id] = z.string().min(10, { message: "Hey, longer please" });
         objects[element.id] = z.enum(element.options.map((option) => option.text), { required_error: "Please select an option" });
         defaultValues[element.id] = "";
     });
     const formSchema = z.object(objects);
-
-
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: defaultValues,
     });
 
+    // const {
+    //     register,
+    //     handleSubmit,
+    //     watch,
+    //     formState: { errors }
+    // } = useForm({
+    // });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         // Do something with the form values.
@@ -92,8 +100,9 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
         );
     }
 
-    return (
-        <>
+    let toRender;
+    if (survey) {
+        toRender = (<>
             <div className='flex flex-col justify-start items-start w-full'>
                 <h3 className='w-full text-center'>{survey.title}</h3>
                 <Form {...form}>
@@ -105,17 +114,23 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
                     </form>
                 </Form>
             </div>
-            {submittedValues && (
-                <>
-                    <h3>Submitted Values</h3>
-                    <Alert className={'bg-green-300'}>
-                        <AlertDescription>
-                            {submittedValues ? JSON.stringify(submittedValues) : ''}
-                        </AlertDescription>
-                    </Alert>
-                </>
-            )}
-        </>);
+            {
+                submittedValues && (
+                    <>
+                        <h3>Submitted Values</h3>
+                        <Alert className={'bg-green-300'}>
+                            <AlertDescription>
+                                {submittedValues ? JSON.stringify(submittedValues) : ''}
+                            </AlertDescription>
+                        </Alert>
+                    </>
+                )
+            }
+        </>)
+    } else {
+        <div>nope</div>
+    }
+    return (toRender)
 }
 
 

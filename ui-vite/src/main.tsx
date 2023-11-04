@@ -1,4 +1,4 @@
-import React, { StrictMode, useState } from 'react'
+import React, { StrictMode, useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { App } from './App.tsx'
 import './index.css'
@@ -21,6 +21,7 @@ import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { RenderedForm } from './RenderedForm.tsx'
 import { markdown_to_form_wasm } from '../../backend/pkg/markdownparser'
 import { Signup } from './Signup.tsx'
+import { setServers } from 'dns'
 
 // Create a root route
 // const rootRoute = new RootRoute({
@@ -69,7 +70,13 @@ const editorRoute = new Route({
   path: '/editor',
   component: () => {
     const [formtext, setFormtext] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"');
-    const survey = markdown_to_form_wasm(formtext);
+    const [survey, setSurvey] = useState(undefined);
+
+    useEffect(() => {
+      console.log('editor useeffect');
+      const newSurvey = markdown_to_form_wasm(formtext);
+      setSurvey(newSurvey);
+    }, [formtext]);
     // const [token, setToken] = useState('');
 
     return (

@@ -234,11 +234,6 @@ pub mod routes {
                 ))
             }
         };
-        // info!("Found survey_id in database");
-        // let answer_id = nanoid_gen(12);
-        // let response = CreateAnswersResponse {
-        //     answer_id: answer_id.clone(),
-        // };
         let create_answer_model = CreateAnswersModel {
             id: None,
             answer_id: nanoid_gen(12),
@@ -271,20 +266,6 @@ pub mod routes {
     pub struct GetSurveyQuery {
         pub format: SurveyFormat,
     }
-
-    // #[derive(Clone, Debug, Serialize, Deserialize, Model)]
-    // pub struct SurveyModel {
-    //     pub id: i32,
-    //     pub plaintext: String,
-    //     pub user_id: String,
-    //     // pub created_at: String,
-    //     // pub modified_at: String,
-    //     // pub questions: Option<Vec<Question>>,
-    //     // pub version: String,
-    //     // pub parse_version: String,
-    //     // #[serde(flatten)]
-    //     // pub metadata: Metadata,
-    // }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
 
