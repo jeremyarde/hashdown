@@ -38,14 +38,6 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
         defaultValues: defaultValues,
     });
 
-    // const {
-    //     register,
-    //     handleSubmit,
-    //     watch,
-    //     formState: { errors }
-    // } = useForm({
-    // });
-
     function onSubmit(values: z.infer<typeof formSchema>) {
         // Do something with the form values.
         // ✅ This will be type-safe and validated.
@@ -64,35 +56,43 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
                 key={question.id}
                 control={form.control}
                 name={question.id}
-                className="flex text-left justify-start"
+                className="flex flex-row text-left justify-start"
                 render={({ field }) => {
                     return (
                         <FormItem className='flex flex-col w-full text-left'>
-                            <FormLabel>{question.value}</FormLabel>
-                            <FormControl>
-                                <RadioGroup
-                                    onValueChange={field.onChange}
-                                    defaultValue={field.value}
-                                >
-                                    {question.options.map((option) => {
-                                        return (
-                                            <FormItem
-                                                className="flex items-center space-x-3 w-full"
-                                            >
-                                                <FormControl>
-                                                    <RadioGroupItem value={option.text} />
-                                                </FormControl>
-                                                <FormLabel className=''>
-                                                    {option.text}
-                                                </FormLabel>
-                                            </FormItem>
-                                        );
-                                    })}
-                                </RadioGroup>
-                            </FormControl>
-                            <FormDescription>
+                            <div className="flex flex-row items-center justify-between">
+                                <FormLabel>{question.value}</FormLabel>
+                                <Badge className="bg-gray-800 text-white" variant="outline">{question.id}</Badge>
+
+                            </div>
+                            <div
+                            // className="flex flex-col items-center align-middle"
+                            >
+                                <FormControl>
+                                    <RadioGroup
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                    >
+                                        {question.options.map((option) => {
+                                            return (
+                                                <FormItem
+                                                // className="flex flex-col items-center space-x-3 w-full"
+                                                >
+                                                    <FormControl>
+                                                        <RadioGroupItem value={option.text} />
+                                                    </FormControl>
+                                                    <FormLabel className=''>
+                                                        {option.text}
+                                                    </FormLabel>
+                                                </FormItem>
+                                            );
+                                        })}
+                                    </RadioGroup>
+                                </FormControl>
+                            </div>
+                            {/* <FormDescription>
                                 {question.id}
-                            </FormDescription>
+                            </FormDescription> */}
                             <FormMessage />
                         </FormItem>
                     );
@@ -143,6 +143,7 @@ import { Input } from "@/components/ui/input"
 import { SelectValue, SelectTrigger, SelectItem, SelectContent, Select } from "@/components/ui/select"
 import { Checkbox } from "./components/ui/checkbox"
 import { CardContent, Card } from "./components/ui/card"
+import { Badge } from "./components/ui/badge";
 
 export function ExampleForm() {
     return (

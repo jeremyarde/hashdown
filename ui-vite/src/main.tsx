@@ -1,6 +1,5 @@
-import React, { StrictMode, useEffect, useState } from 'react'
+import React, { StrictMode, createContext, useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { App } from './App.tsx'
 import './index.css'
 
 import {
@@ -21,15 +20,61 @@ import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { RenderedForm } from './RenderedForm.tsx'
 import { markdown_to_form_wasm } from '../../backend/pkg/markdownparser'
 import { Signup } from './Signup.tsx'
-import { setServers } from 'dns'
+import { Button } from './components/ui/button.tsx'
 
 // Create a root route
 // const rootRoute = new RootRoute({
 //   component: App,
 // })
+// const TanStackRouterDevtools =
+//   process.env.NODE_ENV === 'production'
+//     ? () => null // Render nothing in production
+//     : React.lazy(() =>
+//       // Lazy load in development
+//       import('@tanstack/router-devtools').then((res) => ({
+//         default: res.TanStackRouterDevtools,
+//         // For Embedded Mode
+//         // default: res.TanStackRouterDevtoolsPanel
+//       })),
+//     );
+
+
+export type GlobalState = {
+  token: string;
+  setToken: React.Dispatch<React.SetStateAction<string>>,
+}
+export const GlobalStateContext = createContext();
+
+
+function App() {
+  const [formtext, setFormtext] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"');
+  const survey = markdown_to_form_wasm(formtext);
+  const [token, setToken] = useState(window.sessionStorage.getItem('session_id') ?? '');
+
+  let globalState: GlobalState = {
+    token: token,
+    setToken: setToken,
+  }
+
+  return (
+    <>
+      <GlobalStateContext.Provider value={globalState}>
+        <Navbar></Navbar>
+      </GlobalStateContext.Provider >
+    </>
+  )
+}
+
+
 const rootRoute = new RootRoute({
-  component: App
-})
+  component: () => (
+    <>
+      <App />
+      <Outlet />
+      <TanStackRouterDevtools />
+    </>
+  ),
+});
 
 const indexRoute = new Route({
   getParentRoute: () => rootRoute,
@@ -41,7 +86,11 @@ const indexRoute = new Route({
     return (
       <>
         <h1 className='flex top-10 text-center justify-center m-12'>The easiest way to create and share surveys</h1>
-        <TanStackRouterDevtools />
+        <Link to='/editor'>
+          <Button className='bg-blue-400 rounded-lg'>
+            Get started
+          </Button>
+        </Link>
       </>
     )
   },
@@ -63,6 +112,17 @@ const surveysRoute = new Route({
   getParentRoute: () => rootRoute,
   path: '/surveys',
   component: ListSurveys,
+})
+
+const surveyRoute = new Route({
+  getParentRoute: () => surveysRoute,
+  path: '/$surveyId',
+  component: (params) => {
+    return (<>
+      <div>Show me the survey</div>
+      <div>{JSON.stringify(params)}</div>
+    </>)
+  },
 })
 
 const editorRoute = new Route({
@@ -108,7 +168,7 @@ const routeTree = rootRoute.addChildren([
   loginRoute,
   signupRoute,
   // surveysRoute.addChildren([renderSurveyRoute])
-  surveysRoute
+  surveysRoute.addChildren([surveyRoute])
 ]);
 
 // Create the router using your route tree
@@ -128,6 +188,7 @@ declare module '@tanstack/react-router' {
 // )
 
 // Render our app!
+
 const rootElement = document.getElementById('root')!
 
 if (!rootElement.innerHTML) {

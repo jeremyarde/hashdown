@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState } from 'react';
 import { Button } from '../components/ui/button';
 import { BASE_URL } from '@/lib/constants';
-import { GlobalStateContext } from '@/App';
+
 import { Link, redirect } from '@tanstack/react-router';
+import { GlobalStateContext } from '@/main';
 
 
 type Survey = {
@@ -54,15 +55,17 @@ export function ListSurveys() {
                     <ul>
                         {surveys.map(survey => {
                             return (
-                                <li className='flex flex-row w-full justify-between'>
-                                    <Link to={`/surveys/${survey.survey_id}`}></Link>
-                                    <div className='text-left'>
-                                        Survey ID: {survey.id}
-                                    </div>
-                                    <div className=''>
-                                        Created at: {survey.created_at}
-                                    </div>
-                                </li >
+                                <Link to="/surveys/$surveyId" params={{ surveyId: survey.survey_id }}>
+                                    <li className='flex flex-row w-full justify-between'>
+
+                                        <div className='text-left'>
+                                            Survey ID: {survey.id}
+                                        </div>
+                                        <div className=''>
+                                            Created at: {survey.created_at}
+                                        </div>
+                                    </li >
+                                </Link>
                             )
                         })}
                     </ul >

@@ -4,7 +4,7 @@ import { Label } from "./components/ui/label";
 import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
 import { useContext, useState } from "react";
 import { Link, redirect } from "@tanstack/react-router";
-import { GlobalState, GlobalStateContext } from "./App";
+import { GlobalState, GlobalStateContext } from "./main";
 
 /**
 * v0 by Vercel.

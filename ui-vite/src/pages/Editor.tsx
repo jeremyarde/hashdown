@@ -1,8 +1,8 @@
 import { useContext, useState } from "react";
 import { RenderedForm } from "../RenderedForm";
 import { BASE_URL } from "@/lib/constants";
-import { GlobalStateContext } from "@/App";
 import { redirect } from "@tanstack/react-router";
+import { GlobalStateContext } from "@/main";
 
 export type EditorProps = {
     editorContent: string;
@@ -36,7 +36,7 @@ export function Editor({ editorContent, setEditorContent }: EditorProps) {
         <>
             <h1 className="text-2xl font-bold mb-4">Enter Form Content</h1>
             <textarea
-                className="w-full h-full p-2 rounded border border-gray-300"
+                className="w-full h-4/6 p-2 rounded border border-gray-300"
                 placeholder="Enter form content here..."
                 value={editorContent}
                 onChange={evt => setEditorContent(evt.target.value)} />

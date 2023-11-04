@@ -76,8 +76,8 @@ pub mod routes {
         let auth_routes = Router::new()
             .route("/api/surveys", post(create_survey).get(list_survey))
             .route("/api/surveys/:id", get(get_survey).post(submit_survey))
-            .route("/api/responses", post(submit_response))
-            .route("/api/responses/:id", get(survey_responses::list_response))
+            .route("/api/submit", post(submit_response))
+            // .route("/api/submit/:id", get(survey_responses::list_response))
             .route_layer(middleware::from_fn_with_state(
                 state.clone(),
                 validate_session_middleware,
