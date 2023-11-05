@@ -16,6 +16,8 @@ export function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loggedIn, setLoggedIn] = useState(false);
+    const [loginError, setLoginError] = useState('');
+
 
     let globalState: GlobalState = useContext(GlobalStateContext);
 
@@ -42,6 +44,8 @@ export function Login() {
                 setLoggedIn(true);
                 globalState.setToken(session_header);
                 window.sessionStorage.setItem(SESSION_TOKEN_KEY, session_header);
+            } else {
+                setLoginError((prev) => result.message)
             }
 
             redirect({
@@ -50,6 +54,7 @@ export function Login() {
 
         } catch (error) {
             console.error("Error:", error);
+
         }
     };
 
@@ -64,9 +69,11 @@ export function Login() {
                         < div className="space-y-4 text-left" >
                             <form onSubmit={onSubmit}>
                                 <Label className="" htmlFor="email" > Email </Label>
-                                <Input id="email" placeholder="m@example.com" required type="email" onChange={e => setUsername(e.target.value)} />
+                                <Input id="email" placeholder="m@example.com" required type="email" onChange={e => setUsername(e.target.value)}
+                                    className="invalid:border-pink-500 invalid:text-pink-600" />
                                 <Label className="" htmlFor="password" > Password </Label>
                                 <Input id="password" required type="password" onChange={e => setPassword(e.target.value)} />
+                                {loginError ? (<p>{`Login failed: ${loginError}`}</p>) : (<div className="p-4"></div>)}
                                 <Button className="border shadow-md p-2 w-full hover:bg-slate-400" type="submit" >
                                     Login
                                 </Button>

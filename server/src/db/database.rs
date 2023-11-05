@@ -175,13 +175,8 @@ pub struct Answer {
 
 #[derive(Debug, Deserialize, Serialize, FromRow)]
 pub struct CreateAnswersModel {
-    pub id: Option<String>,
-    pub answer_id: String,
-    // pub external_id: String,
     pub survey_id: String,
-    // pub survey_version: String,
-    pub submitted_at: String,
-    pub answers: Value,
+    pub responses: Value,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
@@ -335,18 +330,27 @@ impl Database {
     pub async fn create_answer(&self, answer: CreateAnswersModel) -> anyhow::Result<()> {
         info!("Creating answers in database");
 
-        let _res = sqlx::query(
-            r#"insert into mdp.surveys_submissions (survey_id, submitted_at, answers)
-        values
-        ($1, $2, $3, $4)
-        "#,
-        )
-        // .bind(answer.answer_id)
-        .bind(answer.survey_id)
-        .bind(answer.submitted_at)
-        .bind(json!(answer.answers))
-        .execute(&self.pool)
-        .await?;
+        // let _res = sqlx::query(
+        //     r#"insert into mdp.surveys_submissions (survey_id, submitted_at, answers)
+        // values
+        // ($1, $2, $3, $4)
+        // "#,
+        // )
+        // // .bind(answer.answer_id)
+        // .bind(answer.survey_id)
+        // .bind(answer.submitted_at)
+        // .bind(json!(answer.answers))
+        // .execute(&self.pool)
+        // .await?;
+
+        let res= sqlx::query!(
+            r#"insert into mdp.responses (submitted_at, survey_id, answers) values ($1, $2, $3) returning *"#, 
+            Utc::now(), answer.survey_id, answer.responses)
+            .fetch_one(&self.pool).await.expect("Should insert a response");
+
+            // let res = sqlx::query_as!(UserModel, r#"select id, user_id, email, password_hash, created_at, modified_at, deleted_at, email_status as "email_status: EmailStatus" from mdp.users where email = $1"#, email)
+            // .fetch_one(&self.pool)
+            // .await?;
 
         // answer.insert(&self.pool).await?;
 

@@ -71,12 +71,12 @@ pub mod routes {
         let public_routes = Router::new()
             .route("/api/auth/login", post(auth::login))
             .route("/api/auth/signup", post(auth::signup))
+            .route("/api/submit", post(submit_response))
             .route("/api/ping", get(ping));
 
         let auth_routes = Router::new()
             .route("/api/surveys", post(create_survey).get(list_survey))
             .route("/api/surveys/:id", get(get_survey).post(submit_survey))
-            .route("/api/submit", post(submit_response))
             // .route("/api/submit/:id", get(survey_responses::list_response))
             .route_layer(middleware::from_fn_with_state(
                 state.clone(),
@@ -235,16 +235,8 @@ pub mod routes {
             }
         };
         let create_answer_model = CreateAnswersModel {
-            id: None,
-            answer_id: nanoid_gen(12),
             survey_id: survey_id.clone(),
-            answers: json!(payload),
-            submitted_at: chrono::Utc::now().to_string(),
-            // external_id: "".to_string(),
-            // survey_version: "".to_string(),
-            // start_time: chrono::Local::now().to_string(),
-            // end_time: "".to_string(),
-            // created_at: "".to_string(),
+            responses: json!({"accepted": "true"}),
         };
 
         state

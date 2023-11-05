@@ -38,12 +38,34 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
         defaultValues: defaultValues,
     });
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onSubmit(values: z.infer<typeof formSchema>) {
         // Do something with the form values.
         // ✅ This will be type-safe and validated.
         console.log(`submit:`);
         console.log(values);
-        setSubmittedValues((prev) => values);
+
+        const surveySubmission = {
+            survey_id: survey.survey_id ?? '',
+            responses: values
+        }
+        setSubmittedValues((prev) => surveySubmission);
+
+        if (survey.survey_id) {
+            const response = await fetch(`${BASE_URL}/submit`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: 'include',
+                body: JSON.stringify(surveySubmission),
+            });
+            console.log(`submit response: ${JSON.stringify(response)}`);
+        } else {
+            console.log("Not sending submittion");
+        }
+
+
+
     }
 
     /**
@@ -104,7 +126,8 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
     if (survey) {
         toRender = (<>
             <div className='flex flex-col justify-start items-start w-full'>
-                <h3 className='w-full text-center'>{survey.title}</h3>
+                <h1 className='w-full text-center'>{survey.title}</h1>
+                <Badge className="bg-gray-800 text-white" variant="outline">{survey.survey_id}</Badge>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)}
                         className="space-y-6 w-full"
@@ -144,6 +167,7 @@ import { SelectValue, SelectTrigger, SelectItem, SelectContent, Select } from "@
 import { Checkbox } from "./components/ui/checkbox"
 import { CardContent, Card } from "./components/ui/card"
 import { Badge } from "./components/ui/badge";
+import { BASE_URL } from "./lib/constants";
 
 export function ExampleForm() {
     return (

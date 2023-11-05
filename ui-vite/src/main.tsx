@@ -10,6 +10,7 @@ import {
   Route,
   RootRoute,
   redirect,
+  RouterContext,
 } from '@tanstack/react-router'
 import { Login } from './Login.tsx'
 import { Navbar } from './Navbar.tsx'
@@ -43,37 +44,42 @@ export type GlobalState = {
   token: string;
   setToken: React.Dispatch<React.SetStateAction<string>>,
 }
-export const GlobalStateContext = createContext();
+// export const GlobalStateContext = createContext();
+
+const routerContext = new RouterContext<GlobalState>()
 
 
 function App() {
   const [formtext, setFormtext] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"');
   const survey = markdown_to_form_wasm(formtext);
-  const [token, setToken] = useState(window.sessionStorage.getItem('session_id') ?? '');
-
-  let globalState: GlobalState = {
-    token: token,
-    setToken: setToken,
-  }
 
   return (
     <>
-      <GlobalStateContext.Provider value={globalState}>
-        <Navbar></Navbar>
-      </GlobalStateContext.Provider >
+      <Navbar></Navbar>
     </>
   )
 }
 
 
-const rootRoute = new RootRoute({
-  component: () => (
-    <>
-      <App />
-      <Outlet />
-      <TanStackRouterDevtools />
-    </>
-  ),
+
+const rootRoute = routerContext.createRootRoute({
+  component: () => {
+    const [token, setToken] = useState(window.sessionStorage.getItem('session_id') ?? '');
+
+    // let globalState: GlobalState = {
+    //   token: token,
+    //   setToken: setToken,
+    // }
+    return (
+      <>
+        {/* <GlobalStateContext.Provider value={globalState}> */}
+        <App />
+        {/* </GlobalStateContext.Provider > */}
+        <Outlet />
+        <TanStackRouterDevtools />
+      </>
+    )
+  },
 });
 
 const indexRoute = new Route({
@@ -172,7 +178,11 @@ const routeTree = rootRoute.addChildren([
 ]);
 
 // Create the router using your route tree
-const router = new Router({ routeTree })
+const router = new Router({
+  routeTree, context: {
+    token: ''
+  }
+})
 
 // Register your router for maximum type safety
 declare module '@tanstack/react-router' {
@@ -180,12 +190,6 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
-
-// ReactDOM.createRoot(document.getElementById('root')!).render(
-//   <React.StrictMode>
-//     <App />
-//   </React.StrictMode>,
-// )
 
 // Render our app!
 
