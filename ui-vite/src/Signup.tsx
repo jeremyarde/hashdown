@@ -3,7 +3,6 @@ import { Button } from "./components/ui/button";
 import { Label } from "./components/ui/label";
 import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
 import { useContext, useState } from "react";
-import { Link, redirect } from "@tanstack/react-router";
 import { GlobalState, GlobalStateContext } from "./main";
 
 /**
@@ -43,9 +42,9 @@ export function Signup() {
                 window.sessionStorage.setItem(SESSION_TOKEN_KEY, session_header);
             }
 
-            redirect({
-                to: "/editor", replace: true
-            });
+            // redirect({
+            //     to: "/editor", replace: true
+            // });
 
         } catch (error) {
             console.error("Error:", error);
@@ -70,9 +69,9 @@ export function Signup() {
                                     Signup
                                 </Button>
                                 <div className="text-center p-1">{"Already have an account? "}
-                                    <Link className="underline" to="/login">
+                                    <a className="underline" href="/login">
                                         Login here
-                                    </Link>
+                                    </a>
                                 </div>
                             </form>
                         </div>

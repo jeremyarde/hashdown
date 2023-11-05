@@ -3,7 +3,6 @@ import { Button } from "./components/ui/button";
 import { Label } from "./components/ui/label";
 import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
 import { useContext, useState } from "react";
-import { Link, redirect } from "@tanstack/react-router";
 import { GlobalState, GlobalStateContext } from "./main";
 
 
@@ -48,9 +47,9 @@ export function Login() {
                 setLoginError((prev) => result.message)
             }
 
-            redirect({
-                to: "/editor", replace: true
-            });
+            // redirect({
+            //     to: "/editor", replace: true
+            // });
 
         } catch (error) {
             console.error("Error:", error);
@@ -78,9 +77,9 @@ export function Login() {
                                     Login
                                 </Button>
                                 <div className="text-center p-1">{"No account? "}
-                                    <Link className="underline" to="/signup">
+                                    <a className="underline" href="/signup">
                                         Signup here
-                                    </Link>
+                                    </a>
                                 </div>
                             </form>
                         </div>

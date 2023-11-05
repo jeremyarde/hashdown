@@ -1,8 +1,8 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { RenderedForm } from "../RenderedForm";
 import { BASE_URL } from "@/lib/constants";
-import { redirect } from "@tanstack/react-router";
 import { GlobalStateContext } from "@/main";
+import { markdown_to_form_wasm } from "markdownparser";
 
 export type EditorProps = {
     editorContent: string;
@@ -12,6 +12,15 @@ export type EditorProps = {
 export function Editor({ editorContent, setEditorContent }: EditorProps) {
     let globalState = useContext(GlobalStateContext);
 
+    const [formtext, setFormtext] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"');
+    const [survey, setSurvey] = useState(undefined);
+
+    useEffect(() => {
+        console.log('editor useeffect');
+        const newSurvey = markdown_to_form_wasm(formtext);
+        setSurvey(newSurvey);
+    }, [formtext]);
+    // const [token, setToken] = useState('');
 
     async function submitSurvey(event) {
         const response = await fetch(`${BASE_URL}/surveys`, {
@@ -19,7 +28,7 @@ export function Editor({ editorContent, setEditorContent }: EditorProps) {
             credentials: 'include',
             headers: {
                 'content-type': 'application/json',
-                'session_id': globalState?.token ?? '',
+                'session_id': globalState.token ?? '',
             },
             body: JSON.stringify({ plaintext: editorContent })
         });
@@ -28,7 +37,7 @@ export function Editor({ editorContent, setEditorContent }: EditorProps) {
         console.log('data: ', result);
 
         if (response.status === 401) {
-            redirect({ to: "/login", replace: true });
+            // redirect({ to: "/login", replace: true });
         }
     };
 
@@ -41,6 +50,20 @@ export function Editor({ editorContent, setEditorContent }: EditorProps) {
                 value={editorContent}
                 onChange={evt => setEditorContent(evt.target.value)} />
             <button className="bg-gray-400 outline p-2 rounded w-full" onClick={submitSurvey}>Save Survey</button>
+            <hr></hr>
+
+
+            <div className="h-screen w-full flex">
+                <div className="w-1/2 border-r-2 p-4">
+                    <Editor editorContent={formtext} setEditorContent={setFormtext}></Editor>
+                </div>
+                <div className="w-1/2 p-4">
+                    <h1 className="text-2xl font-bold mb-4">Preview</h1>
+                    <div className="border border-gray-300 p-4 rounded">
+                        <RenderedForm plaintext={formtext} survey={survey} ></RenderedForm>
+                    </div>
+                </div>
+            </div>)
         </>
     );
 }

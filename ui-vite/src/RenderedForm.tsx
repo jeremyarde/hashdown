@@ -20,6 +20,9 @@ export type RenderedFormProps = {
 
 export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
     let [submittedValues, setSubmittedValues] = useState(null);
+
+    const { survey_id } = useParams<{ survey_id: string }>()
+
     // let [form, setForm] = useState(undefined);
 
     console.log(`render - survey: ${JSON.stringify(survey)}`)
@@ -168,6 +171,7 @@ import { Checkbox } from "./components/ui/checkbox"
 import { CardContent, Card } from "./components/ui/card"
 import { Badge } from "./components/ui/badge";
 import { BASE_URL } from "./lib/constants";
+import { useParams } from "react-router-dom";
 
 export function ExampleForm() {
     return (

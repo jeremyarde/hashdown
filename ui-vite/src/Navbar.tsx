@@ -2,13 +2,14 @@
  * v0 by Vercel.
  * @see https://v0.dev/t/LUoP6hiokbX
  */
-// import Link from "next/link"
+// import a from "next/a"
 import { Button } from "@/components/ui/button"
 import { SelectTrigger, SelectItem, SelectGroup, SelectContent, Select } from "./components/ui/select"
-import { Link } from "@tanstack/react-router"
 import { useContext } from "react";
 import { GlobalState, GlobalStateContext } from "./main";
 import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
+import { Link } from "react-router-dom";
+
 
 
 export function Navbar() {
@@ -27,7 +28,7 @@ export function Navbar() {
         //     // body: payload,
         // });
         window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
-        globalState.setToken(undefined);
+        globalState.setToken('');
     };
 
     return (
@@ -43,12 +44,13 @@ export function Navbar() {
                         <>
                             <Link className="hover:animate-pulse" to="/editor">Editor</Link>
                             <Link className="hover:animate-pulse" to="/login">Login</Link>
+                            <Link to='/test'>Test page</Link>
                         </>
                     ) : (
                         <>
                             <Link className="hover:animate-pulse" to="/surveys">Surveys</Link>
                             <Link className="hover:animate-pulse" to="/editor">Editor</Link>
-                            <Link className="hover:animate-pulse" onClick={(e) => logout()} > Logout</Link>
+                            <Link className="hover:animate-pulse" to='/' onClick={(e) => logout()} > Logout</Link>
                         </>
                     )
                     }

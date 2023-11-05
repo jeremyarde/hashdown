@@ -1,9 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { Button } from '../components/ui/button';
 import { BASE_URL } from '@/lib/constants';
-
-import { Link, redirect } from '@tanstack/react-router';
-import { GlobalStateContext } from '@/main';
+import { GlobalState, GlobalStateContext } from '@/main';
 
 
 type Survey = {
@@ -15,7 +13,7 @@ type Survey = {
 export function ListSurveys() {
     const [surveys, setSurveys] = useState([]);
     const [error, setError] = useState('');
-    let globalState = useContext(GlobalStateContext);
+    let globalState: GlobalState = useContext(GlobalStateContext);
 
     useEffect(() => {
         getSurveys();
@@ -26,7 +24,7 @@ export function ListSurveys() {
             method: "GET",
             credentials: 'include',
             headers: {
-                'session_id': globalState?.token ?? '',
+                'session_id': globalState.token ?? '',
             }
         });
 
@@ -36,7 +34,7 @@ export function ListSurveys() {
             console.log('failed to get surveys: ', result);
             setError(result.message ?? 'Generic error getting surveys');
             if (response.status === 401) {
-                redirect({ to: "/login", replace: true });
+                // redirect({ to: "/login", replace: true });
             }
         } else {
             console.log('Found surveys: ', result);
@@ -55,7 +53,7 @@ export function ListSurveys() {
                     <ul>
                         {surveys.map(survey => {
                             return (
-                                <Link to="/surveys/$surveyId" params={{ surveyId: survey.survey_id }}>
+                                <a href={`/surveys/${survey.survey_id}`} >
                                     <li className='flex flex-row w-full justify-between'>
 
                                         <div className='text-left'>
@@ -65,7 +63,7 @@ export function ListSurveys() {
                                             Created at: {survey.created_at}
                                         </div>
                                     </li >
-                                </Link>
+                                </a>
                             )
                         })}
                     </ul >
