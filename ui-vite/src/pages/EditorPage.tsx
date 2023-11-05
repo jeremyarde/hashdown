@@ -9,7 +9,7 @@ export type EditorProps = {
     setEditorContent: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function Editor({ editorContent, setEditorContent }: EditorProps) {
+export function EditorPage({ editorContent, setEditorContent }: EditorProps) {
     let globalState = useContext(GlobalStateContext);
 
     const [formtext, setFormtext] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"');
@@ -43,19 +43,17 @@ export function Editor({ editorContent, setEditorContent }: EditorProps) {
 
     return (
         <>
-            <h1 className="text-2xl font-bold mb-4">Enter Form Content</h1>
-            <textarea
-                className="w-full h-4/6 p-2 rounded border border-gray-300"
-                placeholder="Enter form content here..."
-                value={editorContent}
-                onChange={evt => setEditorContent(evt.target.value)} />
-            <button className="bg-gray-400 outline p-2 rounded w-full" onClick={submitSurvey}>Save Survey</button>
-            <hr></hr>
-
-
             <div className="h-screen w-full flex">
                 <div className="w-1/2 border-r-2 p-4">
-                    <Editor editorContent={formtext} setEditorContent={setFormtext}></Editor>
+                    {/* <Editor editorContent={formtext} setEditorContent={setFormtext}></Editor> */}
+                    <h1 className="text-2xl font-bold mb-4">Enter Form Content</h1>
+                    <textarea
+                        className="w-full h-4/6 p-2 rounded border border-gray-300"
+                        placeholder="Enter form content here..."
+                        value={editorContent}
+                        onChange={evt => setEditorContent(evt.target.value)} />
+                    <button className="bg-gray-400 outline p-2 rounded w-full" onClick={submitSurvey}>Save Survey</button>
+                    <hr></hr>
                 </div>
                 <div className="w-1/2 p-4">
                     <h1 className="text-2xl font-bold mb-4">Preview</h1>
@@ -63,7 +61,7 @@ export function Editor({ editorContent, setEditorContent }: EditorProps) {
                         <RenderedForm plaintext={formtext} survey={survey} ></RenderedForm>
                     </div>
                 </div>
-            </div>)
+            </div>
         </>
     );
 }
