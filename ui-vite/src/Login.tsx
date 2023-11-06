@@ -4,7 +4,7 @@ import { Label } from "./components/ui/label";
 import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
 import { useContext, useState } from "react";
 import { GlobalState, GlobalStateContext } from "./main";
-
+import { Navigate, redirect } from "react-router-dom";
 
 /**
 * v0 by Vercel.
@@ -43,14 +43,10 @@ export function Login() {
                 setLoggedIn(true);
                 globalState.setToken(session_header);
                 window.sessionStorage.setItem(SESSION_TOKEN_KEY, session_header);
+                // return redirect("/editor");
             } else {
-                setLoginError((prev) => result.message)
+                setLoginError((prev) => result.message);
             }
-
-            // redirect({
-            //     to: "/editor", replace: true
-            // });
-
         } catch (error) {
             console.error("Error:", error);
 
@@ -59,6 +55,7 @@ export function Login() {
 
     return (
         <>
+            {loggedIn && <Navigate to={"/editor"} />}
             {!loggedIn &&
                 <div className="min-h-screen flex items-center justify-center w-240" >
                     <div className="max-w-sm rounded-lg shadow-lg bg-white p-6 space-y-6 border border-gray-200 dark:border-gray-700" >

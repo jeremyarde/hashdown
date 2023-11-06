@@ -44,7 +44,6 @@ export function Navbar() {
                         <>
                             <Link className="hover:animate-pulse" to="/editor">Editor</Link>
                             <Link className="hover:animate-pulse" to="/login">Login</Link>
-                            <Link to='/test'>Test page</Link>
                         </>
                     ) : (
                         <>

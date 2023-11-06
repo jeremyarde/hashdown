@@ -154,7 +154,7 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
             }
         </>)
     } else {
-        <div>nope</div>
+        <div>Not available</div>
     }
     return (toRender)
 }

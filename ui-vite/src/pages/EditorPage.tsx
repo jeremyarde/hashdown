@@ -9,17 +9,16 @@ export type EditorProps = {
     setEditorContent: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function EditorPage({ editorContent, setEditorContent }: EditorProps) {
+export function EditorPage() {
     let globalState = useContext(GlobalStateContext);
-
-    const [formtext, setFormtext] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"');
+    const [editorContent, setEditorContent] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2');
     const [survey, setSurvey] = useState(undefined);
 
     useEffect(() => {
         console.log('editor useeffect');
-        const newSurvey = markdown_to_form_wasm(formtext);
+        const newSurvey = markdown_to_form_wasm(editorContent);
         setSurvey(newSurvey);
-    }, [formtext]);
+    }, [editorContent]);
     // const [token, setToken] = useState('');
 
     async function submitSurvey(event) {
@@ -58,7 +57,7 @@ export function EditorPage({ editorContent, setEditorContent }: EditorProps) {
                 <div className="w-1/2 p-4">
                     <h1 className="text-2xl font-bold mb-4">Preview</h1>
                     <div className="border border-gray-300 p-4 rounded">
-                        <RenderedForm plaintext={formtext} survey={survey} ></RenderedForm>
+                        <RenderedForm plaintext={editorContent} survey={survey} ></RenderedForm>
                     </div>
                 </div>
             </div>
