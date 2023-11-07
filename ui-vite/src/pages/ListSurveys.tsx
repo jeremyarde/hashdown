@@ -56,6 +56,12 @@ export function ListSurveys() {
         }
     }
 
+    const viewSurvey = (surveyId) => {
+        console.log('go to survey');
+        navigate(`/surveys/${surveyId}`);
+        console.log('go to survey - END');
+    };
+
     return (
         <>
             <div className=''>
@@ -97,7 +103,7 @@ export function ListSurveys() {
                                                 <DropdownMenuContent align="end" className=" bg-white">
                                                     {/* <DropdownMenuLabel>Actions</DropdownMenuLabel> */}
                                                     <DropdownMenuItem
-                                                        onClick={() => { console.log('go to survey'); return navigate(`/surveys/${survey.survey_id}`) }}
+                                                        onClick={(evt) => viewSurvey(survey.survey_id)}
                                                         className='hover:bg-blue-900'
                                                     >
                                                         View Survey

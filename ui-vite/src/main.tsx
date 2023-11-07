@@ -41,9 +41,26 @@ function Home() {
 function RenderedSurvey() {
   // const data = useLoaderData();
   let { surveyId } = useParams();
+  const [currSurveyId, setCurrSurveyId] = useState(surveyId);
+
+  // async function getSurvey(surveyId) {
+  //   const response = await fetch(`${BASE_URL}/surveys/${surveyId}`, {
+  //     method: "GET",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     credentials: 'include',
+  //   });
+  //   console.log(JSON.stringify(response))
+  //   const data = await response.json();
+  //   // setSurvey((curr) => data);
+  // }
+
+  // await getSurvey()
+
   return (<>
     <div>
-      {JSON.stringify(surveyId)}
+      {currSurveyId}
     </div>
   </>)
 }
@@ -98,9 +115,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/editor" element={<EditorPage editorContent={formtext} setEditorContent={setFormtext} />} />
-            <Route path="/surveys" element={<ListSurveys />} children={[
-              <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />
-            ]} />
+            <Route path="/surveys" element={<ListSurveys />} />
+            <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />
             <Route path="/login" element={<Login />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
