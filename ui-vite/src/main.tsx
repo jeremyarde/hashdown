@@ -68,6 +68,10 @@ function RenderedSurvey() {
       {surveyId}
       <br />
       {JSON.stringify(survey, null, 2)}
+      <hr />
+      {survey &&
+        <RenderedForm plaintext={survey.plaintext} survey={markdown_to_form_wasm(survey.plaintext)} ></RenderedForm>
+      }
     </div>
   </>)
 }
