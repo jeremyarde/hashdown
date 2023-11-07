@@ -1,4 +1,4 @@
-import React, { StrictMode, createContext, useEffect, useState } from 'react'
+import React, { StrictMode, createContext, useContext, useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, useRouteLoaderData, useLoaderData, Link, useParams, RouterProvider } from 'react-router-dom'
 import './index.css'
@@ -9,7 +9,7 @@ import { RenderedForm } from './RenderedForm.tsx'
 import { markdown_to_form_wasm } from '../../backend/pkg/markdownparser'
 import { Signup } from './Signup.tsx'
 import { Button } from './components/ui/button.tsx'
-import { SESSION_TOKEN_KEY } from './lib/constants.ts'
+import { BASE_URL, SESSION_TOKEN_KEY } from './lib/constants.ts'
 import { EditorPage } from './pages/EditorPage.tsx'
 
 
@@ -41,26 +41,33 @@ function Home() {
 function RenderedSurvey() {
   // const data = useLoaderData();
   let { surveyId } = useParams();
-  const [currSurveyId, setCurrSurveyId] = useState(surveyId);
+  const [survey, setSurvey] = useState();
+  let globalState: GlobalState = useContext(GlobalStateContext);
 
-  // async function getSurvey(surveyId) {
-  //   const response = await fetch(`${BASE_URL}/surveys/${surveyId}`, {
-  //     method: "GET",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     credentials: 'include',
-  //   });
-  //   console.log(JSON.stringify(response))
-  //   const data = await response.json();
-  //   // setSurvey((curr) => data);
-  // }
+  useEffect(() => {
+    getSurvey(surveyId);
+  }, [surveyId]);
 
-  // await getSurvey()
+  const getSurvey = async (surveyId) => {
+    const response = await fetch(`${BASE_URL}/surveys/${surveyId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "session_id": `${globalState.token}`
+      },
+      credentials: 'include',
+    });
+    console.log(JSON.stringify(response))
+    const data = await response.json();
+    setSurvey((curr) => data);
+  }
+
 
   return (<>
     <div>
-      {currSurveyId}
+      {surveyId}
+      <br />
+      {JSON.stringify(survey, null, 2)}
     </div>
   </>)
 }
