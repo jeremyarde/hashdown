@@ -67,7 +67,8 @@ export function ListSurveys() {
                         <TableCaption>Click on a survey to view details</TableCaption>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[100px]">Title</TableHead>
+                                <TableHead className="w-[100px]">ID</TableHead>
+                                <TableHead className="">Title</TableHead>
                                 <TableHead># Questions</TableHead>
                                 <TableHead>Version</TableHead>
                                 <TableHead className="text-right">Created at</TableHead>
@@ -80,6 +81,7 @@ export function ListSurveys() {
                             {surveys.map(survey => {
                                 return (
                                     <TableRow className='outline outline-1 outline-gray-300 hover:bg-blue-100'>
+                                        <TableCell className="font-medium">{survey.survey_id}</TableCell>
                                         <TableCell className="font-medium">{survey.title}</TableCell>
                                         <TableCell>{survey.questions?.length ?? 0}</TableCell>
                                         <TableCell className="">{survey.parse_version}</TableCell>

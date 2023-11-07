@@ -9,6 +9,7 @@ import { useContext } from "react";
 import { GlobalState, GlobalStateContext } from "./main";
 import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
 import { Link } from "react-router-dom";
+import { Toaster } from "./components/ui/toaster";
 
 
 
@@ -55,6 +56,7 @@ export function Navbar() {
                     }
                 </div>
             </div >
+            <Toaster />
         </>
     )
 }

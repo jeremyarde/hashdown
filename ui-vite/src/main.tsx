@@ -1,6 +1,6 @@
 import React, { StrictMode, createContext, useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, useRouteLoaderData, useLoaderData } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, useRouteLoaderData, useLoaderData, Link, useParams, RouterProvider } from 'react-router-dom'
 import './index.css'
 import { Login } from './Login.tsx'
 import { Navbar } from './Navbar.tsx'
@@ -23,68 +23,65 @@ export const GlobalStateContext = createContext({ token: '', setToken: undefined
 
 function Home() {
   return (<>
-    <h1 className='flex top-10 text-center justify-center m-12'>The easiest way to create and share surveys</h1>
-    <a href='/editor'>
-      <Button className='bg-blue-400 rounded-lg'>
+    <h1 className='flex top-10 text-center justify-center m-12 text-xl'>
+      The easiest way to create and share surveys.
+      <br />
+      Create using simple markdown format, visualize your survey, publish and share!
+    </h1>
+    <EditorPage />
+    <Button className='bg-blue-400 rounded-lg p-6'>
+      <Link to="/login">
         Get started
-      </Button>
-    </a>
+      </Link>
+    </Button>
   </>)
 }
 
-function Test({ prop }) {
-
-  return (<>
-    <div>Yo this better work</div>
-    <input></input>
-    <div>{prop}</div>
-  </>)
-}
 
 function RenderedSurvey() {
-  const data = useLoaderData();
+  // const data = useLoaderData();
+  let { surveyId } = useParams();
   return (<>
     <div>
-      {JSON.stringify(data)}
+      {JSON.stringify(surveyId)}
     </div>
   </>)
 }
 
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <App />,
-    children: [
-      {
-        path: "/editor",
-        element: <EditorPage />
-      },
-      {
-        path: "/login",
-        element: <Login />
-      },
-      {
-        path: "/surveys",
-        element: <ListSurveys />,
-        children: [
-          {
-            element: <RenderedSurvey />,
-            path: ":surveyId",
-            loader: async ({ params }) => {
-              return fetch(`/api/surveys/${params.surveyId}`);
-            },
-          }
-        ]
-      }
-    ]
-  }
-])
+// const router = createBrowserRouter([
+//   {
+//     path: "/",
+//     element: <App />,
+//     children: [
+//       {
+//         path: "/editor",
+//         element: <EditorPage />
+//       },
+//       {
+//         path: "/login",
+//         element: <Login />
+//       },
+//       {
+//         path: "/surveys",
+//         element: <ListSurveys />,
+//         children: [
+//           {
+//             element: <RenderedSurvey />,
+//             path: ":surveyId",
+//           }
+//         ]
+//       }
+//     ]
+//   }
+// ])
 
 
 function App() {
+  const exampleText = '# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"';
   // const [formtext, setFormtext] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"');
-  const survey = markdown_to_form_wasm(formtext);
+  const [formtext, setFormtext] = useState(exampleText);
+  const survey = markdown_to_form_wasm(exampleText);
   const [token, setToken] = useState(window.sessionStorage.getItem(SESSION_TOKEN_KEY) ?? '');
   // const [editorContent, setEditorContent] = useState()
 
@@ -99,12 +96,12 @@ function App() {
         <BrowserRouter>
           <Navbar />
           <Routes>
-            <Route path='/test' element={<Test prop={formtext} />} />
             <Route path="/" element={<Home />} />
             <Route path="/editor" element={<EditorPage editorContent={formtext} setEditorContent={setFormtext} />} />
-            <Route path="/surveys" element={<ListSurveys />} />
+            <Route path="/surveys" element={<ListSurveys />} children={[
+              <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />
+            ]} />
             <Route path="/login" element={<Login />} />
-            <Route path='/surveys/:survey_id' element={<RenderedForm survey={survey} plaintext={formtext} />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </BrowserRouter>
