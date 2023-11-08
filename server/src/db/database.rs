@@ -198,6 +198,13 @@ pub enum EmailStatus {
     Verified,
     Unverified
 }
+#[derive(Deserialize, Serialize, FromRow, Debug, Clone)]
+pub struct AnswerModel {
+    id: i32,
+    submitted_at: Option<DateTime<Utc>>,
+    answers: Option<Value>,
+    survey_id: String,
+}
 
 pub struct CreateUserRequest {
     pub email: String,
@@ -357,6 +364,24 @@ impl Database {
         // info!("created rows={}", res.rows_affected());
 
         Ok(())
+    }
+
+
+
+    pub async fn list_responses(&self, survey_id: &String) -> anyhow::Result<Vec<AnswerModel>, ServerError> {
+        info!("Listing responses for survey");
+
+        let answers = sqlx::query_as!(AnswerModel, r#"select * from mdp.responses where mdp.responses.survey_id = $1"#, survey_id.clone())
+        .fetch_all(&self.pool)
+        .await.map_err(|err| return ServerError::Database("Did not find responses".to_string())).unwrap();
+
+        // let res = sqlx::query!(r#"select * from mdp.responses where mdp.responses.survey_id = $1"#, survey_id)
+        //     .fetch_all(&self.pool)
+        //     .await.map_err(|err| Err(ServerError::Database("Did not find responses".to_string()))).unwrap();
+
+        // let answers = res.iter().map(|record| AnswerModel { id: record.id.to_string(), submitted_at: record.submitted_at, answers: record.answers, survey_id }).collect();
+        
+        return Ok(answers)
     }
 
     pub async fn get_session(&self, session_id: String) -> anyhow::Result<Session, ServerError> {

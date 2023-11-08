@@ -37,6 +37,16 @@ function Home() {
   </>)
 }
 
+type Survey = {
+  id: string;
+  survey_id: string;
+  user_id: string;
+  created_at: Date;
+  modified_at: Date,
+  plaintext: string;
+  version: string;
+  parse_version: string;
+}
 
 function RenderedSurvey() {
   // const data = useLoaderData();
@@ -58,8 +68,12 @@ function RenderedSurvey() {
       credentials: 'include',
     });
     console.log(JSON.stringify(response))
-    const data = await response.json();
-    setSurvey((curr) => data);
+    const data: Survey = await response.json();
+    const fullSurvey = {
+      ...markdown_to_form_wasm(data.plaintext),
+      ...data
+    }
+    setSurvey((prev) => fullSurvey);
   }
 
 
@@ -70,9 +84,9 @@ function RenderedSurvey() {
       {JSON.stringify(survey, null, 2)}
       <hr />
       {survey &&
-        <RenderedForm plaintext={survey.plaintext} survey={markdown_to_form_wasm(survey.plaintext)} ></RenderedForm>
+        <RenderedForm plaintext={survey.plaintext} survey={survey} ></RenderedForm>
       }
-    </div>
+    </div >
   </>)
 }
 

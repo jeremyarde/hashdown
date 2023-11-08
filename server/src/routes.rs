@@ -77,7 +77,7 @@ pub mod routes {
         let auth_routes = Router::new()
             .route("/api/surveys", post(create_survey).get(list_survey))
             .route("/api/surveys/:id", get(get_survey).post(submit_survey))
-            // .route("/api/submit/:id", get(survey_responses::list_response))
+            .route("/api/responses", get(survey_responses::list_response))
             .route_layer(middleware::from_fn_with_state(
                 state.clone(),
                 validate_session_middleware,
@@ -221,22 +221,22 @@ pub mod routes {
         debug!("    ->> survey: {:#?}", payload);
 
         // json version
-        let _survey = match state
-            .db
-            .get_survey(&survey_id)
-            .await
-            .expect("Could not get survey from db")
-        {
-            Some(x) => x,
-            None => {
-                return Err(ServerError::BadRequest(
-                    "Resource does not exist".to_string(),
-                ))
-            }
-        };
+        // let _survey = match state
+        //     .db
+        //     .get_survey(&survey_id)
+        //     .await
+        //     .expect("Could not get survey from db")
+        // {
+        //     Some(x) => x,
+        //     None => {
+        //         return Err(ServerError::BadRequest(
+        //             "Resource does not exist".to_string(),
+        //         ))
+        //     }
+        // };
         let create_answer_model = CreateAnswersModel {
             survey_id: survey_id.clone(),
-            responses: json!({"accepted": "true"}),
+            responses: payload.get("responses").unwrap().to_owned(),
         };
 
         state

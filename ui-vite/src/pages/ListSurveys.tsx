@@ -56,6 +56,33 @@ export function ListSurveys() {
         }
     }
 
+    async function getResponses(survey_id: string) {
+        const response = await fetch(`${BASE_URL}/responses?${new URLSearchParams({
+            survey_id
+        })}`, {
+            method: "GET",
+            credentials: 'include',
+            headers: {
+                'session_id': globalState.token ?? '',
+                // 'Content-Type': 'application/json'
+            },
+        });
+
+        const result = await response.json();
+        console.log('data: ', result);
+        if (result.error) {
+            console.log('failed to get surveys: ', result);
+            setError(result.message ?? 'Generic error getting surveys');
+            if (response.status === 401) {
+                // redirect({ to: "/login", replace: true });
+            }
+        } else {
+            console.log('Found surveys: ', result);
+            setSurveys(result.surveys);
+            setError('');
+        }
+    }
+
     const viewSurvey = (surveyId) => {
         console.log('go to survey');
         navigate(`/surveys/${surveyId}`);
@@ -109,7 +136,11 @@ export function ListSurveys() {
                                                         View Survey
                                                     </DropdownMenuItem>
                                                     {/* <DropdownMenuSeparator /> */}
-                                                    {/* <DropdownMenuItem>View payment details</DropdownMenuItem> */}
+                                                    <DropdownMenuItem
+                                                        onClick={(evt) => getResponses(survey.survey_id)}
+                                                    >
+                                                        Responses
+                                                    </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
 

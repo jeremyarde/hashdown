@@ -2,7 +2,7 @@ pub mod survey_responses {
     use std::collections::HashMap;
 
     use axum::{
-        extract::{self, Path, State},
+        extract::{self, Path, Query, State},
         Json,
     };
     use markdownparser::nanoid_gen;
@@ -11,7 +11,7 @@ pub mod survey_responses {
     use tracing::{debug, info};
 
     use crate::{
-        db::database::{CreateAnswersModel, Session},
+        db::database::{AnswerModel, CreateAnswersModel, Session},
         mware::ctext::Ctext,
         ServerError, ServerState,
     };
@@ -47,49 +47,32 @@ pub mod survey_responses {
         return Ok(Json(json!({"accepted": "true"})));
     }
 
+    #[derive(Deserialize, Debug)]
+    pub struct ResponseQuery {
+        survey_id: String,
+    }
+
     #[tracing::instrument]
     #[axum::debug_handler]
     pub async fn list_response(
         State(state): State<ServerState>,
-        Path(survey_id): Path<String>,
+        // Path(survey_id): Path<String>,
+        response_query: Query<ResponseQuery>,
         // ctx: Option<Ctext>,
-        Json(payload): extract::Json<Value>, // for urlencoded
+        // Json(payload): extract::Json<Value>, // for urlencoded
     ) -> Result<Json<Value>, ServerError> {
         info!("->> submit_survey");
-        debug!("    ->> survey: {:#?}", payload);
+        debug!("    ->> survey: {:#?}", response_query);
 
         // json version
-        let _survey = match state
+        let responses: Vec<AnswerModel> = state
             .db
-            .get_survey(&survey_id)
+            .list_responses(&response_query.survey_id)
             .await
-            .expect("Could not get survey from db")
-        {
-            Some(x) => x,
-            None => {
-                return Err(ServerError::BadRequest(
-                    "Resource does not exist".to_string(),
-                ))
-            }
-        };
-        // info!("Found survey_id in database");
-        // let answer_id = nanoid_gen(12);
-        // let response = CreateAnswersResponse {
-        //     answer_id: answer_id.clone(),
-        // };
-        let create_answer_model = CreateAnswersModel {
-            survey_id: survey_id.clone(),
-            responses: json!({"accepted": "true"}),
-        };
-
-        let _answer_result = state
-            .db
-            .create_answer(create_answer_model)
-            .await
-            .expect("Should create answer in database");
+            .expect("Could not get responses from db");
 
         info!("completed survey submit");
-
-        return Ok(Json(json!({ "survey_id": survey_id })));
+        // let test = serde_json::to_value(responses).unwrap();
+        return Ok(Json(json!({ "responses": responses })));
     }
 }
