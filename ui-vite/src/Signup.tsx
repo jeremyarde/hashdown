@@ -38,7 +38,7 @@ export function Signup() {
                 const session_header = response.headers.get(SESSION_TOKEN_KEY);
 
                 setLoggedIn(true);
-                globalState.setToken(session_header);
+                globalState.setSessionId(session_header);
                 window.sessionStorage.setItem(SESSION_TOKEN_KEY, session_header);
             }
 

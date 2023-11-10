@@ -317,7 +317,7 @@ pub mod routes {
         // Extension(ctx): Extension<Option<Ctext>>,
         // State(state): State<ServerState>,
         Extension(session): Extension<Ctext>,
-        headers: HeaderMap,
+        // headers: HeaderMap,
     ) -> anyhow::Result<Json<Value>, ServerError> {
         info!("->> list_survey");
         // println!("context: {:?}", ctx);

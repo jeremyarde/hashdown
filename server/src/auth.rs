@@ -200,18 +200,16 @@ pub async fn login(
     // let offset =
     //     OffsetDateTime::from_unix_timestamp(session.active_period_expires_at.timestamp()).unwrap();
 
-    let session_cookie = Cookie::build("session_id", session.session_id.clone())
-        .http_only(true)
-        // .expires(offset)
-        .finish();
-    let cookies = jar.add(session_cookie);
+    // let session_cookie = Cookie::build("session_id", session.session_id.clone())
+    //     .http_only(true)
+    //     // .expires(offset)
+    //     .finish();
+    // let cookies = jar.add(session_cookie);
 
     return Ok((
-        cookies,
+        // cookies,
         headers,
-        Json(
-            json!({"email": username, "auth_token": "not implemented", "session_id": session.session_id}),
-        ),
+        Json(json!({"email": username, "session_id": session.session_id})),
     ));
 }
 
@@ -306,12 +304,12 @@ pub async fn validate_session_middleware<B>(
         .get(SESSION_ID_KEY)
         .and_then(|header| header.to_str().ok());
 
-    let session_cookie = jar
-        .get(SESSION_ID_KEY)
-        .and_then(|cookie| Some(cookie.value()));
+    // let session_cookie = jar
+    //     .get(SESSION_ID_KEY)
+    //     .and_then(|cookie| Some(cookie.value()));
 
     info!("Session header: {session_header:?}");
-    info!("Session cookies: {session_cookie:?}");
+    // info!("Session cookies: {session_cookie:?}");
 
     // let session_id = match session_header {
     //     Some(x) => x.to_string(),

@@ -29,7 +29,7 @@ export function Navbar() {
         //     // body: payload,
         // });
         window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
-        globalState.setToken('');
+        globalState.setSessionId('');
     };
 
     return (
@@ -41,7 +41,7 @@ export function Navbar() {
                     </Link>
                 </div>
                 <div className="flex items-center space-x-4">
-                    {!globalState.token ? (
+                    {!globalState.sessionId ? (
                         <>
                             <Link className="hover:animate-pulse" to="/editor">Editor</Link>
                             <Link className="hover:animate-pulse" to="/login">Login</Link>

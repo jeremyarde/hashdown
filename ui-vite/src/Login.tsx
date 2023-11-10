@@ -5,6 +5,7 @@ import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
 import { useContext, useState } from "react";
 import { GlobalState, GlobalStateContext } from "./main";
 import { Navigate, redirect } from "react-router-dom";
+import { handleResponse, setSessionToken } from "./lib/utils";
 
 /**
 * v0 by Vercel.
@@ -35,15 +36,12 @@ export function Login() {
                 credentials: 'include',
                 body: loginPayload,
             });
+            handleResponse(response, globalState);
 
             if (response.status === 200) {
                 const result = await response.json();
-                const session_header = response.headers.get(SESSION_TOKEN_KEY);
-
                 setLoggedIn(true);
-                globalState.setToken(session_header);
-                window.sessionStorage.setItem(SESSION_TOKEN_KEY, session_header);
-                // return redirect("/editor");
+                setSessionToken(response, globalState);
             } else {
                 setLoginError((prev) => result.message);
             }

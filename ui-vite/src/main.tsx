@@ -1,6 +1,6 @@
 import React, { StrictMode, createContext, useContext, useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, useRouteLoaderData, useLoaderData, Link, useParams, RouterProvider } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, useRouteLoaderData, useLoaderData, Link, useParams, RouterProvider, useSearchParams } from 'react-router-dom'
 import './index.css'
 import { Login } from './Login.tsx'
 import { Navbar } from './Navbar.tsx'
@@ -14,8 +14,10 @@ import { EditorPage } from './pages/EditorPage.tsx'
 
 
 export type GlobalState = {
-  token: string;
-  setToken: React.Dispatch<React.SetStateAction<string>>,
+  sessionId: string;
+  setSessionId: React.Dispatch<React.SetStateAction<string>>,
+  refreshToken: string,
+  setRefreshToken: React.Dispatch<React.SetStateAction<string>>,
 }
 export const GlobalStateContext = createContext({ token: '', setToken: undefined });
 
@@ -63,7 +65,7 @@ function RenderedSurvey() {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "session_id": `${globalState.token}`
+        "session_id": `${globalState.sessionId}`
       },
       credentials: 'include',
     });
@@ -90,35 +92,6 @@ function RenderedSurvey() {
   </>)
 }
 
-
-// const router = createBrowserRouter([
-//   {
-//     path: "/",
-//     element: <App />,
-//     children: [
-//       {
-//         path: "/editor",
-//         element: <EditorPage />
-//       },
-//       {
-//         path: "/login",
-//         element: <Login />
-//       },
-//       {
-//         path: "/surveys",
-//         element: <ListSurveys />,
-//         children: [
-//           {
-//             element: <RenderedSurvey />,
-//             path: ":surveyId",
-//           }
-//         ]
-//       }
-//     ]
-//   }
-// ])
-
-
 function App() {
   const exampleText = '# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"';
   // const [formtext, setFormtext] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"');
@@ -128,8 +101,8 @@ function App() {
   // const [editorContent, setEditorContent] = useState()
 
   const globalState: GlobalState = {
-    token,
-    setToken,
+    sessionId: token,
+    setSessionId: setToken,
   };
 
   return (
@@ -142,11 +115,74 @@ function App() {
             <Route path="/editor" element={<EditorPage editorContent={formtext} setEditorContent={setFormtext} />} />
             <Route path="/surveys" element={<ListSurveys />} />
             <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />
+            <Route path='/responses' element={<ListResponses />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Login />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </BrowserRouter>
-      </GlobalStateContext.Provider>
+      </GlobalStateContext.Provider >
+    </>
+  )
+}
+type SurveyResponse = {
+  id: Number;
+  submitted_at: string;
+  survey_id: string;
+  answers: Map<string, string>;
+}
+function ListResponses() {
+  const [surveyResponses, setSurveyResponses] = useState([]);
+  const [queryParams, setQueryParams] = useSearchParams();
+  let globalState: GlobalState = useContext(GlobalStateContext);
+  const SURVEY_ID_QUERY_KEY = "survey_id";
+
+  console.log(JSON.stringify(queryParams.get(SURVEY_ID_QUERY_KEY)));
+
+  useEffect(() => {
+    getResponses(queryParams.get(SURVEY_ID_QUERY_KEY));
+  }, [queryParams])
+
+  async function getResponses(survey_id: string) {
+    const response = await fetch(`${BASE_URL}/responses?${new URLSearchParams({
+      survey_id: queryParams.get(SURVEY_ID_QUERY_KEY)
+    })}`, {
+      method: "GET",
+      credentials: 'include',
+      headers: {
+        'session_id': globalState.sessionId ?? '',
+        // 'Content-Type': 'application/json'
+      },
+    });
+
+    const result = await response.json();
+    console.log('data: ', result);
+    if (result.error) {
+      console.log('failed to get surveys: ', result);
+      // setError(result.message ?? 'Generic error getting surveys');
+      if (response.status === 401) {
+        // redirect({ to: "/login", replace: true });
+      }
+    } else {
+      console.log('Found surveys: ', result);
+      setSurveyResponses(result["responses"]);
+      // setError('');
+    }
+  }
+
+  return (
+    <>
+      SurveyID: {queryParams.get(SURVEY_ID_QUERY_KEY)}
+      {surveyResponses.map((surveyResponse: SurveyResponse) => {
+        console.log(surveyResponse)
+        return (
+          <>
+            <div>
+              {JSON.stringify(surveyResponse)}
+            </div>
+          </>
+        )
+      })}
     </>
   )
 }

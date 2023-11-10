@@ -14,6 +14,7 @@ import {
 import { Link, Navigate, redirect, useNavigate } from 'react-router-dom';
 import { MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { handleResponse } from '@/lib/utils';
 
 
 type Survey = {
@@ -37,36 +38,11 @@ export function ListSurveys() {
             method: "GET",
             credentials: 'include',
             headers: {
-                'session_id': globalState.token ?? '',
+                'session_id': globalState.sessionId ?? '',
             }
         });
 
-        const result = await response.json();
-        console.log('data: ', result);
-        if (result.error) {
-            console.log('failed to get surveys: ', result);
-            setError(result.message ?? 'Generic error getting surveys');
-            if (response.status === 401) {
-                // redirect({ to: "/login", replace: true });
-            }
-        } else {
-            console.log('Found surveys: ', result);
-            setSurveys(result.surveys);
-            setError('');
-        }
-    }
-
-    async function getResponses(survey_id: string) {
-        const response = await fetch(`${BASE_URL}/responses?${new URLSearchParams({
-            survey_id
-        })}`, {
-            method: "GET",
-            credentials: 'include',
-            headers: {
-                'session_id': globalState.token ?? '',
-                // 'Content-Type': 'application/json'
-            },
-        });
+        handleResponse(response, globalState);
 
         const result = await response.json();
         console.log('data: ', result);
@@ -137,7 +113,7 @@ export function ListSurveys() {
                                                     </DropdownMenuItem>
                                                     {/* <DropdownMenuSeparator /> */}
                                                     <DropdownMenuItem
-                                                        onClick={(evt) => getResponses(survey.survey_id)}
+                                                        onClick={(evt) => navigate(`/responses?survey_id=${survey.survey_id}`)}
                                                     >
                                                         Responses
                                                     </DropdownMenuItem>
