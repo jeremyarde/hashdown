@@ -146,6 +146,9 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
                     </>
                 )
             } */}
+            <div>
+                {ExampleForm()}
+            </div>
         </>)
     } else {
         <div>Not available</div>

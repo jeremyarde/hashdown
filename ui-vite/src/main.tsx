@@ -1,6 +1,6 @@
 import React, { StrictMode, createContext, useContext, useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, useRouteLoaderData, useLoaderData, Link, useParams, RouterProvider, useSearchParams, Outlet } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, useRouteLoaderData, useLoaderData, Link, useParams, RouterProvider, Outlet } from 'react-router-dom'
 import './index.css'
 import { Login } from './Login.tsx'
 import { Navbar } from './Navbar.tsx'
@@ -11,7 +11,7 @@ import { Signup } from './Signup.tsx'
 import { Button } from './components/ui/button.tsx'
 import { BASE_URL, SESSION_TOKEN_KEY } from './lib/constants.ts'
 import { EditorPage } from './pages/EditorPage.tsx'
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from './components/ui/table.tsx'
+import { ListResponses } from './ListResponses.tsx'
 
 
 export type GlobalState = {
@@ -136,85 +136,12 @@ function App() {
     </>
   )
 }
-type SurveyResponse = {
+export type SurveyResponse = {
   id: Number;
   submitted_at: string;
   survey_id: string;
   answers: Map<string, string>;
 }
-function ListResponses() {
-  const [surveyResponses, setSurveyResponses] = useState([]);
-  const [queryParams, setQueryParams] = useSearchParams();
-  let globalState: GlobalState = useContext(GlobalStateContext);
-  const SURVEY_ID_QUERY_KEY = "survey_id";
-
-  console.log(JSON.stringify(queryParams.get(SURVEY_ID_QUERY_KEY)));
-
-  useEffect(() => {
-    getResponses(queryParams.get(SURVEY_ID_QUERY_KEY));
-  }, [queryParams])
-
-  async function getResponses(survey_id: string) {
-    const response = await fetch(`${BASE_URL}/responses?${new URLSearchParams({
-      survey_id: queryParams.get(SURVEY_ID_QUERY_KEY)
-    })}`, {
-      method: "GET",
-      credentials: 'include',
-      headers: {
-        'session_id': globalState.sessionId ?? '',
-        // 'Content-Type': 'application/json'
-      },
-    });
-
-    const result = await response.json();
-    console.log('data: ', result);
-    if (result.error) {
-      console.log('failed to get surveys: ', result);
-      // setError(result.message ?? 'Generic error getting surveys');
-      if (response.status === 401) {
-        // redirect({ to: "/login", replace: true });
-      }
-    } else {
-      console.log('Found surveys: ', result);
-      setSurveyResponses(result["responses"]);
-      // setError('');
-    }
-  }
-
-  return (
-    <>
-      SurveyID: {queryParams.get(SURVEY_ID_QUERY_KEY)}
-      # answers: {surveyResponses.length}
-      <Table className='text-left'>
-        <TableCaption></TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[100px]">ID</TableHead>
-            <TableHead className="">Submitted at</TableHead>
-            <TableHead className="">Survey ID</TableHead>
-            <TableHead className="">Answers</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody className=''>
-          {surveyResponses.map((surveyResponse: SurveyResponse) => {
-            // console.log(surveyResponse)
-            return (
-              <>
-                <TableRow className='outline outline-1 outline-gray-300 hover:bg-blue-100'>
-                  <TableCell className="font-medium">{`${surveyResponse.id}`}</TableCell>
-                  <TableCell className="font-medium">{surveyResponse.submitted_at}</TableCell>
-                  <TableCell className="font-medium">{surveyResponse.survey_id}</TableCell>
-                  <TableCell className="font-medium">{JSON.stringify(surveyResponse.answers)}</TableCell>
-                </TableRow >
-              </>
-            )
-          })}
-        </TableBody>
-      </Table>
-    </>
-  )
-}
-
 // Render our app!
 const rootElement = document.getElementById('root')!
 
