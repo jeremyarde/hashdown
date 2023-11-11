@@ -1,6 +1,6 @@
 import React, { StrictMode, createContext, useContext, useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, useRouteLoaderData, useLoaderData, Link, useParams, RouterProvider, useSearchParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, useRouteLoaderData, useLoaderData, Link, useParams, RouterProvider, useSearchParams, Outlet } from 'react-router-dom'
 import './index.css'
 import { Login } from './Login.tsx'
 import { Navbar } from './Navbar.tsx'
@@ -11,6 +11,7 @@ import { Signup } from './Signup.tsx'
 import { Button } from './components/ui/button.tsx'
 import { BASE_URL, SESSION_TOKEN_KEY } from './lib/constants.ts'
 import { EditorPage } from './pages/EditorPage.tsx'
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from './components/ui/table.tsx'
 
 
 export type GlobalState = {
@@ -92,6 +93,15 @@ function RenderedSurvey() {
   </>)
 }
 
+export function Layout() {
+  return (
+    <>
+      <Navbar />
+      <Outlet />
+    </>
+  )
+}
+
 function App() {
   const exampleText = '# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"';
   // const [formtext, setFormtext] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"');
@@ -109,16 +119,17 @@ function App() {
     <>
       <GlobalStateContext.Provider value={globalState}>
         <BrowserRouter>
-          <Navbar />
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/editor" element={<EditorPage editorContent={formtext} setEditorContent={setFormtext} />} />
-            <Route path="/surveys" element={<ListSurveys />} />
-            <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />
-            <Route path='/responses' element={<ListResponses />} />
+            <Route element={<Layout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/editor" element={<EditorPage editorContent={formtext} setEditorContent={setFormtext} />} />
+              <Route path="/surveys" element={<ListSurveys />} />
+              <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />
+              <Route path='/responses' element={<ListResponses />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Route>
+            <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Login />} />
-            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </BrowserRouter>
       </GlobalStateContext.Provider >
@@ -173,16 +184,33 @@ function ListResponses() {
   return (
     <>
       SurveyID: {queryParams.get(SURVEY_ID_QUERY_KEY)}
-      {surveyResponses.map((surveyResponse: SurveyResponse) => {
-        console.log(surveyResponse)
-        return (
-          <>
-            <div>
-              {JSON.stringify(surveyResponse)}
-            </div>
-          </>
-        )
-      })}
+      # answers: {surveyResponses.length}
+      <Table className='text-left'>
+        <TableCaption></TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">ID</TableHead>
+            <TableHead className="">Submitted at</TableHead>
+            <TableHead className="">Survey ID</TableHead>
+            <TableHead className="">Answers</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody className=''>
+          {surveyResponses.map((surveyResponse: SurveyResponse) => {
+            // console.log(surveyResponse)
+            return (
+              <>
+                <TableRow className='outline outline-1 outline-gray-300 hover:bg-blue-100'>
+                  <TableCell className="font-medium">{`${surveyResponse.id}`}</TableCell>
+                  <TableCell className="font-medium">{surveyResponse.submitted_at}</TableCell>
+                  <TableCell className="font-medium">{surveyResponse.survey_id}</TableCell>
+                  <TableCell className="font-medium">{JSON.stringify(surveyResponse.answers)}</TableCell>
+                </TableRow >
+              </>
+            )
+          })}
+        </TableBody>
+      </Table>
     </>
   )
 }

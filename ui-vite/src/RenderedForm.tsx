@@ -66,9 +66,6 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
         } else {
             console.log("Not sending submittion");
         }
-
-
-
     }
 
     /**
@@ -87,7 +84,6 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
                         <FormItem className='flex flex-col w-full text-left'>
                             <div className="flex flex-row items-center justify-between">
                                 <FormLabel>{question.value}</FormLabel>
-                                <Badge className="bg-gray-800 text-white" variant="outline">{question.id}</Badge>
 
                             </div>
                             <div
@@ -115,9 +111,7 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
                                     </RadioGroup>
                                 </FormControl>
                             </div>
-                            {/* <FormDescription>
-                                {question.id}
-                            </FormDescription> */}
+
                             <FormMessage />
                         </FormItem>
                     );
@@ -130,7 +124,7 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
         toRender = (<>
             <div className='flex flex-col justify-start items-start w-full'>
                 <h1 className='w-full text-center'>{survey.title}</h1>
-                <Badge className="bg-gray-800 text-white" variant="outline">{survey.survey_id}</Badge>
+                {/* <Badge className="bg-gray-800 text-white" variant="outline">{survey.survey_id}</Badge> */}
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)}
                         className="space-y-6 w-full"
@@ -140,7 +134,7 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
                     </form>
                 </Form>
             </div>
-            {
+            {/* {
                 submittedValues && (
                     <>
                         <h3>Submitted Values</h3>
@@ -151,7 +145,7 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
                         </Alert>
                     </>
                 )
-            }
+            } */}
         </>)
     } else {
         <div>Not available</div>
