@@ -17,12 +17,14 @@ export function Login() {
     const [password, setPassword] = useState('');
     const [loggedIn, setLoggedIn] = useState(false);
     const [loginError, setLoginError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
 
     let globalState: GlobalState = useContext(GlobalStateContext);
 
     const onSubmit = async (event) => {
         event.preventDefault();
+        setIsLoading(true);
         const loginPayload = JSON.stringify({ email: username, password: password });
         console.log('login component')
         console.log(loginPayload);
@@ -51,6 +53,16 @@ export function Login() {
         }
     };
 
+    const loading = (
+        <div className="bg-gray-200 w-full flex justify-center items-center">
+            <div className="flex  w-full items-center justify-center bg-gray-200">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 animate-spin">
+                    <div className="h-9 w-9 rounded-full bg-gray-600"></div>
+                </div>
+            </div>
+        </div>
+    )
+
     return (
         <>
             {loggedIn && <Navigate to={"/editor"} />}
@@ -68,7 +80,7 @@ export function Login() {
                                 <Label className="" htmlFor="password" > Password </Label>
                                 <Input id="password" required type="password" onChange={e => setPassword(e.target.value)} />
                                 {loginError ? (<p>{`Login failed: ${loginError}`}</p>) : (<div className="p-4"></div>)}
-                                <Button className="border shadow-md p-2 w-full hover:bg-slate-400" type="submit" >
+                                <Button disabled={isLoading} className="border shadow-md p-2 w-full hover:bg-slate-400 hover:bg-green disabled:opacity-50" type="submit" >
                                     Login
                                 </Button>
                                 <div className="text-center p-1">{"No account? "}

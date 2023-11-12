@@ -82,10 +82,6 @@ function RenderedSurvey() {
 
   return (<>
     <div>
-      {surveyId}
-      <br />
-      {JSON.stringify(survey, null, 2)}
-      <hr />
       {survey &&
         <RenderedForm plaintext={survey.plaintext} survey={survey} ></RenderedForm>
       }
@@ -124,10 +120,10 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/editor" element={<EditorPage editorContent={formtext} setEditorContent={setFormtext} />} />
               <Route path="/surveys" element={<ListSurveys />} />
-              <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />
               <Route path='/responses' element={<ListResponses />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Route>
+            <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
           </Routes>

@@ -285,11 +285,6 @@ function textInput(question: Question) {
     )
 }
 
-function onchange(evt) {
-    evt.preventDefault();
-    console.log('jere/ onchange')
-    console.log(evt.target);
-}
 function renderSurvey(survey: SurveyModel) {
     const initialState = survey.questions.map((question: Question) => [question.id, '']);
     console.log('initial: ' + JSON.stringify(initialState));
@@ -308,25 +303,25 @@ function renderSurvey(survey: SurveyModel) {
         console.log(formdata.get("myform"));
 
 
-        // const surveySubmission = {
-        //     survey_id: survey.survey_id ?? '',
-        //     responses: values
-        // }
-        // // setSubmittedValues((prev) => surveySubmission);
+        const surveySubmission = {
+            survey_id: survey.survey_id ?? '',
+            responses: formstate
+        }
+        // setSubmittedValues((prev) => surveySubmission);
 
-        // if (survey.survey_id) {
-        //     const response = await fetch(`${BASE_URL}/submit`, {
-        //         method: "POST",
-        //         headers: {
-        //             "Content-Type": "application/json",
-        //         },
-        //         credentials: 'include',
-        //         body: JSON.stringify(surveySubmission),
-        //     });
-        //     console.log(`submit response: ${JSON.stringify(response)}`);
-        // } else {
-        //     console.log("Not sending submittion");
-        // }
+        if (survey.survey_id) {
+            const response = await fetch(`${BASE_URL}/submit`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: 'include',
+                body: JSON.stringify(surveySubmission),
+            });
+            console.log(`submit response: ${JSON.stringify(response)}`);
+        } else {
+            console.log("Not sending submittion");
+        }
     }
 
     return (
