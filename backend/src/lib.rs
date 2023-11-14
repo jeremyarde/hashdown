@@ -13,6 +13,9 @@ use tracing::{debug};
 
 use std::hash::{BuildHasher, Hasher};
 
+
+mod form;
+
 fn rand64() -> u64 {
     RandomState::new().build_hasher().finish()
 }
@@ -35,6 +38,7 @@ const NANOID_ALPHA: [char; 34] = [
 
 // #[wasm_bindgen]
 pub fn nanoid_gen(size: usize) -> String {
+
     let mask = NANOID_ALPHA.len().next_power_of_two() - 1;
 
     let mut res = String::new();

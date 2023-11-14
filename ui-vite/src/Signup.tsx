@@ -65,6 +65,7 @@ export function Signup() {
                                 <Input id="email" placeholder="m@example.com" required type="email" onChange={e => setUsername(e.target.value)} />
                                 <Label className="" htmlFor="password" > Password </Label>
                                 <Input id="password" required type="password" onChange={e => setPassword(e.target.value)} />
+                                <div className="p-4"></div>
                                 <Button className="border shadow-md p-2 w-full hover:bg-slate-400" type="submit" >
                                     Signup
                                 </Button>

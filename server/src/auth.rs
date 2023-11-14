@@ -152,7 +152,7 @@ pub async fn login(
         Err(_) => {
             info!("Did not find user in database");
             return Err(ServerError::UserDoesNotExist(
-                "User does not exist".to_string(),
+                "Username and password did not match or user does not exist".to_string(),
             ));
         }
     };

@@ -7,8 +7,9 @@ use chrono::{DateTime, Utc};
 use db::database::Database;
 
 use hyper::header::CONTENT_ENCODING;
-use markdownparser::Survey;
+use markdownparser::{nanoid_gen, parse_markdown_v3, Survey};
 
+use serde_json::Value;
 use sqlx::FromRow;
 use tokio::task::JoinHandle;
 
@@ -24,9 +25,12 @@ use tracing::log::info;
 use crate::{
     auth::validate_session_middleware,
     config::EnvConfig,
-    db::{self, database::ConnectionDetails},
+    db::{
+        self,
+        database::{ConnectionDetails, Session},
+    },
     mail::mail::Mailer,
-    routes::routes::get_router,
+    routes::routes::{get_router, CreateSurveyRequest},
     ServerState,
 };
 
@@ -109,6 +113,25 @@ impl CreateSurveyResponse {
     }
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Metadata {
+    pub metadata_id: String,
+    pub created_at: DateTime<Utc>,
+    pub modified_at: DateTime<Utc>,
+    pub version: String,
+}
+
+impl Metadata {
+    fn new() -> Self {
+        Self {
+            metadata_id: nanoid_gen(24),
+            created_at: Utc::now(),
+            modified_at: Utc::now(),
+            version: "0".to_string(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 pub struct SurveyModel {
     pub id: i32,
@@ -120,6 +143,25 @@ pub struct SurveyModel {
     // pub questions: Option<Vec<Question>>,
     pub version: String,
     pub parse_version: String,
+    pub parsed_json: Value,
+}
+impl SurveyModel {
+    pub(crate) fn new(payload: CreateSurveyRequest, session: &Session) -> SurveyModel {
+        let parsed_survey =
+            parse_markdown_v3(payload.plaintext.clone()).expect("Could not parse the survey");
+        let metadata = Metadata::new();
+        return SurveyModel {
+            id: 0,
+            survey_id: nanoid_gen(12),
+            plaintext: payload.plaintext,
+            user_id: session.user_id.to_owned(),
+            created_at: metadata.created_at,
+            modified_at: metadata.modified_at,
+            version: "fixme".to_string(),
+            parse_version: parsed_survey.parse_version.clone(),
+            parsed_json: serde_json::to_value(parsed_survey.clone()).unwrap(),
+        };
+    }
 }
 
 struct Form {

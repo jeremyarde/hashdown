@@ -153,7 +153,10 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
             toRender = (
                 <>
                     <div className=''>
-                        <h1 className='w-full text-center'>{survey.title}</h1>
+                        {/* <h1 className='w-full text-center'>{survey.title}</h1> */}
+                        <h1 className="text-3xl font-bold space-y-2" >
+                            {survey.title}
+                        </h1>
                         {renderSurvey(survey)}
                     </div>
                 </>
@@ -217,14 +220,13 @@ function radioGroup(question: Question, setStateFn) {
         }));
     }
     return (
-        <div className="space-y-2">
+        <div className="space-y-2 p-2 text-left" >
             <Label className="font-semibold">{question.value}</Label>
             <RadioGroup onChange={onchangeexample} >
                 {question.options.map((option: Option) => {
                     return (
                         <>
                             <div className="flex items-center space-x-2">
-                                <div>{question.id}</div>
                                 <RadioGroupItem id={option.id} value={option.text} />
                                 <Label className="" htmlFor={option.id} >{option.text}</Label >
                             </div>

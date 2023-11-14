@@ -5,7 +5,7 @@ use std::{
 use anyhow::{self};
 
 use chrono::{DateTime, Utc, Duration};
-use markdownparser::{nanoid_gen};
+use markdownparser::{nanoid_gen, parse_markdown_v3};
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -303,16 +303,16 @@ impl Database {
     }
 
     pub async fn create_survey(&self, survey: SurveyModel) -> anyhow::Result<SurveyModel> {
-        // let partial_survey = parse_markdown_v3(payload.plaintext.clone());
+        // let parsed_survey = parse_markdown_v3(payload.plaintext.clone())?;
         // // let survey = Survey::from(partial_survey);
         // // let survey = Survey::from(payload.plaintext.clone());
         // // let response_survey = survey.clone();
         // let now = chrono::offset::Utc::now();
         // let nowstr = now.to_string();
         let res = sqlx::query_as::<_, SurveyModel>( 
-            r#"insert into mdp.surveys (plaintext, user_id, created_at, modified_at, version, parse_version, survey_id)
+            r#"insert into mdp.surveys (plaintext, user_id, created_at, modified_at, version, parse_version, survey_id, parsed_json)
             values
-            ($1, $2, $3, $4, $5, $6, $7)
+            ($1, $2, $3, $4, $5, $6, $7, $8)
             returning *
             "#)
             .bind(survey.plaintext)
@@ -321,7 +321,9 @@ impl Database {
             .bind(survey.modified_at)
             .bind(survey.version)
             .bind(survey.parse_version)
-            .bind(survey.survey_id).fetch_one(&self.pool).await?;
+            .bind(survey.survey_id)
+            .bind(json!(survey.parsed_json))
+            .fetch_one(&self.pool).await?;
 
         // let res = survey.insert(&self.pool).await?;
 

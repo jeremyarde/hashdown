@@ -170,23 +170,10 @@ pub mod routes {
 
         info!("Creating new survey for user={:?}", session.user_id);
         // Check that the survey is Ok
-        let parsed_survey =
-            parse_markdown_v3(payload.plaintext).expect("Could not parse the survey");
 
-        let metadata = Metadata::new();
+        let survey = SurveyModel::new(payload, &session);
 
-        let survey = SurveyModel {
-            id: 0,
-            survey_id: nanoid_gen(12),
-            plaintext: parsed_survey.plaintext.clone(),
-            user_id: session.user_id.to_owned(),
-            created_at: metadata.created_at,
-            modified_at: metadata.modified_at,
-            version: "fixme".to_string(),
-            parse_version: parsed_survey.parse_version.clone(),
-        };
-
-        let _insert_result = state
+        let insert_result: SurveyModel = state
             .db
             .create_survey(survey)
             .await
@@ -199,7 +186,7 @@ pub mod routes {
 
         info!("     ->> Inserted survey");
 
-        return Ok(Json(json!({ "survey": parsed_survey })));
+        return Ok(Json(json!({ "survey": insert_result })));
     }
 
     #[derive(Deserialize, Serialize, Debug)]
@@ -257,26 +244,6 @@ pub mod routes {
     #[derive(Deserialize, Debug)]
     pub struct GetSurveyQuery {
         pub format: SurveyFormat,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-
-    pub struct Metadata {
-        pub metadata_id: String,
-        pub created_at: DateTime<Utc>,
-        pub modified_at: DateTime<Utc>,
-        pub version: String,
-    }
-
-    impl Metadata {
-        fn new() -> Self {
-            Self {
-                metadata_id: nanoid_gen(24),
-                created_at: Utc::now(),
-                modified_at: Utc::now(),
-                version: "0".to_string(),
-            }
-        }
     }
 
     #[derive(Deserialize, Debug)]

@@ -27,6 +27,7 @@ CREATE table mdp.surveys (
     plaintext TEXT not null,
     version TEXT,
     parse_version TEXT,
+    parsed_json JSON,
     
     foreign key(user_id) references mdp.users(user_id)
 );

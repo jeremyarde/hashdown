@@ -1,0 +1,32 @@
+form      = { SOI ~ header ~ (block | emptyline)* ~ EOI }
+emptyline = { NEWLINE }
+header    = { "# " ~ #text=question_text }
+block     = {
+    text_input
+  | textarea
+  | checkbox
+  | radio
+  | dropdown
+  | submit
+  | comment
+}
+
+text_input = { ^"Text:" ~ #text=question_text }
+textarea   = { ^"Textarea:" ~ question_text }
+checkbox   = {
+    "checkbox:" ~ question_text ~ NEWLINE ~ listitem+ 
+}
+radio      = {
+    ^"radio:" ~ question_text ~ NEWLINE ~ listitem+
+}
+dropdown   = {
+    ^"Dropdown:" ~ #text=question_text ~ NEWLINE ~ listitem+ 
+}
+submit     = { "[" ~ "Submit" ~ "]"  }
+comment    = { "//" ~ (!"\n" ~ ANY)*  }
+
+question_text = { #text=(!NEWLINE ~ ANY)+ }
+listitem   = { SPACE+? ~ "- " ~ #text=question_text ~ NEWLINE }
+
+// Helpers
+SPACE = _{ " " }
