@@ -11,7 +11,7 @@ block     = _{
   | comment
 }
 
-text_input =  { ^"Text:" ~ SPACE? ~ default_value? ~ question_text }
+text_input =  { ^"Text:" ~ SPACE? ~ default_value? ~ question_text ~ default_value? }
 textarea   =  { ^"Textarea:" ~ question_text }
 checkbox   =  {
     "checkbox:" ~ question_text ~ NEWLINE ~ listitem+
@@ -26,7 +26,7 @@ submit     =  { "[" ~ "Submit" ~ "]" }
 comment    = _{ "//" ~ (!"\n" ~ ANY)* }
 
 question_text       = { (!NEWLINE ~ ANY)+ }
-default_value       = { "[" ~ inner_default_value }
+default_value       = _{ "[" ~ inner_default_value }
 inner_default_value = { (!"[" ~ !NEWLINE ~ !"]" ~ ANY)+ }
 listitem            = { SPACE+? ~ "- " ~ (checked | unchecked)? ~ SPACE? ~ question_text ~ NEWLINE? }
 checked             = { "[x]" }
