@@ -11,7 +11,7 @@ block     = _{
   | comment
 }
 
-text_input = { ^"Text:" ~ #text=question_text }
+text_input = { ^"Text:" ~ SPACE? ~ #text=question_text }
 textarea   = { ^"Textarea:" ~ question_text }
 checkbox   = {
     "checkbox:" ~ question_text ~ NEWLINE ~ listitem+ 
@@ -26,7 +26,11 @@ submit     = { "[" ~ "Submit" ~ "]"  }
 comment    = { "//" ~ (!"\n" ~ ANY)*  }
 
 question_text = { #text=(!NEWLINE ~ ANY)+ }
-listitem   = { SPACE+? ~ "- " ~ #text=question_text ~ NEWLINE }
+
+
+listitem   = { SPACE+? ~ "- " ~ (checked | unchecked)? ~ SPACE? ~ #text=question_text ~ NEWLINE? }
 
 // Helpers
+checked = { "[x]" }
+unchecked = { "[ ]" }
 SPACE = _{ " " }
