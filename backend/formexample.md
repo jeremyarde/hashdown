@@ -1,8 +1,8 @@
 # User Registration Form
 
-Text: [Your Name]
+Text: First name [John Dog]
 
-Text: [Email Address]
+Text: Email Address [john@dog.com]
 
 Textarea: [Enter your comments here]
 

@@ -12,7 +12,7 @@ struct FormParser;
 #[derive(Debug)]
 enum FormValue<'a> {
     Title(&'a str),
-    Text(&'a str),
+    TextInput(&'a str),
     Empty,
     Nothing,
     Checkbox(Vec<FormValue<'a>>),
@@ -21,6 +21,9 @@ enum FormValue<'a> {
     ListItem(Vec<FormValue<'a>>),
     QuestionText(&'a str),
     Submit(&'a str),
+    TextArea(&'a str),
+    CheckedStatus(bool),
+    DefaultValue(&'a str),
 }
 
 // pub fn serialize_formvalue(val: &FormValue() {
@@ -40,13 +43,10 @@ pub fn do_thing() {
     fn parse_value(pair: Pair<Rule>) -> FormValue {
         let rule = pair.as_rule();
         let val = pair.as_str();
+        println!("{:?}", rule);
         match pair.as_rule() {
-            // Rule::EOI => todo!(),
-            // Rule::emptyline => todo!(),
             Rule::header => FormValue::Title(pair.into_inner().as_str()),
-            // Rule::block => todo!(),
-            Rule::text_input => FormValue::Text(pair.into_inner().as_str()),
-            // Rule::textarea => todo!(),
+            Rule::text_input => FormValue::TextInput(pair.into_inner().as_str()),
             Rule::checkbox => FormValue::Checkbox(pair.into_inner().map(parse_value).collect()),
             Rule::radio => FormValue::Radio(pair.into_inner().map(parse_value).collect()),
             Rule::dropdown => FormValue::Dropdown(pair.into_inner().map(parse_value).collect()),
@@ -54,9 +54,19 @@ pub fn do_thing() {
             // Rule::comment => todo!(),
             Rule::question_text => FormValue::QuestionText(pair.as_str()),
             Rule::listitem => FormValue::ListItem(pair.into_inner().map(parse_value).collect()),
-            // Rule::SPACE => todo!(),
-            Rule::form | Rule::block | _ => FormValue::Nothing,
-            // _ => FormValue::Empty,
+            Rule::unchecked => FormValue::CheckedStatus(false),
+            Rule::checked => FormValue::CheckedStatus(true),
+            Rule::inner_default_value => FormValue::DefaultValue(pair.as_str()),
+            Rule::EOI => FormValue::Nothing,
+            Rule::comment
+            | Rule::SPACE
+            | Rule::emptyline
+            | Rule::form
+            | Rule::block
+            | Rule::default_value => {
+                unreachable!()
+            }
+            Rule::textarea => FormValue::TextArea(pair.as_str()),
         }
     }
     let data = formtext
