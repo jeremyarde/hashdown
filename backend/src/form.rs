@@ -39,12 +39,12 @@ impl<'a> Serialize for FormValue<'a> {
     }
 }
 
-pub fn do_thing() -> Vec<FormValue<'a>> {
+pub fn do_thing() -> Vec<SurveyPart> {
     let data = parse_markdown_text(include_str!("../formexample.md"));
     match data {
         Ok(x) => {
             println!("{:#?}", &x);
-            return x;
+            return serialize_value(x);
         }
         Err(x) => {
             println!(
@@ -55,6 +55,11 @@ pub fn do_thing() -> Vec<FormValue<'a>> {
             return vec![];
         }
     }
+}
+
+pub fn parse_serialize_markdown_text(contents: &str) -> anyhow::Result<Vec<SurveyPart>> {
+    let res = parse_markdown_text(contents).unwrap();
+    return Ok(serialize_value(res));
 }
 
 pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Error<Rule>> {
@@ -188,6 +193,6 @@ mod tests {
     #[test]
     fn test_parse() {
         let res = do_thing();
-        println!(res);
+        println!("{:?}", res);
     }
 }

@@ -15,6 +15,8 @@ use tracing::debug;
 
 use std::hash::{BuildHasher, Hasher};
 
+use crate::form::parse_serialize_markdown_text;
+
 mod form;
 
 fn rand64() -> u64 {
@@ -296,10 +298,10 @@ enum ParseError {
     MultipleTitle(String),
 }
 
-pub fn parse_markdown_v4(contents: String) -> anyhow::Result<ParsedSurvey> {
+pub fn parse_markdown_v4(contents: String) -> anyhow::Result<ParsedSurvey2> {
     const VERSION: &str = "1";
 
-    let parse_result = match parse_markdown_text(&contents) {
+    let parse_result = match parse_serialize_markdown_text(&contents) {
         Ok(x) => x,
         Err(x) => {
             return Err(anyhow!(x));
@@ -423,14 +425,13 @@ pub struct ParsedSurvey {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct ParsedSurvey2<'a> {
+pub struct ParsedSurvey2 {
     pub id: String,
     pub title: String,
     pub plaintext: String,
-    pub questions: Vec<FormValue<'a>>,
+    pub questions: Vec<SurveyPart>,
     pub parse_version: String,
 }
-
 
 impl ParsedSurvey {
     pub fn from(plaintext: String) -> anyhow::Result<ParsedSurvey> {
