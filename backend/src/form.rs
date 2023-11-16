@@ -1,9 +1,11 @@
+use std::fmt;
 use std::io::Empty;
 
 use anyhow::anyhow;
 use pest::error::{Error, LineColLocation};
 use pest::{iterators::Pair, Parser};
 use pest_derive::Parser;
+use serde::{Deserialize, Serialize};
 
 use crate::Question;
 
@@ -12,7 +14,7 @@ use crate::Question;
 struct FormParser;
 
 #[derive(Debug)]
-enum FormValue<'a> {
+pub enum FormValue<'a> {
     Title(&'a str),
     TextInput(&'a str),
     Empty,
@@ -28,11 +30,21 @@ enum FormValue<'a> {
     DefaultValue(&'a str),
 }
 
-pub fn do_thing() {
-    let data = parse_markdown_text();
+impl<'a> Serialize for FormValue<'a> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        todo!()
+    }
+}
+
+pub fn do_thing() -> Vec<FormValue<'a>> {
+    let data = parse_markdown_text(include_str!("../formexample.md"));
     match data {
         Ok(x) => {
             println!("{:#?}", &x);
+            return x;
         }
         Err(x) => {
             println!(
@@ -40,17 +52,19 @@ pub fn do_thing() {
                 x.line_col,
                 x.line(),
             );
+            return vec![];
         }
     }
 }
 
-pub fn parse_markdown_text() -> anyhow::Result<Vec<FormValue<'static>>, Error<Rule>> {
+pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Error<Rule>> {
     use pest::iterators::Pair;
 
-    let formtext = match FormParser::parse(Rule::form, include_str!("../formexample.md")) {
+    let formtext = match FormParser::parse(Rule::form, &contents) {
         Ok(x) => x,
         Err(x) => return Err(x),
     };
+
     fn parse_value(pair: Pair<Rule>) -> FormValue {
         let rule = pair.as_rule();
         let val = pair.as_str();
@@ -83,7 +97,88 @@ pub fn parse_markdown_text() -> anyhow::Result<Vec<FormValue<'static>>, Error<Ru
     let data = formtext
         .map(|pair| parse_value(pair))
         .collect::<Vec<FormValue>>();
-    Ok(data)
+
+    return Ok(data);
+}
+
+// impl fmt::Display for FormValue<'a> {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(f, "({}, {})", self.x, self.y)
+//     }
+// }
+
+fn serialize_value(formparts: Vec<FormValue>) -> Vec<SurveyPart> {
+    fn serialize_form_value(pair: &FormValue) -> SurveyPart {
+        match pair {
+            FormValue::Title(x) => SurveyPart::Title(x.to_owned().to_owned()),
+            // FormValue::TextInput(x) => todo!(),
+            // FormValue::Empty => todo!(),
+            // FormValue::Nothing => todo!(),
+            // FormValue::Checkbox(x) => todo!(),
+            FormValue::Radio(x) => SurveyPart::Radio(
+                "testing title".to_owned(),
+                x.iter().map(serialize_form_value).collect(),
+            ),
+            // FormValue::Dropdown(x) => todo!(),
+            FormValue::ListItem(x) => {
+                SurveyPart::ListItem(get_bool(&x[0]), x[1..].iter().map(get_string).collect())
+            }
+            FormValue::QuestionText(x) => todo!(),
+            // FormValue::Submit(x) => todo!(),
+            // FormValue::TextArea(x) => todo!(),
+            // FormValue::CheckedStatus(x) => x,
+            // FormValue::DefaultValue(x) => todo!(),
+            _ => SurveyPart::Nothing,
+        }
+    }
+
+    return formparts.iter().map(serialize_form_value).collect();
+}
+
+fn get_string(status: &FormValue) -> String {
+    return match status {
+        // FormValue::Title(_) => todo!(),
+        FormValue::TextInput(x) => x.to_owned().to_owned(),
+        // FormValue::Empty => todo!(),
+        // FormValue::Nothing => todo!(),
+        // FormValue::Checkbox(_) => todo!(),
+        // FormValue::Radio(_) => todo!(),
+        // FormValue::Dropdown(_) => todo!(),
+        // FormValue::ListItem(_) => todo!(),
+        // FormValue::QuestionText(_) => todo!(),
+        // FormValue::Submit(_) => todo!(),
+        // FormValue::TextArea(_) => todo!(),
+        // FormValue::CheckedStatus(_) => todo!(),
+        // FormValue::DefaultValue(_) => todo!(),
+        _ => "".to_string(),
+    };
+}
+
+fn get_bool(status: &FormValue) -> bool {
+    return match status {
+        // FormValue::Title(_) => todo!(),
+        // FormValue::TextInput(_) => todo!(),
+        // FormValue::Empty => todo!(),
+        // FormValue::Nothing => todo!(),
+        // FormValue::Checkbox(_) => todo!(),
+        // FormValue::Radio(_) => todo!(),
+        // FormValue::Dropdown(_) => todo!(),
+        // FormValue::ListItem(_) => todo!(),
+        // FormValue::QuestionText(_) => todo!(),
+        // FormValue::Submit(_) => todo!(),
+        // FormValue::TextArea(_) => todo!(),
+        // FormValue::DefaultValue(_) => todo!(),
+        FormValue::CheckedStatus(x) => x.to_owned(),
+        _ => false,
+    };
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub enum SurveyPart {
+    Title(String),
+    Radio(String, Vec<SurveyPart>),
+    ListItem(bool, String),
+    Nothing,
 }
 
 #[cfg(test)]
@@ -92,6 +187,7 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        do_thing()
+        let res = do_thing();
+        println!(res);
     }
 }

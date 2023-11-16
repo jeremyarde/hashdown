@@ -1,18 +1,19 @@
+use chrono::Utc;
+use form::{parse_markdown_text, FormValue, SurveyPart};
 use wasm_bindgen::prelude::*;
 
 use derive_builder::Builder;
 // use rand::{thread_rng, Rng};
 // use nanoid::nanoid;
 use getrandom::getrandom;
-use regex::{Regex};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use anyhow::{anyhow};
-use std::{collections::hash_map::RandomState};
-use tracing::{debug};
+use anyhow::anyhow;
+use std::collections::hash_map::RandomState;
+use tracing::debug;
 
 use std::hash::{BuildHasher, Hasher};
-
 
 mod form;
 
@@ -38,7 +39,6 @@ const NANOID_ALPHA: [char; 34] = [
 
 // #[wasm_bindgen]
 pub fn nanoid_gen(size: usize) -> String {
-
     let mask = NANOID_ALPHA.len().next_power_of_two() - 1;
 
     let mut res = String::new();
@@ -156,9 +156,28 @@ pub enum QuestionType {
     Number,
     Email,
     Date,
+    Textarea,
+    Submit,
 }
 
 impl Question {
+    fn from_v4(q_text: String, options: Vec<&str>, q_type: QuestionType) -> Question {
+        Question {
+            id: nanoid_gen(NANOID_LEN),
+            value: q_text,
+            options: options
+                .iter()
+                .map(|&x| QuestionOption {
+                    id: nanoid_gen(NANOID_LEN),
+                    text: x.to_owned(),
+                })
+                .collect(),
+            r#type: q_type,
+            created_on: Utc::now().to_string(),
+            modified_on: Utc::now().to_string(),
+        }
+    }
+
     fn from(q_text: &str, options: Vec<&str>) -> Self {
         let question_id = nanoid_gen(NANOID_LEN);
         let (question_type, question_text) = Question::parse_question_type_and_text(q_text);
@@ -277,6 +296,27 @@ enum ParseError {
     MultipleTitle(String),
 }
 
+pub fn parse_markdown_v4(contents: String) -> anyhow::Result<ParsedSurvey> {
+    const VERSION: &str = "1";
+
+    let parse_result = match parse_markdown_text(&contents) {
+        Ok(x) => x,
+        Err(x) => {
+            return Err(anyhow!(x));
+        }
+    };
+
+    let mut survey = ParsedSurvey2 {
+        id: nanoid_gen(NANOID_LEN),
+        title: "".to_string(),
+        plaintext: contents,
+        questions: parse_result,
+        parse_version: VERSION.to_string(),
+    };
+
+    return Ok(survey);
+}
+
 pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
     const VERSION: &str = "0";
 
@@ -381,6 +421,16 @@ pub struct ParsedSurvey {
     pub questions: Vec<Question>,
     pub parse_version: String,
 }
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ParsedSurvey2<'a> {
+    pub id: String,
+    pub title: String,
+    pub plaintext: String,
+    pub questions: Vec<FormValue<'a>>,
+    pub parse_version: String,
+}
+
 
 impl ParsedSurvey {
     pub fn from(plaintext: String) -> anyhow::Result<ParsedSurvey> {

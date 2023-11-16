@@ -4,7 +4,7 @@ Text: First name [John Dog]
 
 Text: Email Address [john@dog.com]
 
-Textarea: [Enter your comments here]
+Textarea: This is nice [Enter your comments here]
 
 checkbox: subscribe?
 - [x] Subscribe to newsletter
