@@ -11,26 +11,31 @@ block     = _{
   | comment
 }
 
-text_input =  { ^"Text:" ~ SPACE? ~ default_value? ~ question_text ~ default_value? }
-textarea   =  { ^"Textarea:" ~ question_text }
-checkbox   =  {
+textarea =  { ^"Textarea:" ~ SPACE? ~ ((default_value ~ SPACE? ~ question_text) | (question_text ~ default_value)) }
+checkbox =  {
     "checkbox:" ~ question_text ~ NEWLINE ~ listitem+
 }
-radio      =  {
+radio    =  {
     ^"radio:" ~ question_text ~ NEWLINE ~ listitem+
 }
-dropdown   =  {
+dropdown =  {
     ^"Dropdown:" ~ question_text ~ NEWLINE ~ listitem+
 }
-submit     =  { "[" ~ "Submit" ~ "]" }
-comment    = _{ "//" ~ (!"\n" ~ ANY)* }
+submit   =  { default_value }
+comment  = _{ "//" ~ (!"\n" ~ ANY)* }
 
-question_text       = { (!NEWLINE ~ ANY)+ }
-default_value       = _{ "[" ~ inner_default_value }
-inner_default_value = { (!"[" ~ !NEWLINE ~ !"]" ~ ANY)+ }
-listitem            = { SPACE+? ~ "- " ~ (checked | unchecked)? ~ SPACE? ~ question_text ~ NEWLINE? }
-checked             = { "[x]" }
-unchecked           = { "[ ]" }
+text_input          =  {
+    "Text:" ~ SPACE? ~ ((default_value ~ SPACE? ~ question_text) | (question_text ~ default_value))
+}
+question_text       =  { (!NEWLINE ~ !"[" ~ ANY)+ }
+default_value       = _{ "[" ~ inner_default_value ~ "]" }
+inner_default_value =  { (!"]" ~ !NEWLINE ~ ANY)+ }
+
+// default_value       = _{ "[" ~ inner_default_value }
+// inner_default_value =  { (!"[" ~ !NEWLINE ~ !"]" ~ ANY)+ }
+listitem  = { SPACE+? ~ "- " ~ (checked | unchecked)? ~ SPACE? ~ question_text ~ NEWLINE? }
+checked   = { "[x]" }
+unchecked = { "[ ]" }
 
 // Helpers
 SPACE = _{ " " }

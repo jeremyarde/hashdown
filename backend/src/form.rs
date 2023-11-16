@@ -1,6 +1,8 @@
 use std::io::Empty;
 
-use pest::Parser;
+use anyhow::anyhow;
+use pest::error::{Error, LineColLocation};
+use pest::{iterators::Pair, Parser};
 use pest_derive::Parser;
 
 use crate::Question;
@@ -26,20 +28,29 @@ enum FormValue<'a> {
     DefaultValue(&'a str),
 }
 
-// pub fn serialize_formvalue(val: &FormValue() {
-//     use FormValue::*;
-
-//     match val {
-//         Title(s) => ,
-//         Text(s) => todo!(),
-//     }
-// }
-
 pub fn do_thing() {
+    let data = parse_markdown_text();
+    match data {
+        Ok(x) => {
+            println!("{:#?}", &x);
+        }
+        Err(x) => {
+            println!(
+                "Line (Row, Col)={:?}, with content {:?} is not formatted properly.",
+                x.line_col,
+                x.line(),
+            );
+        }
+    }
+}
+
+pub fn parse_markdown_text() -> anyhow::Result<Vec<FormValue<'static>>, Error<Rule>> {
     use pest::iterators::Pair;
 
-    let formtext = FormParser::parse(Rule::form, include_str!("../formexample.md")).unwrap();
-
+    let formtext = match FormParser::parse(Rule::form, include_str!("../formexample.md")) {
+        Ok(x) => x,
+        Err(x) => return Err(x),
+    };
     fn parse_value(pair: Pair<Rule>) -> FormValue {
         let rule = pair.as_rule();
         let val = pair.as_str();
@@ -58,6 +69,7 @@ pub fn do_thing() {
             Rule::checked => FormValue::CheckedStatus(true),
             Rule::inner_default_value => FormValue::DefaultValue(pair.as_str()),
             Rule::EOI => FormValue::Nothing,
+            Rule::textarea => FormValue::TextArea(pair.as_str()),
             Rule::comment
             | Rule::SPACE
             | Rule::emptyline
@@ -66,16 +78,12 @@ pub fn do_thing() {
             | Rule::default_value => {
                 unreachable!()
             }
-            Rule::textarea => FormValue::TextArea(pair.as_str()),
         }
     }
     let data = formtext
         .map(|pair| parse_value(pair))
         .collect::<Vec<FormValue>>();
-    // let formvalue = parse_value(formtext);
-
-    println!("{:#?}", data);
-    // dbg!(parse_value(formvalue))
+    Ok(data)
 }
 
 #[cfg(test)]
