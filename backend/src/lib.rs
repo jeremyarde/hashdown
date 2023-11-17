@@ -15,7 +15,7 @@ use tracing::debug;
 
 use std::hash::{BuildHasher, Hasher};
 
-use crate::form::parse_serialize_markdown_text;
+// use crate::form::parse_serialize_markdown_text;
 
 mod form;
 
@@ -298,26 +298,26 @@ enum ParseError {
     MultipleTitle(String),
 }
 
-pub fn parse_markdown_v4(contents: String) -> anyhow::Result<ParsedSurvey2> {
-    const VERSION: &str = "1";
+// pub fn parse_markdown_v4(contents: String) -> anyhow::Result<ParsedSurvey2> {
+//     const VERSION: &str = "1";
 
-    let parse_result = match parse_serialize_markdown_text(&contents) {
-        Ok(x) => x,
-        Err(x) => {
-            return Err(anyhow!(x));
-        }
-    };
+//     let parse_result = match parse_serialize_markdown_text(&contents) {
+//         Ok(x) => x,
+//         Err(x) => {
+//             return Err(anyhow!(x));
+//         }
+//     };
 
-    let mut survey = ParsedSurvey2 {
-        id: nanoid_gen(NANOID_LEN),
-        title: "".to_string(),
-        plaintext: contents,
-        questions: parse_result,
-        parse_version: VERSION.to_string(),
-    };
+//     let mut survey = ParsedSurvey2 {
+//         id: nanoid_gen(NANOID_LEN),
+//         title: "".to_string(),
+//         plaintext: contents,
+//         questions: parse_result,
+//         parse_version: VERSION.to_string(),
+//     };
 
-    return Ok(survey);
-}
+//     return Ok(survey);
+// }
 
 pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
     const VERSION: &str = "0";
