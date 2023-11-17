@@ -293,6 +293,15 @@ pub fn markdown_to_form_wasm(contents: String) -> JsValue {
     // return serde_wasm_bindgen::to_value(&survey).unwrap();
 }
 
+#[wasm_bindgen]
+pub fn markdown_to_form_wasm_v2(contents: String) -> JsValue {
+    let survey = parse_markdown_text(&contents);
+    match survey {
+        Ok(x) => return serde_wasm_bindgen::to_value(&x).unwrap(),
+        Err(_) => return serde_wasm_bindgen::to_value(&ParsedSurvey::new()).unwrap(),
+    }
+}
+
 #[derive(Debug)]
 enum ParseError {
     MultipleTitle(String),

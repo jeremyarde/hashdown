@@ -6,6 +6,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { RadioGroup, RadioGroupItem } from './components/ui/radio-group';
 import { Alert, AlertDescription, AlertTitle } from './components/ui/alert';
 import * as z from "zod";
+import { markdown_to_form_wasm, markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
 
 /**
  * The complete Triforce, or one or more components of the Triforce.
@@ -159,6 +160,10 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
                         </h1>
                         {renderSurvey(survey)}
                     </div>
+                    <hr></hr>
+                    <div>
+                        {renderSurveyV2(plaintext)}
+                    </div>
                 </>
             );
         }
@@ -285,6 +290,15 @@ function textInput(question: Question) {
             <Input id={question.id} placeholder="Enter text" />
         </>
     )
+}
+
+function renderSurveyV2(plaintext) {
+    const surveydetails = markdown_to_form_wasm_v2(plaintext);
+    return (
+        <>
+            <div>Survey V2 rendering</div>
+            <div>{JSON.stringify(surveydetails, null, 2)}</div>
+        </>)
 }
 
 function renderSurvey(survey: SurveyModel) {

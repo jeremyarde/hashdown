@@ -6,7 +6,7 @@ import { Login } from './Login.tsx'
 import { Navbar } from './Navbar.tsx'
 import { ListSurveys } from './pages/ListSurveys.tsx'
 import { RenderedForm } from './RenderedForm.tsx'
-import { markdown_to_form_wasm } from '../../backend/pkg/markdownparser'
+import { markdown_to_form_wasm, markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
 import { Signup } from './Signup.tsx'
 import { Button } from './components/ui/button.tsx'
 import { BASE_URL, SESSION_TOKEN_KEY } from './lib/constants.ts'
@@ -74,7 +74,8 @@ function RenderedSurvey() {
     const data: Survey = await response.json();
     const fullSurvey = {
       ...markdown_to_form_wasm(data.plaintext),
-      ...data
+      ...data,
+      surveyv2: markdown_to_form_wasm_v2(data.plaintext)
     }
     setSurvey((prev) => fullSurvey);
   }
