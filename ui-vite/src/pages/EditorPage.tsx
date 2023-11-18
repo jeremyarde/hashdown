@@ -2,8 +2,8 @@ import { useContext, useEffect, useState } from "react";
 import { RenderedForm } from "../RenderedForm";
 import { BASE_URL } from "@/lib/constants";
 import { GlobalStateContext } from "@/main";
-import { markdown_to_form_wasm } from "markdownparser";
 import { useToast } from "@/components/ui/use-toast";
+import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
 
 export type EditorProps = {
     editorContent: string;
@@ -13,12 +13,34 @@ export type EditorProps = {
 export function EditorPage() {
     let globalState = useContext(GlobalStateContext);
     const { toast } = useToast()
-    const [editorContent, setEditorContent] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2');
+    const [editorContent, setEditorContent] = useState(`# User Registration Form
+
+Text: First name [John Dog]
+
+Text: Email Address [john@dog.com]
+
+Textarea: This is nice [Enter your comments here]
+
+checkbox: subscribe?
+- [x] Subscribe to newsletter
+- [ ] second value here
+
+radio: my radio
+- radio button
+- another one
+- third radio
+
+Dropdown: My question here
+    - Option 1
+    - Option 2
+    - Option 3
+
+[Submit]`);
     const [survey, setSurvey] = useState(undefined);
 
     useEffect(() => {
         console.log('editor useeffect');
-        const newSurvey = markdown_to_form_wasm(editorContent);
+        const newSurvey = markdown_to_form_wasm_v2(editorContent);
         setSurvey(newSurvey);
     }, [editorContent]);
     // const [token, setToken] = useState('');

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from 'react-hook-form';
 import { Button } from './components/ui/button';
@@ -6,7 +6,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { RadioGroup, RadioGroupItem } from './components/ui/radio-group';
 import { Alert, AlertDescription, AlertTitle } from './components/ui/alert';
 import * as z from "zod";
-import { markdown_to_form_wasm, markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
+import { markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
 
 /**
  * The complete Triforce, or one or more components of the Triforce.
@@ -158,10 +158,7 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
                         <h1 className="text-3xl font-bold space-y-2" >
                             {survey.title}
                         </h1>
-                        {renderSurvey(survey)}
-                    </div>
-                    <hr></hr>
-                    <div>
+                        {/* {renderSurvey(survey)} */}
                         {renderSurveyV2(plaintext)}
                     </div>
                 </>
@@ -263,6 +260,61 @@ function checkboxGroup(question: Question) {
     )
 }
 
+function checkboxGroupV2(parts = []) {
+    return (
+        <>
+            <Label className="font-semibold">{parts[0].QuestionText}</Label>
+            <div className="flex flex-col space-y-2">
+                {parts.map((option) => {
+
+                    if (!option.ListItem) { return; }                    if (!option.ListItem) { return; }
+
+                    // console.log("checkboxgrouppart", option);
+                    const questionId = useId();
+                    return (
+                        <div className="flex items-center">
+                            <Checkbox defaultChecked={option.ListItem[0].CheckedStatus} id={questionId} name={questionId} required />
+                            <Label className="ml-2 text-sm" htmlFor={questionId}>
+                                {option.ListItem[1].QuestionText}
+                            </Label>
+                        </div>
+                    )
+                })}
+            </div>
+        </>
+    )
+}
+
+function radioGroupV2(parts = []) {
+    return (
+        <>
+            <Label className="space-y-2 p-2 text-left font-semibold">{parts[0].QuestionText}</Label>
+            <div className="flex flex-col space-y-2">
+                {parts.map((option) => {
+                    if (!option.ListItem) { return; }
+
+                    // console.log("checkboxgrouppart", option);
+                    const questionId = useId();
+                    return (
+                        <div className="flex items-center">
+                            {/* <Checkbox defaultChecked={option.ListItem[0].CheckedStatus} id={questionId} name={questionId} required />
+                            <Label className="ml-2 text-sm" htmlFor={questionId}>
+                                {option.ListItem[1].QuestionText}
+                            </Label> */}
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem id={questionId} value={option.ListItem[1].QuestionText} />
+                                <Label className="" htmlFor={questionId} >
+                                    {option.ListItem[1].QuestionText}
+                                </Label >
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+        </>
+    )
+}
+
 function dropdownGroup(question: Question) {
     return (
         <>
@@ -293,13 +345,52 @@ function textInput(question: Question) {
 }
 
 function renderSurveyV2(plaintext) {
+    console.log("render v2 plaintext:", plaintext);
     const surveydetails = markdown_to_form_wasm_v2(plaintext);
+    console.log("rederSurveyV2", surveydetails);
+
     return (
         <>
-            <div>Survey V2 rendering</div>
-            <div>{JSON.stringify(surveydetails, null, 2)}</div>
+            {surveydetails.map(surveyPart => Object.entries(surveyPart).map(([key, value]) => {
+                console.log("map entries: ", key, value)
+                // let transformedValue = !Array.isArray(value) ? value : value.map(option => {
+                //     return { id: useId() }
+                // });
+                switch (key) {
+                    case "Title":
+                        return (
+                            <h1 className="text-3xl font-bold space-y-2" >
+                                {value}
+                            </h1>)
+                    case "TextInput":
+                        return (
+                            <div>
+                                {textInput({ id: useId(), value })}
+                            </div>
+                        )
+                    case "Checkbox":
+                        return (
+                            <div>
+                                {checkboxGroupV2(value)}
+                            </div>
+                        )
+                    case "Radio":
+                        return (
+                            <div>
+                                {radioGroupV2(value)}
+                            </div>
+                        )
+                }
+
+                // return (
+                //     <div>
+                //         {JSON.stringify(surveyPart)}
+                //     </div>
+                // )
+            }))}
         </>)
 }
+
 
 function renderSurvey(survey: SurveyModel) {
     const initialState = survey.questions.map((question: Question) => [question.id, '']);

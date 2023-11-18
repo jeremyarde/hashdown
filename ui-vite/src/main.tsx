@@ -6,7 +6,7 @@ import { Login } from './Login.tsx'
 import { Navbar } from './Navbar.tsx'
 import { ListSurveys } from './pages/ListSurveys.tsx'
 import { RenderedForm } from './RenderedForm.tsx'
-import { markdown_to_form_wasm, markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
+import { markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
 import { Signup } from './Signup.tsx'
 import { Button } from './components/ui/button.tsx'
 import { BASE_URL, SESSION_TOKEN_KEY } from './lib/constants.ts'
@@ -73,9 +73,8 @@ function RenderedSurvey() {
     console.log(JSON.stringify(response))
     const data: Survey = await response.json();
     const fullSurvey = {
-      ...markdown_to_form_wasm(data.plaintext),
       ...data,
-      surveyv2: markdown_to_form_wasm_v2(data.plaintext)
+      questions: markdown_to_form_wasm_v2(data.plaintext)
     }
     setSurvey((prev) => fullSurvey);
   }
@@ -100,10 +99,33 @@ export function Layout() {
 }
 
 function App() {
-  const exampleText = '# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"';
-  // const [formtext, setFormtext] = useState('# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"');
+  // const exampleText = '# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"';
+  const exampleText = `# User Registration Form
+
+Text: First name [John Dog]
+
+Text: Email Address [john@dog.com]
+
+Textarea: This is nice [Enter your comments here]
+
+checkbox: subscribe?
+- [x] Subscribe to newsletter
+- [ ] second value here
+
+radio: my radio
+- radio button
+- another one
+- third radio
+
+Dropdown: My question here
+  - Option 1
+  - Option 2
+  - Option 3
+
+[Submit]`;
+
   const [formtext, setFormtext] = useState(exampleText);
-  const survey = markdown_to_form_wasm(exampleText);
+  const survey = markdown_to_form_wasm_v2(exampleText);
   const [token, setToken] = useState(window.sessionStorage.getItem(SESSION_TOKEN_KEY) ?? '');
   // const [editorContent, setEditorContent] = useState()
 

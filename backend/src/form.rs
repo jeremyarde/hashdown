@@ -1,11 +1,10 @@
-use std::fmt;
-use std::io::Empty;
-
 use anyhow::anyhow;
 use pest::error::{Error, LineColLocation};
 use pest::{iterators::Pair, Parser};
 use pest_derive::Parser;
 use serde::{Deserialize, Serialize};
+use std::fmt;
+use tracing::info;
 
 use crate::Question;
 
@@ -14,6 +13,12 @@ use crate::Question;
 struct FormParser;
 
 #[derive(Debug, Serialize, Deserialize)]
+pub enum QuestionType {
+    Checkbox,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type")]
 pub enum FormValue {
     Title(String),
     TextInput(String),
@@ -32,6 +37,8 @@ pub enum FormValue {
 
 pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Error<Rule>> {
     use pest::iterators::Pair;
+
+    info!("Parsing: {:?}", contents);
 
     let formtext = match FormParser::parse(Rule::form, &contents) {
         Ok(x) => x,
@@ -160,6 +167,8 @@ pub enum SurveyPart {
 mod tests {
     // use super::do_thing;
 
+    use serde_json::json;
+
     use crate::form::{parse_markdown_text, serialize_value};
 
     #[test]
@@ -168,7 +177,7 @@ mod tests {
         // let res = do_thing();
         println!("{:#?}", res);
 
-        // let serialized = serialize_value(res.unwrap());
-        // println!("{:#?}", serialized);
+        let serialized = json!(res.unwrap());
+        println!("{:#?}", serialized);
     }
 }
