@@ -223,6 +223,11 @@ export function __wbindgen_is_object(arg0) {
     return ret;
 };
 
+export function __wbindgen_number_new(arg0) {
+    const ret = arg0;
+    return addHeapObject(ret);
+};
+
 export function __wbindgen_object_clone_ref(arg0) {
     const ret = getObject(arg0);
     return addHeapObject(ret);

@@ -1,5 +1,5 @@
 use chrono::Utc;
-use form::{parse_markdown_text, FormValue, SurveyPart};
+use form::{parse_markdown_text, Block, FormValue, SurveyPart};
 use wasm_bindgen::prelude::*;
 
 use derive_builder::Builder;
@@ -33,6 +33,7 @@ const NANOID_ALPHA: [char; 34] = [
     'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NanoId(String);
 impl NanoId {
     fn new() -> NanoId {
@@ -303,11 +304,21 @@ pub fn markdown_to_form_wasm(contents: String) -> JsValue {
 #[wasm_bindgen]
 pub fn markdown_to_form_wasm_v2(contents: String) -> JsValue {
     let survey = parse_markdown_text(&contents);
+
     match survey {
         Ok(x) => return serde_wasm_bindgen::to_value(&x).unwrap(),
         Err(_) => return serde_wasm_bindgen::to_value(&ParsedSurvey::new()).unwrap(),
     }
 }
+
+// #[wasm_bindgen]
+// pub fn markdown_to_form_wasm_v3(contents: String) -> JsValue {
+//     let survey = parse_markdown_text(&contents);
+//     match survey {
+//         Ok(x) => return serde_wasm_bindgen::to_value(&x).unwrap(),
+//         Err(_) => return serde_wasm_bindgen::to_value(&ParsedSurvey::new()).unwrap(),
+//     }
+// }
 
 #[derive(Debug)]
 enum ParseError {
@@ -437,15 +448,7 @@ pub struct ParsedSurvey {
     pub title: String,
     pub plaintext: String,
     pub questions: Vec<Question>,
-    pub parse_version: String,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct ParsedSurvey2 {
-    pub id: String,
-    pub title: String,
-    pub plaintext: String,
-    pub questions: Vec<SurveyPart>,
+    pub blocks: Vec<Block>,
     pub parse_version: String,
 }
 
@@ -463,6 +466,7 @@ impl ParsedSurvey {
             plaintext: plaintext.to_owned(),
             questions: questions,
             parse_version: "".to_string(),
+            blocks: vec![],
         }
     }
     pub fn new() -> Self {
@@ -472,6 +476,7 @@ impl ParsedSurvey {
             questions: vec![],
             parse_version: "".to_string(),
             id: "fakeid".to_string(),
+            blocks: vec![],
         }
     }
 }

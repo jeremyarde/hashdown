@@ -22,7 +22,7 @@ struct FormParser;
 // }
 
 pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Error<Rule>> {
-    use pest::iterators::Pair;
+    // use pest::iterators::Pair;
 
     info!("Parsing: {:?}", contents);
 
@@ -43,17 +43,17 @@ pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Err
                 text: pair.into_inner().as_str().to_string(),
             },
             Rule::checkbox => FormValue::Checkbox {
-                options: pair.into_inner().map(parse_value).collect(),
+                properties: pair.into_inner().map(parse_value).collect(),
             },
             // Rule::checkbox => FormValue::Checkbox {
-            //     options: pair.into_inner().map(parse_value).collect(),
+            //     properties: pair.into_inner().map(parse_value).collect(),
             // },
             // Rule::checkbox => FormValue::Checkbox(pair.into_inner().map(parse_value).collect()),
             Rule::radio => FormValue::Radio {
-                options: pair.into_inner().map(parse_value).collect(),
+                properties: pair.into_inner().map(parse_value).collect(),
             },
             Rule::dropdown => FormValue::Dropdown {
-                options: pair.into_inner().map(parse_value).collect(),
+                properties: pair.into_inner().map(parse_value).collect(),
             },
             Rule::submit => FormValue::Submit {
                 text: pair.as_str().to_string(),
@@ -63,7 +63,7 @@ pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Err
                 text: pair.as_str().to_string(),
             },
             Rule::listitem => FormValue::ListItem {
-                options: pair.into_inner().map(parse_value).collect(),
+                properties: pair.into_inner().map(parse_value).collect(),
             },
             Rule::unchecked => FormValue::CheckedStatus { value: false },
             Rule::checked => FormValue::CheckedStatus { value: true },
@@ -88,6 +88,8 @@ pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Err
     let data = formtext
         .map(|pair| parse_value(pair))
         .collect::<Vec<FormValue>>();
+
+    // let survey: SurveyV2 = SurveyV2::from(data);
 
     return Ok(data);
 }
@@ -179,6 +181,7 @@ struct FormText {
     questions: Vec<FormValue>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 struct SurveyV2 {
     questions: Vec<Question>,
     blocks: Vec<Block>,
@@ -197,22 +200,22 @@ impl SurveyV2 {
     }
 }
 
-fn formvalue_to_block(formvalue: &FormValue) -> Block { 
+fn formvalue_to_block(formvalue: &FormValue) -> Block {
     let block_type = match formvalue {
         FormValue::Title { text } => BlockType::Title,
-        FormValue::TextInput { text } => todo!(),
-        FormValue::Radio { options } => BlockType::Radio,
-        FormValue::Dropdown { options } => BlockType::Dropdown,
+        FormValue::TextInput { text } => BlockType::TextInput,
+        FormValue::Radio { properties } => BlockType::Radio,
+        FormValue::Dropdown { properties } => BlockType::Dropdown,
         FormValue::Submit { text } => BlockType::Submit,
         FormValue::TextArea { text } => BlockType::Textarea,
-        FormValue::Checkbox { options } => BlockType::Checkbox,
+        FormValue::Checkbox { properties } => BlockType::Checkbox,
         _ => BlockType::Empty,
     };
 
     return Block {
         id: NanoId::new(),
         index: 0.0,
-        properties: formvalue.to_owned(),
+        properties: (*formvalue).clone(),
         block_type: block_type,
     };
 }
@@ -222,6 +225,7 @@ pub struct Metadata {
     created_at: DateTime<Utc>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum BlockType {
     Title,
     Radio,
@@ -234,6 +238,7 @@ pub enum BlockType {
     Submit,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Block {
     id: NanoId,
     index: f32,
@@ -250,9 +255,12 @@ fn formvalue_to_question(formvalues: Vec<FormValue>) -> ParsedSurvey {
         plaintext: "not implemented".to_string(),
         questions: vec![],
         parse_version: "2".to_string(),
+        blocks: vec![],
     };
 
     for formvalue in formvalues {
+        survey.blocks.push(formvalue_to_block(&formvalue));
+
         println!("formvalue: {:?}", formvalue);
         match formvalue {
             FormValue::Title { text } => {
@@ -261,7 +269,7 @@ fn formvalue_to_question(formvalues: Vec<FormValue>) -> ParsedSurvey {
             // FormValue::TextInput { text } => todo!(),
             // FormValue::Empty => todo!(),
             FormValue::Nothing => {}
-            FormValue::Checkbox { options } => {
+            FormValue::Checkbox { properties } => {
                 let mut question = Question {
                     id: nanoid_gen(NANOID_LEN),
                     value: "".to_string(),
@@ -270,10 +278,10 @@ fn formvalue_to_question(formvalues: Vec<FormValue>) -> ParsedSurvey {
                     created_on: Utc::now().to_string(),
                     modified_on: Utc::now().to_string(),
                 };
-                for o in options {
+                for o in properties {
                     match o {
-                        FormValue::ListItem { options } => {
-                            match options.get(1).unwrap() {
+                        FormValue::ListItem { properties } => {
+                            match properties.get(1).unwrap() {
                                 FormValue::CheckedStatus { value } => {}
                                 FormValue::QuestionText { text } => {
                                     question.options.push(QuestionOption {
@@ -290,18 +298,23 @@ fn formvalue_to_question(formvalues: Vec<FormValue>) -> ParsedSurvey {
                 }
                 survey.questions.push(question);
             }
-            FormValue::Radio { options } => todo!(),
-            FormValue::Dropdown { options } => todo!(),
+            FormValue::Radio { properties } => todo!(),
+            FormValue::Dropdown { properties } => todo!(),
             FormValue::Submit { text } => {}
             FormValue::TextArea { text } => todo!(),
             _ => unreachable!(),
         };
     }
 
+    // survey.blocks = survey
+    //     .iter()
+    //     .map(|formvalue| formvalue_to_block(formvalue))
+    //     .collect();
+
     return survey;
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
 // #[serde(untagged)]
 // #[serde(rename_all = "camelCase")]
@@ -310,15 +323,15 @@ pub enum FormValue {
     TextInput { text: String },
     Empty,
     Nothing,
-    Radio { options: Vec<FormValue> },
-    Dropdown { options: Vec<FormValue> },
-    ListItem { options: Vec<FormValue> },
+    Radio { properties: Vec<FormValue> },
+    Dropdown { properties: Vec<FormValue> },
+    ListItem { properties: Vec<FormValue> },
     QuestionText { text: String },
     Submit { text: String },
     TextArea { text: String },
     CheckedStatus { value: bool },
     DefaultValue { text: String },
-    Checkbox { options: Vec<FormValue> },
+    Checkbox { properties: Vec<FormValue> },
 }
 
 #[cfg(test)]
@@ -344,7 +357,7 @@ mod tests {
         //         text: "mytitle".to_string(),
         //     },
         //     questions: vec![FormValue::Dropdown {
-        //         options: vec![FormValue::QuestionText {
+        //         properties: vec![FormValue::QuestionText {
         //             text: "myquestiontext".to_string(),
         //         }],
         //     }],
@@ -355,19 +368,20 @@ mod tests {
     #[test]
     fn test_parse_into_survey() {
         let res = parse_markdown_text(include_str!("../formexample-minimal.md"));
-        let survey = SurveyV2::from(res.unwrap());
-        println!("{:?}", &res);
+        let survey: SurveyV2 = SurveyV2::from(res.unwrap());
+        println!("{:#?}", &survey);
+        println!("json version:\n{:#}", json!(survey));
 
-        let serialized = formvalue_to_question(res.unwrap());
-        // let serialized = json!(res.unwrap());
-        println!("{:#?}", serialized);
+        // let serialized = formvalue_to_question(res.unwrap());
+        // // let serialized = json!(res.unwrap());
+        // println!("{:#?}", serialized);
 
         // let testval = FormText {
         //     title: crate::form::FormValue::Title {
         //         text: "mytitle".to_string(),
         //     },
         //     questions: vec![FormValue::Dropdown {
-        //         options: vec![FormValue::QuestionText {
+        //         properties: vec![FormValue::QuestionText {
         //             text: "myquestiontext".to_string(),
         //         }],
         //     }],
