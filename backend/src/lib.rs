@@ -33,6 +33,13 @@ const NANOID_ALPHA: [char; 34] = [
     'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
+pub struct NanoId(String);
+impl NanoId {
+    fn new() -> NanoId {
+        return NanoId(nanoid_gen(NANOID_LEN));
+    }
+}
+
 // pub fn nanoid_gen() -> String {
 //     let random =
 //         [(); NANOID_LEN].map(|_| NANOID_ALPHA[thread_rng().gen_range(0..NANOID_ALPHA.len())]);

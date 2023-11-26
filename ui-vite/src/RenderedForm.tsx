@@ -261,20 +261,21 @@ function checkboxGroup(question: Question) {
 }
 
 function checkboxGroupV2(parts = []) {
+    const questionId = crypto.randomUUID();
+
     return (
         <>
             <Label className="font-semibold">{parts[0].QuestionText}</Label>
             <div className="flex flex-col space-y-2">
                 {parts.map((option) => {
 
-                    if (!option.ListItem) { return; }                    if (!option.ListItem) { return; }
+                    if (!option.ListItem) { return; } if (!option.ListItem) { return; }
 
                     // console.log("checkboxgrouppart", option);
-                    const questionId = useId();
                     return (
                         <div className="flex items-center">
                             <Checkbox defaultChecked={option.ListItem[0].CheckedStatus} id={questionId} name={questionId} required />
-                            <Label className="ml-2 text-sm" htmlFor={questionId}>
+                            <Label className="ml-2 text-sm items-center" htmlFor={questionId}>
                                 {option.ListItem[1].QuestionText}
                             </Label>
                         </div>
@@ -285,34 +286,60 @@ function checkboxGroupV2(parts = []) {
     )
 }
 
-function radioGroupV2(parts = []) {
+function radioGroupV2(parts = [], setStateFn) {
+    const onchangeexample = (evt) => {
+        console.log('onchangeexample');
+
+        console.log(evt.target);
+        // setStateFn(prev => ({
+        //     ...prev,
+        //     [question.id]: evt.target.value,
+        // }));
+    }
+    // const questionId = useId();
+
+    const questionId = crypto.randomUUID();
     return (
         <>
-            <Label className="space-y-2 p-2 text-left font-semibold">{parts[0].QuestionText}</Label>
-            <div className="flex flex-col space-y-2">
-                {parts.map((option) => {
-                    if (!option.ListItem) { return; }
+            <Label className="space-y-2 p-2 text-left">{parts[0].QuestionText}</Label>
+            <RadioGroup className="" onChange={onchangeexample} >
+                <div className="flex flex-col space-y-2 ">
+                    {parts.map((option) => {
+                        if (!option.ListItem) { return; }
 
-                    // console.log("checkboxgrouppart", option);
-                    const questionId = useId();
-                    return (
-                        <div className="flex items-center">
-                            {/* <Checkbox defaultChecked={option.ListItem[0].CheckedStatus} id={questionId} name={questionId} required />
-                            <Label className="ml-2 text-sm" htmlFor={questionId}>
-                                {option.ListItem[1].QuestionText}
-                            </Label> */}
+                        console.log("part - option:", option);
+                        return (
                             <div className="flex items-center space-x-2">
-                                <RadioGroupItem id={questionId} value={option.ListItem[1].QuestionText} />
-                                <Label className="" htmlFor={questionId} >
-                                    {option.ListItem[1].QuestionText}
+                                <RadioGroupItem id={questionId} value={option.ListItem[0].QuestionText} />
+                                <Label className="items-center" htmlFor={questionId} >
+                                    {option.ListItem[0].QuestionText}
                                 </Label >
                             </div>
-                        </div>
-                    )
-                })}
-            </div>
+                        )
+                    })}
+                </div>
+            </RadioGroup>
         </>
     )
+
+    // return (
+    //     <div className="space-y-2 p-2 text-left" >
+    //         <Label className="font-semibold">{question.value}</Label>
+    //         <RadioGroup onChange={onchangeexample} >
+    //             {question.options.map((option: Option) => {
+    //                 return (
+    //                     <>
+    //                         <div className="flex items-center space-x-2">
+    //                             <RadioGroupItem id={option.id} value={option.text} />
+    //                             <Label className="" htmlFor={option.id} >{option.text}</Label >
+    //                         </div>
+    //                     </>
+    //                 )
+    //             })}
+    //         </RadioGroup>
+    //     </div>
+    // )
+
 }
 
 function dropdownGroup(question: Question) {
