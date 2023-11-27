@@ -98,38 +98,127 @@ pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Err
 //     }
 // }
 
-fn serialize_value(formparts: Vec<FormValue>) -> Vec<SurveyPart> {
-    fn serialize_form_value(pair: &FormValue) -> SurveyPart {
-        match pair {
-            FormValue::Title(x) => SurveyPart::Title(x.to_owned().to_owned()),
-            // FormValue::TextInput(x) => todo!(),
-            // FormValue::Empty => todo!(),
-            // FormValue::Nothing => todo!(),
-            FormValue::Checkbox(x) => SurveyPart::Checkbox(
-                get_bool(&x[0]),
-                x[1..].iter().map(|x| serialize_form_value(x)).collect(),
-            ),
-            FormValue::Radio(x) => {
-                return SurveyPart::Radio(
-                    get_string(&x[0]),
-                    x.iter().map(serialize_form_value).collect(),
-                );
-            }
-            // FormValue::Dropdown(x) => todo!(),
-            FormValue::ListItem(x) => {
-                SurveyPart::ListItem(get_bool(&x[0]), x[1..].iter().map(get_string).collect())
-            }
-            FormValue::TextInput(x) => SurveyPart::TextInput(x.to_owned().to_owned()),
-            // FormValue::Empty => todo!(),
-            // FormValue::Nothing => todo!(),
-            FormValue::Dropdown(x) => {
-                SurveyPart::Dropdown(get_string(&x[0]), x[1..].iter().map(get_string).collect())
-            }
-            _ => SurveyPart::Nothing,
-        }
-    }
+fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
+    match pair {
+        FormValue::Title { text } => SurveyPart::Title(text.to_owned()),
+        // FormValue::TextInput(x) => todo!(),
+        // FormValue::Empty => todo!(),
+        // FormValue::Nothing => todo!(),
+        FormValue::Checkbox { properties } => {
+            let question = match properties.get(0).unwrap() {
+                FormValue::QuestionText { text } => text.clone(),
+                _ => unreachable!(),
+            };
+            let options: Vec<CheckboxItem> = properties[1..]
+                .iter()
+                .map(|formvalue| match formvalue {
+                    FormValue::ListItem { properties } => {
+                        let checked = match properties.get(0).unwrap() {
+                            FormValue::CheckedStatus { value } => value.clone(),
+                            _ => unreachable!(),
+                        };
+                        let optiontext = match properties.get(1).unwrap() {
+                            FormValue::QuestionText { text } => text.clone(),
+                            _ => unreachable!(),
+                        };
 
-    return formparts.iter().map(serialize_form_value).collect();
+                        return CheckboxItem {
+                            checked,
+                            text: optiontext,
+                        };
+                    }
+                    _ => {
+                        unreachable!()
+                    }
+                })
+                .collect();
+
+            SurveyPart::Checkbox(CheckboxQuestion {
+                options: options,
+                question: question,
+            })
+        }
+        // get_bool(&x[0]),       // x[1..].iter().map(|x| serialize_form_value(x)).collect(),
+        // FormValue::Radio(x) => {
+        //     return SurveyPart::Radio(
+        //         get_string(&x[0]),
+        //         x.iter().map(serialize_form_value).collect(),
+        //     );
+        // }
+        // // FormValue::Dropdown(x) => todo!(),
+        // FormValue::ListItem(x) => {
+        //     SurveyPart::ListItem(get_bool(&x[0]), x[1..].iter().map(get_string).collect())
+        // }
+        // FormValue::TextInput(x) => SurveyPart::TextInput(x.to_owned().to_owned()),
+        // // FormValue::Empty => todo!(),
+        // // FormValue::Nothing => todo!(),
+        // FormValue::Dropdown(x) => {
+        //     SurveyPart::Dropdown(get_string(&x[0]), x[1..].iter().map(get_string).collect())
+        // }
+        _ => SurveyPart::Nothing,
+    }
+}
+
+fn serialize_value(formparts: Vec<FormValue>) -> Vec<SurveyPart> {
+    // fn serialize_form_value(pair: &FormValue) -> SurveyPart {
+    //     match pair {
+    //         FormValue::Title { text } => SurveyPart::Title(text.to_owned()),
+    //         // FormValue::TextInput(x) => todo!(),
+    //         // FormValue::Empty => todo!(),
+    //         // FormValue::Nothing => todo!(),
+    //         FormValue::Checkbox { properties } => {
+    //             let question = match properties.get(0).unwrap() {
+    //                 FormValue::QuestionText { text } => text.clone(),
+    //             };
+    //             let options: Vec<CheckboxItem> = properties[1..]
+    //                 .iter()
+    //                 .map(|formvalue| match formvalue {
+    //                     FormValue::ListItem { properties } => {
+    //                         let checked = match properties.get(0).unwrap() {
+    //                             FormValue::CheckedStatus { value } => value.clone(),
+    //                         };
+    //                         let optiontext = match properties.get(1).unwrap() {
+    //                             FormValue::QuestionText { text } => text.clone(),
+    //                         };
+
+    //                         return CheckboxItem {
+    //                             checked,
+    //                             text: optiontext,
+    //                         };
+    //                     }
+    //                     _ => {
+    //                         unreachable!()
+    //                     }
+    //                 })
+    //                 .collect();
+
+    //             SurveyPart::Checkbox(CheckboxQuestion {
+    //                 options: options,
+    //                 question: question,
+    //             })
+    //         }
+    //         // get_bool(&x[0]),       // x[1..].iter().map(|x| serialize_form_value(x)).collect(),
+    //         // FormValue::Radio(x) => {
+    //         //     return SurveyPart::Radio(
+    //         //         get_string(&x[0]),
+    //         //         x.iter().map(serialize_form_value).collect(),
+    //         //     );
+    //         // }
+    //         // // FormValue::Dropdown(x) => todo!(),
+    //         // FormValue::ListItem(x) => {
+    //         //     SurveyPart::ListItem(get_bool(&x[0]), x[1..].iter().map(get_string).collect())
+    //         // }
+    //         // FormValue::TextInput(x) => SurveyPart::TextInput(x.to_owned().to_owned()),
+    //         // // FormValue::Empty => todo!(),
+    //         // // FormValue::Nothing => todo!(),
+    //         // FormValue::Dropdown(x) => {
+    //         //     SurveyPart::Dropdown(get_string(&x[0]), x[1..].iter().map(get_string).collect())
+    //         // }
+    //         _ => SurveyPart::Nothing,
+    //     }
+    // }
+
+    return formparts.iter().map(form_value_to_survey_part).collect();
 }
 
 // fn get_string(status: &FormValue) -> String {
@@ -158,6 +247,7 @@ struct RadioQuestion {
 #[derive(Deserialize, Serialize, Clone, Debug)]
 struct CheckboxQuestion {
     question: String,
+    options: Vec<CheckboxItem>,
 }
 #[derive(Deserialize, Serialize, Clone, Debug)]
 struct CheckboxItem {
@@ -177,6 +267,7 @@ pub enum SurveyPart {
     TextInput {
         question: String,
     },
+    Nothing,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -205,22 +296,24 @@ impl SurveyV2 {
 }
 
 fn formvalue_to_block(formvalue: &FormValue) -> Block {
-    let (block_type, survey_part) = match formvalue {
-        FormValue::Title { text } => (BlockType::Title, SurveyPart::Title(text.clone())),
-        FormValue::TextInput { text } => BlockType::TextInput,
-        FormValue::Radio { properties } => BlockType::Radio,
-        FormValue::Dropdown { properties } => BlockType::Dropdown,
-        FormValue::Submit { text } => BlockType::Submit,
-        FormValue::TextArea { text } => BlockType::Textarea,
-        FormValue::Checkbox { properties } => BlockType::Checkbox,
-        _ => BlockType::Empty,
-    };
+    // let (block_type, survey_part) = match formvalue {
+    //     FormValue::Title { text } => (BlockType::Title, SurveyPart::Title(text.clone())),
+    //     // FormValue::TextInput { text } => BlockType::TextInput,
+    //     // FormValue::Radio { properties } => BlockType::Radio,
+    //     // FormValue::Dropdown { properties } => BlockType::Dropdown,
+    //     // FormValue::Submit { text } => BlockType::Submit,
+    //     // FormValue::TextArea { text } => BlockType::Textarea,
+    //     FormValue::Checkbox { properties } => (BlockType::Checkbox, form_value_to_survey_part(prop)),
+    //     _ => BlockType::Empty,
+    // };
+
+    let survey_part = form_value_to_survey_part(formvalue);
 
     return Block {
         id: NanoId::new(),
         index: 0.0,
         properties: survey_part,
-        block_type: block_type,
+        block_type: BlockType::Checkbox,
     };
 }
 
