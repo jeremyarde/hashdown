@@ -1,5 +1,5 @@
 use chrono::Utc;
-use form::{parse_markdown_text, Block, FormValue, SurveyPart};
+use form::{formvalue_to_survey, parse_markdown_text, Block, FormValue, SurveyPart};
 use wasm_bindgen::prelude::*;
 
 use derive_builder::Builder;
@@ -297,17 +297,17 @@ pub fn markdown_to_form_wasm(contents: String) -> JsValue {
         Ok(x) => return serde_wasm_bindgen::to_value(&x).unwrap(),
         Err(_) => return serde_wasm_bindgen::to_value(&ParsedSurvey::new()).unwrap(),
     }
-
-    // return serde_wasm_bindgen::to_value(&survey).unwrap();
 }
 
 #[wasm_bindgen]
 pub fn markdown_to_form_wasm_v2(contents: String) -> JsValue {
-    let survey = parse_markdown_text(&contents);
-
-    match survey {
-        Ok(x) => return serde_wasm_bindgen::to_value(&x).unwrap(),
-        Err(_) => return serde_wasm_bindgen::to_value(&ParsedSurvey::new()).unwrap(),
+    let formvalues = parse_markdown_text(&contents);
+    match formvalues {
+        Ok(x) => {
+            let survey = formvalue_to_survey(x);
+            return serde_wasm_bindgen::to_value(&survey).unwrap();
+        }
+        Err(err) => return serde_wasm_bindgen::to_value(&err.to_string()).unwrap(),
     }
 }
 
@@ -510,7 +510,7 @@ enum MarkdownElement {
 
 #[cfg(test)]
 mod tests {
-    use crate::{parse_markdown_v3, Question};
+    use crate::{markdown_to_form_wasm_v2, parse_markdown_v3, Question};
 
     #[test]
     fn test() {
@@ -587,5 +587,12 @@ mod tests {
             Question::parse_question_type_and_text("  1. testing").1,
             "testing"
         );
+    }
+
+    #[test]
+    fn test_wasm_parsed_markdown() {
+        let input = include_str!("../formexample-minimal.md");
+        let results = markdown_to_form_wasm_v2(input.to_string());
+        // assert!()
     }
 }

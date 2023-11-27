@@ -373,38 +373,39 @@ function textInput(question: Question) {
 
 function renderSurveyV2(plaintext) {
     console.log("render v2 plaintext:", plaintext);
-    const surveydetails = markdown_to_form_wasm_v2(plaintext);
-    console.log("rederSurveyV2", surveydetails);
+    const survey = markdown_to_form_wasm_v2(plaintext);
+    const surveyblocks = survey.blocks;
+    console.log("rederSurveyV2", survey);
 
     return (
         <>
-            {surveydetails.map(surveyPart => Object.entries(surveyPart).map(([key, value]) => {
-                console.log("map entries: ", key, value)
+            {surveyblocks.map(block => {
+                console.log("map entries: ", block)
                 // let transformedValue = !Array.isArray(value) ? value : value.map(option => {
                 //     return { id: useId() }
                 // });
-                switch (key) {
+                switch (block.block_type) {
                     case "Title":
                         return (
                             <h1 className="text-3xl font-bold space-y-2" >
-                                {value}
+                                {block.properties}
                             </h1>)
                     case "TextInput":
                         return (
                             <div>
-                                {textInput({ id: useId(), value })}
+                                {textInput({ id: useId(), value: block.properties })}
                             </div>
                         )
                     case "Checkbox":
                         return (
                             <div>
-                                {checkboxGroupV2(value)}
+                                {checkboxGroupV2(block.properties)}
                             </div>
                         )
                     case "Radio":
                         return (
                             <div>
-                                {radioGroupV2(value)}
+                                {radioGroupV2(block.properties)}
                             </div>
                         )
                 }
@@ -414,7 +415,7 @@ function renderSurveyV2(plaintext) {
                 //         {JSON.stringify(surveyPart)}
                 //     </div>
                 // )
-            }))}
+            })}
         </>)
 }
 
