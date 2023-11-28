@@ -138,6 +138,36 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                 question: question,
             })
         }
+        FormValue::Radio { properties } => {
+            let question = match properties.get(0).unwrap() {
+                FormValue::QuestionText { text } => text.clone(),
+                _ => unreachable!(),
+            };
+            let options = properties[1..]
+                .iter()
+                .map(|formvalue| match formvalue {
+                    FormValue::ListItem { properties } => {
+                        // let checked = match properties.get(0).unwrap() {
+                        //     FormValue::CheckedStatus { value } => value.clone(),
+                        //     _ => unreachable!(),
+                        // };
+                        let optiontext = match properties.get(0).unwrap() {
+                            FormValue::QuestionText { text } => text.clone(),
+                            _ => unreachable!(),
+                        };
+                        return optiontext;
+                    }
+                    _ => {
+                        unreachable!()
+                    }
+                })
+                .collect();
+
+            SurveyPart::Radio(RadioQuestion {
+                options: options,
+                question: question,
+            })
+        }
         // get_bool(&x[0]),       // x[1..].iter().map(|x| serialize_form_value(x)).collect(),
         // FormValue::Radio(x) => {
         //     return SurveyPart::Radio(
@@ -242,6 +272,7 @@ fn serialize_value(formparts: Vec<FormValue>) -> Vec<SurveyPart> {
 #[derive(Deserialize, Serialize, Clone, Debug)]
 struct RadioQuestion {
     question: String,
+    options: Vec<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -256,6 +287,7 @@ struct CheckboxItem {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
+#[serde(untagged)]
 pub enum SurveyPart {
     Title(String),
     Radio(RadioQuestion),
@@ -453,7 +485,8 @@ mod tests {
         println!("{:?}", &res);
 
         let serialized = formvalue_to_survey(res.unwrap());
-        // let serialized = json!(res.unwrap());
         println!("{:#?}", serialized);
+
+        println!("{:#}", json!(serialized));
     }
 }
