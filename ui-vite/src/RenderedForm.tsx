@@ -260,23 +260,23 @@ function checkboxGroup(question: Question) {
     )
 }
 
-function checkboxGroupV2(parts = []) {
+function checkboxGroupV2(block) {
     const questionId = crypto.randomUUID();
 
     return (
         <>
-            <Label className="font-semibold">{parts[0].QuestionText}</Label>
+            <Label className="font-semibold">{block.properties.question}</Label>
             <div className="flex flex-col space-y-2">
-                {parts.map((option) => {
+                {block.properties.options.map((option) => {
 
-                    if (!option.ListItem) { return; } if (!option.ListItem) { return; }
+                    // if (!option.text) { return; } if (!option.ListItem) { return; }
 
                     // console.log("checkboxgrouppart", option);
                     return (
                         <div className="flex items-center">
-                            <Checkbox defaultChecked={option.ListItem[0].CheckedStatus} id={questionId} name={questionId} required />
+                            <Checkbox defaultChecked={option.checked} id={questionId} name={questionId} required />
                             <Label className="ml-2 text-sm items-center" htmlFor={questionId}>
-                                {option.ListItem[1].QuestionText}
+                                {option.text}
                             </Label>
                         </div>
                     )
@@ -286,7 +286,7 @@ function checkboxGroupV2(parts = []) {
     )
 }
 
-function radioGroupV2(parts = [], setStateFn) {
+function radioGroupV2(block, setStateFn) {
     const onchangeexample = (evt) => {
         console.log('onchangeexample');
 
@@ -301,18 +301,18 @@ function radioGroupV2(parts = [], setStateFn) {
     const questionId = crypto.randomUUID();
     return (
         <>
-            <Label className="space-y-2 p-2 text-left">{parts[0].QuestionText}</Label>
+            <Label className="space-y-2 p-2 text-left">{block.properties.question}</Label>
             <RadioGroup className="" onChange={onchangeexample} >
                 <div className="flex flex-col space-y-2 ">
-                    {parts.map((option) => {
-                        if (!option.ListItem) { return; }
+                    {block.properties.options.map((option) => {
+                        // if (!option.ListItem) { return; }
 
                         console.log("part - option:", option);
                         return (
                             <div className="flex items-center space-x-2">
-                                <RadioGroupItem id={questionId} value={option.ListItem[0].QuestionText} />
+                                <RadioGroupItem id={questionId} value={option} />
                                 <Label className="items-center" htmlFor={questionId} >
-                                    {option.ListItem[0].QuestionText}
+                                    {option}
                                 </Label >
                             </div>
                         )
@@ -362,61 +362,87 @@ function dropdownGroup(question: Question) {
     )
 }
 
-function textInput(question: Question) {
+function textInput(block) {
     return (
         <>
-            <Label htmlFor={question.id}>{question.value}</Label>
-            <Input id={question.id} placeholder="Enter text" />
+            <Label htmlFor={block.id}>{block.properties.question}</Label>
+            <Input id={block.id} placeholder="Enter text" />
         </>
     )
 }
 
 function renderSurveyV2(plaintext) {
+    // const [parsingError, setParsingError] = useState();
     console.log("render v2 plaintext:", plaintext);
+
     const survey = markdown_to_form_wasm_v2(plaintext);
-    const surveyblocks = survey.blocks;
-    console.log("rederSurveyV2", survey);
+    let parsingError = undefined;
+    if (!survey.blocks) {
+        parsingError = survey;
+    }
+    console.log(`survey issues? ${survey}`);
+    console.log("renderSurveyV2", survey);
 
     return (
         <>
-            {surveyblocks.map(block => {
-                console.log("map entries: ", block)
-                // let transformedValue = !Array.isArray(value) ? value : value.map(option => {
-                //     return { id: useId() }
-                // });
-                switch (block.block_type) {
-                    case "Title":
-                        return (
-                            <h1 className="text-3xl font-bold space-y-2" >
-                                {block.properties}
-                            </h1>)
-                    case "TextInput":
-                        return (
-                            <div>
-                                {textInput({ id: useId(), value: block.properties })}
-                            </div>
-                        )
-                    case "Checkbox":
-                        return (
-                            <div>
-                                {checkboxGroupV2(block.properties)}
-                            </div>
-                        )
-                    case "Radio":
-                        return (
-                            <div>
-                                {radioGroupV2(block.properties)}
-                            </div>
-                        )
-                }
+            {parsingError ? (
+                <div style={{ whiteSpace: "pre-wrap", background: "red", textAlign: "left" }}>
+                    {parsingError}
+                </div >
+            ) : ''}
+            <div>
+                {
+                    survey.blocks?.map(block => {
+                        console.log("map entries: ", block)
+                        // let transformedValue = !Array.isArray(value) ? value : value.map(option => {
+                        //     return { id: useId() }
+                        // });
+                        switch (block.block_type) {
+                            case "Title":
+                                return (
+                                    <h1 className="text-3xl font-bold space-y-2" >
+                                        {block.properties.title}
+                                    </h1>)
+                            case "TextInput":
+                                return (
+                                    <div>
+                                        {textInput(block)}
+                                    </div>
+                                )
+                            case "Checkbox":
+                                return (
+                                    <div>
+                                        {checkboxGroupV2(block)}
+                                    </div>
+                                )
+                            case "Radio":
+                                return (
+                                    <div>
+                                        {radioGroupV2(block)}
+                                    </div>
+                                )
+                            case "Submit":
+                                return (
+                                    <div>
+                                        {submitButton(block)}
+                                    </div>
+                                )
+                        }
 
-                // return (
-                //     <div>
-                //         {JSON.stringify(surveyPart)}
-                //     </div>
-                // )
-            })}
+                        // return (
+                        //     <div>
+                        //         {JSON.stringify(surveyPart)}
+                        //     </div>
+                        // )
+                    })
+                }
+            </div>
+
         </>)
+}
+
+function submitButton(block) {
+
 }
 
 
