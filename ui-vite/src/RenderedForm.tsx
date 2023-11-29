@@ -119,6 +119,78 @@ export function RenderedForm({ plaintext, survey }: RenderedFormProps) {
         );
     }
 
+    function formelements2(question) {
+        return (
+            <FormField
+                key={question.id}
+                control={form.control}
+                name={question.id}
+                className="flex flex-row text-left justify-start"
+                render={({ field }) => {
+                    return (
+                        <FormItem className='flex flex-col w-full text-left'>
+                            <div className="flex flex-row items-center justify-between">
+                                <FormLabel>{question.value}</FormLabel>
+
+                            </div>
+                            <div
+                            // className="flex flex-col items-center align-middle"
+                            >
+                                <FormControl>
+                                    {
+                                        survey.blocks?.map(block => {
+                                            console.log("map entries: ", block)
+                                            // let transformedValue = !Array.isArray(value) ? value : value.map(option => {
+                                            //     return { id: useId() }
+                                            // });
+                                            switch (block.block_type) {
+                                                case "Title":
+                                                    return (
+                                                        <h1 className="text-3xl font-bold space-y-2" >
+                                                            {block.properties.title}
+                                                        </h1>)
+                                                case "TextInput":
+                                                    return (
+                                                        <div>
+                                                            {textInput(block, setExampleSubmittion)}
+                                                        </div>
+                                                    )
+                                                case "Checkbox":
+                                                    return (
+                                                        <div>
+                                                            {checkboxGroupV2(block, setExampleSubmittion)}
+                                                        </div>
+                                                    )
+                                                case "Radio":
+                                                    return (
+                                                        <div>
+                                                            {radioGroupV2(block, setExampleSubmittion)}
+                                                        </div>
+                                                    )
+                                                case "Submit":
+                                                    return (
+                                                        <div>
+                                                            {submitButton(block)}
+                                                        </div>
+                                                    )
+                                            }
+
+                                            // return (
+                                            //     <div>
+                                            //         {JSON.stringify(surveyPart)}
+                                            //     </div>
+                                            // )
+                                        })
+                                    }
+                                </FormControl>
+                            </div>
+                            <FormMessage />
+                        </FormItem>
+                    );
+                }} />
+        );
+    }
+
     let toRender;
     if (survey) {
         if (DISPLAY_SURVEY_VERSION == 0) {
@@ -260,8 +332,19 @@ function checkboxGroup(question: Question) {
     )
 }
 
-function checkboxGroupV2(block) {
+function checkboxGroupV2(block, setStateFn) {
+
     const questionId = crypto.randomUUID();
+
+    const onchangeexample = (evt) => {
+        console.log('onchangeexample');
+        console.log(evt);
+        // console.log(evt.target);
+        setStateFn(prev => ({
+            ...prev,
+            [block.id]: evt,
+        }));
+    }
 
     return (
         <>
@@ -274,7 +357,7 @@ function checkboxGroupV2(block) {
                     // console.log("checkboxgrouppart", option);
                     return (
                         <div className="flex items-center">
-                            <Checkbox defaultChecked={option.checked} id={questionId} name={questionId} required />
+                            <Checkbox onCheckedChange={onchangeexample} defaultChecked={option.checked} id={questionId} name={questionId} required />
                             <Label className="ml-2 text-sm items-center" htmlFor={questionId}>
                                 {option.text}
                             </Label>
@@ -362,17 +445,24 @@ function dropdownGroup(question: Question) {
     )
 }
 
-function textInput(block) {
+function textInput(block, setStateFn) {
+    function handleChange(e) {
+        setStateFn(curr => {
+            return { ...curr, [block.id]: e.target.value }
+        })
+    };
+
     return (
         <>
             <Label htmlFor={block.id}>{block.properties.question}</Label>
-            <Input id={block.id} placeholder="Enter text" />
+            <Input id={block.id} placeholder="Enter text" onChange={handleChange} />
         </>
     )
 }
 
 function renderSurveyV2(plaintext) {
     // const [parsingError, setParsingError] = useState();
+    const [exampleSubmittion, setExampleSubmittion] = useState();
     console.log("render v2 plaintext:", plaintext);
 
     const survey = markdown_to_form_wasm_v2(plaintext);
@@ -387,62 +477,83 @@ function renderSurveyV2(plaintext) {
         <>
             {parsingError ? (
                 <div style={{ whiteSpace: "pre-wrap", background: "red", textAlign: "left" }}>
-                    {parsingError}
+                    <pre>
+                        <code className="bg-blue-200">{parsingError}</code>
+                    </pre>
                 </div >
             ) : ''}
+            {exampleSubmittion ? (
+                <pre>
+                    <code className="bg-blue-200">{JSON.stringify(exampleSubmittion, null, 2)}</code>
+                </pre>
+            ) : ''}
             <div>
-                {
-                    survey.blocks?.map(block => {
-                        console.log("map entries: ", block)
-                        // let transformedValue = !Array.isArray(value) ? value : value.map(option => {
-                        //     return { id: useId() }
-                        // });
-                        switch (block.block_type) {
-                            case "Title":
-                                return (
-                                    <h1 className="text-3xl font-bold space-y-2" >
-                                        {block.properties.title}
-                                    </h1>)
-                            case "TextInput":
-                                return (
-                                    <div>
-                                        {textInput(block)}
-                                    </div>
-                                )
-                            case "Checkbox":
-                                return (
-                                    <div>
-                                        {checkboxGroupV2(block)}
-                                    </div>
-                                )
-                            case "Radio":
-                                return (
-                                    <div>
-                                        {radioGroupV2(block)}
-                                    </div>
-                                )
-                            case "Submit":
-                                return (
-                                    <div>
-                                        {submitButton(block)}
-                                    </div>
-                                )
-                        }
+                <form>
+                    {
+                        survey.blocks?.map(block => {
+                            console.log("map entries: ", block)
+                            // let transformedValue = !Array.isArray(value) ? value : value.map(option => {
+                            //     return { id: useId() }
+                            // });
+                            switch (block.block_type) {
+                                case "Title":
+                                    return (
+                                        <h1 className="text-3xl font-bold space-y-2" >
+                                            {block.properties.title}
+                                        </h1>)
+                                case "TextInput":
+                                    return (
+                                        <div>
+                                            {textInput(block, setExampleSubmittion)}
+                                        </div>
+                                    )
+                                case "Checkbox":
+                                    return (
+                                        <div>
+                                            {checkboxGroupV2(block, setExampleSubmittion)}
+                                        </div>
+                                    )
+                                case "Radio":
+                                    return (
+                                        <div>
+                                            {radioGroupV2(block, setExampleSubmittion)}
+                                        </div>
+                                    )
+                                case "Submit":
+                                    return (
+                                        <div>
+                                            {submitButton(block)}
+                                        </div>
+                                    )
+                            }
 
-                        // return (
-                        //     <div>
-                        //         {JSON.stringify(surveyPart)}
-                        //     </div>
-                        // )
-                    })
-                }
+                            // return (
+                            //     <div>
+                            //         {JSON.stringify(surveyPart)}
+                            //     </div>
+                            // )
+                        })
+                    }
+                </form>
+
             </div>
 
         </>)
 }
 
 function submitButton(block) {
+    function handleSubmit(evt) {
+        console.log(`Submit clicked: ${JSON.stringify({})}`)
+    }
 
+    return (
+        <>
+            <div>
+                <Button className="bg-slate-400 rounded hover:bg-slate-150" type="submit" onClick={handleSubmit}>{block.properties.text}</Button>
+                {/* <Button onClick={handleSubmit}>{block.properties.text}</Button> */}
+            </div>
+        </>
+    )
 }
 
 
