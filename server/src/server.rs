@@ -7,9 +7,9 @@ use chrono::{DateTime, Utc};
 use db::database::Database;
 
 use hyper::header::CONTENT_ENCODING;
-use markdownparser::{nanoid_gen, Survey};
+use markdownparser::{markdown_to_form_wasm_v2, nanoid_gen, ParsedSurvey, Survey};
 
-use serde_json::Value;
+use serde_json::{json, Value};
 use sqlx::FromRow;
 use tokio::task::JoinHandle;
 
@@ -147,19 +147,22 @@ pub struct SurveyModel {
 }
 impl SurveyModel {
     pub(crate) fn new(payload: CreateSurveyRequest, session: &Session) -> SurveyModel {
-        let parsed_survey =
-            parse_markdown_v3(payload.plaintext.clone()).expect("Could not parse the survey");
+        // let parsed_survey =
+        //     (payload.plaintext.clone()).expect("Could not parse the survey");
+        // let survey = markdown_to_form_wasm_v2(payload.plaintext);
+        let survey = ParsedSurvey::from(payload.plaintext.clone()).unwrap();
         let metadata = Metadata::new();
         return SurveyModel {
             id: 0,
             survey_id: nanoid_gen(12),
-            plaintext: payload.plaintext,
+            plaintext: payload.plaintext.clone(),
             user_id: session.user_id.to_owned(),
             created_at: metadata.created_at,
             modified_at: metadata.modified_at,
             version: Some("fixme".to_string()),
-            parse_version: Some(parsed_survey.parse_version.clone()),
-            parsed_json: Some(serde_json::to_value(parsed_survey.clone()).unwrap()),
+            parse_version: Some(survey.parse_version.clone()),
+            parsed_json: Some(json!(&survey)), // parse_version: Some(parsed_survey.parse_version.clone()),
+                                               // parsed_json: Some(serde_json::to_value(parsed_survey.clone()).unwrap()),
         };
     }
 }

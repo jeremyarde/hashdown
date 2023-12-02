@@ -330,8 +330,6 @@ pub fn formvalue_to_survey(formvalues: Vec<FormValue>) -> ParsedSurvey {
 
     for formvalue in formvalues {
         survey.blocks.push(formvalue_to_block(&formvalue));
-
-        println!("formvalue: {:?}", formvalue);
     }
     return survey;
 }

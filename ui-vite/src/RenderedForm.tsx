@@ -17,6 +17,7 @@ export type RenderedFormProps = {
 }
 
 export function RenderedForm({ survey }: RenderedFormProps) {
+    console.log(`RenderedForm: ${JSON.stringify(survey)}`)
     return (
         <>
             <div className="border border-gray-300 p-4 rounded">

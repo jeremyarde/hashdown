@@ -40,7 +40,7 @@ pub mod routes {
         plaintext: String,
     }
 
-    use markdownparser::{nanoid_gen, parse_markdown_v3};
+    use markdownparser::nanoid_gen;
 
     #[derive(Deserialize, Serialize, Debug)]
     pub struct ListSurveyResponse {

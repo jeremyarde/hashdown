@@ -256,7 +256,6 @@ impl Question {
                 .to_owned();
         }
 
-        // println!("parse: {question_text:?}");
         return (qtype, question_text.to_string());
     }
 }
@@ -305,7 +304,6 @@ pub fn markdown_to_form_wasm_v2(contents: String) -> JsValue {
     let survey = ParsedSurvey::from(contents);
     match survey {
         Ok(x) => {
-            // let survey = formvalue_to_survey(x);
             return serde_wasm_bindgen::to_value(&x).unwrap();
         }
         // This is a parsing issue, return something helpful to the user
@@ -341,18 +339,17 @@ impl ParsedSurvey {
         }
     }
 
-    fn from_details(id: &str, title: &str, plaintext: &str, questions: Vec<Question>) -> Self {
-        let title = title.replace("# ", "");
-
-        ParsedSurvey {
-            id: id.to_owned(),
-            title: title.to_owned(),
-            plaintext: plaintext.to_owned(),
-            questions: questions,
-            parse_version: "".to_string(),
-            blocks: vec![],
-        }
-    }
+    // fn from_details(id: &str, title: &str, plaintext: &str, questions: Vec<Question>) -> Self {
+    //     let title = title.replace("# ", "");
+    //     ParsedSurvey {
+    //         id: id.to_owned(),
+    //         title: title.to_owned(),
+    //         plaintext: plaintext.to_owned(),
+    //         questions: questions,
+    //         parse_version: "".to_string(),
+    //         blocks: vec![],
+    //     }
+    // }
     pub fn new() -> Self {
         ParsedSurvey {
             title: "".to_owned(),
@@ -365,118 +362,14 @@ impl ParsedSurvey {
     }
 }
 
-fn find_line_type(line: &str) -> LineType {
-    let linetype: LineType;
-    if line.starts_with("# ") {
-        return LineType::Title;
-    }
-
-    if !line.starts_with(' ') && line.starts_with(|c: char| c.eq(&'-') || c.is_ascii_digit()) {
-        linetype = LineType::Question
-    } else if line.starts_with(" ")
-        && line
-            .trim_start()
-            .starts_with(|c: char| c.eq(&'-') || c.is_ascii_digit())
-    {
-        linetype = LineType::Option
-    } else {
-        linetype = LineType::Nothing;
-    }
-    linetype
-}
-
-enum MarkdownElement {
-    Heading,
-    List,
-    ListItem,
-    Nothing,
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::{markdown_to_form_wasm_v2, Question};
-
-    //     #[test]
-    //     fn test() {
-    //         let teststring = "1. this is a test\n - option 1\n - opt 2";
-
-    //         let content = String::from(teststring);
-    //         let result = parse_markdown_v3(content);
-    //         print!("test result: {:?}\n", result);
-    //     }
-
-    //     #[test]
-    //     fn test_v3() {
-    //         let teststring = r#"
-    // # This is the title
-
-    // 1. Question number 1
-    //   1. option 1
-    //   2. option 2
-    // 2. Question number 2
-    // 3. Question number 3
-    //   1. q3 option 1
-    //   2. q3 option 2
-    // "#;
-
-    //         let res = parse_markdown_v3(teststring.to_string()).unwrap();
-
-    //         assert_eq!(&res.title, "This is the title");
-    //         assert!(&res.questions.get(0).unwrap().value.eq("Question number 1"));
-    //         assert_eq!(
-    //             &res.questions.get(0).unwrap().options.get(0).unwrap().text,
-    //             "option 1"
-    //         );
-
-    //         assert_eq!(&res.questions.get(1).unwrap().value, "Question number 2");
-    //         assert_eq!(&res.questions.get(1).unwrap().options.len(), &(0 as usize));
-
-    //         assert_eq!(&res.questions.get(2).unwrap().value, "Question number 3");
-    //         assert_eq!(
-    //             &res.questions.get(2).unwrap().options.get(0).unwrap().text,
-    //             "q3 option 1"
-    //         );
-    //         assert_eq!(
-    //             &res.questions.get(2).unwrap().options.get(1).unwrap().text,
-    //             "q3 option 2"
-    //         );
-
-    //         // println!("{:#?}", res)
-    //     }
-
-    //     #[test]
-    //     fn test_question_parsing() {
-    //         assert_eq!(
-    //             Question::parse_question_type_and_text("- testing").1,
-    //             "testing"
-    //         );
-    //         assert_eq!(
-    //             Question::parse_question_type_and_text(" - testing").1,
-    //             "testing"
-    //         );
-    //         assert_eq!(
-    //             Question::parse_question_type_and_text("  - testing").1,
-    //             "testing"
-    //         );
-
-    //         assert_eq!(
-    //             Question::parse_question_type_and_text("1. testing").1,
-    //             "testing"
-    //         );
-    //         assert_eq!(
-    //             Question::parse_question_type_and_text(" 1. testing").1,
-    //             "testing"
-    //         );
-    //         assert_eq!(
-    //             Question::parse_question_type_and_text("  1. testing").1,
-    //             "testing"
-    //         );
-    //     }
+    use crate::{markdown_to_form_wasm_v2, ParsedSurvey, Question};
 
     #[test]
     fn test_wasm_parsed_markdown() {
         let input = include_str!("../formexample-minimal.md");
-        let results = markdown_to_form_wasm_v2(input.to_string());
-        // assert!()
+        let results = ParsedSurvey::from(input.to_string());
+        dbg!(results);
     }
 }
