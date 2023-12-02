@@ -187,17 +187,6 @@ function getInt32Memory0() {
 * @param {string} contents
 * @returns {any}
 */
-export function markdown_to_form_wasm(contents) {
-    const ptr0 = passStringToWasm0(contents, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.markdown_to_form_wasm(ptr0, len0);
-    return takeObject(ret);
-}
-
-/**
-* @param {string} contents
-* @returns {any}
-*/
 export function markdown_to_form_wasm_v2(contents) {
     const ptr0 = passStringToWasm0(contents, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;

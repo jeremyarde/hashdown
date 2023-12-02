@@ -302,146 +302,21 @@ enum LineType {
 
 #[wasm_bindgen]
 pub fn markdown_to_form_wasm_v2(contents: String) -> JsValue {
-    let formvalues = parse_markdown_text(&contents);
-    match formvalues {
+    let survey = ParsedSurvey::from(contents);
+    match survey {
         Ok(x) => {
-            let survey = formvalue_to_survey(x);
-            return serde_wasm_bindgen::to_value(&survey).unwrap();
+            // let survey = formvalue_to_survey(x);
+            return serde_wasm_bindgen::to_value(&x).unwrap();
         }
+        // This is a parsing issue, return something helpful to the user
         Err(err) => return serde_wasm_bindgen::to_value(&err.to_string()).unwrap(),
     }
 }
-
-// #[wasm_bindgen]
-// pub fn markdown_to_form_wasm_v3(contents: String) -> JsValue {
-//     let survey = parse_markdown_text(&contents);
-//     match survey {
-//         Ok(x) => return serde_wasm_bindgen::to_value(&x).unwrap(),
-//         Err(_) => return serde_wasm_bindgen::to_value(&ParsedSurvey::new()).unwrap(),
-//     }
-// }
 
 #[derive(Debug)]
 enum ParseError {
     MultipleTitle(String),
 }
-
-// pub fn parse_markdown_v4(contents: String) -> anyhow::Result<ParsedSurvey2> {
-//     const VERSION: &str = "1";
-
-//     let parse_result = match parse_serialize_markdown_text(&contents) {
-//         Ok(x) => x,
-//         Err(x) => {
-//             return Err(anyhow!(x));
-//         }
-//     };
-
-//     let mut survey = ParsedSurvey2 {
-//         id: nanoid_gen(NANOID_LEN),
-//         title: "".to_string(),
-//         plaintext: contents,
-//         questions: parse_result,
-//         parse_version: VERSION.to_string(),
-//     };
-
-//     return Ok(survey);
-// }
-
-// pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
-//     const VERSION: &str = "0";
-
-//     let survey_id = nanoid_gen(NANOID_LEN);
-//     let plaintext = contents.clone();
-//     let mut questions = vec![];
-//     let mut curr_question_text: &str = "";
-//     let mut curr_options: Vec<&str> = vec![];
-//     let _in_question = false;
-//     let mut last_line_type: LineType = LineType::Nothing;
-//     let _question_num = 0;
-//     let mut title = "";
-//     let mut curr_line_type: LineType = LineType::Nothing;
-//     let mut _curr_line: &str;
-
-//     for line in contents.lines() {
-//         // println!("Curr line: {line}");
-//         match (find_line_type(line), &last_line_type) {
-//             (LineType::Question, LineType::Question) => {
-//                 // new question after question, push prev, clear old
-//                 curr_line_type = LineType::Question;
-//                 questions.push(Question::from(curr_question_text, curr_options.clone()));
-//                 curr_question_text = line;
-//                 curr_options.clear();
-//                 last_line_type = LineType::Question;
-//             }
-//             (LineType::Question, LineType::Nothing) => {
-//                 // new question, push prev, clear options
-//                 curr_question_text = line;
-//                 curr_options.clear();
-//                 // questions.push(Question::from(curr_question_text, curr_options.clone()));
-//                 curr_line_type = LineType::Question;
-//                 last_line_type = LineType::Question;
-//             }
-//             (LineType::Question, LineType::Option) => {
-//                 // new question, push prev, clear options
-//                 curr_line_type = LineType::Question;
-//                 questions.push(Question::from(curr_question_text, curr_options.clone()));
-//                 curr_options.clear();
-//                 curr_question_text = line;
-//             }
-//             (LineType::Option, LineType::Question) => {
-//                 // option for new question, clear options, push option
-//                 curr_line_type = LineType::Option;
-//                 curr_options.clear();
-//                 curr_options.push(line);
-//                 last_line_type = LineType::Option;
-//             }
-//             (LineType::Option, LineType::Option) => {
-//                 curr_line_type = LineType::Option;
-//                 // new option same question, push option
-//                 curr_options.push(line);
-//                 last_line_type = LineType::Option;
-//             }
-//             (LineType::Title, LineType::Nothing) => {
-//                 curr_line_type = LineType::Title;
-//                 title = line;
-//                 last_line_type = LineType::Title;
-//             }
-//             (LineType::Question, LineType::Title) => {
-//                 // First question
-//                 curr_line_type = LineType::Question;
-//                 curr_question_text = line;
-//                 curr_options.clear();
-//                 last_line_type = LineType::Question;
-//             }
-//             (LineType::Title, _) => {
-//                 curr_line_type = LineType::Title;
-//                 return Err(anyhow!(
-//                     "Found multiple titles, remove one line that starts with `# `"
-//                 ));
-//             }
-//             _ => {
-//                 curr_line_type = LineType::Nothing;
-//                 last_line_type = LineType::Nothing;
-//             }
-//         }
-//         println!("{curr_line_type:?}: {line:?}");
-//         debug!("{curr_line_type:?}: {line:?}");
-//     }
-
-//     // adding the last question
-//     questions.push(Question::from(curr_question_text, curr_options.clone()));
-
-//     // let value = Questions { qs: questions };
-
-//     // let newq = TestQ {
-//     //     text: "test".to_string(),
-//     // };
-
-//     let survey = ParsedSurvey::from_details(&survey_id, title, &plaintext, questions);
-
-//     return Ok(survey);
-//     // return JsValue::from(value);
-// }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ParsedSurvey {
@@ -455,7 +330,15 @@ pub struct ParsedSurvey {
 
 impl ParsedSurvey {
     pub fn from(plaintext: String) -> anyhow::Result<ParsedSurvey> {
-        return parse_markdown_v3(plaintext);
+        let formvalues = parse_markdown_text(&plaintext);
+        match formvalues {
+            Ok(x) => {
+                let survey = formvalue_to_survey(x);
+                return Ok(survey);
+            }
+            // This is a parsing issue, return something helpful to the user
+            Err(err) => return Err(err.into()),
+        }
     }
 
     fn from_details(id: &str, title: &str, plaintext: &str, questions: Vec<Question>) -> Self {
@@ -511,84 +394,84 @@ enum MarkdownElement {
 
 #[cfg(test)]
 mod tests {
-    use crate::{markdown_to_form_wasm_v2, parse_markdown_v3, Question};
+    use crate::{markdown_to_form_wasm_v2, Question};
 
-    #[test]
-    fn test() {
-        let teststring = "1. this is a test\n - option 1\n - opt 2";
+    //     #[test]
+    //     fn test() {
+    //         let teststring = "1. this is a test\n - option 1\n - opt 2";
 
-        let content = String::from(teststring);
-        let result = parse_markdown_v3(content);
-        print!("test result: {:?}\n", result);
-    }
+    //         let content = String::from(teststring);
+    //         let result = parse_markdown_v3(content);
+    //         print!("test result: {:?}\n", result);
+    //     }
 
-    #[test]
-    fn test_v3() {
-        let teststring = r#"
-# This is the title
+    //     #[test]
+    //     fn test_v3() {
+    //         let teststring = r#"
+    // # This is the title
 
-1. Question number 1
-  1. option 1
-  2. option 2
-2. Question number 2
-3. Question number 3
-  1. q3 option 1
-  2. q3 option 2
-"#;
+    // 1. Question number 1
+    //   1. option 1
+    //   2. option 2
+    // 2. Question number 2
+    // 3. Question number 3
+    //   1. q3 option 1
+    //   2. q3 option 2
+    // "#;
 
-        let res = parse_markdown_v3(teststring.to_string()).unwrap();
+    //         let res = parse_markdown_v3(teststring.to_string()).unwrap();
 
-        assert_eq!(&res.title, "This is the title");
-        assert!(&res.questions.get(0).unwrap().value.eq("Question number 1"));
-        assert_eq!(
-            &res.questions.get(0).unwrap().options.get(0).unwrap().text,
-            "option 1"
-        );
+    //         assert_eq!(&res.title, "This is the title");
+    //         assert!(&res.questions.get(0).unwrap().value.eq("Question number 1"));
+    //         assert_eq!(
+    //             &res.questions.get(0).unwrap().options.get(0).unwrap().text,
+    //             "option 1"
+    //         );
 
-        assert_eq!(&res.questions.get(1).unwrap().value, "Question number 2");
-        assert_eq!(&res.questions.get(1).unwrap().options.len(), &(0 as usize));
+    //         assert_eq!(&res.questions.get(1).unwrap().value, "Question number 2");
+    //         assert_eq!(&res.questions.get(1).unwrap().options.len(), &(0 as usize));
 
-        assert_eq!(&res.questions.get(2).unwrap().value, "Question number 3");
-        assert_eq!(
-            &res.questions.get(2).unwrap().options.get(0).unwrap().text,
-            "q3 option 1"
-        );
-        assert_eq!(
-            &res.questions.get(2).unwrap().options.get(1).unwrap().text,
-            "q3 option 2"
-        );
+    //         assert_eq!(&res.questions.get(2).unwrap().value, "Question number 3");
+    //         assert_eq!(
+    //             &res.questions.get(2).unwrap().options.get(0).unwrap().text,
+    //             "q3 option 1"
+    //         );
+    //         assert_eq!(
+    //             &res.questions.get(2).unwrap().options.get(1).unwrap().text,
+    //             "q3 option 2"
+    //         );
 
-        // println!("{:#?}", res)
-    }
+    //         // println!("{:#?}", res)
+    //     }
 
-    #[test]
-    fn test_question_parsing() {
-        assert_eq!(
-            Question::parse_question_type_and_text("- testing").1,
-            "testing"
-        );
-        assert_eq!(
-            Question::parse_question_type_and_text(" - testing").1,
-            "testing"
-        );
-        assert_eq!(
-            Question::parse_question_type_and_text("  - testing").1,
-            "testing"
-        );
+    //     #[test]
+    //     fn test_question_parsing() {
+    //         assert_eq!(
+    //             Question::parse_question_type_and_text("- testing").1,
+    //             "testing"
+    //         );
+    //         assert_eq!(
+    //             Question::parse_question_type_and_text(" - testing").1,
+    //             "testing"
+    //         );
+    //         assert_eq!(
+    //             Question::parse_question_type_and_text("  - testing").1,
+    //             "testing"
+    //         );
 
-        assert_eq!(
-            Question::parse_question_type_and_text("1. testing").1,
-            "testing"
-        );
-        assert_eq!(
-            Question::parse_question_type_and_text(" 1. testing").1,
-            "testing"
-        );
-        assert_eq!(
-            Question::parse_question_type_and_text("  1. testing").1,
-            "testing"
-        );
-    }
+    //         assert_eq!(
+    //             Question::parse_question_type_and_text("1. testing").1,
+    //             "testing"
+    //         );
+    //         assert_eq!(
+    //             Question::parse_question_type_and_text(" 1. testing").1,
+    //             "testing"
+    //         );
+    //         assert_eq!(
+    //             Question::parse_question_type_and_text("  1. testing").1,
+    //             "testing"
+    //         );
+    //     }
 
     #[test]
     fn test_wasm_parsed_markdown() {

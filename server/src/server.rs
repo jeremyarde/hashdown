@@ -7,7 +7,7 @@ use chrono::{DateTime, Utc};
 use db::database::Database;
 
 use hyper::header::CONTENT_ENCODING;
-use markdownparser::{nanoid_gen, parse_markdown_v3, Survey};
+use markdownparser::{nanoid_gen, Survey};
 
 use serde_json::Value;
 use sqlx::FromRow;

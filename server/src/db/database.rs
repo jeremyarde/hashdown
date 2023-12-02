@@ -5,7 +5,7 @@ use std::{
 use anyhow::{self};
 
 use chrono::{DateTime, Utc, Duration};
-use markdownparser::{nanoid_gen, parse_markdown_v3};
+use markdownparser::{nanoid_gen};
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};

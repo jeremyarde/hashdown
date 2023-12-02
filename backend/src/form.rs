@@ -16,11 +16,6 @@ use crate::{
 #[grammar = "form.pest"]
 struct FormParser;
 
-// #[derive(Debug, Serialize, Deserialize)]
-// pub enum QuestionType {
-//     Checkbox,
-// }
-
 pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Error<Rule>> {
     // use pest::iterators::Pair;
 
@@ -86,8 +81,6 @@ pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Err
     let data = formtext
         .map(|pair| parse_value(pair))
         .collect::<Vec<FormValue>>();
-
-    // let survey: SurveyV2 = SurveyV2::from(data);
 
     return Ok(data);
 }
