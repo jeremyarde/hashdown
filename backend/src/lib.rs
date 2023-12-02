@@ -290,14 +290,15 @@ enum LineType {
     Title,
 }
 
-#[wasm_bindgen]
-pub fn markdown_to_form_wasm(contents: String) -> JsValue {
-    let survey = parse_markdown_v3(contents);
-    match survey {
-        Ok(x) => return serde_wasm_bindgen::to_value(&x).unwrap(),
-        Err(_) => return serde_wasm_bindgen::to_value(&ParsedSurvey::new()).unwrap(),
-    }
-}
+// #[wasm_bindgen]
+// pub fn markdown_to_form_wasm(contents: String) -> JsValue {
+//     // let survey = parse_markdown_v3(contents);
+
+//     match survey {
+//         Ok(x) => return serde_wasm_bindgen::to_value(&x).unwrap(),
+//         Err(_) => return serde_wasm_bindgen::to_value(&ParsedSurvey::new()).unwrap(),
+//     }
+// }
 
 #[wasm_bindgen]
 pub fn markdown_to_form_wasm_v2(contents: String) -> JsValue {
@@ -346,101 +347,101 @@ enum ParseError {
 //     return Ok(survey);
 // }
 
-pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
-    const VERSION: &str = "0";
+// pub fn parse_markdown_v3(contents: String) -> anyhow::Result<ParsedSurvey> {
+//     const VERSION: &str = "0";
 
-    let survey_id = nanoid_gen(NANOID_LEN);
-    let plaintext = contents.clone();
-    let mut questions = vec![];
-    let mut curr_question_text: &str = "";
-    let mut curr_options: Vec<&str> = vec![];
-    let _in_question = false;
-    let mut last_line_type: LineType = LineType::Nothing;
-    let _question_num = 0;
-    let mut title = "";
-    let mut curr_line_type: LineType = LineType::Nothing;
-    let mut _curr_line: &str;
+//     let survey_id = nanoid_gen(NANOID_LEN);
+//     let plaintext = contents.clone();
+//     let mut questions = vec![];
+//     let mut curr_question_text: &str = "";
+//     let mut curr_options: Vec<&str> = vec![];
+//     let _in_question = false;
+//     let mut last_line_type: LineType = LineType::Nothing;
+//     let _question_num = 0;
+//     let mut title = "";
+//     let mut curr_line_type: LineType = LineType::Nothing;
+//     let mut _curr_line: &str;
 
-    for line in contents.lines() {
-        // println!("Curr line: {line}");
-        match (find_line_type(line), &last_line_type) {
-            (LineType::Question, LineType::Question) => {
-                // new question after question, push prev, clear old
-                curr_line_type = LineType::Question;
-                questions.push(Question::from(curr_question_text, curr_options.clone()));
-                curr_question_text = line;
-                curr_options.clear();
-                last_line_type = LineType::Question;
-            }
-            (LineType::Question, LineType::Nothing) => {
-                // new question, push prev, clear options
-                curr_question_text = line;
-                curr_options.clear();
-                // questions.push(Question::from(curr_question_text, curr_options.clone()));
-                curr_line_type = LineType::Question;
-                last_line_type = LineType::Question;
-            }
-            (LineType::Question, LineType::Option) => {
-                // new question, push prev, clear options
-                curr_line_type = LineType::Question;
-                questions.push(Question::from(curr_question_text, curr_options.clone()));
-                curr_options.clear();
-                curr_question_text = line;
-            }
-            (LineType::Option, LineType::Question) => {
-                // option for new question, clear options, push option
-                curr_line_type = LineType::Option;
-                curr_options.clear();
-                curr_options.push(line);
-                last_line_type = LineType::Option;
-            }
-            (LineType::Option, LineType::Option) => {
-                curr_line_type = LineType::Option;
-                // new option same question, push option
-                curr_options.push(line);
-                last_line_type = LineType::Option;
-            }
-            (LineType::Title, LineType::Nothing) => {
-                curr_line_type = LineType::Title;
-                title = line;
-                last_line_type = LineType::Title;
-            }
-            (LineType::Question, LineType::Title) => {
-                // First question
-                curr_line_type = LineType::Question;
-                curr_question_text = line;
-                curr_options.clear();
-                last_line_type = LineType::Question;
-            }
-            (LineType::Title, _) => {
-                curr_line_type = LineType::Title;
-                return Err(anyhow!(
-                    "Found multiple titles, remove one line that starts with `# `"
-                ));
-            }
-            _ => {
-                curr_line_type = LineType::Nothing;
-                last_line_type = LineType::Nothing;
-            }
-        }
-        println!("{curr_line_type:?}: {line:?}");
-        debug!("{curr_line_type:?}: {line:?}");
-    }
+//     for line in contents.lines() {
+//         // println!("Curr line: {line}");
+//         match (find_line_type(line), &last_line_type) {
+//             (LineType::Question, LineType::Question) => {
+//                 // new question after question, push prev, clear old
+//                 curr_line_type = LineType::Question;
+//                 questions.push(Question::from(curr_question_text, curr_options.clone()));
+//                 curr_question_text = line;
+//                 curr_options.clear();
+//                 last_line_type = LineType::Question;
+//             }
+//             (LineType::Question, LineType::Nothing) => {
+//                 // new question, push prev, clear options
+//                 curr_question_text = line;
+//                 curr_options.clear();
+//                 // questions.push(Question::from(curr_question_text, curr_options.clone()));
+//                 curr_line_type = LineType::Question;
+//                 last_line_type = LineType::Question;
+//             }
+//             (LineType::Question, LineType::Option) => {
+//                 // new question, push prev, clear options
+//                 curr_line_type = LineType::Question;
+//                 questions.push(Question::from(curr_question_text, curr_options.clone()));
+//                 curr_options.clear();
+//                 curr_question_text = line;
+//             }
+//             (LineType::Option, LineType::Question) => {
+//                 // option for new question, clear options, push option
+//                 curr_line_type = LineType::Option;
+//                 curr_options.clear();
+//                 curr_options.push(line);
+//                 last_line_type = LineType::Option;
+//             }
+//             (LineType::Option, LineType::Option) => {
+//                 curr_line_type = LineType::Option;
+//                 // new option same question, push option
+//                 curr_options.push(line);
+//                 last_line_type = LineType::Option;
+//             }
+//             (LineType::Title, LineType::Nothing) => {
+//                 curr_line_type = LineType::Title;
+//                 title = line;
+//                 last_line_type = LineType::Title;
+//             }
+//             (LineType::Question, LineType::Title) => {
+//                 // First question
+//                 curr_line_type = LineType::Question;
+//                 curr_question_text = line;
+//                 curr_options.clear();
+//                 last_line_type = LineType::Question;
+//             }
+//             (LineType::Title, _) => {
+//                 curr_line_type = LineType::Title;
+//                 return Err(anyhow!(
+//                     "Found multiple titles, remove one line that starts with `# `"
+//                 ));
+//             }
+//             _ => {
+//                 curr_line_type = LineType::Nothing;
+//                 last_line_type = LineType::Nothing;
+//             }
+//         }
+//         println!("{curr_line_type:?}: {line:?}");
+//         debug!("{curr_line_type:?}: {line:?}");
+//     }
 
-    // adding the last question
-    questions.push(Question::from(curr_question_text, curr_options.clone()));
+//     // adding the last question
+//     questions.push(Question::from(curr_question_text, curr_options.clone()));
 
-    // let value = Questions { qs: questions };
+//     // let value = Questions { qs: questions };
 
-    // let newq = TestQ {
-    //     text: "test".to_string(),
-    // };
+//     // let newq = TestQ {
+//     //     text: "test".to_string(),
+//     // };
 
-    let survey = ParsedSurvey::from_details(&survey_id, title, &plaintext, questions);
+//     let survey = ParsedSurvey::from_details(&survey_id, title, &plaintext, questions);
 
-    return Ok(survey);
-    // return JsValue::from(value);
-}
+//     return Ok(survey);
+//     // return JsValue::from(value);
+// }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ParsedSurvey {

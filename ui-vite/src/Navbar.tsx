@@ -16,8 +16,6 @@ import { Toaster } from "./components/ui/toaster";
 export function Navbar() {
     let globalState: GlobalState = useContext(GlobalStateContext);
 
-    console.log(`current path: ${'test'}`)
-
     async function logout() {
         console.log('logging out');
         // const response = await fetch(`${BASE_URL}/auth/logout`, {

@@ -12,6 +12,7 @@ import { Button } from './components/ui/button.tsx'
 import { BASE_URL, SESSION_TOKEN_KEY } from './lib/constants.ts'
 import { EditorPage } from './pages/EditorPage.tsx'
 import { ListResponses } from './ListResponses.tsx'
+import { useGetSurvey } from './hooks/useGetSurvey.ts'
 
 
 export type GlobalState = {
@@ -54,36 +55,16 @@ type Survey = {
 function RenderedSurvey() {
   // const data = useLoaderData();
   let { surveyId } = useParams();
-  const [survey, setSurvey] = useState();
+  let { survey, error, isPending } = useGetSurvey(surveyId);
   let globalState: GlobalState = useContext(GlobalStateContext);
 
-  useEffect(() => {
-    getSurvey(surveyId);
-  }, [surveyId]);
-
-  const getSurvey = async (surveyId) => {
-    const response = await fetch(`${BASE_URL}/surveys/${surveyId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "session_id": `${globalState.sessionId}`
-      },
-      credentials: 'include',
-    });
-    console.log(JSON.stringify(response))
-    const data: Survey = await response.json();
-    const fullSurvey = {
-      ...data,
-      questions: markdown_to_form_wasm_v2(data.plaintext)
-    }
-    setSurvey((prev) => fullSurvey);
-  }
-
-
+  console.log('rendered from url: ' + JSON.stringify(survey));
+  console.log(`useGetSurvey: ${JSON.stringify(survey)}, ${error}, ${isPending}`);
   return (<>
+    {error && <div>{error}</div>}
     <div>
       {survey &&
-        <RenderedForm plaintext={survey.plaintext} survey={survey} ></RenderedForm>
+        <RenderedForm survey={survey} ></RenderedForm>
       }
     </div >
   </>)
@@ -125,7 +106,7 @@ Dropdown: My question here
 [Submit]`;
 
   const [formtext, setFormtext] = useState(exampleText);
-  const survey = markdown_to_form_wasm_v2(exampleText);
+  // const survey = markdown_to_form_wasm_v2(exampleText);
   const [token, setToken] = useState(window.sessionStorage.getItem(SESSION_TOKEN_KEY) ?? '');
   // const [editorContent, setEditorContent] = useState()
 

@@ -36,7 +36,8 @@ Dropdown: My question here
     - Option 3
 
 [Submit]`);
-    const [survey, setSurvey] = useState(undefined);
+    console.log('editorContent: ' + editorContent);
+    const [survey, setSurvey] = useState(markdown_to_form_wasm_v2(editorContent));
 
     useEffect(() => {
         console.log('editor useeffect');
@@ -51,7 +52,7 @@ Dropdown: My question here
             credentials: 'include',
             headers: {
                 'content-type': 'application/json',
-                'session_id': globalState.token ?? '',
+                'session_id': globalState.sessionId ?? '',
             },
             body: JSON.stringify({ plaintext: editorContent })
         });
@@ -93,9 +94,7 @@ Dropdown: My question here
                 </div>
                 <div className="w-1/2 p-4">
                     <h1 className="text-2xl font-bold mb-4">Preview</h1>
-                    <div className="border border-gray-300 p-4 rounded">
-                        <RenderedForm plaintext={editorContent} survey={survey} ></RenderedForm>
-                    </div>
+                    <RenderedForm survey={survey} ></RenderedForm>
                 </div>
             </div>
         </>

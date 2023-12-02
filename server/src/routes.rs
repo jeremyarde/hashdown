@@ -72,11 +72,11 @@ pub mod routes {
             .route("/api/auth/login", post(auth::login))
             .route("/api/auth/signup", post(auth::signup))
             .route("/api/submit", post(submit_response))
+            .route("/api/surveys/:id", get(get_survey).post(submit_survey))
             .route("/api/ping", get(ping));
 
         let auth_routes = Router::new()
             .route("/api/surveys", post(create_survey).get(list_survey))
-            .route("/api/surveys/:id", get(get_survey).post(submit_survey))
             .route("/api/responses", get(survey_responses::list_response))
             .route_layer(middleware::from_fn_with_state(
                 state.clone(),

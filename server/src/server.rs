@@ -141,9 +141,9 @@ pub struct SurveyModel {
     pub modified_at: DateTime<Utc>,
     pub plaintext: String,
     // pub questions: Option<Vec<Question>>,
-    pub version: String,
-    pub parse_version: String,
-    pub parsed_json: Value,
+    pub version: Option<String>,
+    pub parse_version: Option<String>,
+    pub parsed_json: Option<Value>,
 }
 impl SurveyModel {
     pub(crate) fn new(payload: CreateSurveyRequest, session: &Session) -> SurveyModel {
@@ -157,9 +157,9 @@ impl SurveyModel {
             user_id: session.user_id.to_owned(),
             created_at: metadata.created_at,
             modified_at: metadata.modified_at,
-            version: "fixme".to_string(),
-            parse_version: parsed_survey.parse_version.clone(),
-            parsed_json: serde_json::to_value(parsed_survey.clone()).unwrap(),
+            version: Some("fixme".to_string()),
+            parse_version: Some(parsed_survey.parse_version.clone()),
+            parsed_json: Some(serde_json::to_value(parsed_survey.clone()).unwrap()),
         };
     }
 }
