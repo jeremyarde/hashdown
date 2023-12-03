@@ -260,45 +260,6 @@ impl Question {
     }
 }
 
-// #[wasm_bindgen]
-#[derive(Clone, Debug)]
-pub enum Types {
-    checkbox,
-    radio,
-    text,
-}
-
-// #[wasm_bindgen]
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
-pub struct Questions {
-    pub qs: Vec<Question>,
-}
-
-// #[wasm_bindgen]
-// impl Questions {
-//     fn new() -> Self {
-//         Questions { qs: vec![] }
-//     }
-// }
-
-#[derive(Debug)]
-enum LineType {
-    Question,
-    Option,
-    Nothing,
-    Title,
-}
-
-// #[wasm_bindgen]
-// pub fn markdown_to_form_wasm(contents: String) -> JsValue {
-//     // let survey = parse_markdown_v3(contents);
-
-//     match survey {
-//         Ok(x) => return serde_wasm_bindgen::to_value(&x).unwrap(),
-//         Err(_) => return serde_wasm_bindgen::to_value(&ParsedSurvey::new()).unwrap(),
-//     }
-// }
-
 #[wasm_bindgen]
 pub fn markdown_to_form_wasm_v2(contents: String) -> JsValue {
     let survey = ParsedSurvey::from(contents);
@@ -309,11 +270,6 @@ pub fn markdown_to_form_wasm_v2(contents: String) -> JsValue {
         // This is a parsing issue, return something helpful to the user
         Err(err) => return serde_wasm_bindgen::to_value(&err.to_string()).unwrap(),
     }
-}
-
-#[derive(Debug)]
-enum ParseError {
-    MultipleTitle(String),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
