@@ -1,5 +1,4 @@
 pub mod routes {
-    
 
     use axum::{
         extract::Path,
@@ -20,18 +19,17 @@ pub mod routes {
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
 
-    
     use tower_http::{cors::CorsLayer, trace::TraceLayer};
     use tracing::{debug, log::info};
 
     use crate::{
         auth::{self, validate_session_middleware},
         constants::SESSION_ID_KEY,
-        db::database::{CreateAnswersModel},
+        db::database::CreateAnswersModel,
         error::main_response_mapper,
         mware::ctext::Ctext,
         server::SurveyModel,
-        survey_responses::survey_responses::{self, submit_response},
+        survey_responses::{self, submit_response},
         ServerError, ServerState,
     };
 
@@ -39,8 +37,6 @@ pub mod routes {
     struct CreateSurvey {
         plaintext: String,
     }
-
-    
 
     #[derive(Deserialize, Serialize, Debug)]
     pub struct ListSurveyResponse {
@@ -142,11 +138,7 @@ pub mod routes {
             .to_str()
             .unwrap()
             .to_string();
-        let session = state
-            .db
-            .get_session(session_id)
-            .await
-            .unwrap();
+        let session = state.db.get_session(session_id).await.unwrap();
 
         // let ctx = match &ctx {
         //     Some(x) => x,
@@ -163,9 +155,7 @@ pub mod routes {
             .create_survey(survey)
             .await
             .map_err(|x| {
-                ServerError::Database(
-                    format!("Could not create new survey: {x}").to_string(),
-                )
+                ServerError::Database(format!("Could not create new survey: {x}").to_string())
             })
             .unwrap();
 
