@@ -1,6 +1,6 @@
 use anyhow::Context;
-use async_trait::async_trait;
-use axum::{extract::FromRequestParts, http::HeaderMap, RequestPartsExt};
+
+
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 // use ormlite::Model;
 use serde::{Deserialize, Serialize};
@@ -11,7 +11,7 @@ use sqlx::FromRow;
 use tracing::log::info;
 
 use crate::{
-    db::{self, database::Session},
+    db::{database::Session},
     ServerError,
 };
 
@@ -211,8 +211,8 @@ impl Ctext {
 
     pub fn new(user_id: String, session: Session) -> Self {
         Ctext {
-            user_id: user_id,
-            session: session,
+            user_id,
+            session,
         }
     }
 }

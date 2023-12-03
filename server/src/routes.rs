@@ -1,5 +1,5 @@
 pub mod routes {
-    use chrono::{DateTime, Utc};
+    
 
     use axum::{
         extract::Path,
@@ -20,14 +20,14 @@ pub mod routes {
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
 
-    use tower::ServiceBuilder;
+    
     use tower_http::{cors::CorsLayer, trace::TraceLayer};
     use tracing::{debug, log::info};
 
     use crate::{
         auth::{self, validate_session_middleware},
         constants::SESSION_ID_KEY,
-        db::database::{CreateAnswersModel, Session},
+        db::database::{CreateAnswersModel},
         error::main_response_mapper,
         mware::ctext::Ctext,
         server::SurveyModel,
@@ -40,7 +40,7 @@ pub mod routes {
         plaintext: String,
     }
 
-    use markdownparser::nanoid_gen;
+    
 
     #[derive(Deserialize, Serialize, Debug)]
     pub struct ListSurveyResponse {
@@ -146,7 +146,6 @@ pub mod routes {
             .db
             .get_session(session_id)
             .await
-            .map_err(|x| return x)
             .unwrap();
 
         // let ctx = match &ctx {
@@ -164,9 +163,9 @@ pub mod routes {
             .create_survey(survey)
             .await
             .map_err(|x| {
-                return ServerError::Database(
+                ServerError::Database(
                     format!("Could not create new survey: {x}").to_string(),
-                );
+                )
             })
             .unwrap();
 
@@ -292,7 +291,7 @@ pub mod routes {
         .bind(session.user_id.clone())
         .fetch_all(pool)
         .await
-        .map_err(|err| return ServerError::Database(err.to_string()))
+        .map_err(|err| ServerError::Database(err.to_string()))
         .unwrap();
 
         let resp = ListSurveyResponse { surveys: res };

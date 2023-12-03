@@ -1,29 +1,23 @@
 use axum::{
-    http::{self, HeaderName, Method},
-    middleware::{self},
     Router,
 };
 use chrono::{DateTime, Utc};
 use db::database::Database;
 
-use hyper::header::CONTENT_ENCODING;
-use markdownparser::{markdown_to_form_wasm_v2, nanoid_gen, ParsedSurvey, Survey};
 
-use serde_json::{json, Value};
+use markdownparser::{nanoid_gen, ParsedSurvey, Survey};
+
+
 use sqlx::FromRow;
 use tokio::task::JoinHandle;
 
-use tower::ServiceBuilder;
-use tower_http::{
-    cors::{Any, CorsLayer},
-    trace::TraceLayer,
-};
+
+
 
 // use tower_sessions::PostgresStore;
 use tracing::log::info;
 
 use crate::{
-    auth::validate_session_middleware,
     config::EnvConfig,
     db::{
         self,
@@ -60,8 +54,8 @@ impl ServerApplication {
             config: EnvConfig::new(),
         };
 
-        let router = get_router(state).unwrap();
-        return router;
+        
+        get_router(state).unwrap()
     }
 
     pub async fn new() -> ServerApplication {
@@ -153,7 +147,7 @@ impl SurveyModel {
         // let survey = markdown_to_form_wasm_v2(payload.plaintext);
         let survey = ParsedSurvey::from(payload.plaintext.clone()).unwrap();
         let metadata = Metadata::new();
-        return SurveyModel {
+        SurveyModel {
             id: 0,
             survey_id: nanoid_gen(12),
             plaintext: payload.plaintext.clone(),
@@ -166,7 +160,7 @@ impl SurveyModel {
             version: Some("version - todo".to_string()),
             // parsed_json: Some(json!(&survey)), // parse_version: Some(parsed_survey.parse_version.clone()),
             // parsed_json: Some(serde_json::to_value(parsed_survey.clone()).unwrap()),
-        };
+        }
     }
 }
 

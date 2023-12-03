@@ -53,7 +53,7 @@ pub async fn log_request(
         req_method: req_method.to_string(),
 
         // user_id: ctx..map(|c| c.user_id().clone()),
-        user_id: ctx.and_then(|x| Some(x.user_id)).or(None),
+        user_id: ctx.map(|x| x.user_id).or(None),
 
         client_error_type: client_error.map(|e| e.as_ref().to_string()),
 

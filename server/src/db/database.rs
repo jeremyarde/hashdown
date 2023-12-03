@@ -6,7 +6,7 @@ use chrono::{DateTime, Duration, Utc};
 use markdownparser::nanoid_gen;
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value};
 use sqlx::{FromRow, PgPool};
 
 // use models::CreateAnswersModel;
@@ -229,8 +229,8 @@ impl Session {
 }
 
 impl Database {
-    pub async fn create_magic_link(&self, user: UserModel) -> anyhow::Result<()> {
-        return Ok(());
+    pub async fn create_magic_link(&self, _user: UserModel) -> anyhow::Result<()> {
+        Ok(())
     }
 
     pub async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel> {
@@ -370,7 +370,7 @@ impl Database {
         // .execute(&self.pool)
         // .await?;
 
-        let res= sqlx::query!(
+        let _res= sqlx::query!(
             r#"insert into mdp.responses (submitted_at, survey_id, answers) values ($1, $2, $3) returning *"#, 
             Utc::now(), answer.survey_id, answer.responses)
             .fetch_one(&self.pool).await.expect("Should insert a response");
@@ -399,7 +399,7 @@ impl Database {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|err| return ServerError::Database("Did not find responses".to_string()))
+        .map_err(|_err| ServerError::Database("Did not find responses".to_string()))
         .unwrap();
 
         // let res = sqlx::query!(r#"select * from mdp.responses where mdp.responses.survey_id = $1"#, survey_id)
@@ -408,7 +408,7 @@ impl Database {
 
         // let answers = res.iter().map(|record| AnswerModel { id: record.id.to_string(), submitted_at: record.submitted_at, answers: record.answers, survey_id }).collect();
 
-        return Ok(answers);
+        Ok(answers)
     }
 
     pub async fn get_session(&self, session_id: String) -> anyhow::Result<Session, ServerError> {
@@ -469,7 +469,7 @@ impl Database {
             }
         };
 
-        return Ok(new_session);
+        Ok(new_session)
     }
 
     pub async fn update_session(&self, session: Session) -> anyhow::Result<Session, ServerError> {
@@ -477,7 +477,7 @@ impl Database {
             r#"update mdp.sessions sessions set active_period_expires_at = $1, idle_period_expires_at = $2 where sessions.session_id = $3 and sessions.user_id = $4 returning *"#
         ).bind(session.active_period_expires_at).bind(session.idle_period_expires_at).bind(session.session_id).bind(session.user_id).fetch_one(&self.pool).await.unwrap();
 
-        return Ok(curr_session);
+        Ok(curr_session)
     }
 
     pub async fn delete_session(&self, session_id: String) -> anyhow::Result<bool, ServerError> {
@@ -487,12 +487,12 @@ impl Database {
         )
         .execute(&self.pool)
         .await
-        .expect(&format!("Did not delete session: {}", &session_id.as_str()));
+        .unwrap_or_else(|_| panic!("Did not delete session: {}", &session_id.as_str()));
 
         if result.rows_affected() == 1 {
-            return Ok(true);
+            Ok(true)
         } else {
-            return Err(ServerError::AuthFailTokenExpired);
+            Err(ServerError::AuthFailTokenExpired)
         }
     }
 }

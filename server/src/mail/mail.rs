@@ -1,5 +1,5 @@
 use lettre::{
-    message::{header::ContentType, MessageBuilder},
+    message::{header::ContentType},
     Message, SmtpTransport, Transport,
 };
 
@@ -19,9 +19,9 @@ impl std::fmt::Debug for Mailer {
 
 impl Mailer {
     pub fn new() -> Self {
-        use lettre::message::header::ContentType;
+        
         use lettre::transport::smtp::authentication::Credentials;
-        use lettre::{Message, SmtpTransport};
+        use lettre::{SmtpTransport};
 
         let from_email = "Test FROM <test@jeremyarde.com>";
         let to_email = "Test TO <test@jeremyarde.com>";
@@ -49,7 +49,7 @@ impl Mailer {
             .build();
 
         Mailer {
-            mailer: mailer,
+            mailer,
             test_from: from_email.to_string(),
             smtp_server_url: smtp_server.to_string(),
             test_to: to_email.to_string(),
@@ -65,6 +65,6 @@ impl Mailer {
             .body(message)
             .unwrap();
 
-        let response = &self.mailer.send(&email).expect("Email sent successfully");
+        let _response = &self.mailer.send(&email).expect("Email sent successfully");
     }
 }

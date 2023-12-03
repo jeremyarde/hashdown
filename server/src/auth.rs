@@ -9,18 +9,18 @@ use argon2::{PasswordHash, PasswordHasher};
 // use axum::extract::TypedHeader;
 // use axum::headers::authorization::{Authorization, Bearer};
 
-use axum::headers::Server;
-use axum_extra::extract::cookie::Cookie;
-use axum_extra::extract::{cookie, CookieJar};
+
+
+use axum_extra::extract::{CookieJar};
 
 use axum::http::HeaderValue;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use chrono::{Duration, Offset, Utc};
-use hyper::header::SET_COOKIE;
+use chrono::{Duration, Utc};
+
 use hyper::{HeaderMap, Request};
 
-use markdownparser::nanoid_gen;
+
 use serde_json::json;
 // use sqlx::types::time::OffsetDateTime;
 
@@ -36,9 +36,9 @@ use tracing::log::info;
 
 use crate::{db, ServerError};
 
-use serde_json::Value;
 
-use axum::{Extension, Json};
+
+use axum::{Json};
 
 use crate::ServerState;
 
@@ -99,7 +99,7 @@ pub async fn signup(
     // let _ = jar.add(Cookie::new("session_id", session.session_id.clone()));
     let headers = create_session_headers(&session);
 
-    return Ok((headers, Json(json!({"email": user.email}))));
+    Ok((headers, Json(json!({"email": user.email}))))
 }
 
 #[axum::debug_handler]
@@ -122,13 +122,13 @@ pub async fn logout(
         .delete_session(session_header.clone().to_string())
         .await?;
     let _ = &jar.remove(session_header);
-    return Ok(());
+    Ok(())
 }
 
 #[axum::debug_handler]
 pub async fn login(
     state: State<ServerState>,
-    jar: CookieJar,
+    _jar: CookieJar,
     // headers: HeaderMap,
     // ctext: Extension<Ctext>,
     // ctext: Ctext,
@@ -206,20 +206,20 @@ pub async fn login(
     //     .finish();
     // let cookies = jar.add(session_cookie);
 
-    return Ok((
+    Ok((
         // cookies,
         headers,
         Json(json!({"email": username, "session_id": session.session_id})),
-    ));
+    ))
 }
 
-async fn generate_magic_link(state: &ServerState, ctext: Ctext) -> String {
+async fn generate_magic_link(_state: &ServerState, ctext: Ctext) -> String {
     let jwt = create_jwt_token(&ctext).expect("JWT was not created properly");
 
     // let session = state.db.create_session(user.user_id().to_string()).await;
     let magic_link = format!("http://localhost:5173/auth/verify?token={jwt}");
 
-    return magic_link;
+    magic_link
 }
 
 pub fn create_session_headers(session: &Session) -> HeaderMap {
@@ -254,7 +254,7 @@ pub fn create_session_headers(session: &Session) -> HeaderMap {
 
     info!("Session_id: {headers:?}");
 
-    return headers;
+    headers
 }
 
 pub async fn validate_session_middleware<B>(
@@ -262,7 +262,7 @@ pub async fn validate_session_middleware<B>(
     // you can add more extractors here but the last
     // extractor must implement `FromRequest` which
     // `Request` does
-    jar: CookieJar,
+    _jar: CookieJar,
     mut request: Request<B>,
     next: Next<B>,
 ) -> anyhow::Result<Response, ServerError> {
@@ -387,5 +387,5 @@ pub async fn validate_session_middleware<B>(
         });
     }
 
-    return Ok(next.run(request).await);
+    Ok(next.run(request).await)
 }
