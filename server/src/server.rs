@@ -135,7 +135,7 @@ impl Metadata {
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 pub struct SurveyModel {
     pub id: i32,
-    pub name: String,
+    pub name: Option<String>,
     pub survey_id: String,
     pub user_id: String,
     pub created_at: DateTime<Utc>,
@@ -162,7 +162,7 @@ impl SurveyModel {
             modified_at: metadata.modified_at,
             // version: Some(survey),
             parse_version: Some(survey.parse_version.clone()),
-            name: "name - todo".to_string(),
+            name: Some("name - todo".to_string()),
             version: Some("version - todo".to_string()),
             // parsed_json: Some(json!(&survey)), // parse_version: Some(parsed_survey.parse_version.clone()),
             // parsed_json: Some(serde_json::to_value(parsed_survey.clone()).unwrap()),
