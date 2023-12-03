@@ -6,7 +6,7 @@ use chrono::{DateTime, Duration, Utc};
 use markdownparser::nanoid_gen;
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
-use serde_json::{Value};
+use serde_json::Value;
 use sqlx::{FromRow, PgPool};
 
 // use models::CreateAnswersModel;
@@ -288,7 +288,7 @@ impl Database {
         Ok(res)
     }
 
-    pub async fn get_survey(&self, survey_id: &String) -> anyhow::Result<Option<SurveyModel>> {
+    pub async fn get_survey(&self, survey_id: &String) -> anyhow::Result<SurveyModel> {
         let result = sqlx::query_as::<_, SurveyModel>(
             "select * from mdp.surveys where surveys.survey_id = $1",
         )
@@ -300,36 +300,16 @@ impl Database {
         //     .fetch_one(&self.pool)
         //     .await?;
         // let survey = parse_markdown_v3(result.plaintext);
-        Ok(Some(result))
+        Ok(result)
     }
 
     pub async fn create_survey(&self, survey: SurveyModel) -> anyhow::Result<SurveyModel> {
         // let parsed_survey = parse_markdown_v3(payload.plaintext.clone())?;
-        // // let survey = Survey::from(partial_survey);
-        // // let survey = Survey::from(payload.plaintext.clone());
-        // // let response_survey = survey.clone();
-        // let now = chrono::offset::Utc::now();
-        // let nowstr = now.to_string();
-        // let res = sqlx::query_as::<_, SurveyModel>(
-        //     r#"insert into mdp.surveys (plaintext, user_id, created_at, modified_at, version, parse_version, survey_id, parsed_json)
-        //     values
-        //     ($1, $2, $3, $4, $5, $6, $7, $8)
-        //     returning *
-        //     "#)
-        //     .bind(survey.plaintext)
-        //     .bind(survey.user_id)
-        //     .bind(survey.created_at)
-        //     .bind(survey.modified_at)
-        //     .bind(survey.version)
-        //     .bind(survey.parse_version)
-        //     .bind(survey.survey_id)
-        //     .fetch_one(&self.pool).await?;
-
         let res = sqlx::query_as!(
             SurveyModel,
             r#"insert into mdp.surveys (
-                    name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version
-                ) values ($1, $2, $3, $4, $5, $6, $7, $8) returning *"#,
+                    name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version, blocks
+                ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *"#,
             survey.name,
             survey.survey_id,
             survey.user_id,
@@ -337,7 +317,8 @@ impl Database {
             Utc::now(),
             survey.plaintext,
             survey.version,
-            survey.parse_version
+            survey.parse_version,
+            survey.blocks
         )
         .fetch_one(&self.pool)
         .await

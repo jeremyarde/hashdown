@@ -28,6 +28,7 @@ CREATE table mdp.surveys (
     plaintext TEXT not null,
     version TEXT,
     parse_version TEXT,
+    blocks JSON not null,
     
     foreign key(user_id) references mdp.users(user_id)
 );
@@ -78,13 +79,4 @@ INSERT INTO mdp.users (user_id, email, password_hash, email_status, created_at, 
     'verified',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-
 );
-
-INSERT INTO mdp.surveys (survey_id, plaintext, user_id, created_at)
-VALUES (
-        'testsurveyid', 
-        '- q1 title\n  - q1 first question\n  - q1 second\n - q2 question\n  - q2 possible answer',
-        'testuserid',
-        '2023-09-17 02:50:27.567946+00'
-    );

@@ -26,6 +26,10 @@ export function useGetSurvey(surveyId: string) {
                 setError('Not authorized');
                 return
             }
+            if (response.status === 400) {
+                setError('Survey not found');
+                return
+            }
             const data = await response.json();
             const fullSurvey = {
                 ...data,

@@ -1,18 +1,12 @@
-use axum::{
-    Router,
-};
+use axum::Router;
 use chrono::{DateTime, Utc};
 use db::database::Database;
 
-
 use markdownparser::{nanoid_gen, ParsedSurvey, Survey};
 
-
+use serde_json::{json, Value};
 use sqlx::FromRow;
 use tokio::task::JoinHandle;
-
-
-
 
 // use tower_sessions::PostgresStore;
 use tracing::log::info;
@@ -54,7 +48,6 @@ impl ServerApplication {
             config: EnvConfig::new(),
         };
 
-        
         get_router(state).unwrap()
     }
 
@@ -138,6 +131,7 @@ pub struct SurveyModel {
     // pub questions: Option<Vec<Question>>,
     pub version: Option<String>,
     pub parse_version: Option<String>,
+    pub blocks: Value,
     // pub parsed_json: Option<Value>,
 }
 impl SurveyModel {
@@ -158,6 +152,7 @@ impl SurveyModel {
             parse_version: Some(survey.parse_version.clone()),
             name: Some("name - todo".to_string()),
             version: Some("version - todo".to_string()),
+            blocks: json!(&survey.blocks),
             // parsed_json: Some(json!(&survey)), // parse_version: Some(parsed_survey.parse_version.clone()),
             // parsed_json: Some(serde_json::to_value(parsed_survey.clone()).unwrap()),
         }

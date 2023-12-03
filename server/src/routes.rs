@@ -240,24 +240,19 @@ pub mod routes {
         // Extension(ctx): Extension<Option<Ctext>>,
         // authorization: TypedHeader<Authorization<Bearer>>,
         Path(survey_id): Path<String>,
-    ) -> impl IntoResponse {
-        let db_response = _state
-            .db
-            .get_survey(&survey_id)
-            .await
-            .expect("Did not find survey in db");
-        // let response = CreateSurveyResponse::from(insert_result);
+    ) -> anyhow::Result<Json<Value>, ServerError> {
+        let db_response = match _state.db.get_survey(&survey_id).await {
+            Ok(x) => x,
+            Err(err) => return Err(ServerError::Database("Could not get survey".to_string())),
+        };
 
-        // let results = transform_response(db_response, query);
-        (StatusCode::OK, Json(db_response))
+        Ok(Json(json!(db_response)))
     }
 
     #[tracing::instrument]
     #[axum::debug_handler]
     pub async fn list_survey(
         state: State<ServerState>,
-        // Extension(ctx): Extension<Option<Ctext>>,
-        // State(state): State<ServerState>,
         Extension(session): Extension<Ctext>,
         // headers: HeaderMap,
     ) -> anyhow::Result<Json<Value>, ServerError> {
