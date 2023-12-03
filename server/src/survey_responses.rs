@@ -1,4 +1,3 @@
-
 use axum::{
     extract::{self, Query, State},
     Json,
@@ -8,23 +7,20 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::{debug, info};
 
-use crate::{
-    db::database::{AnswerModel, CreateAnswersModel},
-    ServerError, ServerState,
-};
+use crate::{db::database::AnswerModel, ServerError, ServerState};
 
-// #[derive(Deserialize, Debug)]
-// pub struct SubmitResponseRequest {
-//     survey_id: String,
-//     responses: Value,
-// }
+#[derive(Deserialize, Debug)]
+pub struct SubmitResponseRequest {
+    pub survey_id: String,
+    pub answers: Value,
+}
 
 #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn submit_response(
     State(state): State<ServerState>,
     // extract(session): Extract<Session>,
-    Json(payload): extract::Json<CreateAnswersModel>,
+    Json(payload): extract::Json<SubmitResponseRequest>,
 ) -> Result<Json<Value>, ServerError> {
     info!("->> submit_response");
     debug!("    ->> request: {:#?}", payload);

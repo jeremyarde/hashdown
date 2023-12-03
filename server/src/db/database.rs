@@ -34,7 +34,7 @@ use tracing::{info, instrument};
 //     pub metadata: Metadata,
 // }
 
-use crate::{server::SurveyModel, ServerError};
+use crate::{server::SurveyModel, survey_responses::SubmitResponseRequest, ServerError};
 
 // mod models;
 
@@ -167,12 +167,6 @@ pub struct QuestionAnswers {
 pub struct Answer {
     pub question_id: String,
     pub answers: Vec<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize, FromRow)]
-pub struct CreateAnswersModel {
-    pub survey_id: String,
-    pub responses: Value,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
@@ -335,7 +329,7 @@ impl Database {
         Ok(res)
     }
 
-    pub async fn create_answer(&self, answer: CreateAnswersModel) -> anyhow::Result<()> {
+    pub async fn create_answer(&self, answer: SubmitResponseRequest) -> anyhow::Result<()> {
         info!("Creating answers in database");
 
         // let _res = sqlx::query(
@@ -353,7 +347,7 @@ impl Database {
 
         let _res= sqlx::query!(
             r#"insert into mdp.responses (submitted_at, survey_id, answers) values ($1, $2, $3) returning *"#, 
-            Utc::now(), answer.survey_id, answer.responses)
+            Utc::now(), answer.survey_id, answer.answers)
             .fetch_one(&self.pool).await.expect("Should insert a response");
 
         // let res = sqlx::query_as!(UserModel, r#"select id, user_id, email, password_hash, created_at, modified_at, deleted_at, email_status as "email_status: EmailStatus" from mdp.users where email = $1"#, email)

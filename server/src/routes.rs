@@ -25,11 +25,10 @@ pub mod routes {
     use crate::{
         auth::{self, validate_session_middleware},
         constants::SESSION_ID_KEY,
-        db::database::CreateAnswersModel,
         error::main_response_mapper,
         mware::ctext::Ctext,
         server::SurveyModel,
-        survey_responses::{self, submit_response},
+        survey_responses::{self, submit_response, SubmitResponseRequest},
         ServerError, ServerState,
     };
 
@@ -164,20 +163,13 @@ pub mod routes {
         return Ok(Json(json!({ "survey": insert_result })));
     }
 
-    #[derive(Deserialize, Serialize, Debug)]
-    #[serde(tag = "type", rename_all = "snake_case")]
-    pub enum Answer {
-        MultipleChoice { id: String, value: Vec<String> },
-        Radio { id: String, value: String },
-    }
-
     #[tracing::instrument]
     #[axum::debug_handler]
     pub async fn submit_survey(
         State(state): State<ServerState>,
         Path(survey_id): Path<String>,
-        Extension(ctx): Extension<Option<Ctext>>,
-        Json(payload): extract::Json<Value>, // for urlencoded
+        // Extension(ctx): Extension<Option<Ctext>>,
+        Json(payload): extract::Json<SubmitResponseRequest>, // for urlencoded
     ) -> Result<Json<Value>, ServerError> {
         info!("->> submit_survey");
         debug!("    ->> survey: {:#?}", payload);
@@ -196,14 +188,14 @@ pub mod routes {
         //         ))
         //     }
         // };
-        let create_answer_model = CreateAnswersModel {
-            survey_id: survey_id.clone(),
-            responses: payload.get("responses").unwrap().to_owned(),
-        };
+        // let create_answer_model = CreateAnswersModel {
+        //     survey_id: survey_id.clone(),
+        //     responses: payload.get("responses").unwrap().to_owned(),
+        // };
 
         state
             .db
-            .create_answer(create_answer_model)
+            .create_answer(payload)
             .await
             .expect("Should create answer in database");
 

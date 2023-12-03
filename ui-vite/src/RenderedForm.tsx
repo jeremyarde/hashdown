@@ -111,20 +111,12 @@ function renderSurveyV2(survey) {
     const handleSubmit = async (evt) => {
         evt.preventDefault();
         let formdata = new FormData(evt.target);
+        console.log('form entries');
         console.log(Object.fromEntries(formdata));
 
-        let responses = [];
-        for (const [questionId, questionValue] of Object.entries(formdata)) {
-            console.log(`survey question: ${questionId}`)
-            responses.push({
-                question_id: questionId,
-                value: questionValue
-            });
-        }
-
         const surveySubmission = {
-            survey_id: survey.id ?? '',
-            responses: responses
+            survey_id: survey.survey_id ?? '',
+            answers: Object.fromEntries(formdata)
         }
 
         console.log(`submission: ${JSON.stringify(surveySubmission)}`)
