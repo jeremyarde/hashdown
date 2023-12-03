@@ -53,20 +53,6 @@ pub mod routes {
         pub password: String,
     }
 
-    // pub fn get_router() -> anyhow::Result<Router> {
-    //     get_routes(state)
-    //     let auth_session_service = ServiceBuilder::new().layer(middleware::from_fn_with_state(
-    //         state.clone(),
-    //         validate_session_middleware,
-    //     ));
-
-    //     Router::new()
-    //         .merge(get_routes(state).unwrap())
-    //         .layer(corslayer)
-    //         .layer(TraceLayer::new_for_http())
-    //         .layer(auth_session_service)
-    // }
-
     pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         let public_routes = Router::new()
             .route("/api/auth/login", post(auth::login))

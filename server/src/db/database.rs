@@ -1,11 +1,9 @@
-use std::{
-    fmt::{self},
-};
+use std::fmt::{self};
 
 use anyhow::{self};
 
-use chrono::{DateTime, Utc, Duration};
-use markdownparser::{nanoid_gen};
+use chrono::{DateTime, Duration, Utc};
+use markdownparser::nanoid_gen;
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -37,8 +35,6 @@ use tracing::{info, instrument};
 // }
 
 use crate::{server::SurveyModel, ServerError};
-
-
 
 // mod models;
 
@@ -192,11 +188,11 @@ pub struct UserModel {
     // pub user_id: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone , sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::Type)]
 #[sqlx(type_name = "email_status", rename_all = "snake_case")]
 pub enum EmailStatus {
     Verified,
-    Unverified
+    Unverified,
 }
 #[derive(Deserialize, Serialize, FromRow, Debug, Clone)]
 pub struct AnswerModel {
@@ -222,15 +218,19 @@ pub struct Session {
 
 impl Session {
     pub fn new() -> Self {
-        Session { id: 0, user_id: String::from(""), session_id: String::from(""), active_period_expires_at: chrono::Utc::now(), idle_period_expires_at: chrono::Utc::now() }
+        Session {
+            id: 0,
+            user_id: String::from(""),
+            session_id: String::from(""),
+            active_period_expires_at: chrono::Utc::now(),
+            idle_period_expires_at: chrono::Utc::now(),
+        }
     }
 }
 
 impl Database {
     pub async fn create_magic_link(&self, user: UserModel) -> anyhow::Result<()> {
-        
-
-        return Ok(())
+        return Ok(());
     }
 
     pub async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel> {
@@ -289,11 +289,12 @@ impl Database {
     }
 
     pub async fn get_survey(&self, survey_id: &String) -> anyhow::Result<Option<SurveyModel>> {
-        let result =
-            sqlx::query_as::<_, SurveyModel>("select * from mdp.surveys where surveys.survey_id = $1")
-                .bind(survey_id)
-                .fetch_one(&self.pool)
-                .await?;
+        let result = sqlx::query_as::<_, SurveyModel>(
+            "select * from mdp.surveys where surveys.survey_id = $1",
+        )
+        .bind(survey_id)
+        .fetch_one(&self.pool)
+        .await?;
         // let result = SurveyModel::select()
         //     .where_bind("survey_id = ?", survey_id)
         //     .fetch_one(&self.pool)
@@ -309,21 +310,38 @@ impl Database {
         // // let response_survey = survey.clone();
         // let now = chrono::offset::Utc::now();
         // let nowstr = now.to_string();
-        let res = sqlx::query_as::<_, SurveyModel>( 
-            r#"insert into mdp.surveys (plaintext, user_id, created_at, modified_at, version, parse_version, survey_id, parsed_json)
-            values
-            ($1, $2, $3, $4, $5, $6, $7, $8)
-            returning *
-            "#)
-            .bind(survey.plaintext)
-            .bind(survey.user_id)
-            .bind(survey.created_at)
-            .bind(survey.modified_at)
-            .bind(survey.version)
-            .bind(survey.parse_version)
-            .bind(survey.survey_id)
-            .bind(json!(survey.parsed_json))
-            .fetch_one(&self.pool).await?;
+        // let res = sqlx::query_as::<_, SurveyModel>(
+        //     r#"insert into mdp.surveys (plaintext, user_id, created_at, modified_at, version, parse_version, survey_id, parsed_json)
+        //     values
+        //     ($1, $2, $3, $4, $5, $6, $7, $8)
+        //     returning *
+        //     "#)
+        //     .bind(survey.plaintext)
+        //     .bind(survey.user_id)
+        //     .bind(survey.created_at)
+        //     .bind(survey.modified_at)
+        //     .bind(survey.version)
+        //     .bind(survey.parse_version)
+        //     .bind(survey.survey_id)
+        //     .fetch_one(&self.pool).await?;
+
+        let res = sqlx::query_as!(
+            SurveyModel,
+            r#"insert into mdp.surveys (
+                    survey_id, user_id, created_at, modified_at, plaintext, version, parse_version
+                ) values ($1, $2, $3, $4, $5, $6,$7) returning *"#,
+            survey.name,
+            survey.survey_id,
+            survey.user_id,
+            Utc::now(),
+            Utc::now(),
+            survey.plaintext,
+            survey.version,
+            survey.parse_version
+        )
+        .fetch_one(&self.pool)
+        .await
+        .expect("Should insert a survey");
 
         // let res = survey.insert(&self.pool).await?;
 
@@ -357,9 +375,9 @@ impl Database {
             Utc::now(), answer.survey_id, answer.responses)
             .fetch_one(&self.pool).await.expect("Should insert a response");
 
-            // let res = sqlx::query_as!(UserModel, r#"select id, user_id, email, password_hash, created_at, modified_at, deleted_at, email_status as "email_status: EmailStatus" from mdp.users where email = $1"#, email)
-            // .fetch_one(&self.pool)
-            // .await?;
+        // let res = sqlx::query_as!(UserModel, r#"select id, user_id, email, password_hash, created_at, modified_at, deleted_at, email_status as "email_status: EmailStatus" from mdp.users where email = $1"#, email)
+        // .fetch_one(&self.pool)
+        // .await?;
 
         // answer.insert(&self.pool).await?;
 
@@ -368,22 +386,29 @@ impl Database {
         Ok(())
     }
 
-
-
-    pub async fn list_responses(&self, survey_id: &String) -> anyhow::Result<Vec<AnswerModel>, ServerError> {
+    pub async fn list_responses(
+        &self,
+        survey_id: &String,
+    ) -> anyhow::Result<Vec<AnswerModel>, ServerError> {
         info!("Listing responses for survey");
 
-        let answers = sqlx::query_as!(AnswerModel, r#"select * from mdp.responses where mdp.responses.survey_id = $1"#, survey_id.clone())
+        let answers = sqlx::query_as!(
+            AnswerModel,
+            r#"select * from mdp.responses where mdp.responses.survey_id = $1"#,
+            survey_id.clone()
+        )
         .fetch_all(&self.pool)
-        .await.map_err(|err| return ServerError::Database("Did not find responses".to_string())).unwrap();
+        .await
+        .map_err(|err| return ServerError::Database("Did not find responses".to_string()))
+        .unwrap();
 
         // let res = sqlx::query!(r#"select * from mdp.responses where mdp.responses.survey_id = $1"#, survey_id)
         //     .fetch_all(&self.pool)
         //     .await.map_err(|err| Err(ServerError::Database("Did not find responses".to_string()))).unwrap();
 
         // let answers = res.iter().map(|record| AnswerModel { id: record.id.to_string(), submitted_at: record.submitted_at, answers: record.answers, survey_id }).collect();
-        
-        return Ok(answers)
+
+        return Ok(answers);
     }
 
     pub async fn get_session(&self, session_id: String) -> anyhow::Result<Session, ServerError> {
@@ -403,18 +428,23 @@ impl Database {
         // };
 
         let _curr_session: Session = match sqlx::query_as::<_, Session>(
-            r#"select * from mdp.sessions sessions where sessions.session_id = $1"#
-        ).bind(session_id).fetch_one(&self.pool).await {
+            r#"select * from mdp.sessions sessions where sessions.session_id = $1"#,
+        )
+        .bind(session_id)
+        .fetch_one(&self.pool)
+        .await
+        {
             Ok(x) => {
                 info!("GET_SESSION - found");
-                return Ok(x)
-            },
+                return Ok(x);
+            }
             Err(_error) => {
                 info!("GET_SESSION - not found");
-                return Err(ServerError::AuthFailTokenNotVerified("User session not available".to_string()));
-            },
+                return Err(ServerError::AuthFailTokenNotVerified(
+                    "User session not available".to_string(),
+                ));
+            }
         };
-
     }
 
     pub async fn create_session(&self, user_id: String) -> anyhow::Result<Session, ServerError> {
@@ -446,15 +476,18 @@ impl Database {
         let curr_session = sqlx::query_as::<_, Session>(
             r#"update mdp.sessions sessions set active_period_expires_at = $1, idle_period_expires_at = $2 where sessions.session_id = $3 and sessions.user_id = $4 returning *"#
         ).bind(session.active_period_expires_at).bind(session.idle_period_expires_at).bind(session.session_id).bind(session.user_id).fetch_one(&self.pool).await.unwrap();
-        
+
         return Ok(curr_session);
     }
 
     pub async fn delete_session(&self, session_id: String) -> anyhow::Result<bool, ServerError> {
         let result = sqlx::query!(
             r#"delete from mdp.sessions sessions where sessions.session_id = $1"#,
-            session_id).execute(&self.pool).await.expect(&format!("Did not delete session: {}", &session_id.as_str()));
-
+            session_id
+        )
+        .execute(&self.pool)
+        .await
+        .expect(&format!("Did not delete session: {}", &session_id.as_str()));
 
         if result.rows_affected() == 1 {
             return Ok(true);

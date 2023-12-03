@@ -135,6 +135,7 @@ impl Metadata {
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 pub struct SurveyModel {
     pub id: i32,
+    pub name: String,
     pub survey_id: String,
     pub user_id: String,
     pub created_at: DateTime<Utc>,
@@ -143,7 +144,7 @@ pub struct SurveyModel {
     // pub questions: Option<Vec<Question>>,
     pub version: Option<String>,
     pub parse_version: Option<String>,
-    pub parsed_json: Option<Value>,
+    // pub parsed_json: Option<Value>,
 }
 impl SurveyModel {
     pub(crate) fn new(payload: CreateSurveyRequest, session: &Session) -> SurveyModel {
@@ -159,10 +160,12 @@ impl SurveyModel {
             user_id: session.user_id.to_owned(),
             created_at: metadata.created_at,
             modified_at: metadata.modified_at,
-            version: Some("fixme".to_string()),
+            // version: Some(survey),
             parse_version: Some(survey.parse_version.clone()),
-            parsed_json: Some(json!(&survey)), // parse_version: Some(parsed_survey.parse_version.clone()),
-                                               // parsed_json: Some(serde_json::to_value(parsed_survey.clone()).unwrap()),
+            name: "name - todo".to_string(),
+            version: Some("version - todo".to_string()),
+            // parsed_json: Some(json!(&survey)), // parse_version: Some(parsed_survey.parse_version.clone()),
+            // parsed_json: Some(serde_json::to_value(parsed_survey.clone()).unwrap()),
         };
     }
 }

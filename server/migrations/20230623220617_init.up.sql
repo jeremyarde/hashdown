@@ -21,13 +21,13 @@ CREATE table mdp.users (
 CREATE table mdp.surveys (
     id SERIAL PRIMARY KEY,
     survey_id TEXT not null unique,
+    name TEXT,
     user_id TEXT not null,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     modified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     plaintext TEXT not null,
     version TEXT,
     parse_version TEXT,
-    parsed_json JSON,
     
     foreign key(user_id) references mdp.users(user_id)
 );
