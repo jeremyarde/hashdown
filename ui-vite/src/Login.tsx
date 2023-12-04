@@ -34,7 +34,6 @@ export function Login() {
         setIsLoading(true);
         const loginPayload = JSON.stringify({ email: username, password: password });
         console.log('login component')
-        console.log(loginPayload);
         console.log(globalState)
         try {
             const response = await fetch(`${BASE_URL}/auth/login`, {

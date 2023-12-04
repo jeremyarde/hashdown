@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from './components/ui/button';
-import { markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { BASE_URL } from "./lib/constants";
@@ -14,36 +13,157 @@ import { BASE_URL } from "./lib/constants";
 export type RenderedFormProps = {
     // plaintext: string;
     survey: object;
+    mode: "test" | "prod"
 }
 
-export function RenderedForm({ survey }: RenderedFormProps) {
+export function RenderedForm({ survey, mode }: RenderedFormProps) {
+    const [exampleSubmission, setExampleSubmittion] = useState();
+
     console.log(`RenderedForm: ${JSON.stringify(survey)}`)
+
+    let parsingError = undefined;
+    if (!survey.blocks) {
+        parsingError = survey;
+    }
+    console.log("renderSurveyV2", survey);
+
+    const handleSubmit = async (evt) => {
+        evt.preventDefault();
+        let formdata = new FormData(evt.target);
+        const survey_id = survey.survey_id;
+
+        const surveySubmission = {
+            survey_id: survey_id ?? '',
+            answers: Object.fromEntries(formdata)
+        }
+
+        if (mode === "test") {
+            setExampleSubmittion(surveySubmission);
+            return;
+        }
+
+        console.log(`submission: ${JSON.stringify(surveySubmission)}`)
+        // setSubmittedValues((prev) => surveySubmission);
+
+        if (survey_id) {
+            const response = await fetch(`${BASE_URL}/submit`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: 'include',
+                // body: JSON.stringify(surveySubmission),
+                body: JSON.stringify(surveySubmission)
+            });
+            console.log(`submit response: ${JSON.stringify(response)}`);
+        }
+    }
+
+    const handleUpdate = (evt) => {
+        console.log('update event')
+        console.log(evt.target.form)
+        let formdata = new FormData(evt.target.form);
+        const survey_id = survey.survey_id;
+
+        const surveySubmission = {
+            survey_id: survey_id ?? 'surveyid',
+            answers: Object.fromEntries(formdata)
+        }
+
+        if (mode === "test") {
+            setExampleSubmittion(surveySubmission);
+            return;
+        }
+    }
+
     return (
         <>
             <div className="border border-gray-300 p-4 rounded">
                 {/* <h1 className='w-full text-center'>{survey.title}</h1> */}
-                <h1 className="text-3xl font-bold space-y-2" >
+                {/* <h1 className="text-3xl font-bold space-y-2 text-center" >
                     {survey.title}
-                </h1>
-                {/* {renderSurvey(survey)} */}
-                {renderSurveyV2(survey)}
+                </h1> */}
+                {parsingError ? (
+                    <div style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>
+                        <pre>
+                            {/* <code className="bg-red-200">{parsingError}</code> */}
+                        </pre>
+                    </div >
+                ) : ''}
+                <div>
+                    <form onSubmit={handleSubmit} onChange={handleUpdate} className="text-left">
+                        {
+                            survey.blocks?.map(block => {
+                                console.log("map entries: ", block)
+                                let blockHtml = undefined;
+                                switch (block.block_type) {
+                                    case "Title":
+                                        blockHtml = (
+                                            <h1 className="text-3xl font-bold space-y-2 text-center" >
+                                                {block.properties.title}
+                                            </h1>)
+                                        break;
+                                    case "TextInput":
+                                        blockHtml = (
+                                            <div>
+                                                {textInput(block, setExampleSubmittion)}
+                                            </div>
+                                        )
+                                        break;
+                                    case "Checkbox":
+                                        blockHtml = (
+                                            <div>
+                                                {checkboxGroupV2(block, setExampleSubmittion)}
+                                            </div>
+                                        )
+                                        break;
+                                    case "Radio":
+                                        blockHtml = (
+                                            <div>
+                                                {radioGroupV2(block, setExampleSubmittion)}
+                                            </div>
+                                        )
+                                        break;
+                                    case "Submit":
+                                        blockHtml = (
+                                            <div>
+                                                {submitButton(block)}
+                                            </div>
+                                        )
+                                        break;
+                                }
+
+                                return (
+                                    <div style={{ margin: "20px", border: "line" }}>
+                                        {blockHtml}
+                                    </div>
+                                )
+                            })
+                        }
+                    </form>
+
+                </div>
             </div>
+            {exampleSubmission ? (
+                <div className="fixed skeu" >
+                    <h3>Submission data</h3>
+                    <div className="text-left">
+                        <pre>
+                            <code className="bg-blue-200">{JSON.stringify(exampleSubmission, null, 2)}</code>
+                        </pre>
+                    </div>
+                </div>
+            ) : ''}
         </>
     );
 }
 
 function checkboxGroupV2(block, setStateFn) {
-    // const questionId = crypto.randomUUID();
-
     return (
         <>
             <Label className="font-semibold">{block.properties.question}</Label>
             <div className="flex flex-col space-y-2">
                 {block.properties.options.map((option, i) => {
-
-                    // if (!option.text) { return; } if (!option.ListItem) { return; }
-
-                    // console.log("checkboxgrouppart", option);
                     return (
                         <div className="flex items-center">
                             <input type="checkbox" defaultChecked={option.checked} id={block.id + `_${i}`} name={block.id + `_${i}`} />
@@ -53,7 +173,7 @@ function checkboxGroupV2(block, setStateFn) {
                         </div>
                     )
                 })}
-            </div>
+            </div >
         </>
     )
 }
@@ -63,7 +183,6 @@ function radioGroupV2(block, setStateFn) {
     return (
         <>
             <Label className="space-y-2 p-2 text-left">{block.properties.question}</Label>
-            <Label>{block.id}</Label>
             <ul className="" >
                 <div className="flex flex-col space-y-2 ">
                     {block.properties.options.map((option: string) => {
@@ -90,17 +209,13 @@ function textInput(block, setStateFn) {
     return (
         <>
             <Label htmlFor={block.id}>{block.properties.question}</Label>
-            <hr></hr>
-            <Label>{block.id}</Label>
             <Input id={block.id} name={block.id} placeholder="Enter text" />
         </>
     )
 }
 
 function renderSurveyV2(survey) {
-    // const [parsingError, setParsingError] = useState();
     const [exampleSubmittion, setExampleSubmittion] = useState();
-    // console.log("render v2 plaintext:", plaintext);
 
     let parsingError = undefined;
     if (!survey.blocks) {

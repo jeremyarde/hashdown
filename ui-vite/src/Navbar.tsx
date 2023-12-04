@@ -48,7 +48,7 @@ export function Navbar() {
                         <>
                             <Link className="hover:animate-pulse" to="/surveys">Surveys</Link>
                             <Link className="hover:animate-pulse" to="/editor">Editor</Link>
-                            <Link className="hover:animate-pulse" to='/' onClick={(e) => logout()} > Logout</Link>
+                            {/* <Link className="hover:animate-pulse" to='/' onClick={(e) => logout()} > Logout</Link> */}
                         </>
                     )
                     }

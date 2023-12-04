@@ -9,9 +9,7 @@ use argon2::{PasswordHash, PasswordHasher};
 // use axum::extract::TypedHeader;
 // use axum::headers::authorization::{Authorization, Bearer};
 
-
-
-use axum_extra::extract::{CookieJar};
+use axum_extra::extract::CookieJar;
 
 use axum::http::HeaderValue;
 use axum::middleware::Next;
@@ -19,7 +17,6 @@ use axum::response::{IntoResponse, Response};
 use chrono::{Duration, Utc};
 
 use hyper::{HeaderMap, Request};
-
 
 use serde_json::json;
 // use sqlx::types::time::OffsetDateTime;
@@ -36,9 +33,7 @@ use tracing::log::info;
 
 use crate::{db, ServerError};
 
-
-
-use axum::{Json};
+use axum::Json;
 
 use crate::ServerState;
 
@@ -358,7 +353,6 @@ pub async fn validate_session_middleware<B>(
                 user_id: curr_session.user_id,
             })
             .await?;
-        info!("Putting Ctext into extensions");
         request.extensions_mut().insert(updated_session.clone());
         request.extensions_mut().insert(Ctext {
             user_id: updated_session.user_id.to_string(),
@@ -367,20 +361,6 @@ pub async fn validate_session_middleware<B>(
     } else {
         // remove this later
         info!("Session still active, not updating");
-        // let new_active_expires = Utc::now() + Duration::hours(1);
-        // let new_idle_expires = Utc::now() + Duration::hours(2);
-        // let updated_session = state
-        //     .db
-        //     .update_session(Session {
-        //         id: 0,
-        //         session_id: curr_session.session_id,
-        //         active_period_expires_at: new_active_expires,
-        //         idle_period_expires_at: new_idle_expires,
-        //         user_id: curr_session.user_id,
-        //     })
-        //     .await?;
-        info!("Putting Ctext into extensions");
-        // request.extensions_mut().insert(curr_session.clone());
         request.extensions_mut().insert(Ctext {
             user_id: curr_session.user_id.to_string(),
             session: curr_session,

@@ -24,5 +24,6 @@ export function handleResponse(apiResponse: Response, globalState: GlobalState) 
 
 export async function setSessionToken(apiResponse: Response, globalState: GlobalState) {
   const sessionId = apiResponse.headers.get(SESSION_TOKEN_KEY);
+  window.sessionStorage.setItem(SESSION_TOKEN_KEY, sessionId);
   globalState.setSessionId((curr) => sessionId);
 }

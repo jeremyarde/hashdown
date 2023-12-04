@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use axum::{
     extract::{self, Query, State},
     Json,
@@ -64,7 +66,19 @@ pub async fn list_response(
         .await
         .expect("Could not get responses from db");
 
+    let survey = state
+        .db
+        .get_survey(&response_query.survey_id)
+        .await
+        .expect("Could not find survey");
+
     info!("completed survey submit");
     // let test = serde_json::to_value(responses).unwrap();
     return Ok(Json(json!({ "responses": responses })));
+}
+
+struct AnswerData {
+    answer_id: String,
+    survey_id: String,
+    answer_text: HashMap<String, String> // 
 }

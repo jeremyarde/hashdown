@@ -10,7 +10,7 @@ export type EditorProps = {
     setEditorContent: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function EditorPage() {
+export function EditorPage({ mode = "test" }) {
     let globalState = useContext(GlobalStateContext);
     const { toast } = useToast()
     const [editorContent, setEditorContent] = useState(`# User Registration Form
@@ -94,7 +94,7 @@ Dropdown: My question here
                 </div>
                 <div className="w-1/2 p-4">
                     <h1 className="text-2xl font-bold mb-4">Preview</h1>
-                    <RenderedForm survey={survey} ></RenderedForm>
+                    <RenderedForm survey={survey} mode={mode} ></RenderedForm>
                 </div>
             </div>
         </>
