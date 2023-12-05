@@ -39,9 +39,7 @@ pub mod mainapp {
     // use gloo_timers::future::TimeoutFuture;
     // use gloo_timers::future::TimeoutFuture;
     // use fermi::{use_atom_ref, use_atom_state, use_set, Atom};
-    use markdownparser::{
-        parse_markdown_v3, ParsedSurvey, Question, QuestionOption, QuestionType, Questions, Survey,
-    };
+    use markdownparser::{ParsedSurvey, Question, QuestionOption, QuestionType, Survey};
 
     // mod types;
     // use types::SurveyDto;

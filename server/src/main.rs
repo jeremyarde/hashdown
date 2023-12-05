@@ -1,20 +1,9 @@
-use config::EnvConfig;
-// use ormlite::FromRow;
-// use ormlite::{model::ModelBuilder, Model};
-
 use crate::mail::mail::Mailer;
-
-use tokio::try_join;
-use tracing::instrument;
-// use uuid::Uuid;
-// use sqlx::{Sqlite, SqlitePool};
-
-// use tower_http::http::cors::CorsLayer;
-
-// use tower_http::trace::TraceLayer;
-// use tower::http
+use config::EnvConfig;
 
 use crate::server::ServerApplication;
+use tokio::try_join;
+use tracing::instrument;
 
 // mod answer;
 // mod db;
