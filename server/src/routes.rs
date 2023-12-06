@@ -1,26 +1,19 @@
 pub mod routes {
-
     use axum::{
-        extract::Path,
-        http::{self, HeaderMap, HeaderName, Request},
+        body::Body,
+        http::{self, HeaderMap},
         middleware::{self, Next},
-        response::IntoResponse,
         response::Response,
         routing::{get, post},
-        Extension, Router,
+        Json, Router,
     };
-
-    use axum::{
-        extract::{self, State},
-        http::StatusCode,
-        Json,
+    use hyper::{
+        header::{HeaderName, CONTENT_ENCODING},
+        Method, Request,
     };
-    use hyper::{header::CONTENT_ENCODING, Method};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
-
     use tower_http::{cors::CorsLayer, trace::TraceLayer};
-    use tracing::{debug, log::info};
 
     use crate::{
         auth::{self, validate_session_middleware},
@@ -110,7 +103,7 @@ pub mod routes {
         Ok(router)
     }
 
-    async fn propagate_header<B>(req: Request<B>, next: Next<B>) -> Response {
+    async fn propagate_header<B>(req: Request<Body>, next: Next) -> Response {
         next.run(req).await
     }
 

@@ -72,7 +72,7 @@ impl ServerApplication {
 
         let server = tokio::spawn(async move {
             info!("Server address: http://{addr}");
-            axum::Server::bind(&addr)
+            hyper::Server::bind(&addr)
                 .serve(app.into_make_service())
                 .await
                 .unwrap();

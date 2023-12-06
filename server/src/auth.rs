@@ -6,12 +6,8 @@ use crate::routes::routes::LoginPayload;
 use anyhow::Context;
 use argon2::{PasswordHash, PasswordHasher};
 
-// use axum::extract::TypedHeader;
-// use axum::headers::authorization::{Authorization, Bearer};
-
 use axum_extra::extract::CookieJar;
 
-use axum::http::HeaderValue;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use chrono::{Duration, Utc};
@@ -48,7 +44,7 @@ pub enum AuthError {
 #[axum::debug_handler]
 pub async fn signup(
     state: State<ServerState>,
-    _jar: CookieJar,
+    // _jar: CookieJar,
     payload: Json<LoginPayload>,
 ) -> impl IntoResponse {
     info!("->> signup");
@@ -100,7 +96,7 @@ pub async fn signup(
 #[axum::debug_handler]
 pub async fn logout(
     state: State<ServerState>,
-    jar: CookieJar,
+    // jar: CookieJar,
     _headers: HeaderMap,
     // payload: Json<LoginPayload>,
 ) -> impl IntoResponse {
@@ -123,7 +119,7 @@ pub async fn logout(
 #[axum::debug_handler]
 pub async fn login(
     state: State<ServerState>,
-    _jar: CookieJar,
+    // _jar: CookieJar,
     // headers: HeaderMap,
     // ctext: Extension<Ctext>,
     // ctext: Ctext,
@@ -259,7 +255,7 @@ pub async fn validate_session_middleware<B>(
     // `Request` does
     _jar: CookieJar,
     mut request: Request<B>,
-    next: Next<B>,
+    next: Next,
 ) -> anyhow::Result<Response, ServerError> {
     info!("--> validate_session_middleware");
 
