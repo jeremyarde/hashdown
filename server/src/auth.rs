@@ -1,41 +1,31 @@
-use crate::constants::SESSION_ID_KEY;
-
-use crate::mware::ctext::{create_jwt_token, Ctext};
-use crate::routes::routes::LoginPayload;
-
 use anyhow::Context;
 use argon2::{PasswordHash, PasswordHasher};
 
+use axum::http::{HeaderMap, HeaderValue};
 use axum_extra::extract::CookieJar;
 
-use axum::middleware::Next;
-use axum::response::{IntoResponse, Response};
-use chrono::{Duration, Utc};
-
-use hyper::{HeaderMap, Request};
-
-use serde_json::json;
-// use sqlx::types::time::OffsetDateTime;
-
-// use tower_sessions::cookie::Cookie;
-
-use crate::db::database::{CreateUserRequest, Session};
-
 use argon2::password_hash::rand_core::OsRng;
-
 use argon2::password_hash::SaltString;
-
+use argon2::PasswordVerifier;
+use axum::Json;
+use axum::{
+    extract::{Request, State},
+    http::StatusCode,
+    middleware::{self, Next},
+    response::{IntoResponse, Response},
+    routing::get,
+    Router,
+};
+use chrono::{Duration, Utc};
+use serde_json::json;
 use tracing::log::info;
 
-use crate::{db, ServerError};
-
-use axum::Json;
-
+use crate::constants::SESSION_ID_KEY;
+use crate::db::database::{CreateUserRequest, Session};
+use crate::mware::ctext::{create_jwt_token, Ctext};
+use crate::routes::routes::LoginPayload;
 use crate::ServerState;
-
-use axum::extract::State;
-
-use argon2::PasswordVerifier;
+use crate::{db, ServerError};
 
 pub enum AuthError {
     PasswordDoNotMatch,
@@ -97,22 +87,19 @@ pub async fn signup(
 pub async fn logout(
     state: State<ServerState>,
     // jar: CookieJar,
-    _headers: HeaderMap,
+    headers: HeaderMap,
     // payload: Json<LoginPayload>,
 ) -> impl IntoResponse {
     info!("->> logout");
 
-    let session_header = if let Some(x) = jar.get(SESSION_ID_KEY) {
-        x.to_owned()
+    let session_header = if let Some(x) = headers.get(SESSION_ID_KEY) {
+        x.to_owned().to_str().unwrap().to_string()
     } else {
         return Err(ServerError::AuthFailNoTokenCookie);
     };
 
-    state
-        .db
-        .delete_session(session_header.clone().to_string())
-        .await?;
-    let _ = &jar.remove(session_header);
+    state.db.delete_session(session_header).await?;
+    // let _ = &headers.remove(session_header);
     Ok(())
 }
 
@@ -248,13 +235,13 @@ pub fn create_session_headers(session: &Session) -> HeaderMap {
     headers
 }
 
-pub async fn validate_session_middleware<B>(
+pub async fn validate_session_middleware(
     State(state): State<ServerState>,
     // you can add more extractors here but the last
     // extractor must implement `FromRequest` which
     // `Request` does
-    _jar: CookieJar,
-    mut request: Request<B>,
+    // _jar: CookieJar,
+    mut request: Request,
     next: Next,
 ) -> anyhow::Result<Response, ServerError> {
     info!("--> validate_session_middleware");

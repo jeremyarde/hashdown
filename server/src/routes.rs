@@ -1,19 +1,22 @@
 pub mod routes {
     use axum::{
-        body::Body,
+        extract::{self, Path, Request, State},
         http::{self, HeaderMap},
         middleware::{self, Next},
         response::Response,
         routing::{get, post},
-        Json, Router,
+        Extension, Json, Router,
     };
+
+    use axum::response::{Html, IntoResponse};
     use hyper::{
         header::{HeaderName, CONTENT_ENCODING},
-        Method, Request,
+        Method,
     };
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use tower_http::{cors::CorsLayer, trace::TraceLayer};
+    use tracing::{debug, info};
 
     use crate::{
         auth::{self, validate_session_middleware},
@@ -82,11 +85,11 @@ pub mod routes {
         let corslayer = CorsLayer::new()
             .allow_methods([Method::POST, Method::GET])
             .allow_headers([
-                http::header::CONTENT_TYPE,
-                http::header::ACCEPT,
-                http::header::AUTHORIZATION,
-                http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
-                http::header::ACCESS_CONTROL_REQUEST_METHOD,
+                hyper::http::header::CONTENT_TYPE,
+                hyper::http::header::ACCEPT,
+                hyper::http::header::AUTHORIZATION,
+                hyper::http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
+                hyper::http::header::ACCESS_CONTROL_REQUEST_METHOD,
                 HeaderName::from_static("x-auth-token"),
                 HeaderName::from_static("x-sid"),
                 HeaderName::from_static("session_id"),
@@ -103,9 +106,9 @@ pub mod routes {
         Ok(router)
     }
 
-    async fn propagate_header<B>(req: Request<Body>, next: Next) -> Response {
-        next.run(req).await
-    }
+    // async fn propagate_header<B>(req: Request<Body>, next: Next) -> Response {
+    //     next.run(req).await
+    // }
 
     #[tracing::instrument]
     #[axum::debug_handler]

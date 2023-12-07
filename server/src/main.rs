@@ -89,7 +89,9 @@ mod tests {
 
         dbg!(&response);
         assert!(response.status() != 500);
-        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
         let body: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(body, json!({ "result": "Ok" }));
     }

@@ -2,6 +2,7 @@ use axum::Router;
 use chrono::{DateTime, Utc};
 use db::database::Database;
 
+use hyper::Server;
 use markdownparser::{nanoid_gen, ParsedSurvey, Survey};
 
 use serde_json::{json, Value};
@@ -72,7 +73,7 @@ impl ServerApplication {
 
         let server = tokio::spawn(async move {
             info!("Server address: http://{addr}");
-            hyper::Server::bind(&addr)
+            Server::bind(&addr)
                 .serve(app.into_make_service())
                 .await
                 .unwrap();

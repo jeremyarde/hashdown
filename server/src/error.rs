@@ -1,7 +1,8 @@
+use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::{http::StatusCode, response::Response};
 use axum::{Extension, Json};
-use hyper::{Method, Uri};
+// use hyper::{Method, Uri};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tracing::info;
@@ -11,7 +12,7 @@ use crate::db::database::Session;
 use crate::mware::ctext::Ctext;
 use crate::mware::log::log_request;
 
-#[derive(Debug, Deserialize, strum_macros::AsRefStr, Serialize)]
+#[derive(Debug, Deserialize, strum_macros::AsRefStr, Serialize, Clone)]
 #[serde(tag = "type", content = "data")]
 pub enum ServerError {
     SurveyFail(String),
