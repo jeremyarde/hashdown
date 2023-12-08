@@ -60,25 +60,12 @@ pub mod routes {
                 validate_session_middleware,
             ));
 
-        let all = public_routes
-            .merge(auth_routes)
-            .layer(middleware::map_response(main_response_mapper))
-            .with_state(state.clone());
-
-        // let auth_session_service = ServiceBuilder::new().layer(middleware::from_fn_with_state(
-        //     state.clone(),
-        //     validate_session_middleware,
-        // ));
-
         let mut origins = vec![];
         info!("Starting app in stage={:?}", &state.config.stage);
         if state.config.is_dev() {
             origins.append(&mut vec![
-                // "http://localhost:3000".parse().unwrap(),
-                // "http://localhost:3001".parse().unwrap(),
                 "http://localhost:8080".parse().unwrap(),
                 "http://localhost:5173".parse().unwrap(),
-                // "http://api.example.com".parse().unwrap(),
             ]);
         }
 
@@ -96,14 +83,20 @@ pub mod routes {
                 HeaderName::from_static("credentials"),
             ])
             // .allow_headers(Any)
-            .allow_credentials(true)
+            // .allow_credentials(true)
             .allow_origin(origins)
             .expose_headers([CONTENT_ENCODING, HeaderName::from_static("session_id")]);
 
-        let router = all.layer(corslayer).layer(TraceLayer::new_for_http());
+        let all = public_routes
+            .merge(auth_routes)
+            .layer(middleware::map_response(main_response_mapper))
+            // .layer(corslayer)
+            .with_state(state.clone());
+
+        // let router = all.layer(corslayer);
         // .layer(auth_session_service);
 
-        Ok(router)
+        Ok(all)
     }
 
     // async fn propagate_header<B>(req: Request<Body>, next: Next) -> Response {

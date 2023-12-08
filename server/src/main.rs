@@ -70,7 +70,6 @@ mod tests {
     async fn test_setup_server() {
         setup_environment();
         let mut router = ServerApplication::get_router().await;
-        router.ready().await.unwrap();
 
         let client_url = format!("http://localhost:3000{}", "/ping");
         println!("Client sending to: {client_url}");
@@ -101,7 +100,7 @@ mod tests {
     async fn test_create_survey() {
         setup_environment();
         let mut router = ServerApplication::get_router().await;
-        router.ready().await.unwrap();
+        // router.ready().await.unwrap();
 
         let client_url = format!("http://localhost:3000{}", "/auth/login");
         println!("Client sending to: {client_url}");
@@ -130,7 +129,7 @@ mod tests {
         assert_ne!(response.status(), 500);
         println!("{response:?}");
         let list_response: Value = serde_json::from_slice(
-            &hyper::body::to_bytes(response.into_body())
+            &axum::body::to_bytes(response.into_body(), usize::MAX)
                 .await
                 .expect("Should turn response into thing"),
         )
@@ -148,7 +147,7 @@ mod tests {
 
         let _app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
-        router.ready().await.unwrap();
+        // router.ready().await.unwrap();
 
         let url = "/auth/login";
         let client_url = format!("http://{}{}", "localhost:3000", url);
@@ -180,9 +179,12 @@ mod tests {
             .unwrap()
             .to_string();
 
-        let results: Value =
-            serde_json::from_slice(&hyper::body::to_bytes(response.into_body()).await.unwrap())
-                .unwrap();
+        let results: Value = serde_json::from_slice(
+            &axum::body::to_bytes(response.into_body(), usize::MAX)
+                .await
+                .unwrap(),
+        )
+        .unwrap();
 
         dbg!(&results);
 
@@ -200,7 +202,7 @@ mod tests {
         println!("=== Signup testing");
         let _app = ServerApplication::new().await;
         let mut router = ServerApplication::get_router().await;
-        router.ready().await.unwrap();
+        // router.ready().await.unwrap();
 
         // let client = get_client().await;
 
@@ -229,9 +231,12 @@ mod tests {
         let response = router.borrow_mut().oneshot(create_request).await.unwrap();
         let headers = response.headers().clone();
 
-        let results: Value =
-            serde_json::from_slice(&hyper::body::to_bytes(response.into_body()).await.unwrap())
-                .unwrap();
+        let results: Value = serde_json::from_slice(
+            &axum::body::to_bytes(response.into_body(), usize::MAX)
+                .await
+                .unwrap(),
+        )
+        .unwrap();
 
         assert_eq!(results.get("email").unwrap(), &username);
         assert!(headers.contains_key(SESSION_ID_KEY));
