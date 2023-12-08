@@ -1,7 +1,7 @@
 pub mod routes {
     use axum::{
         extract::{self, Path, Request, State},
-        http::{self, HeaderMap},
+        http::{self, HeaderMap, Method},
         middleware::{self, Next},
         response::Response,
         routing::{get, post},
@@ -9,10 +9,7 @@ pub mod routes {
     };
 
     use axum::response::{Html, IntoResponse};
-    use hyper::{
-        header::{HeaderName, CONTENT_ENCODING},
-        Method,
-    };
+    use hyper::header::CONTENT_ENCODING;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use tower_http::{cors::CorsLayer, trace::TraceLayer};
@@ -72,25 +69,32 @@ pub mod routes {
         let corslayer = CorsLayer::new()
             .allow_methods([Method::POST, Method::GET])
             .allow_headers([
-                hyper::http::header::CONTENT_TYPE,
-                hyper::http::header::ACCEPT,
-                hyper::http::header::AUTHORIZATION,
-                hyper::http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
-                hyper::http::header::ACCESS_CONTROL_REQUEST_METHOD,
-                HeaderName::from_static("x-auth-token"),
-                HeaderName::from_static("x-sid"),
-                HeaderName::from_static("session_id"),
-                HeaderName::from_static("credentials"),
+                axum::http::header::CONTENT_TYPE,
+                axum::http::header::ACCEPT,
+                axum::http::header::AUTHORIZATION,
+                axum::http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
+                axum::http::header::ACCESS_CONTROL_REQUEST_METHOD,
+                axum::http::HeaderName::from_static("x-auth-token"),
+                axum::http::HeaderName::from_static("x-sid"),
+                axum::http::HeaderName::from_static("session_id"),
+                axum::http::HeaderName::from_static("credentials"),
             ])
             // .allow_headers(Any)
-            // .allow_credentials(true)
+            .allow_credentials(true)
             .allow_origin(origins)
-            .expose_headers([CONTENT_ENCODING, HeaderName::from_static("session_id")]);
+            .expose_headers([
+                axum::http::header::CONTENT_ENCODING,
+                // hyper::http::HeaderName::from_static("session_id"),
+            ]);
+
+        // let corslayer = CorsLayer::new();
+        // .allow_origin(origins)
+        // .expose_headers([CONTENT_ENCODING, HeaderName::from_static("session_id")]);
 
         let all = public_routes
             .merge(auth_routes)
             .layer(middleware::map_response(main_response_mapper))
-            // .layer(corslayer)
+            .layer(corslayer)
             .with_state(state.clone());
 
         // let router = all.layer(corslayer);

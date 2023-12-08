@@ -8,7 +8,7 @@ version = "0.1.0"
 [dependencies]
 axum = {version = "0.7.2", features = ["json", "macros", "multipart"]}
 markdownparser = {path = "../backend"}
-tower-http = {version = "0.3.5", features = ["full", "fs"]}
+tower-http = {version = "0.5", features = ["full", "fs"]}
 
 argon2 = "0.5.0"
 async-trait = "0.1.68"
