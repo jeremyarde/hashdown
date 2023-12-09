@@ -46,7 +46,7 @@ function surveyToForm(survey: Survey) {
     let form = {};
     let idToText = {};
 
-    survey.blocks.forEach((block) => {
+    survey.blocks?.forEach((block) => {
         if (block.block_type === 'Checkbox') {
             block.properties.options?.forEach((option, i) => {
                 form[option.id] = Boolean(option.checked)

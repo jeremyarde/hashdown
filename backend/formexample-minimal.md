@@ -9,4 +9,4 @@ radio: my radio
 - another one
 - third radio
 
-[Submit]
+Submit: Send it!

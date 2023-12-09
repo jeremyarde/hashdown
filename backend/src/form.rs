@@ -35,7 +35,7 @@ pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Err
                 text: pair.into_inner().as_str().to_string(),
             },
             Rule::text_input => FormValue::TextInput {
-                text: pair.into_inner().as_str().to_string(),
+                properties: pair.into_inner().map(parse_value).collect(),
             },
             Rule::checkbox => FormValue::Checkbox {
                 properties: pair.into_inner().map(parse_value).collect(),
@@ -67,14 +67,15 @@ pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Err
             },
             Rule::EOI => FormValue::Nothing,
             Rule::textarea => FormValue::Textarea {
-                text: pair.as_str().to_string(),
+                properties: pair.into_inner().map(parse_value).collect(),
             },
             Rule::comment
             | Rule::SPACE
             | Rule::emptyline
             | Rule::form
             | Rule::block
-            | Rule::default_value => FormValue::Nothing,
+            | Rule::default_value
+            | Rule::question_with_default => FormValue::Nothing,
         }
     }
 
@@ -164,9 +165,18 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                 question: question,
             })
         }
-        FormValue::TextInput { text } => SurveyPart::TextInput {
-            question: text.clone(),
-        },
+        FormValue::TextInput { properties } => {
+            let mut default = String::new();
+            let mut question = String::new();
+            for formvalue in properties {
+                match formvalue {
+                    FormValue::QuestionText { text } => question = text.clone(),
+                    FormValue::DefaultValue { text } => default = text.clone(),
+                    _ => unreachable!(),
+                }
+            }
+            SurveyPart::TextInput { question, default }
+        }
         FormValue::Dropdown { properties } => {
             let question = match properties.get(0).unwrap() {
                 FormValue::QuestionText { text } => text.clone(),
@@ -190,9 +200,19 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
             return SurveyPart::Dropdown { question, options };
         }
         FormValue::Submit { text } => SurveyPart::Submit { text: text.clone() },
-        FormValue::Textarea { text } => SurveyPart::Textarea {
-            question: text.clone(),
-        },
+        FormValue::Textarea { properties } => {
+            let mut default = String::new();
+            let mut question = String::new();
+            for formvalue in properties {
+                match formvalue {
+                    FormValue::QuestionText { text } => question = text.clone(),
+                    FormValue::DefaultValue { text } => default = text.clone(),
+                    _ => unreachable!(),
+                }
+            }
+            // SurveyPart::TextInput { question, default }
+            SurveyPart::Textarea { question, default }
+        }
         // FormValue::DefaultValue { text } => todo!(), // _ => SurveyPart::Nothing,
         _ => SurveyPart::Nothing,
     }
@@ -231,9 +251,11 @@ pub enum SurveyPart {
     },
     TextInput {
         question: String,
+        default: String,
     },
     Textarea {
         question: String,
+        default: String,
     },
     Nothing,
     Submit {
@@ -247,8 +269,8 @@ impl SurveyPart {
             SurveyPart::Radio(_) => BlockType::Radio,
             SurveyPart::Checkbox(_) => BlockType::Checkbox,
             SurveyPart::Dropdown { question, options } => BlockType::Dropdown,
-            SurveyPart::TextInput { question } => BlockType::TextInput,
-            SurveyPart::Textarea { question } => BlockType::Textarea,
+            SurveyPart::TextInput { question, default } => BlockType::TextInput,
+            SurveyPart::Textarea { question, default } => BlockType::Textarea,
             SurveyPart::Nothing => BlockType::Empty,
             SurveyPart::Submit { text } => BlockType::Submit,
         }
@@ -342,14 +364,14 @@ pub fn formvalue_to_survey(formvalues: Vec<FormValue>) -> ParsedSurvey {
 #[serde(tag = "type")]
 pub enum FormValue {
     Title { text: String },
-    TextInput { text: String },
+    TextInput { properties: Vec<FormValue> },
     Nothing,
     Radio { properties: Vec<FormValue> },
     Dropdown { properties: Vec<FormValue> },
     ListItem { properties: Vec<FormValue> },
     QuestionText { text: String },
     Submit { text: String },
-    Textarea { text: String },
+    Textarea { properties: Vec<FormValue> },
     CheckedStatus { value: bool },
     DefaultValue { text: String },
     Checkbox { properties: Vec<FormValue> },
@@ -377,11 +399,11 @@ mod tests {
     fn test_parse_all() {
         let res = parse_markdown_text(include_str!("../formexample.md"));
         // // let res = do_thing();
-        println!("{:?}", &res);
+        println!("{:#?}", &res);
 
-        let serialized = formvalue_to_survey(res.unwrap());
-        println!("{:#?}", serialized);
+        // let serialized = formvalue_to_survey(res.unwrap());
+        // println!("{:#?}", serialized);
 
-        println!("{:#}", json!(serialized));
+        // println!("{:#}", json!(serialized));
     }
 }
