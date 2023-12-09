@@ -3,6 +3,7 @@ import { Button } from './components/ui/button';
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { BASE_URL } from "./lib/constants";
+import { setDefaultHighWaterMark } from "stream";
 
 /**
  * The complete Triforce, or one or more components of the Triforce.
@@ -18,8 +19,11 @@ export type RenderedFormProps = {
 
 export function RenderedForm({ survey, mode }: RenderedFormProps) {
     const [exampleSubmission, setExampleSubmittion] = useState();
+    const [displayTextMode, setDisplayTextMode] = useState(false);
+    const surveyIdToText = Object.fromEntries(survey.blocks.map((block) => [block.id, block.properties.question]));
 
     console.log(`RenderedForm: ${JSON.stringify(survey)}`)
+    console.log(`IdToText: ${JSON.stringify(surveyIdToText)}`)
 
     let parsingError = undefined;
     if (!survey.blocks) {
@@ -74,6 +78,12 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
             setExampleSubmittion(surveySubmission);
             return;
         }
+    }
+
+    function substituteSubmissionIdToText(exampleSubmission): any {
+        let textVersion = {};
+        Object.entries(exampleSubmission.answers).map((([key, value]) => textVersion[surveyIdToText[key]] = value));
+        return { ...exampleSubmission, answers: textVersion }
     }
 
     return (
@@ -145,14 +155,26 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                 </div>
             </div>
             {exampleSubmission ? (
-                <div className="fixed skeu" >
-                    <h3>Submission data</h3>
-                    <div className="text-left">
-                        <pre>
-                            <code className="bg-blue-200">{JSON.stringify(exampleSubmission, null, 2)}</code>
-                        </pre>
+                <>
+                    {/* <Button type="button" onClick={(evt) => displayTextMode ? setDisplayTextMode(false) : setDisplayTextMode(true)}></Button> */}
+                    <div className="fixed skeu">
+                        <div>
+                            <h3>Submission data</h3>
+                            <label className="switch">
+                                <input type="checkbox" onClick={(evt) => displayTextMode ? setDisplayTextMode(false) : setDisplayTextMode(true)} />
+                                <span className="slider round"></span>
+                            </label>
+                        </div>
+                        <div className="text-left">
+                            <pre>
+                                <code className="bg-blue-200">
+                                    {!displayTextMode ? (JSON.stringify(exampleSubmission, null, 2)) :
+                                        (JSON.stringify(substituteSubmissionIdToText(exampleSubmission), null, 2))}
+                                </code>
+                            </pre>
+                        </div>
                     </div>
-                </div>
+                </>
             ) : ''}
         </>
     );
