@@ -273,7 +273,7 @@ function radioGroupV2(block, setStateFn) {
     )
 }
 
-function textInput(block, setStateFn) {
+function textInput(block) {
     return (
         <>
             <Label htmlFor={block.id}>{block.properties.question}</Label>
@@ -385,7 +385,7 @@ function submitButton(block) {
     return (
         <>
             <div>
-                <Button className="" type="submit">{block.properties.text}</Button>
+                <Button className="skeu" type="submit">{block.properties.question}</Button>
             </div>
         </>
     )

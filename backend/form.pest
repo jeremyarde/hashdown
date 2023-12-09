@@ -13,7 +13,7 @@ block     = _{
 
 textarea =  { ^"Textarea:" ~ SPACE? ~ question_with_default? }
 checkbox =  {
-    "checkbox:" ~ SPACE? ~ question_text? ~ NEWLINE ~ listitem+
+    "checkbox:" ~ SPACE? ~ question_text? ~ NEWLINE ~ listitem_check+
 }
 radio    =  {
     ^"radio:" ~ SPACE? ~ question_text ~ NEWLINE ~ listitem+
@@ -27,22 +27,20 @@ submit   =  {
 comment  = _{ "//" ~ (!"\n" ~ ANY)* }
 
 text_input            =  {
-    "Text:" ~ SPACE? ~ ((default_value ~ SPACE? ~ question_text) | (question_text ~ SPACE? ~ default_value))
+    "Text:" ~ SPACE? ~ question_with_default ~ SPACE?
 }
 question_with_default = _{
     (default_value ~ SPACE? ~ question_text)
   | (question_text ~ SPACE? ~ default_value)
   | (SPACE? ~ question_text)
 }
-question_text         =  { (!NEWLINE ~ !"[" ~ ANY)+ }
+question_text         =  { (!NEWLINE ~ !" [" ~ ANY)+ }
 default_value         = _{ "[" ~ inner_default_value ~ "]" }
 inner_default_value   =  { (!"]" ~ !NEWLINE ~ ANY)+ }
-
-// default_value       = _{ "[" ~ inner_default_value }
-// inner_default_value =  { (!"[" ~ !NEWLINE ~ !"]" ~ ANY)+ }
-listitem  = { SPACE+? ~ "- " ~ (checked | unchecked)? ~ SPACE? ~ question_text ~ NEWLINE? }
-checked   = { "[x]" }
-unchecked = { "[ ]" }
+listitem              =  { SPACE+? ~ "- " ~ (checked | unchecked)? ~ SPACE? ~ question_text ~ NEWLINE? }
+listitem_check        =  { SPACE+? ~ "- " ~ (checked | unchecked) ~ SPACE? ~ question_text ~ NEWLINE? }
+checked               =  { "[x]" }
+unchecked             =  { "[ ]" }
 
 // Helpers
 SPACE = _{ " " }

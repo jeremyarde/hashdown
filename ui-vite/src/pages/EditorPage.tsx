@@ -35,7 +35,7 @@ Dropdown: My question here
     - Option 2
     - Option 3
 
-[Submit]`);
+submit: this is my content [default values]`);
     console.log('editorContent: ' + editorContent);
     const [survey, setSurvey] = useState(markdown_to_form_wasm_v2(editorContent));
 
