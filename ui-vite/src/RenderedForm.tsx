@@ -17,10 +17,58 @@ export type RenderedFormProps = {
     mode: "test" | "prod"
 }
 
+export interface Survey {
+    blocks: Block[]
+    id: string
+    parse_version: string
+    plaintext: string
+    questions: any[]
+    title: string
+}
+
+export interface Block {
+    block_type: string
+    id: string
+    index: number
+    properties: Properties
+}
+
+export interface Properties {
+    title?: string
+    type: string
+    options?: any[]
+    question?: string
+    text?: string
+}
+
+
+function surveyToForm(survey: Survey) {
+    let form = {};
+    let idToText = {};
+
+    survey.blocks.forEach((block) => {
+        if (block.block_type === 'Checkbox') {
+            block.properties.options?.forEach((option, i) => {
+                form[option.id] = Boolean(option.checked)
+                idToText[option.id] = option.text
+            });
+        } else {
+            form[block.id] = '';
+            idToText[block.id] = block.properties.question
+        }
+    });
+    console.log('surveyToForm')
+    console.log(form)
+    console.log(idToText)
+    return [form, idToText]
+}
+
 export function RenderedForm({ survey, mode }: RenderedFormProps) {
     const [exampleSubmission, setExampleSubmittion] = useState();
     const [displayTextMode, setDisplayTextMode] = useState(false);
-    const surveyIdToText = Object.fromEntries(survey.blocks.map((block) => [block.id, block.properties.question]));
+
+    // const surveyIdToText = Object.fromEntries(survey.blocks.map((block) => [block.id, block.properties.question]));
+    const [_, surveyIdToText] = surveyToForm(survey);
 
     console.log(`RenderedForm: ${JSON.stringify(survey)}`)
     console.log(`IdToText: ${JSON.stringify(surveyIdToText)}`)
@@ -89,14 +137,10 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
     return (
         <>
             <div className="border border-gray-300 p-4 rounded">
-                {/* <h1 className='w-full text-center'>{survey.title}</h1> */}
-                {/* <h1 className="text-3xl font-bold space-y-2 text-center" >
-                    {survey.title}
-                </h1> */}
                 {parsingError ? (
                     <div style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>
                         <pre>
-                            {/* <code className="bg-red-200">{parsingError}</code> */}
+                            <code className="bg-red-200">{parsingError}</code>
                         </pre>
                     </div >
                 ) : ''}
@@ -154,6 +198,7 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
 
                 </div>
             </div>
+            {/* {JSON.stringify(surveyIdToText)} */}
             {exampleSubmission ? (
                 <>
                     {/* <Button type="button" onClick={(evt) => displayTextMode ? setDisplayTextMode(false) : setDisplayTextMode(true)}></Button> */}
@@ -188,8 +233,9 @@ function checkboxGroupV2(block, setStateFn) {
                 {block.properties.options.map((option, i) => {
                     return (
                         <div className="flex items-center">
-                            <input type="checkbox" defaultChecked={option.checked} id={block.id + `_${i}`} name={block.id + `_${i}`} />
-                            <Label className="ml-2 text-sm items-center" htmlFor={block.id + `_${i}`}>
+                            {/* <input type="checkbox" defaultChecked={option.checked} id={block.id + `_${i}`} name={block.id + `_${i}`} /> */}
+                            <input type="checkbox" defaultChecked={option.checked} id={option.id} name={option.id} />
+                            <Label className="ml-2 text-sm items-center" htmlFor={option.id}>
                                 {option.text}
                             </Label>
                         </div>

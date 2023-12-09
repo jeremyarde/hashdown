@@ -120,6 +120,7 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                         return CheckboxItem {
                             checked,
                             text: optiontext,
+                            id: nanoid_gen(NANOID_LEN),
                         };
                     }
                     _ => {
@@ -212,6 +213,7 @@ pub struct CheckboxQuestion {
 struct CheckboxItem {
     checked: bool,
     text: String,
+    id: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -368,6 +370,7 @@ mod tests {
         let serialized = formvalue_to_survey(res.unwrap());
         // let serialized = json!(res.unwrap());
         println!("{:#?}", serialized);
+        println!("{:#}", json!(serialized));
     }
 
     #[test]
