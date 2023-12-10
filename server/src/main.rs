@@ -22,7 +22,7 @@ mod mail;
 mod routes;
 mod survey_responses;
 
-pub use self::{error::ServerError};
+pub use self::error::ServerError;
 
 #[derive(Debug, Clone)]
 pub struct ServerState {
@@ -59,7 +59,7 @@ mod tests {
 
     use tower::ServiceExt;
 
-    use crate::{constants::SESSION_ID_KEY, routes::routes::LoginPayload, ServerApplication};
+    use crate::{constants::SESSION_ID_KEY, routes::LoginPayload, ServerApplication};
 
     fn setup_environment() {
         dotenvy::from_filename("./server/.env").unwrap();

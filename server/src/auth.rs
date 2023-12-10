@@ -3,14 +3,13 @@ use argon2::{PasswordHash, PasswordHasher};
 
 use axum::http::{HeaderMap, HeaderValue};
 
-
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use argon2::PasswordVerifier;
 use axum::Json;
 use axum::{
     extract::{Request, State},
-    middleware::{Next},
+    middleware::Next,
     response::{IntoResponse, Response},
 };
 use chrono::{Duration, Utc};
@@ -20,7 +19,7 @@ use tracing::log::info;
 use crate::constants::SESSION_ID_KEY;
 use crate::db::database::{CreateUserRequest, Session};
 use crate::mware::ctext::{create_jwt_token, Ctext};
-use crate::routes::routes::LoginPayload;
+use crate::routes::LoginPayload;
 use crate::ServerState;
 use crate::{db, ServerError};
 

@@ -1,7 +1,4 @@
-use lettre::{
-    message::{header::ContentType},
-    Message, SmtpTransport, Transport,
-};
+use lettre::{message::header::ContentType, Message, SmtpTransport, Transport};
 
 #[derive(Clone)]
 pub struct Mailer {
@@ -19,9 +16,7 @@ impl std::fmt::Debug for Mailer {
 
 impl Mailer {
     pub fn new() -> Self {
-        
         use lettre::transport::smtp::authentication::Credentials;
-        use lettre::{SmtpTransport};
 
         let from_email = "Test FROM <test@jeremyarde.com>";
         let to_email = "Test TO <test@jeremyarde.com>";

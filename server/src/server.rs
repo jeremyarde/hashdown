@@ -20,7 +20,7 @@ use crate::{
         database::{ConnectionDetails, Session},
     },
     mail::mail::Mailer,
-    routes::routes::{get_router, CreateSurveyRequest},
+    routes::{get_router, CreateSurveyRequest},
     ServerState,
 };
 
