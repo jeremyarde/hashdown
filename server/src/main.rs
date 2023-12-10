@@ -22,7 +22,7 @@ mod mail;
 mod routes;
 mod survey_responses;
 
-pub use self::{error::ServerError, routes::*};
+pub use self::{error::ServerError};
 
 #[derive(Debug, Clone)]
 pub struct ServerState {

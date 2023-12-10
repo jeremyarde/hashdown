@@ -66,7 +66,7 @@ pub async fn list_response(
         .await
         .expect("Could not get responses from db");
 
-    let survey = state
+    let _survey = state
         .db
         .get_survey(&response_query.survey_id)
         .await

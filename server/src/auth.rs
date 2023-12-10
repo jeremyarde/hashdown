@@ -2,7 +2,7 @@ use anyhow::Context;
 use argon2::{PasswordHash, PasswordHasher};
 
 use axum::http::{HeaderMap, HeaderValue};
-use axum_extra::extract::CookieJar;
+
 
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
@@ -10,11 +10,8 @@ use argon2::PasswordVerifier;
 use axum::Json;
 use axum::{
     extract::{Request, State},
-    http::StatusCode,
-    middleware::{self, Next},
+    middleware::{Next},
     response::{IntoResponse, Response},
-    routing::get,
-    Router,
 };
 use chrono::{Duration, Utc};
 use serde_json::json;

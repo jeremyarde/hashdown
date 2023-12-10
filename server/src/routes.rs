@@ -1,18 +1,17 @@
 pub mod routes {
     use axum::{
-        extract::{self, Path, Request, State},
-        http::{self, HeaderMap, Method},
-        middleware::{self, Next},
-        response::Response,
+        extract::{self, Path, State},
+        http::{HeaderMap, Method},
+        middleware::{self},
         routing::{get, post},
         Extension, Json, Router,
     };
 
-    use axum::response::{Html, IntoResponse};
-    use hyper::header::CONTENT_ENCODING;
+    
+    
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
-    use tower_http::{cors::CorsLayer, trace::TraceLayer};
+    use tower_http::{cors::CorsLayer};
     use tracing::{debug, info};
 
     use crate::{
@@ -228,7 +227,7 @@ pub mod routes {
     ) -> anyhow::Result<Json<Value>, ServerError> {
         let db_response = match _state.db.get_survey(&survey_id).await {
             Ok(x) => x,
-            Err(err) => return Err(ServerError::Database("Could not get survey".to_string())),
+            Err(_err) => return Err(ServerError::Database("Could not get survey".to_string())),
         };
 
         Ok(Json(json!(db_response)))
