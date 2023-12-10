@@ -89,20 +89,11 @@ pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Err
     return Ok(data);
 }
 
-// impl fmt::Display for FormValue<'a> {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//         write!(f, "({}, {})", self.x, self.y)
-//     }
-// }
-
 fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
     match pair {
         FormValue::Title { text } => SurveyPart::Title {
             title: text.clone(),
         },
-        // FormValue::TextInput(x) => todo!(),
-        // FormValue::Empty => todo!(),
-        // FormValue::Nothing => todo!(),
         FormValue::Checkbox { properties } => {
             let question = match properties.get(0).unwrap() {
                 FormValue::QuestionText { text } => text.clone(),

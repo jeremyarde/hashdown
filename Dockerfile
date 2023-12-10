@@ -15,6 +15,9 @@ RUN cargo chef cook --release --target=aarch64-unknown-linux-musl --recipe-path 
 
 COPY . .
 
+RUN apt-get update
+RUN apt-get install ca-certificates libssl-dev openssl -y
+
 RUN cargo build --release --target=aarch64-unknown-linux-musl
 
 # Create the execution container by copying the compiled hello world to it and running it
