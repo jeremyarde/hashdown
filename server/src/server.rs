@@ -96,11 +96,11 @@ pub struct CreateSurveyResponse {
     pub survey: Survey,
 }
 
-impl CreateSurveyResponse {
-    fn from(survey: Survey) -> Self {
-        CreateSurveyResponse { survey }
-    }
-}
+// impl CreateSurveyResponse {
+//     fn from(survey: Survey) -> Self {
+//         CreateSurveyResponse { survey }
+//     }
+// }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Metadata {
@@ -159,29 +159,29 @@ impl SurveyModel {
     }
 }
 
-struct Form {
-    id: String,
-    views: i32,
-    starts: i32,
-    submissions: i32,
-    completions: i32,
-    created_on: String,
-    modified_on: String,
-}
+// struct Form {
+//     id: String,
+//     views: i32,
+//     starts: i32,
+//     submissions: i32,
+//     completions: i32,
+//     created_on: String,
+//     modified_on: String,
+// }
 
-#[derive(Debug, Deserialize, Serialize)]
-struct Answers {
-    id: String,
-    used_id: String,
-    survey_id: String,
-    submitted_on: String,
-    answers: HashMap<String, String>,
-}
+// #[derive(Debug, Deserialize, Serialize)]
+// struct Answers {
+//     id: String,
+//     used_id: String,
+//     survey_id: String,
+//     submitted_on: String,
+//     answers: HashMap<String, String>,
+// }
 
-struct Answer {
-    form_id: String,
-    value: String,
-}
+// struct Answer {
+//     form_id: String,
+//     value: String,
+// }
 
 mod test {
 

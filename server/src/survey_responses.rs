@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use axum::{
     extract::{self, Query, State},
     Json,
@@ -39,7 +37,7 @@ pub async fn submit_response(
 
     info!("completed submit_response");
 
-    return Ok(Json(json!({"accepted": "true"})));
+    Ok(Json(json!({"accepted": "true"})))
 }
 
 #[derive(Deserialize, Debug)]
@@ -74,11 +72,11 @@ pub async fn list_response(
 
     info!("completed survey submit");
     // let test = serde_json::to_value(responses).unwrap();
-    return Ok(Json(json!({ "responses": responses })));
+    Ok(Json(json!({ "responses": responses })))
 }
 
-struct AnswerData {
-    answer_id: String,
-    survey_id: String,
-    answer_text: HashMap<String, String> // 
-}
+// struct AnswerData {
+//     answer_id: String,
+//     survey_id: String,
+//     answer_text: HashMap<String, String> //
+// }

@@ -13,12 +13,13 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use chrono::{Duration, Utc};
+use markdownparser::nanoid_gen;
 use serde_json::json;
 use tracing::log::info;
 
 use crate::constants::SESSION_ID_KEY;
 use crate::db::database::{CreateUserRequest, Session};
-use crate::mware::ctext::{create_jwt_token, Ctext};
+use crate::mware::ctext::Ctext;
 use crate::routes::LoginPayload;
 use crate::ServerState;
 use crate::{db, ServerError};
@@ -189,10 +190,11 @@ pub async fn login(
 }
 
 async fn generate_magic_link(_state: &ServerState, ctext: Ctext) -> String {
-    let jwt = create_jwt_token(&ctext).expect("JWT was not created properly");
+    // let jwt = create_jwt_token(&ctext).expect("JWT was not created properly");
+    let token = nanoid_gen(16);
 
     // let session = state.db.create_session(user.user_id().to_string()).await;
-    let magic_link = format!("http://localhost:5173/auth/verify?token={jwt}");
+    let magic_link = format!("http://localhost:5173/auth/verify?token={token}");
 
     magic_link
 }

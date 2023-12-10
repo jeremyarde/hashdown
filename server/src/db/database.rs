@@ -370,7 +370,7 @@ impl Database {
         let answers = sqlx::query_as!(
             AnswerModel,
             r#"select * from mdp.responses where mdp.responses.survey_id = $1"#,
-            survey_id.clone()
+            survey_id
         )
         .fetch_all(&self.pool)
         .await
