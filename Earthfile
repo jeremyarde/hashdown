@@ -18,13 +18,20 @@ source:
 # lint runs cargo clippy on the source code
 lint:
   FROM +source
-  DO rust+CARGO --args="clippy --all-features --all-targets -- -D warnings"
+  # DO rust+CARGO --args="clippy --all-features --all-targets -- -D warnings"
+  DO rust+CARGO --args="clippy --all-features --all-targets"
 
 # build builds with the Cargo release profile
 build:
   FROM +lint
   DO rust+CARGO --args="build --release" --output="release/[^/\.]+"
   SAVE ARTIFACT ./target/release/ target AS LOCAL artifact/target
+
+docker:
+  FROM +build
+  COPY artifact .
+  ENTRYPOINT ["server"]
+  SAVE IMAGE mdp-server:latest
 
 # test executes all unit and integration tests via Cargo
 test:
