@@ -1,27 +1,14 @@
-use chrono::Utc;
-use form::{formvalue_to_survey, parse_markdown_text, Block, FormValue, SurveyPart};
+use form::{formvalue_to_survey, parse_markdown_text, Block};
 use wasm_bindgen::prelude::*;
 
 use derive_builder::Builder;
-// use rand::{thread_rng, Rng};
-// use nanoid::nanoid;
 use getrandom::getrandom;
-use regex::Regex;
+
 use serde::{Deserialize, Serialize};
-
-use anyhow::anyhow;
-use std::collections::hash_map::RandomState;
-use tracing::debug;
-
-use std::hash::{BuildHasher, Hasher};
 
 // use crate::form::parse_serialize_markdown_text;
 
 mod form;
-
-fn rand64() -> u64 {
-    RandomState::new().build_hasher().finish()
-}
 
 const NANOID_LEN: usize = 12;
 // const NANOID_ALPHA: [char; 36] = [
@@ -37,7 +24,7 @@ const NANOID_ALPHA: [char; 34] = [
 pub struct NanoId(String);
 impl NanoId {
     fn new() -> NanoId {
-        return NanoId(nanoid_gen(NANOID_LEN));
+        NanoId(nanoid_gen(NANOID_LEN))
     }
 }
 
@@ -72,12 +59,6 @@ pub fn nanoid_gen(size: usize) -> String {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct UserInfo {
     user_id: String,
-}
-
-impl UserInfo {
-    fn new(user_id: String) -> Self {
-        return UserInfo { user_id: user_id };
-    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Builder)]
@@ -140,6 +121,12 @@ impl Survey {
     }
 }
 
+impl Default for Survey {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // #[wasm_bindgen]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Question {
@@ -170,105 +157,13 @@ pub enum QuestionType {
     Submit,
 }
 
-impl Question {
-    fn from_v4(q_text: String, options: Vec<&str>, q_type: QuestionType) -> Question {
-        Question {
-            id: nanoid_gen(NANOID_LEN),
-            value: q_text,
-            options: options
-                .iter()
-                .map(|&x| QuestionOption {
-                    id: nanoid_gen(NANOID_LEN),
-                    text: x.to_owned(),
-                })
-                .collect(),
-            r#type: q_type,
-            created_on: Utc::now().to_string(),
-            modified_on: Utc::now().to_string(),
-        }
-    }
-
-    fn from(q_text: &str, options: Vec<&str>) -> Self {
-        let question_id = nanoid_gen(NANOID_LEN);
-        let (question_type, question_text) = Question::parse_question_type_and_text(q_text);
-        return Question {
-            // id: nanoid!(NANOID_LEN, &NANOID_ALPHA, random),
-            id: question_id,
-            value: question_text.clone(),
-            options: options
-                .iter()
-                .map(|&option_value| {
-                    let remove_start =
-                        Regex::new(r"((?P<number>\d{1,}).|(?P<dash>-))(?P<content>\s.*)$").unwrap();
-
-                    let mut clean = remove_start.replace(option_value, "$content").to_string();
-
-                    // remove_start.replace(option_value);
-                    clean = clean.trim().to_owned();
-                    // clean.trim_end_matches(char::is_digit);
-                    // clean.trim_start_matches(&[" -", "1. "]);
-                    // todo!("Add regex here to remove either ' - ' from start or ' 1. ' ");
-
-                    QuestionOption {
-                        // id: "nanoid_gen()".to_string(),
-                        id: nanoid_gen(12),
-                        text: clean.to_string().to_owned(),
-                    }
-                })
-                .collect(),
-            r#type: question_type,
-            created_on: "now".to_string(),
-            modified_on: "now".to_string(),
-        };
-    }
-
-    fn parse_question_type_and_text(line: &str) -> (QuestionType, String) {
-        let qtype: QuestionType;
-        let mut question_text = line.to_owned();
-        // if line.contains("[checkbox]") || line.contains("[c]") {
-        if question_text.contains("[c]") {
-            // TODO: removed checkbox from supported answers
-            // qtype = QuestionType::Checkbox;
-            qtype = QuestionType::Radio;
-            question_text = question_text.clone().replace("[c]", "");
-            // question_text = temp;
-        } else if question_text.contains("[t]") {
-            qtype = QuestionType::Text;
-            question_text = question_text.clone().replace("[t]", "");
-        } else if question_text.contains("[n]") {
-            qtype = QuestionType::Number;
-            question_text = question_text.clone().replace("[n]", "");
-        } else {
-            qtype = QuestionType::Radio;
-        }
-
-        question_text = match question_text.trim_start().split_once("- ") {
-            Some(x) => x.1.to_owned(),
-            None => question_text,
-        };
-
-        let trimmed = question_text.trim_start();
-        if trimmed.starts_with(char::is_numeric) {
-            question_text = trimmed
-                .split_once(". ")
-                .unwrap_or((&question_text, ""))
-                .1
-                .to_owned();
-        }
-
-        return (qtype, question_text.to_string());
-    }
-}
-
 #[wasm_bindgen]
 pub fn markdown_to_form_wasm_v2(contents: String) -> JsValue {
     let survey = ParsedSurvey::from(contents);
     match survey {
-        Ok(x) => {
-            return serde_wasm_bindgen::to_value(&x).unwrap();
-        }
+        Ok(x) => serde_wasm_bindgen::to_value(&x).unwrap(),
         // This is a parsing issue, return something helpful to the user
-        Err(err) => return serde_wasm_bindgen::to_value(&err.to_string()).unwrap(),
+        Err(err) => serde_wasm_bindgen::to_value(&err.to_string()).unwrap(),
     }
 }
 
@@ -288,10 +183,10 @@ impl ParsedSurvey {
         match formvalues {
             Ok(x) => {
                 let survey = formvalue_to_survey(x);
-                return Ok(survey);
+                Ok(survey)
             }
             // This is a parsing issue, return something helpful to the user
-            Err(err) => return Err(err.into()),
+            Err(err) => Err(err.into()),
         }
     }
 
@@ -315,6 +210,12 @@ impl ParsedSurvey {
             id: "fakeid".to_string(),
             blocks: vec![],
         }
+    }
+}
+
+impl Default for ParsedSurvey {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

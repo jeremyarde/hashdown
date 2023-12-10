@@ -1,34 +1,31 @@
-use anyhow::anyhow;
-use chrono::{DateTime, Utc};
-use pest::error::{Error, LineColLocation};
+// use pest::error::Error;
 use pest::{iterators::Pair, Parser};
 use pest_derive::Parser;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fmt;
+
 use tracing::info;
 
-use crate::{
-    nanoid_gen, NanoId, ParsedSurvey, Question, QuestionOption, QuestionType, Survey, NANOID_LEN,
-};
+use crate::{nanoid_gen, NanoId, ParsedSurvey, Question, NANOID_LEN};
 
 #[derive(Parser)]
 #[grammar = "form.pest"]
 struct FormParser;
 
-pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Error<Rule>> {
+pub fn parse_markdown_text(
+    contents: &str,
+) -> anyhow::Result<Vec<FormValue>, Box<pest::error::Error<crate::form::Rule>>> {
     // use pest::iterators::Pair;
 
     info!("Parsing: {:?}", contents);
 
-    let formtext = match FormParser::parse(Rule::form, &contents) {
+    let formtext = match FormParser::parse(Rule::form, contents) {
         Ok(x) => x,
-        Err(x) => return Err(x),
+        Err(x) => return Err(Box::new(x)),
     };
 
     fn parse_value(pair: Pair<Rule>) -> FormValue {
-        let rule = pair.as_rule();
-        let val = pair.as_str();
+        // let rule = pair.as_rule();
+        // let val = pair.as_str();
         // println!("{:?}", rule);
         match pair.as_rule() {
             Rule::header => FormValue::Title {
@@ -86,7 +83,7 @@ pub fn parse_markdown_text(contents: &str) -> anyhow::Result<Vec<FormValue>, Err
         .map(|pair| parse_value(pair))
         .collect::<Vec<FormValue>>();
 
-    return Ok(data);
+    Ok(data)
 }
 
 fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
@@ -104,7 +101,7 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                 .map(|formvalue| match formvalue {
                     FormValue::CheckListItem { properties } => {
                         let checked = match properties.get(0).unwrap() {
-                            FormValue::CheckedStatus { value } => value.clone(),
+                            FormValue::CheckedStatus { value } => *value,
                             _ => unreachable!(),
                         };
                         let optiontext = match properties.get(1).unwrap() {
@@ -112,11 +109,11 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                             _ => unreachable!(),
                         };
 
-                        return CheckboxItem {
+                        CheckboxItem {
                             checked,
                             text: optiontext,
                             id: nanoid_gen(NANOID_LEN),
-                        };
+                        }
                     }
                     _ => {
                         unreachable!()
@@ -124,10 +121,7 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                 })
                 .collect();
 
-            SurveyPart::Checkbox(CheckboxQuestion {
-                options: options,
-                question: question,
-            })
+            SurveyPart::Checkbox(CheckboxQuestion { options, question })
         }
         FormValue::Radio { properties } => {
             let question = match properties.get(0).unwrap() {
@@ -146,7 +140,7 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                             FormValue::QuestionText { text } => text.clone(),
                             _ => unreachable!(),
                         };
-                        return optiontext;
+                        optiontext
                     }
                     _ => {
                         unreachable!()
@@ -154,10 +148,7 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                 })
                 .collect();
 
-            SurveyPart::Radio(RadioQuestion {
-                options: options,
-                question: question,
-            })
+            SurveyPart::Radio(RadioQuestion { options, question })
         }
         FormValue::TextInput { properties } => {
             let mut default = String::new();
@@ -184,14 +175,14 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                             FormValue::QuestionText { text } => text.clone(),
                             _ => unreachable!(),
                         };
-                        return optiontext;
+                        optiontext
                     }
                     _ => {
                         unreachable!()
                     }
                 })
                 .collect();
-            return SurveyPart::Dropdown { question, options };
+            SurveyPart::Dropdown { question, options }
         }
         FormValue::Submit { properties } => {
             let mut default = String::new();
@@ -272,14 +263,26 @@ pub enum SurveyPart {
 impl SurveyPart {
     fn get_block_type(&self) -> BlockType {
         match self {
-            SurveyPart::Title { title } => BlockType::Title,
+            SurveyPart::Title { title: _ } => BlockType::Title,
             SurveyPart::Radio(_) => BlockType::Radio,
             SurveyPart::Checkbox(_) => BlockType::Checkbox,
-            SurveyPart::Dropdown { question, options } => BlockType::Dropdown,
-            SurveyPart::TextInput { question, default } => BlockType::TextInput,
-            SurveyPart::Textarea { question, default } => BlockType::Textarea,
+            SurveyPart::Dropdown {
+                question: _,
+                options: _,
+            } => BlockType::Dropdown,
+            SurveyPart::TextInput {
+                question: _,
+                default: _,
+            } => BlockType::TextInput,
+            SurveyPart::Textarea {
+                question: _,
+                default: _,
+            } => BlockType::Textarea,
             SurveyPart::Nothing => BlockType::Empty,
-            SurveyPart::Submit { question, default } => BlockType::Submit,
+            SurveyPart::Submit {
+                question: _,
+                default: _,
+            } => BlockType::Submit,
         }
     }
 }
@@ -296,34 +299,21 @@ struct SurveyV2 {
     blocks: Vec<Block>,
 }
 
-impl SurveyV2 {
-    pub fn from(values: Vec<FormValue>) -> SurveyV2 {
-        let blocks = values
-            .iter()
-            .map(|formvalue| formvalue_to_block(formvalue))
-            .collect();
-        SurveyV2 {
-            questions: vec![],
-            blocks,
-        }
-    }
-}
-
 fn formvalue_to_block(formvalue: &FormValue) -> Block {
     let survey_part = form_value_to_survey_part(formvalue);
     let block_type = survey_part.get_block_type();
-    return Block {
+    Block {
         id: NanoId::new(),
         index: 0.0,
         properties: survey_part,
         block_type,
-    };
+    }
 }
 
-pub struct Metadata {
-    id: String,
-    created_at: DateTime<Utc>,
-}
+// pub struct Metadata {
+//     id: String,
+//     created_at: DateTime<Utc>,
+// }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum BlockType {
@@ -362,7 +352,7 @@ pub fn formvalue_to_survey(formvalues: Vec<FormValue>) -> ParsedSurvey {
     for formvalue in formvalues {
         survey.blocks.push(formvalue_to_block(&formvalue));
     }
-    return survey;
+    survey
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
