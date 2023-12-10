@@ -35,11 +35,12 @@ pub async fn signup(
 ) -> impl IntoResponse {
     info!("->> signup");
 
-    if let Ok(_) = state
+    if state
         .db
         .get_user_by_email(payload.email.clone())
         .await
         .with_context(|| "Checking if user already exists")
+        .is_err()
     {
         return Err(ServerError::UserAlreadyExists);
     };

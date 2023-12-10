@@ -19,7 +19,7 @@ use crate::{
         self,
         database::{ConnectionDetails, Session},
     },
-    mail::mail::Mailer,
+    mail::mailer::Mailer,
     routes::{get_router, CreateSurveyRequest},
     ServerState,
 };
@@ -155,8 +155,6 @@ impl SurveyModel {
             name: Some("name - todo".to_string()),
             version: Some("version - todo".to_string()),
             blocks: json!(&survey.blocks),
-            // parsed_json: Some(json!(&survey)), // parse_version: Some(parsed_survey.parse_version.clone()),
-            // parsed_json: Some(serde_json::to_value(parsed_survey.clone()).unwrap()),
         }
     }
 }
@@ -169,10 +167,6 @@ struct Form {
     completions: i32,
     created_on: String,
     modified_on: String,
-}
-
-struct CreateForm {
-    text: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

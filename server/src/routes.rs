@@ -1,4 +1,3 @@
-
 use axum::{
     extract::{self, Path, State},
     http::{HeaderMap, Method},
@@ -190,10 +189,6 @@ pub async fn submit_survey(
     info!("completed survey submit");
 
     return Ok(Json(json!({ "survey_id": survey_id })));
-}
-
-fn try_thing() -> Result<(), anyhow::Error> {
-    anyhow::bail!("it failed!")
 }
 
 #[derive(Deserialize, Debug)]

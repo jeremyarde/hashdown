@@ -1,5 +1,6 @@
-use crate::mail::mail::Mailer;
+use crate::mail::mailer;
 use config::EnvConfig;
+use mail::mailer::Mailer;
 
 use crate::server::ServerApplication;
 use tokio::try_join;
@@ -11,6 +12,7 @@ mod auth;
 mod config;
 mod constants;
 mod db;
+mod mail;
 mod mware;
 mod server;
 // mod survey;
@@ -18,7 +20,7 @@ mod server;
 use db::database::Database;
 
 mod error;
-mod mail;
+// mod mail;
 mod routes;
 mod survey_responses;
 

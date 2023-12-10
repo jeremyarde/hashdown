@@ -1,6 +1,5 @@
 use anyhow::Context;
 
-
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 // use ormlite::Model;
 use serde::{Deserialize, Serialize};
@@ -10,10 +9,7 @@ use sqlx::FromRow;
 
 use tracing::log::info;
 
-use crate::{
-    db::{database::Session},
-    ServerError,
-};
+use crate::{db::database::Session, ServerError};
 
 struct Keys {
     encoding: EncodingKey,
@@ -210,10 +206,7 @@ impl Ctext {
     }
 
     pub fn new(user_id: String, session: Session) -> Self {
-        Ctext {
-            user_id,
-            session,
-        }
+        Ctext { user_id, session }
     }
 }
 

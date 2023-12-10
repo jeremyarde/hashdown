@@ -363,7 +363,7 @@ impl Database {
 
     pub async fn list_responses(
         &self,
-        survey_id: &String,
+        survey_id: &str,
     ) -> anyhow::Result<Vec<AnswerModel>, ServerError> {
         info!("Listing responses for survey");
 
