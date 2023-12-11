@@ -2,8 +2,11 @@ VERSION --global-cache 0.7
 
 IMPORT github.com/earthly/lib/rust AS rust
 
+# FROM rust:slim-buster
+# WORKDIR /
+
 install:
-  FROM rust:1.73.0-bookworm
+  FROM rust:1.74.1-bookworm
   RUN rustup component add clippy rustfmt
 
   # Call +INIT before copying the source file to avoid installing function depencies every time source code changes
@@ -28,9 +31,12 @@ build:
   SAVE ARTIFACT ./target/release/ target AS LOCAL artifact/target
 
 docker:
-  FROM +build
-  COPY artifact .
-  ENTRYPOINT ["server"]
+  FROM rust:1.74.1-bookworm
+  # FROM +build
+  COPY +build/target /usr/local/bin 
+  # RUN cargo install --path .
+  EXPOSE 3000
+  CMD ["server"]
   SAVE IMAGE mdp-server:latest
 
 # test executes all unit and integration tests via Cargo
