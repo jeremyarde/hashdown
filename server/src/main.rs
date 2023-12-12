@@ -36,12 +36,13 @@ pub struct ServerState {
 #[tokio::main]
 #[instrument]
 async fn main() -> anyhow::Result<()> {
+    println!("Starting server...");
     // cargo watch -d 1.5 -- cargo run
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .with_env_filter("server=debug,sqlx=debug")
         .init();
-
+    println!("Loading environment variables from file");
     dotenvy::from_filename("./server/.env")?;
 
     let server_app = ServerApplication::new().await;

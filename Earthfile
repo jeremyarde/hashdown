@@ -24,20 +24,21 @@ lint:
   # DO rust+CARGO --args="clippy --all-features --all-targets -- -D warnings"
   DO rust+CARGO --args="clippy --all-features --all-targets"
 
-# build builds with the Cargo release profile
 build:
-  FROM +lint
-  DO rust+CARGO --args="build --release" --output="release/[^/\.]+"
-  SAVE ARTIFACT ./target/release/ target AS LOCAL artifact/target
+    FROM rust:1.74.1-bookworm
+    # Cargo UDC adds caching to cargo runs.
+    # See https://github.com/earthly/lib/tree/main/rust
+    FROM +source
+    DO rust+CARGO --args="build --release" --output="release/[^/\.]+"
+    SAVE ARTIFACT target/release/server server
 
+# docker creates docker image earthly/examples:rust
 docker:
-  FROM rust:1.74.1-bookworm
-  # FROM +build
-  COPY +build/target /usr/local/bin 
-  # RUN cargo install --path .
-  EXPOSE 3000
-  CMD ["server"]
-  SAVE IMAGE mdp-server:latest
+    FROM rust:1.74.1-bookworm
+    COPY +build/server server
+    EXPOSE 3000
+    ENTRYPOINT ["./server"]
+    SAVE IMAGE mdp-server:latest
 
 # test executes all unit and integration tests via Cargo
 test:
