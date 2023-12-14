@@ -37,6 +37,8 @@ pub struct ServerState {
 #[instrument]
 async fn main() -> anyhow::Result<()> {
     println!("Starting server...");
+    // println!("Ending early :)");
+    // return Ok(());
     // cargo watch -d 1.5 -- cargo run
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
