@@ -10,7 +10,7 @@ use axum::{
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::{debug, info};
 
 use crate::{
@@ -45,7 +45,7 @@ pub async fn hello() -> Response {
 
 pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
     let public_routes = Router::new()
-        .route("/api/hello", post(hello))
+        .route("/api/hello", get(hello))
         .route("/api/auth/login", post(auth::login))
         .route("/api/auth/signup", post(auth::signup))
         .route("/api/submit", post(submit_response))
@@ -60,14 +60,14 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
             validate_session_middleware,
         ));
 
-    let mut origins = vec![];
+    // let mut origins = vec![];
     info!("Starting app in stage={:?}", &state.config.stage);
     if state.config.is_dev() {
-        origins.append(&mut vec![
-            "http://localhost:8080".parse().unwrap(),
-            "http://localhost:5173".parse().unwrap(),
-            "http:127.0.0.1:5173".parse().unwrap(),
-        ]);
+        // origins.append(&mut vec![
+        //     "http://localhost:8080".parse().unwrap(),
+        //     "http://localhost:5173".parse().unwrap(),
+        //     "http:127.0.0.1:5173".parse().unwrap(),
+        // ]);
     }
 
     let corslayer = CorsLayer::new()
@@ -75,17 +75,18 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         .allow_headers([
             axum::http::header::CONTENT_TYPE,
             axum::http::header::ACCEPT,
-            axum::http::header::AUTHORIZATION,
-            axum::http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
-            axum::http::header::ACCESS_CONTROL_REQUEST_METHOD,
+            // axum::http::header::AUTHORIZATION,
+            // axum::http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
+            // axum::http::header::ACCESS_CONTROL_REQUEST_METHOD,
             axum::http::HeaderName::from_static("x-auth-token"),
-            axum::http::HeaderName::from_static("x-sid"),
+            // axum::http::HeaderName::from_static("x-sid"),
             axum::http::HeaderName::from_static("session_id"),
-            axum::http::HeaderName::from_static("credentials"),
+            // axum::http::HeaderName::from_static("credentials"),
         ])
         // .allow_headers(Any)
-        .allow_credentials(true)
-        .allow_origin(origins)
+        // .allow_credentials(true)
+        // .allow_origin(origins)
+        .allow_origin(Any)
         .expose_headers([
             axum::http::header::CONTENT_ENCODING,
             // hyper::http::HeaderName::from_static("session_id"),
