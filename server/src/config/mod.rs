@@ -17,6 +17,7 @@ impl Stage {
 #[derive(Debug, Clone)]
 pub struct EnvConfig {
     pub(crate) stage: Stage,
+    // pub database_url:
 }
 
 impl EnvConfig {

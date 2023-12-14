@@ -34,14 +34,9 @@ pub struct ServerApplication {
 
 impl ServerApplication {
     pub async fn get_router() -> Router {
-        let in_memory = dotenvy::var("DATABASE_IN_MEMORY")
-            .expect("Could not find `DATABASE_IN_MEMORY` env variable")
-            .trim()
-            == "true";
-
         let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
         let db_url = ConnectionDetails(uri);
-        let db = Database::new(in_memory, db_url)
+        let db = Database::new( db_url)
             .await
             .expect("Error connecting to database");
         let state = ServerState {

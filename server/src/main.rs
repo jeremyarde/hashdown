@@ -44,8 +44,10 @@ async fn main() -> anyhow::Result<()> {
         .with_max_level(tracing::Level::DEBUG)
         .with_env_filter("server=debug,sqlx=debug")
         .init();
-    println!("Loading environment variables from file");
-    dotenvy::from_filename("./server/.env")?;
+
+    // println!("Loading environment variables from file");
+    // dotenvy::dotenv()?;
+    // dotenvy::from_filename("./server/.env")?;
 
     let server_app = ServerApplication::new().await;
     try_join!(server_app.server).unwrap();
