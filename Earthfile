@@ -36,7 +36,7 @@ build:
 docker:
     FROM rust:1.74.1-bookworm
     COPY +build/server server
-    EXPOSE 3000
+    EXPOSE 8080
     ENTRYPOINT ["./server"]
     SAVE IMAGE mdp-server:latest
 

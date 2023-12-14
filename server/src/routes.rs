@@ -1,7 +1,9 @@
 use axum::{
+    body::Body,
     extract::{self, Path, State},
     http::{HeaderMap, Method},
     middleware::{self},
+    response::{IntoResponse, Response},
     routing::{get, post},
     Extension, Json, Router,
 };
@@ -37,8 +39,13 @@ pub struct LoginPayload {
     pub password: String,
 }
 
+pub async fn hello() -> Response {
+    Response::new("Hi!".into())
+}
+
 pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
     let public_routes = Router::new()
+        .route("/api/hello", post(hello))
         .route("/api/auth/login", post(auth::login))
         .route("/api/auth/signup", post(auth::signup))
         .route("/api/submit", post(submit_response))

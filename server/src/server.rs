@@ -25,7 +25,7 @@ use crate::{
 };
 
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, net::SocketAddr};
+use std::{collections::HashMap, net::SocketAddr, str::FromStr};
 
 pub struct ServerApplication {
     pub base_url: SocketAddr,
@@ -36,7 +36,7 @@ impl ServerApplication {
     pub async fn get_router() -> Router {
         let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
         let db_url = ConnectionDetails(uri);
-        let db = Database::new( db_url)
+        let db = Database::new(db_url)
             .await
             .expect("Error connecting to database");
         let state = ServerState {
@@ -64,7 +64,9 @@ impl ServerApplication {
         let app = ServerApplication::get_router().await;
 
         // let app = configure_app().await;
-        let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+        let addr =
+            SocketAddr::from_str(&dotenvy::var("SERVER_URL").expect("server url should be set"))
+                .expect("Should parse server url properly");
         tracing::debug!("listening on {}", addr);
 
         let server = tokio::spawn(async move {
