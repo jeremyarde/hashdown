@@ -49,7 +49,7 @@ submit: this is my content [default values]`);
     async function submitSurvey(event) {
         const response = await fetch(`${BASE_URL}/surveys`, {
             method: "POST",
-            credentials: 'include',
+            // credentials: 'include',
             headers: {
                 'content-type': 'application/json',
                 'session_id': globalState.sessionId ?? '',

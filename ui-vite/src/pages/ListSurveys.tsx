@@ -36,7 +36,7 @@ export function ListSurveys() {
     async function getSurveys() {
         const response = await fetch(`${BASE_URL}/surveys`, {
             method: "GET",
-            credentials: 'include',
+            // credentials: 'include',
             headers: {
                 'session_id': globalState.sessionId ?? '',
             }

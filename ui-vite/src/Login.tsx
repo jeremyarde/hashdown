@@ -41,7 +41,7 @@ export function Login() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                credentials: 'include',
+                // credentials: 'include',
                 body: loginPayload,
             });
             const result = await response.json();

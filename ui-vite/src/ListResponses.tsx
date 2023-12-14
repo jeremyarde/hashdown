@@ -23,7 +23,7 @@ export function ListResponses() {
             survey_id: queryParams.get(SURVEY_ID_QUERY_KEY)
         })}`, {
             method: "GET",
-            credentials: 'include',
+            // credentials: 'include',
             headers: {
                 'session_id': globalState.sessionId ?? '',
                 // 'Content-Type': 'application/json'

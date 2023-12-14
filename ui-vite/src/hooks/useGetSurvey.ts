@@ -19,7 +19,7 @@ export function useGetSurvey(surveyId: string) {
                     "Content-Type": "application/json",
                     "session_id": `${globalState.sessionId}`
                 },
-                credentials: 'include',
+                // credentials: 'include',
             });
             console.log(`response from API: ${JSON.stringify(response)}`)
             if (response.status === 401) {

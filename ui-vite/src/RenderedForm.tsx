@@ -103,7 +103,7 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                credentials: 'include',
+                // credentials: 'include',
                 // body: JSON.stringify(surveySubmission),
                 body: JSON.stringify(surveySubmission)
             });
@@ -311,7 +311,7 @@ function renderSurveyV2(survey) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                credentials: 'include',
+                // credentials: 'include',
                 // body: JSON.stringify(surveySubmission),
                 body: JSON.stringify(surveySubmission)
             });
