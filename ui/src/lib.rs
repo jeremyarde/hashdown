@@ -189,7 +189,7 @@ pub mod mainapp {
                     match app_state
                         .read()
                         .client
-                        .post("http://localhost:3000/surveys")
+                        .post("http://localhost:8080/surveys")
                         .json(&CreateSurvey {
                             plaintext: editor_state.get().clone(),
                         })
@@ -227,7 +227,7 @@ pub mod mainapp {
                     match app_state
                         .read()
                         .client
-                        .post("http://localhost:3000/surveys")
+                        .post("http://localhost:8080/surveys")
                         .json(&CreateSurvey {
                             plaintext: content.get(0).unwrap().to_owned(),
                         })
@@ -269,7 +269,7 @@ pub mod mainapp {
                 form {
                     class: "border border-red-600 flex flex-col",
                     prevent_default: "onsubmit",
-                    // action: "localhost:3000/survey",
+                    // action: "localhost:8080/survey",
                     onsubmit: move |evt| {
                         info!("Pushed publish :)");
                         let formvalue = evt.values.get(FORMINPUT_KEY).clone().unwrap().clone();

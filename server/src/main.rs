@@ -78,7 +78,7 @@ mod tests {
         setup_environment();
         let mut router = ServerApplication::get_router().await;
 
-        let client_url = format!("http://localhost:3000{}", "/ping");
+        let client_url = format!("http://localhost:8080{}", "/ping");
         println!("Client sending to: {client_url}");
 
         let request = Request::builder()
@@ -109,14 +109,14 @@ mod tests {
         let mut router = ServerApplication::get_router().await;
         // router.ready().await.unwrap();
 
-        let client_url = format!("http://localhost:3000{}", "/auth/login");
+        let client_url = format!("http://localhost:8080{}", "/auth/login");
         println!("Client sending to: {client_url}");
 
         let token = signup_or_login(&mut router).await;
         println!("{}", token);
 
         // List surveys
-        let client_url = format!("http://localhost:3000{}", "/surveys");
+        let client_url = format!("http://localhost:8080{}", "/surveys");
         println!("Sending create survey with headers...");
 
         let create_request: Request<Body> = Request::builder()
@@ -157,7 +157,7 @@ mod tests {
         // router.ready().await.unwrap();
 
         let url = "/auth/login";
-        let client_url = format!("http://{}{}", "localhost:3000", url);
+        let client_url = format!("http://{}{}", "localhost:8080", url);
 
         println!("Sending req to: {client_url}");
 
@@ -214,7 +214,7 @@ mod tests {
         // let client = get_client().await;
 
         let url = "/auth/signup";
-        let client_url = format!("http://{}{}", "localhost:3000", url);
+        let client_url = format!("http://{}{}", "localhost:8080", url);
 
         println!("Sending req to: {client_url}");
 
@@ -257,7 +257,7 @@ mod tests {
             password: "mypassword".to_string(),
         };
 
-        let client_url = format!("http://localhost:3000{}", "/auth/signup");
+        let client_url = format!("http://localhost:8080{}", "/auth/signup");
         println!("Client sending to: {client_url}");
         let request: Request<Body> = Request::builder()
             .method("POST")
@@ -277,7 +277,7 @@ mod tests {
         }
         println!("Was NOT able to signup, attempting login...");
 
-        let client_url = format!("http://localhost:3000{}", "/auth/login");
+        let client_url = format!("http://localhost:8080{}", "/auth/login");
         println!("Client sending to: {client_url}");
         let request: Request<Body> = Request::builder()
             .method("POST")

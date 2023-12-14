@@ -59,6 +59,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         origins.append(&mut vec![
             "http://localhost:8080".parse().unwrap(),
             "http://localhost:5173".parse().unwrap(),
+            "http:127.0.0.1:5173".parse().unwrap(),
         ]);
     }
 

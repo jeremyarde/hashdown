@@ -207,7 +207,7 @@ pub fn create_session_headers(session: &Session) -> HeaderMap {
     //         .unwrap(),
     // );
     // let session_cookie = Cookie::build("session_id", session.session_id.clone())
-    //     // .domain("http://localhost:3000")
+    //     // .domain("http://localhost:8080")
     //     .path("/")
     //     .http_only(true)
     //     .secure(true)

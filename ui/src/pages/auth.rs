@@ -32,7 +32,7 @@ pub fn Login(cx: Scope) -> Element {
             to_owned![app_state];
 
             async move {
-                let url = "http://localhost:3000/auth/login";
+                let url = "http://localhost:8080/auth/login";
                 let request: LoginPayload = LoginPayload {
                     email: evt.values["email"].get(0).unwrap().to_owned(),
                     password: evt.values["password"].get(0).unwrap().to_owned(),
@@ -99,7 +99,7 @@ pub fn Login(cx: Scope) -> Element {
             to_owned![app_state];
             async move {
                 let url = "/auth/signup";
-                let client_url = format!("http://{}{}", "localhost:3000", url);
+                let client_url = format!("http://{}{}", "localhost:8080", url);
 
                 println!("Sending req to: {client_url}");
 
@@ -183,7 +183,7 @@ pub fn Signup(cx: Scope) -> Element {
             to_owned![app_state];
 
             async move {
-                let url = "http://localhost:3000/auth/signup";
+                let url = "http://localhost:8080/auth/signup";
                 let request = SignupPayload {
                     email_address: evt.values["email"].get(0).unwrap().to_owned(),
                     password: evt.values["password"].get(0).unwrap().to_owned(),

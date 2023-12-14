@@ -31,7 +31,7 @@ pub fn ListSurvey(cx: Scope) -> Element {
         }
         let user_token = user.unwrap().token;
         // let url = "/responses";
-        let client_url = format!("http://{}", "localhost:3000/surveys");
+        let client_url = format!("http://{}", "localhost:8080/surveys");
 
         println!("Sending req to: {client_url}");
 
@@ -67,7 +67,7 @@ pub fn ListSurvey(cx: Scope) -> Element {
                 };
                 // token = token.trim_matches('"').to_string();
                 let resp = reqwest::Client::new()
-                    .get(format!("http://localhost:3000/surveys/{}", survey_id))
+                    .get(format!("http://localhost:8080/surveys/{}", survey_id))
                     .header("x-auth-token", token)
                     .send()
                     .await;
@@ -141,7 +141,7 @@ pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
             }
             let user_token = user.unwrap().token;
             let url = "/responses";
-            let client_url = format!("http://{}{}", "localhost:3000/surveys/", survey_id);
+            let client_url = format!("http://{}{}", "localhost:8080/surveys/", survey_id);
 
             println!("Sending req to: {client_url}");
             // formdata['survey_id'] =
@@ -167,7 +167,7 @@ pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
             // to_owned![app_state];
             async move {
                 let url = "/responses";
-                let client_url = format!("http://{}{}", "localhost:3000", url);
+                let client_url = format!("http://{}{}", "localhost:8080", url);
 
                 println!("Sending req to: {client_url}");
 
@@ -203,8 +203,8 @@ pub fn RenderSurvey(cx: Scope, survey_id: String) -> Element {
     render! {
         div { class: "flex flex-col",
             form {
-                // action: "http://localhost:3000/surveys/{survey_to_render.survey.metadata.id}",
-                // action: "http://localhost:3000/surveys/test",
+                // action: "http://localhost:8080/surveys/{survey_to_render.survey.metadata.id}",
+                // action: "http://localhost:8080/surveys/test",
                 // enctype: "application/x-www-form-urlencoded",
                 // method: "post",
                 // prevent_default: "onsubmit",
