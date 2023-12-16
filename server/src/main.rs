@@ -36,7 +36,7 @@ pub struct ServerState {
 #[tokio::main]
 #[instrument]
 async fn main() -> anyhow::Result<()> {
-    println!("Starting server...");
+    log::info!("Starting server...");
     // println!("Ending early :)");
     // return Ok(());
     // cargo watch -d 1.5 -- cargo run
@@ -50,7 +50,7 @@ async fn main() -> anyhow::Result<()> {
     // dotenvy::from_filename("./server/.env")?;
 
     let server_app = ServerApplication::new().await;
-    println!("Running...");
+    log::info!("Running...");
     try_join!(server_app.server).unwrap();
     Ok(())
 }
