@@ -50,6 +50,7 @@ async fn main() -> anyhow::Result<()> {
     // dotenvy::from_filename("./server/.env")?;
 
     let server_app = ServerApplication::new().await;
+    println!("Running...");
     try_join!(server_app.server).unwrap();
     Ok(())
 }

@@ -1,13 +1,13 @@
-# FROM rust:1.74.1-bookworm
+FROM rust:alpine3.18 as builder
+# ENV OPENSSL_DIR="/opt/homebrew/etc/openssl@1.1"
+WORKDIR /app
+RUN apk add musl-dev
+COPY . .
+RUN cargo build --release
 
-
-
-# COPY ./artifact/target/server /usr/local/bin
-# COPY ./server/migrations /migrations
-
-# EXPOSE 3000
-# # RUN chmod +x server
-# ENTRYPOINT ["/usr/local/bin/server"]
-
-# # docker build . --tag mdp-server
-# # docker run --env-file ./server/.env mdp-server
+FROM scratch
+USER 1000:1000
+COPY --from=builder --chown=1000:1000 /app/target/release/mdpserver /mdpserver
+# ENV PORT=8080
+EXPOSE 8080
+ENTRYPOINT ["/mdpserver"]

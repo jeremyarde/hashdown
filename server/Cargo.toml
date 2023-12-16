@@ -1,28 +1,26 @@
 [package]
 edition = "2021"
-name = "server"
+name = "mdpserver"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = {version = "0.7.2", features = ["json", "macros", "multipart"]}
-markdownparser = {path = "../backend"}
-tower-http = {version = "0.5", features = ["full", "fs"]}
-
 argon2 = "0.5.0"
 async-trait = "0.1.68"
-jsonwebtoken = "8.3.0"
+axum = {version = "0.7.2", features = ["json", "macros", "multipart"]}
+# jsonwebtoken = "8.3.0"
+markdownparser = {path = "../backend"}
 mime = "0.3.16"
 mime_guess = "2.0.4"
 serde_with = "2.3.2"
 strum_macros = "0.24.3"
 tokio = {version = "1.34", features = ["macros", "full"]}
 tower = "0.4.13"
+tower-http = {version = "0.5", features = ["full", "fs"]}
 tracing = "0.1.37"
 tracing-subscriber = {version = "0.3.16", features = ["env-filter"]}
 uuid = {version = "1.2.2", features = ["serde"]}
-
 # database
 anyhow = "1.0.69"
 axum-extra = {version = "0.8.0", features = ["cookie"]}
@@ -36,13 +34,14 @@ rand = "0.8.5"
 serde = {version = "1.0.155", features = ["derive"]}
 serde_json = "1.0.94"
 sqlx = {version = "0.7.1", features = ["postgres", "chrono", "postgres", "uuid", "runtime-tokio"]}
-# tower-sessions = {version = "0.2.4", features = ["postgres-store"]}
+
+# openssl = {version = "0.10", features = ["vendored"]}
 
 [dev-dependencies]
 serial_test = "1.0.0"
 
-[profile.release]
-debug = true
-derive_builder = "0.12.0"
-lettre = "0.10.4"
-once_cell = "1.18.0"
+# [profile.release]
+# debug = true
+# derive_builder = "0.12.0"
+# lettre = "0.10.4"
+# once_cell = "1.18.0"
