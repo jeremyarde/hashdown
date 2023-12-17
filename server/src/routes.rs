@@ -45,16 +45,17 @@ pub async fn hello() -> Response {
 
 pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
     let public_routes = Router::new()
-        .route("/api/hello", get(hello))
-        .route("/api/auth/login", post(auth::login))
-        .route("/api/auth/signup", post(auth::signup))
-        .route("/api/submit", post(submit_response))
-        .route("/api/surveys/:id", get(get_survey).post(submit_survey))
-        .route("/api/ping", get(ping));
+        .route("/v1/hello", get(hello))
+        .route("/v1/auth/login", post(auth::login))
+        .route("/v1/auth/signup", post(auth::signup))
+        .route("/v1/auth/remove", post(auth::delete))
+        .route("/v1/submit", post(submit_response))
+        .route("/v1/surveys/:id", get(get_survey).post(submit_survey))
+        .route("/v1/ping", get(ping));
 
     let auth_routes = Router::new()
-        .route("/api/surveys", post(create_survey).get(list_survey))
-        .route("/api/responses", get(survey_responses::list_response))
+        .route("/v1/surveys", post(create_survey).get(list_survey))
+        .route("/v1/responses", get(survey_responses::list_response))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             validate_session_middleware,

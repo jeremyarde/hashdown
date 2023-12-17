@@ -214,7 +214,7 @@ mod tests {
 
         // let client = get_client().await;
 
-        let url = "/auth/signup";
+        let url = "/v1/auth/signup";
         let client_url = format!("http://{}{}", "localhost:8080", url);
 
         println!("Sending req to: {client_url}");
@@ -238,7 +238,7 @@ mod tests {
 
         let response = router.borrow_mut().oneshot(create_request).await.unwrap();
         let headers = response.headers().clone();
-
+        dbg!(&response);
         let results: Value = serde_json::from_slice(
             &axum::body::to_bytes(response.into_body(), usize::MAX)
                 .await

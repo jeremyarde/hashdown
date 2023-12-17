@@ -431,6 +431,20 @@ impl Database {
             Err(ServerError::AuthFailTokenExpired)
         }
     }
+
+    pub async fn delete_user(&self, session: Session) -> anyhow::Result<String, ServerError> {
+        let result = sqlx::query!(
+            "delete from mdp.users where users.user_id = $1",
+            session.session_id
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|err| {
+            ServerError::Database(format!("Could not delete user: {}", err));
+        });
+
+        return Ok(session.user_id);
+    }
 }
 
 #[cfg(test)]

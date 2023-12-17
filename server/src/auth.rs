@@ -82,6 +82,25 @@ pub async fn signup(
 }
 
 #[axum::debug_handler]
+pub async fn delete(
+    state: State<ServerState>,
+    // jar: CookieJar,
+    headers: HeaderMap,
+    // payload: Json<LoginPayload>,
+) -> impl IntoResponse {
+    info!("->> delete user");
+    let session_header = if let Some(x) = headers.get(SESSION_ID_KEY) {
+        x.to_owned().to_str().unwrap().to_string()
+    } else {
+        return Err(ServerError::AuthFailNoTokenCookie);
+    };
+    // must be signed in to delete yourself
+    state.db.delete_session(session_id).await?;
+    state.db.delete_user(session_header).await?;
+    Ok(())
+}
+
+#[axum::debug_handler]
 pub async fn logout(
     state: State<ServerState>,
     // jar: CookieJar,

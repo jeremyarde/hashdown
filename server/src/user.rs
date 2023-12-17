@@ -106,7 +106,7 @@
 //     let client = reqwest::Client::new();
 //     let user_data: User = client
 //         // https://discord.com/developers/docs/resources/user#get-current-user
-//         .get("https://discordapp.com/api/users/@me")
+//         .get("https://discordapp.com/v1/users/@me")
 //         .bearer_auth(token.access_token().secret())
 //         .send()
 //         .await

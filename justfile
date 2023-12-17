@@ -1,8 +1,11 @@
 build:
-    earthly +build
+    earthly --no-sat +build
 
 docker:
-    earthly +docker
+    earthly --no-sat +docker
+
+test:
+    earthly --no-sat +test
 
 rund: 
     docker run --env-file ./server/.env -p 8080:8080 -it mdp-server
@@ -18,6 +21,3 @@ other:
 
 ls:
     docker run --rm -it testserver ls -l /usr/local/bin
-
-test:
-    docker build . -t testserver:latest

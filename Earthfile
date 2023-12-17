@@ -1,5 +1,7 @@
 VERSION --global-cache 0.7
 # VERSION 0.7
+ARG run_locally=true
+
 
 IMPORT github.com/earthly/lib/rust AS rust
 
@@ -31,7 +33,9 @@ docker:
   # FROM rust:1.74.1-bookworm # works
   # FROM debian:12 # works with libssl-dev
   # RUN apt-get update && apt-get install -y libssl-dev
-
+  # IF [ "$run_locally" = "true" ]
+  #   LOCALLY
+  # ELSE
   FROM debian:bookworm-slim # does work with libssl-dev
   RUN apt-get update && apt-get install -y libssl-dev
 
@@ -46,16 +50,21 @@ docker:
 
 # test executes all unit and integration tests via Cargo
 test:
+  LOCALLY
   FROM +lint
   DO rust+CARGO --args="test"
 
 # fmt checks whether Rust code is formatted according to style guidelines
 fmt:
+  LOCALLY
   FROM +lint
   DO rust+CARGO --args="fmt --check"
 
 # all runs all other targets in parallel
 all:
-  BUILD +build
-  BUILD +test
+  LOCALLY
   BUILD +fmt
+  BUILD +build
+  BUILD +docker
+  # BUILD +test
+  # BUILD +docker
