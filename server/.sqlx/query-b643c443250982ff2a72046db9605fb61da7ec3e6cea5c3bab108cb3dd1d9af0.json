@@ -1,0 +1,84 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into mdp.surveys (\n                    name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version, blocks\n                ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "survey_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "modified_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "plaintext",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "version",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "parse_version",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "blocks",
+        "type_info": "Json"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Json"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "b643c443250982ff2a72046db9605fb61da7ec3e6cea5c3bab108cb3dd1d9af0"
+}

@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select * from mdp.responses where mdp.responses.survey_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "submitted_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "answers",
+        "type_info": "Json"
+      },
+      {
+        "ordinal": 3,
+        "name": "survey_id",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "30e680e0119fa517fd4309db0e1b40a8cfd016c303448be00effa7348a611ec6"
+}
