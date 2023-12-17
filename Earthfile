@@ -50,19 +50,19 @@ docker:
 
 # test executes all unit and integration tests via Cargo
 test:
-  LOCALLY
+  # LOCALLY
   FROM +lint
   DO rust+CARGO --args="test"
 
 # fmt checks whether Rust code is formatted according to style guidelines
 fmt:
-  LOCALLY
+  # LOCALLY
   FROM +lint
   DO rust+CARGO --args="fmt --check"
 
 # all runs all other targets in parallel
 all:
-  LOCALLY
+  # LOCALLY
   BUILD +fmt
   BUILD +build
   BUILD +docker
