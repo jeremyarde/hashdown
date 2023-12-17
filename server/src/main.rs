@@ -4,7 +4,7 @@ use mail::mailer::Mailer;
 
 use crate::server::ServerApplication;
 use tokio::try_join;
-use tracing::instrument;
+use tracing::{info, instrument};
 
 // mod answer;
 // mod db;
@@ -36,7 +36,7 @@ pub struct ServerState {
 #[tokio::main]
 #[instrument]
 async fn main() -> anyhow::Result<()> {
-    log::info!("Starting server...");
+    info!("Starting server...");
     // println!("Ending early :)");
     // return Ok(());
     // cargo watch -d 1.5 -- cargo run
@@ -50,7 +50,7 @@ async fn main() -> anyhow::Result<()> {
     // dotenvy::from_filename("./server/.env")?;
 
     let server_app = ServerApplication::new().await;
-    log::info!("Running...");
+    info!("Running...");
     try_join!(server_app.server).unwrap();
     Ok(())
 }

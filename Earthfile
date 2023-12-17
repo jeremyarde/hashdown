@@ -1,4 +1,5 @@
-VERSION --global-cache 0.7
+# VERSION --global-cache 0.7
+VERSION 0.7
 
 IMPORT github.com/earthly/lib/rust AS rust
 
@@ -39,6 +40,7 @@ docker:
 
   FROM debian:bookworm-slim # does work with libssl-dev
   RUN apt-get update && apt-get install -y libssl-dev
+
   # FROM scratch
   # FROM gcr.io/distroless/cc
   # RUN apt-get update && apt-get install -y libssl-dev
