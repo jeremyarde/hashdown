@@ -26,7 +26,7 @@ jobs:
       - uses: earthly/actions/setup-earthly@v1
       - uses: actions/checkout@v2
       - name: Run +all on Earthly satellite
-        run: earthly --ci --satellite my-satellite +all
+        run: earthly --org jeremyarde --ci --satellite my-satellite +all
     # old stuff below
     # - uses: earthly/actions-setup@v1
     #   with:
