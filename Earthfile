@@ -1,16 +1,10 @@
-# VERSION --global-cache 0.7
-VERSION 0.7
+VERSION --global-cache 0.7
+# VERSION 0.7
 
 IMPORT github.com/earthly/lib/rust AS rust
 
-# FROM purtontech/rust-on-nails-devcontainer:1.1.2
-# FROM rust:slim-buster
-# WORKDIR /
-
 install:
   FROM rust:1.74.1-bookworm
-  # FROM rust:1.73.0-bookworm
-  # FROM purtontech/rust-on-nails-devcontainer:1.1.2
   RUN rustup component add clippy rustfmt
 
   # Call +INIT before copying the source file to avoid installing function depencies every time source code changes
@@ -44,11 +38,6 @@ docker:
   # FROM scratch
   # FROM gcr.io/distroless/cc
   # RUN apt-get update && apt-get install -y libssl-dev
-  # FROM alpine:latest
-  # RUN apt-get update \
-  #   && apt-get install -y \
-  #       libssl-dev pkg-config \
-  #   && rm -rf /var/lib/apt/lists/*
   WORKDIR /myapp
   COPY +build/target/mdpserver /myapp
   EXPOSE 8080
