@@ -1,7 +1,7 @@
 VERSION --global-cache 0.7
 # VERSION 0.7
 ARG run_locally=true
-
+ARG docker_tag=ghcr.io/jeremyarde/mdp-server
 
 IMPORT github.com/earthly/lib/rust AS rust
 
@@ -46,7 +46,7 @@ docker:
   COPY +build/target/mdpserver /myapp
   EXPOSE 8080
   CMD ["./mdpserver"]
-  SAVE IMAGE --push mdp-server:latest
+  SAVE IMAGE --push "$docker_tag":latest
 
 # test executes all unit and integration tests via Cargo
 test:
