@@ -28,6 +28,9 @@ jobs:
       - uses: actions/checkout@v2
       - name: Run +all on Earthly satellite
         run: earthly --org jeremyarde --ci --satellite my-satellite +all
+      - name: Push docker image to container registry
+        run: earthly --org jeremyarde --ci --satellite my-satellite --push +docker
+        # docker push ghcr.io/jeremyarde/mdp-server:latest
     # old stuff below
     # - uses: earthly/actions-setup@v1
     #   with:

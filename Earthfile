@@ -46,7 +46,7 @@ docker:
   COPY +build/target/mdpserver /myapp
   EXPOSE 8080
   CMD ["./mdpserver"]
-  SAVE IMAGE mdp-server:latest
+  SAVE IMAGE --push mdp-server:latest
 
 # test executes all unit and integration tests via Cargo
 test:
@@ -68,3 +68,6 @@ all:
   BUILD +docker
   # BUILD +test
   # BUILD +docker
+
+# publish:
+#   docker push ghcr.io/NAMESPACE/IMAGE_NAME:latest
