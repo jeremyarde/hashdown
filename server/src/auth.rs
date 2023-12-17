@@ -95,7 +95,7 @@ pub async fn delete(
         return Err(ServerError::AuthFailNoTokenCookie);
     };
     // must be signed in to delete yourself
-    state.db.delete_session(session_id).await?;
+    state.db.delete_session(session_header.clone()).await?;
     state.db.delete_user(session_header).await?;
     Ok(())
 }

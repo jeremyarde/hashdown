@@ -432,18 +432,15 @@ impl Database {
         }
     }
 
-    pub async fn delete_user(&self, session: Session) -> anyhow::Result<String, ServerError> {
-        let result = sqlx::query!(
-            "delete from mdp.users where users.user_id = $1",
-            session.session_id
-        )
-        .execute(&self.pool)
-        .await
-        .map_err(|err| {
-            ServerError::Database(format!("Could not delete user: {}", err));
-        });
+    pub async fn delete_user(&self, user_id: String) -> anyhow::Result<String, ServerError> {
+        let result = sqlx::query!("delete from mdp.users where users.user_id = $1", user_id)
+            .execute(&self.pool)
+            .await
+            .map_err(|err| {
+                ServerError::Database(format!("Could not delete user: {}", err));
+            });
 
-        return Ok(session.user_id);
+        return Ok(user_id);
     }
 }
 
