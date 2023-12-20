@@ -4,6 +4,11 @@ build:
 docker:
     earthly --no-sat +docker
 
+push:
+    source .env
+    echo $DOCKERHUB_TOKEN | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+    earthly --no-sat --push +docker
+
 test:
     earthly --no-sat +test
 
@@ -21,3 +26,10 @@ other:
 
 ls:
     docker run --rm -it testserver ls -l /usr/local/bin
+
+
+new:
+    earthly --no-sat +testbuild
+
+newd:
+    earthly --no-sat +testdocker

@@ -1,13 +1,12 @@
-FROM rust:alpine3.18 as builder
-# ENV OPENSSL_DIR="/opt/homebrew/etc/openssl@1.1"
-WORKDIR /app
-RUN apk add musl-dev
-COPY . .
-RUN cargo build --release
+# does work with libssl-dev
+# possible inspo: https://github.com/atomicdata-dev/atomic-server/blob/745511acfab17d8155973db9619bc006c9f943b7/Earthfile#L4
+FROM debian:bookworm-slim 
+RUN apt-get update && apt-get install -y libssl-dev
 
-FROM scratch
-USER 1000:1000
-COPY --from=builder --chown=1000:1000 /app/target/release/mdpserver /mdpserver
-# ENV PORT=8080
+# FROM scratch
+# FROM gcr.io/distroless/cc
+# RUN apt-get update && apt-get install -y libssl-dev
+WORKDIR /myapp
+COPY +build/target/mdpserver /myapp
 EXPOSE 8080
-ENTRYPOINT ["/mdpserver"]
+CMD ["./mdpserver"]
