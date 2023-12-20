@@ -38,6 +38,7 @@ jobs:
       DOCKERHUB_USERNAME: "${{secrets.DOCKERHUB_USERNAME}}"
       DOCKERHUB_TOKEN: "${{secrets.DOCKERHUB_TOKEN}}"
     steps:
+      - uses: earthly/actions/setup-earthly@v1
       - name: Docker Login
         run: docker login --username "$DOCKERHUB_USERNAME" --password "$DOCKERHUB_TOKEN"
       - name: Earthly version
