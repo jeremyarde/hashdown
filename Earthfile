@@ -29,7 +29,7 @@ build:
   SAVE ARTIFACT ./target/release/ target AS LOCAL artifact/target
 
 docker:
-  ARG docker_tag=ghcr.io/jeremyarde/mdp-server
+  ARG docker_tag=jerecan/markdownparser/mdp-server:latest
   ARG run_locally=true
 
   # FROM rust:1.74.1-bookworm # works
