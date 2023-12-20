@@ -28,39 +28,16 @@ build:
   DO rust+CARGO --args="build --release" --output="release/[^/\.]+"
   SAVE ARTIFACT ./target/release/ target AS LOCAL artifact/target
 
-testbuild:
-  # FROM debian:bookworm-slim # does work with libssl-dev
-  FROM +source
-  RUN apt-get update && apt-get install -y libssl-dev
-  # COPY --keep-ts Cargo.toml Cargo.lock ./
-  # COPY --keep-ts --dir server backend ./
-  # WORKDIR /myapp
-  DO rust+CARGO --args="build --release" --output="release/[^/\.]+"
-  SAVE ARTIFACT ./target/release/ target AS LOCAL artifact/target
-
-testdocker:
+docker:
   ARG docker_tag=jerecan/markdownparser:mdp-server
-  ARG run_locally=true
+
+  # FROM DOCKERFILE . # how to fix: https://docs.earthly.dev/docs/earthfile#description-10
   FROM debian:bookworm-slim # does work with libssl-dev
+  RUN apt-get update && apt-get install -y libssl-dev
   WORKDIR /myapp
   COPY +build/target/mdpserver /myapp
   EXPOSE 8080
   CMD ["./mdpserver"]
-  SAVE IMAGE --push "$docker_tag"
-
-docker:
-  ARG docker_tag=jerecan/markdownparser:mdp-server
-  ARG run_locally=true
-
-  FROM DOCKERFILE . # how to fix: https://docs.earthly.dev/docs/earthfile#description-10
-
-  # FROM debian:bookworm-slim # does work with libssl-dev
-  # RUN apt-get update && apt-get install -y libssl-dev
-  # WORKDIR /myapp
-  # COPY +build/target/mdpserver /myapp
-  # EXPOSE 8080
-  # CMD ["./mdpserver"]
-
   SAVE IMAGE --push "$docker_tag"
 
 # test executes all unit and integration tests via Cargo
@@ -71,18 +48,11 @@ test:
 
 # fmt checks whether Rust code is formatted according to style guidelines
 fmt:
-  # LOCALLY
   FROM +lint
   DO rust+CARGO --args="fmt --check"
 
 # all runs all other targets in parallel
 all:
-  # LOCALLY
-  # BUILD +fmt
-  BUILD +docker
-  # BUILD +docker
+  BUILD +build
   # BUILD +test
-  # BUILD +docker
-
-# publish:
-#   docker push ghcr.io/NAMESPACE/IMAGE_NAME:latest
+  BUILD +fmt
