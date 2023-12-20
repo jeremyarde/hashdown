@@ -27,9 +27,7 @@ jobs:
       - uses: earthly/actions/setup-earthly@v1
       - uses: actions/checkout@v2
       - name: Run +all on Earthly satellite
-        run: earthly --push --org jeremyarde --ci --satellite my-satellite +all
-      - name: Push docker image to container registry
-        run: docker push ghcr.io/jeremyarde/mdp-server:latest
+        run: earthly --org jeremyarde --ci --satellite my-satellite +all
   cd:
     name: +cd
     runs-on: ubuntu-latest
@@ -45,7 +43,7 @@ jobs:
       - name: Earthly version
         run: earthly --version
       - name: Run build
-        run: earthly --push +build
+        run: earthly --push +docker
         
         # run: earthly --org jeremyarde --ci --satellite my-satellite --push +docker
         # docker push ghcr.io/jeremyarde/mdp-server:latest
