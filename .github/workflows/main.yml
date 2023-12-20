@@ -23,21 +23,13 @@ jobs:
       FORCE_COLOR: 1
       EARTHLY_TOKEN: "${{ secrets.EARTHLY_TOKEN }}"
       DATABASE_URL: "${{secrets.DATABASE_URL}}"
+      DOCKERHUB_USERNAME: "${{secrets.DOCKERHUB_USERNAME}}"
+      DOCKERHUB_TOKEN: "${{secrets.DOCKERHUB_TOKEN}}"
     steps:
       - uses: earthly/actions/setup-earthly@v1
       - uses: actions/checkout@v2
       - name: Run +all on Earthly satellite
         run: earthly --org jeremyarde --ci --satellite my-satellite +all
-  cd:
-    name: +cd
-    runs-on: ubuntu-latest
-    env:
-      FORCE_COLOR: 1
-      EARTHLY_TOKEN: "${{ secrets.EARTHLY_TOKEN }}"
-      DATABASE_URL: "${{secrets.DATABASE_URL}}"
-      DOCKERHUB_USERNAME: "${{secrets.DOCKERHUB_USERNAME}}"
-      DOCKERHUB_TOKEN: "${{secrets.DOCKERHUB_TOKEN}}"
-    steps:
       - uses: earthly/actions/setup-earthly@v1
       - name: Docker Login
         run: docker login --username "$DOCKERHUB_USERNAME" --password "$DOCKERHUB_TOKEN"
@@ -45,6 +37,23 @@ jobs:
         run: earthly --version
       - name: Run build
         run: earthly --push +docker
+  # cd:
+  #   name: +cd
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     FORCE_COLOR: 1
+  #     EARTHLY_TOKEN: "${{ secrets.EARTHLY_TOKEN }}"
+  #     DATABASE_URL: "${{secrets.DATABASE_URL}}"
+  #     DOCKERHUB_USERNAME: "${{secrets.DOCKERHUB_USERNAME}}"
+  #     DOCKERHUB_TOKEN: "${{secrets.DOCKERHUB_TOKEN}}"
+  #   steps:
+  #     - uses: earthly/actions/setup-earthly@v1
+  #     - name: Docker Login
+  #       run: docker login --username "$DOCKERHUB_USERNAME" --password "$DOCKERHUB_TOKEN"
+  #     - name: Earthly version
+  #       run: earthly --version
+  #     - name: Run build
+  #       run: earthly --push +docker
         
         # run: earthly --org jeremyarde --ci --satellite my-satellite --push +docker
         # docker push ghcr.io/jeremyarde/mdp-server:latest
