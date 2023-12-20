@@ -67,7 +67,7 @@ all:
   # LOCALLY
   BUILD +fmt
   BUILD +build
-  BUILD +docker
+  # BUILD +docker
   # BUILD +test
   # BUILD +docker
 
