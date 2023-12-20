@@ -1,7 +1,6 @@
 VERSION --global-cache 0.7
 # VERSION 0.7
-ARG run_locally=true
-ARG docker_tag=ghcr.io/jeremyarde/mdp-server
+# ARG docker_tag=ghcr.io/jeremyarde/mdp-server
 
 IMPORT github.com/earthly/lib/rust AS rust
 
@@ -30,6 +29,9 @@ build:
   SAVE ARTIFACT ./target/release/ target AS LOCAL artifact/target
 
 docker:
+  ARG docker_tag=ghcr.io/jeremyarde/mdp-server
+  ARG run_locally=true
+
   # FROM rust:1.74.1-bookworm # works
   # FROM debian:12 # works with libssl-dev
   # RUN apt-get update && apt-get install -y libssl-dev
