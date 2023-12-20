@@ -40,7 +40,8 @@ jobs:
           fi
           git checkout -b "$branch" || true
       - name: Docker Login
-        run: docker login --username "$DOCKERHUB_USERNAME" --password "$DOCKERHUB_TOKEN"
+        # run: docker login --username "$DOCKERHUB_USERNAME" --password "$DOCKERHUB_TOKEN"
+        run: echo $DOCKERHUB_TOKEN | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
       - name: Earthly version
         run: earthly --version
       - name: Run build and push

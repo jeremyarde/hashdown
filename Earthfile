@@ -29,7 +29,7 @@ build:
   SAVE ARTIFACT ./target/release/ target AS LOCAL artifact/target
 
 docker:
-  ARG docker_tag=jerecan/markdownparser/mdp-server:latest
+  ARG docker_tag=jerecan/markdownparser/mdp-server
   ARG run_locally=true
 
   # FROM rust:1.74.1-bookworm # works
@@ -48,7 +48,7 @@ docker:
   COPY +build/target/mdpserver /myapp
   EXPOSE 8080
   CMD ["./mdpserver"]
-  SAVE IMAGE --push "$docker_tag":latest
+  SAVE IMAGE --push "$docker_tag"
 
 # test executes all unit and integration tests via Cargo
 test:
@@ -65,8 +65,8 @@ fmt:
 # all runs all other targets in parallel
 all:
   # LOCALLY
-  BUILD +fmt
-  BUILD +build
+  # BUILD +fmt
+  BUILD +docker
   # BUILD +docker
   # BUILD +test
   # BUILD +docker
