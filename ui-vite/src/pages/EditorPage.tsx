@@ -35,7 +35,7 @@ Dropdown: My question here
     - Option 2
     - Option 3
 
-submit: this is my content [default values]`);
+submit: Send [default values]`);
     console.log('editorContent: ' + editorContent);
     const [survey, setSurvey] = useState(markdown_to_form_wasm_v2(editorContent));
 
@@ -79,8 +79,7 @@ submit: this is my content [default values]`);
     return (
         <>
             <div className="h-screen w-full flex">
-                <div className="w-1/2 border-r-2 p-4">
-                    {/* <Editor editorContent={formtext} setEditorContent={setFormtext}></Editor> */}
+                <div className="w-1/2 p-4">
                     <h1 className="text-2xl font-bold mb-4">Enter Form Content</h1>
                     <textarea
                         className="w-full h-4/6 p-2 rounded border border-gray-300"
@@ -88,8 +87,8 @@ submit: this is my content [default values]`);
                         value={editorContent}
                         onChange={evt => setEditorContent(evt.target.value)} />
                     <div className="flex flex-row">
-                        <button className="bg-gray-200 outline p-1 m-1 rounded w-full" onClick={submitSurvey}>Save Survey</button>
-                        <button className="bg-green-200 outline p-1 m-1 rounded w-full flex-1" onClick={submitSurvey}>Publish</button>
+                        <button className="bg-gray-200 border p-1 w-full" onClick={submitSurvey}>Save Survey</button>
+                        <button className="bg-green-200 border w-full p-1 flex-1" onClick={submitSurvey}>Publish</button>
                     </div>
                 </div>
                 <div className="w-1/2 p-4">

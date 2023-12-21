@@ -202,15 +202,19 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
             {exampleSubmission ? (
                 <>
                     {/* <Button type="button" onClick={(evt) => displayTextMode ? setDisplayTextMode(false) : setDisplayTextMode(true)}></Button> */}
-                    <div className="fixed skeu">
+                    <div className="skeu">
                         <div>
                             <h3>Submission data</h3>
-                            <label className="switch">
-                                <input type="checkbox" onClick={(evt) => displayTextMode ? setDisplayTextMode(false) : setDisplayTextMode(true)} />
-                                <span className="slider round"></span>
-                            </label>
+                            <div>
+                                <label>{"Show real questions"}</label>
+                                <label className="switch">
+                                    <input type="checkbox" onClick={(evt) => displayTextMode ? setDisplayTextMode(false) : setDisplayTextMode(true)} />
+                                    <span className="slider round"></span>
+                                </label>
+
+                            </div>
                         </div>
-                        <div className="text-left">
+                        <div className="text-left p-6 border-dotted border">
                             <pre>
                                 <code className="bg-blue-200">
                                     {!displayTextMode ? (JSON.stringify(exampleSubmission, null, 2)) :

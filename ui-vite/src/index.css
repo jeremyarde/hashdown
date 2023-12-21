@@ -10,12 +10,15 @@
 }
 
 .skeu {
-  margin: 50px;
-  padding: 20px;
-  border-radius: 20px;
-  background: #e0e0e0;
-  box-shadow: 20px 20px 60px #bebebe,
-    -20px -20px 60px #ffffff;
+  /* margin: 50px; */
+  /* padding: 20px; */
+  border-radius: 5px;
+  /* background: #e0e0e0; */
+  border-style: solid;
+  border-color: black;
+  border-width: 1px;
+  /* box-shadow: 20px 20px 60px #bebebe,
+    -20px -20px 60px #ffffff; */
 }
 
 /* The switch - the box around the slider */

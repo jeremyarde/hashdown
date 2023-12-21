@@ -18,8 +18,10 @@ test:
 rund: 
     docker run --env-file ./server/.env -p 8080:8080 -it mdp-server
 
-run-fe:
+runfe:
     cd ui-vite && npm run dev
+runbe:
+    cd server && cargo r
 
 ls:
     docker run --rm -it testserver ls -l /usr/local/bin
