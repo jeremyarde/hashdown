@@ -104,6 +104,9 @@ export function ListResponses() {
                                             console.log('getting answer with id: ', key);
                                             console.log(surveyResponse.answers[key])
                                             let answer = surveyResponse.answers[key] ?? '-';
+                                            // TODO: need to fix display of checkbox results.
+                                            // idToTitle might only contain blockIds, and not individual checkbox
+                                            // ids that are needed to record the results
                                             return (
                                                 <>
                                                     <TableCell className="font-medium">{answer}</TableCell>
