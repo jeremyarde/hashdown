@@ -101,12 +101,12 @@ export function ListResponses() {
                                     <TableCell className="font-medium">{surveyResponse.survey_id}</TableCell>
                                     {Object.entries(idToTitle).map(([key, value]) => {
                                         if (value) {
-                                            console.log('getting answer with id')
+                                            console.log('getting answer with id: ', key);
                                             console.log(surveyResponse.answers[key])
                                             let answer = surveyResponse.answers[key] ?? '-';
                                             return (
                                                 <>
-                                                    <TableCell className="font-medium">{`${key}: ${answer}`}</TableCell>
+                                                    <TableCell className="font-medium">{answer}</TableCell>
                                                 </>
                                             )
                                         }

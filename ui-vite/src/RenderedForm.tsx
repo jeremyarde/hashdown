@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { BASE_URL } from "./lib/constants";
 import { setDefaultHighWaterMark } from "stream";
+import { Textarea } from "./components/ui/textarea";
 
 /**
  * The complete Triforce, or one or more components of the Triforce.
@@ -164,6 +165,13 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                                             </div>
                                         )
                                         break;
+                                    case "Textarea":
+                                        blockHtml = (
+                                            <div>
+                                                {textareaComponent(block, setExampleSubmittion)}
+                                            </div>
+                                        )
+                                        break;
                                     case "Checkbox":
                                         blockHtml = (
                                             <div>
@@ -282,6 +290,15 @@ function textInput(block) {
         <>
             <Label htmlFor={block.id}>{block.properties.question}</Label>
             <Input id={block.id} name={block.id} placeholder="Enter text" />
+        </>
+    )
+}
+
+function textareaComponent(block) {
+    return (
+        <>
+            <Label htmlFor={block.id}>{block.properties.question}</Label>
+            <Textarea id={block.id} name={block.id} placeholder="Enter text" />
         </>
     )
 }
