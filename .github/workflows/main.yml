@@ -29,6 +29,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: earthly/actions/setup-earthly@v1
       - name: Run +all on Earthly satellite
+        if: github.ref == 'refs/heads/main'
         run: earthly --org jeremyarde --ci --satellite my-satellite +all
       - name: Put back the git branch into git (Earthly uses it for tagging)
         run: |
