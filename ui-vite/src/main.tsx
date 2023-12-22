@@ -44,17 +44,18 @@ Dropdown: My question here
   - Option 2
   - Option 3
 
-[Submit]`;
+Submit: submit`;
+
 function Home() {
   const [editorContent, setEditorContent] = useState(exampleText);
 
   return (<>
-    <h1 className='flex top-10 text-center justify-center m-12 text-xl'>
+    <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
+    <h1 className='flex top-10 text-center justify-center text-xl'>
       The easiest way to create and share surveys.
       <br />
       Create using simple markdown, visualize, publish and share!
     </h1>
-    <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
   </>)
 }
 

@@ -12,6 +12,71 @@ export type EditorProps = {
     setEditorContent: React.Dispatch<React.SetStateAction<string>>;
 }
 
+const userFeedbackTemplate = `# Hashdown User Feedback
+
+Textarea: How was your experience using Hashdown
+
+Textarea: What is the number one complaint you have?
+
+radio: How did you hear about us?
+- Friend
+- Online
+- Search
+Text: Other?
+
+checkbox: How did you hear about us?
+- [ ] Option 1
+- [ ] Option 2
+- [ ] Option 3
+
+radio: Can we contact you?
+- yes
+- no
+Text: Email address`;
+
+const userSignupTemplate = `# User Registration Form
+
+Text: First name [John Dog]
+
+Text: Email Address [john@dog.com]
+
+Textarea: This is nice [Enter your comments here]
+
+checkbox: subscribe?
+- [x] Subscribe to newsletter
+- [ ] second value here
+
+radio: my radio
+- radio button
+- another one
+- third radio
+
+Dropdown: My question here
+  - Option 1
+  - Option 2
+  - Option 3
+
+Submit: submit`;
+
+const emailCaptureSignup = `# Email
+
+Text: Email address
+
+Submit: Get updates`;
+
+function SampleForms({ setEditorContent }) {
+    return (
+        <>
+            <div className='flex flex-row'>
+                <div className='bg-blue p-3' onClick={(evt) => setEditorContent(userFeedbackTemplate)}>User signup</div>
+                <div className='bg-blue p-3' onClick={(evt) => setEditorContent(userFeedbackTemplate)}>Product feedback</div>
+                <div className='bg-blue p-3' onClick={(evt) => setEditorContent(emailCaptureSignup)}>Email capture</div>
+                <div className='bg-blue p-3' onClick={(evt) => setEditorContent(userFeedbackTemplate)}>Email opt out</div>
+            </div>
+        </>
+    );
+}
+
 export function EditorPage({ mode = "test", editorContent, setEditorContent }: EditorProps) {
     const { toast } = useToast()
     console.log('editorContent: ' + editorContent);
@@ -59,6 +124,7 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
             <div className="h-screen w-full flex">
                 <div className="w-1/2 p-4">
                     <h1 className="text-2xl font-bold mb-4">Enter Form Content</h1>
+                    <SampleForms setEditorContent={setEditorContent}></SampleForms>
                     <textarea
                         className="w-full h-4/6 p-2 rounded border border-gray-300"
                         placeholder="Enter form content here..."
