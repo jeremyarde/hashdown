@@ -18,6 +18,19 @@ CREATE table mdp.users (
     email_status mdp.email_status NOT NULL default 'unverified'
 );
 
+create table mdp.organizations (
+    id serial primary key,
+    organization_id text not null unique
+);
+
+create table mdp.user_organizations (
+    user_id text not null,
+    organization_id text not null,
+
+    foreign key(user_id) references mdp.users(user_id),
+    foreign key (organization_id) references mdp.organizations(organization_id)
+);
+
 CREATE table mdp.surveys (
     id SERIAL PRIMARY KEY,
     survey_id TEXT not null unique,
@@ -29,6 +42,7 @@ CREATE table mdp.surveys (
     version TEXT,
     parse_version TEXT,
     blocks JSON not null,
+    organization_id TEXT not null,
     
     foreign key(user_id) references mdp.users(user_id)
 );
@@ -80,3 +94,5 @@ INSERT INTO mdp.users (user_id, email, password_hash, email_status, created_at, 
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 );
+
+

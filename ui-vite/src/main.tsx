@@ -30,14 +30,9 @@ function Home() {
     <h1 className='flex top-10 text-center justify-center m-12 text-xl'>
       The easiest way to create and share surveys.
       <br />
-      Create using simple markdown format, visualize your survey, publish and share!
+      Create using simple markdown, visualize, publish and share!
     </h1>
     <EditorPage />
-    <Button className='bg-blue-400 rounded-lg p-6'>
-      <Link to="/login">
-        Get started
-      </Link>
-    </Button>
   </>)
 }
 

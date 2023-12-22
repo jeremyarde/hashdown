@@ -10,12 +10,15 @@
 }
 
 .skeu {
-  margin: 50px;
-  padding: 20px;
-  border-radius: 20px;
-  background: #e0e0e0;
-  box-shadow: 20px 20px 60px #bebebe,
-    -20px -20px 60px #ffffff;
+  /* margin: 50px; */
+  /* padding: 20px; */
+  border-radius: 5px;
+  /* background: #e0e0e0; */
+  border-style: solid;
+  border-color: black;
+  border-width: 1px;
+  /* box-shadow: 20px 20px 60px #bebebe,
+    -20px -20px 60px #ffffff; */
 }
 
 /* The switch - the box around the slider */
@@ -79,4 +82,37 @@ input:checked+.slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+
+
+.table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.table-row {
+  display: flex;
+}
+
+.table-cell {
+  flex: 1;
+  padding: 10px;
+  border-right: 1px solid #ccc;
+}
+
+.table-cell:last-child {
+  border-right: none;
+}
+
+.header {
+  font-weight: bold;
+  background-color: #f2f2f2;
+}
+
+.mycols {
+  grid-template-columns: repeat(--columns, 2fr);
 }

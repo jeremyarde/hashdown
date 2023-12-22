@@ -35,7 +35,7 @@ export function Navbar() {
             <div className="flex items-center justify-between w-full">
                 <div>
                     <Link className="text-2xl font-bold" to="/">
-                        <span>Form MD</span>
+                        <span>Hashdown</span>
                     </Link>
                 </div>
                 <div className="flex items-center space-x-4">

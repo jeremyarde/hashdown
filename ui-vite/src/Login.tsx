@@ -26,6 +26,12 @@ export function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const [componentState, setComponentState] = useState(ComponentState.Idle);
 
+    // Reset the login button when the user has updated either of the fields
+    const resetState = (event) => {
+        if (isLoading) {
+            setIsLoading(false);
+        }
+    };
 
     let globalState: GlobalState = useContext(GlobalStateContext);
 
@@ -97,10 +103,10 @@ export function Login() {
                         <div className="space-y-4 text-left" >
                             <form onSubmit={onSubmit}>
                                 <Label className="" htmlFor="email" > Email </Label>
-                                <Input id="email" placeholder="m@example.com" required type="email" onChange={e => setUsername(e.target.value)}
+                                <Input id="email" placeholder="m@example.com" required type="email" onChange={e => { setUsername(e.target.value); resetState(e) }}
                                     className="invalid:border-pink-500 invalid:text-pink-600" />
                                 <Label className="" htmlFor="password" > Password </Label>
-                                <Input id="password" required type="password" onChange={e => setPassword(e.target.value)} />
+                                <Input id="password" required type="password" onChange={e => { setPassword(e.target.value);; resetState(e) }} />
                                 <div className="p-4">
                                     {componentHtml ? (componentHtml) : (<div></div>)}
                                 </div>

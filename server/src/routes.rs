@@ -90,7 +90,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         .allow_origin(Any)
         .expose_headers([
             axum::http::header::CONTENT_ENCODING,
-            // hyper::http::HeaderName::from_static("session_id"),
+            axum::http::HeaderName::from_static("session_id"),
         ]);
 
     // let corslayer = CorsLayer::new();
@@ -216,6 +216,7 @@ pub enum SurveyFormat {
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct CreateSurveyRequest {
     pub plaintext: String,
+    pub organization: String,
 }
 
 // #[tracing::instrument]
