@@ -1,27 +1,25 @@
-import React, { StrictMode, createContext, useContext, useEffect, useState } from 'react'
+import React, { StrictMode, createContext, useContext, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate, createBrowserRouter, useRouteLoaderData, useLoaderData, Link, useParams, RouterProvider, Outlet } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams, Outlet } from 'react-router-dom'
 import './index.css'
 import { Login } from './Login.tsx'
 import { Navbar } from './Navbar.tsx'
 import { ListSurveys } from './pages/ListSurveys.tsx'
 import { RenderedForm } from './RenderedForm.tsx'
-import { markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
 import { Signup } from './Signup.tsx'
-import { Button } from './components/ui/button.tsx'
 import { BASE_URL, SESSION_TOKEN_KEY } from './lib/constants.ts'
 import { EditorPage } from './pages/EditorPage.tsx'
 import { ListResponses } from './ListResponses.tsx'
 import { useGetSurvey } from './hooks/useGetSurvey.ts'
 
 
-export type GlobalState = {
-  sessionId: string;
-  setSessionId: React.Dispatch<React.SetStateAction<string>>,
-  refreshToken: string,
-  setRefreshToken: React.Dispatch<React.SetStateAction<string>>,
-}
-export const GlobalStateContext = createContext({ token: '', setToken: undefined });
+// export type GlobalState = {
+//   sessionId: string | undefined;
+//   setSessionId: React.Dispatch<React.SetStateAction<string>>,
+//   // refreshToken: string,
+//   // setRefreshToken: React.Dispatch<React.SetStateAction<string>>,
+// }
+// export const GlobalStateContext = createContext({ sessionId: undefined, setSessionId });
 
 // const routerContext = new RouterContext<GlobalState>()
 
@@ -51,7 +49,7 @@ function RenderedSurvey() {
   // const data = useLoaderData();
   let { surveyId } = useParams();
   let { survey, error, isPending } = useGetSurvey(surveyId);
-  let globalState: GlobalState = useContext(GlobalStateContext);
+  // let globalState: GlobalState = useContext(GlobalStateContext);
 
   console.log('rendered from url: ' + JSON.stringify(survey));
   console.log(`useGetSurvey: ${JSON.stringify(survey)}, ${error}, ${isPending}`);
@@ -101,33 +99,31 @@ Dropdown: My question here
 [Submit]`;
 
   const [formtext, setFormtext] = useState(exampleText);
-  // const survey = markdown_to_form_wasm_v2(exampleText);
   const [token, setToken] = useState(window.sessionStorage.getItem(SESSION_TOKEN_KEY) ?? '');
-  // const [editorContent, setEditorContent] = useState()
 
-  const globalState: GlobalState = {
-    sessionId: token,
-    setSessionId: setToken,
-  };
+  // const globalState: GlobalState = {
+  //   sessionId: token,
+  //   setSessionId: setToken,
+  // };
 
   return (
     <>
-      <GlobalStateContext.Provider value={globalState}>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/editor" element={<EditorPage editorContent={formtext} setEditorContent={setFormtext} />} />
-              <Route path="/surveys" element={<ListSurveys />} />
-              <Route path='/responses' element={<ListResponses />} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Route>
-            <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
-          </Routes>
-        </BrowserRouter>
-      </GlobalStateContext.Provider >
+      {/* <GlobalStateContext.Provider value={globalState}> */}
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/editor" element={<EditorPage editorContent={formtext} setEditorContent={setFormtext} />} />
+            <Route path="/surveys" element={<ListSurveys />} />
+            <Route path='/responses' element={<ListResponses />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Route>
+          <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </BrowserRouter>
+      {/* </GlobalStateContext.Provider > */}
     </>
   )
 }

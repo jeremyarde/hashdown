@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { Button } from '../components/ui/button';
 import { BASE_URL } from '@/lib/constants';
-import { GlobalState, GlobalStateContext } from '@/main';
+// import { GlobalState, GlobalStateContext } from '@/main';
 import {
     Table,
     TableBody,
@@ -14,19 +14,13 @@ import {
 import { Link, Navigate, redirect, useNavigate } from 'react-router-dom';
 import { MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { handleResponse } from '@/lib/utils';
+import { getSessionToken, handleResponse } from '@/lib/utils';
+import { Survey } from '@/lib/constants';
 
-
-type Survey = {
-    id: string;
-    created_at: string,
-    survey_id: string,
-}
 
 export function ListSurveys() {
     const [surveys, setSurveys] = useState([]);
     const [error, setError] = useState('');
-    let globalState: GlobalState = useContext(GlobalStateContext);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -38,11 +32,11 @@ export function ListSurveys() {
             method: "GET",
             // credentials: 'include',
             headers: {
-                'session_id': globalState.sessionId ?? '',
+                'session_id': getSessionToken() ?? '',
             }
         });
 
-        handleResponse(response, globalState);
+        handleResponse(response);
 
         const result = await response.json();
         console.log('data: ', result);
@@ -59,7 +53,7 @@ export function ListSurveys() {
         }
     }
 
-    const viewSurvey = (surveyId) => {
+    const viewSurvey = (surveyId: string) => {
         console.log('go to survey');
         navigate(`/surveys/${surveyId}`);
         console.log('go to survey - END');
@@ -87,7 +81,7 @@ export function ListSurveys() {
                             </TableRow>
                         </TableHeader>
                         <TableBody className=''>
-                            {surveys.map(survey => {
+                            {surveys.map((survey: Survey) => {
                                 return (
                                     <TableRow className='outline outline-1 outline-gray-300 hover:bg-blue-100'>
                                         <TableCell className="font-medium">{survey.survey_id}</TableCell>

@@ -1,23 +1,34 @@
 import { BASE_URL } from "@/lib/constants";
-import { GlobalState, GlobalStateContext } from "@/main";
+// import { GlobalState, GlobalStateContext } from "@/main";
 import { useContext, useEffect, useState } from "react";
 import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
+import { Survey } from "@/lib/constants";
+import { getSessionToken } from "@/lib/utils";
 
-export function useGetSurvey(surveyId: string) {
-    let globalState: GlobalState = useContext(GlobalStateContext);
+
+/**
+ * 
+ * @param surveyId 
+ * @returns {Survey, string, boolean}
+ */
+export function useGetSurvey(surveyId: string | undefined): { survey: Survey | undefined, error: string, isPending: boolean } {
+    // let globalState: GlobalState = useContext(GlobalStateContext);
     const [survey, setSurvey] = useState();
     const [isPending, setIsPending] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState('');
 
-    const getSurvey = async (getSurveyId) => {
+    const getSurvey = async (getSurveyId: string | undefined) => {
+        if (!getSurveyId) {
+            return;
+        }
+
         setIsPending(true);
         try {
-
             const response = await fetch(`${BASE_URL}/surveys/${getSurveyId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
-                    "session_id": `${globalState.sessionId}`
+                    "session_id": getSessionToken()
                 },
                 // credentials: 'include',
             });
@@ -37,7 +48,7 @@ export function useGetSurvey(surveyId: string) {
             }
             setIsPending(false);
             setSurvey(fullSurvey);
-            setError(null);
+            setError('');
         } catch (error) {
             setIsPending(false);
             setError(`Could not fetch data: ${error}`);
@@ -48,5 +59,7 @@ export function useGetSurvey(surveyId: string) {
         getSurvey(surveyId);
     }, []);
 
-    return { survey, error, isPending }
+    return {
+        survey, error, isPending
+    }
 }

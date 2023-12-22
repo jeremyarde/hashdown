@@ -17,7 +17,7 @@ export function Signup() {
 
     let globalState: GlobalState = useContext(GlobalStateContext);
 
-    const onSubmit = async (event) => {
+    const onSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
         const payload = JSON.stringify({ email: username, password: password });
         console.log('login component')
@@ -35,7 +35,7 @@ export function Signup() {
 
             if (response.status === 200) {
                 const result = await response.json();
-                const session_header = response.headers.get(SESSION_TOKEN_KEY);
+                const session_header = response.headers.get(SESSION_TOKEN_KEY) || '';
 
                 setLoggedIn(true);
                 globalState.setSessionId(session_header);

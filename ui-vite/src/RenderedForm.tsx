@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from "react";
 import { Button } from './components/ui/button';
 import { Label } from "@/components/ui/label"
@@ -12,36 +13,35 @@ import { Textarea } from "./components/ui/textarea";
  * @property {string} text - Indicates whether the Courage component is present.
  * @property {string} id - Indicates whether the Power component is present.
  */
-export type RenderedFormProps = {
-    // plaintext: string;
-    survey: object;
-    mode: "test" | "prod"
-}
+// export type RenderedFormProps = {
+//     // plaintext: string;
+//     survey: object;
+//     mode: "test" | "prod"
+// }
 
-export interface Survey {
-    blocks: Block[]
-    id: string
-    parse_version: string
-    plaintext: string
-    questions: any[]
-    title: string
-}
+// // export interface Survey {
+// //     blocks: Block[]
+// //     id: string
+// //     parse_version: string
+// //     plaintext: string
+// //     questions: any[]
+// //     title: string
+// // }
 
-export interface Block {
-    block_type: string
-    id: string
-    index: number
-    properties: Properties
-}
+// // export interface Block {
+// //     block_type: string
+// //     id: string
+// //     index: number
+// //     properties: Properties
+// // }
 
-export interface Properties {
-    title?: string
-    type: string
-    options?: any[]
-    question?: string
-    text?: string
-}
-
+// // export interface Properties {
+// //     title?: string
+// //     type: string
+// //     options?: any[]
+// //     question?: string
+// //     text?: string
+// // }
 
 function surveyToForm(survey: Survey) {
     let form = {};
