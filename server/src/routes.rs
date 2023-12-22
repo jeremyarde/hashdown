@@ -216,6 +216,7 @@ pub enum SurveyFormat {
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct CreateSurveyRequest {
     pub plaintext: String,
+    pub organization: String,
 }
 
 // #[tracing::instrument]

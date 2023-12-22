@@ -117,6 +117,11 @@ export function ListSurveys() {
                                                     >
                                                         Responses
                                                     </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={(evt) => navigator.clipboard.writeText(`http://localhost:5173/surveys/${survey.survey_id}`)}
+                                                    >
+                                                        Copy public link (this needs to be different)
+                                                    </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
 

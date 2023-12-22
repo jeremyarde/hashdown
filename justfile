@@ -25,3 +25,6 @@ runbe:
 
 ls:
     docker run --rm -it testserver ls -l /usr/local/bin
+
+migrate:
+    cd server && sqlx migrate revert && sqlx migrate run

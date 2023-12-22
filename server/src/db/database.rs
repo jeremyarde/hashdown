@@ -263,8 +263,8 @@ impl Database {
         let res = sqlx::query_as!(
             SurveyModel,
             r#"insert into mdp.surveys (
-                    name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version, blocks
-                ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *"#,
+                    name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version, blocks, organization_id
+                ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *"#,
             survey.name,
             survey.survey_id,
             survey.user_id,
@@ -273,7 +273,8 @@ impl Database {
             survey.plaintext,
             survey.version,
             survey.parse_version,
-            survey.blocks
+            survey.blocks,
+            "organization here"
         )
         .fetch_one(&self.pool)
         .await
