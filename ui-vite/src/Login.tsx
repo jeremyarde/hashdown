@@ -2,8 +2,7 @@ import { Input } from "./components/ui/input";
 import { Button } from "./components/ui/button";
 import { Label } from "./components/ui/label";
 import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
-import { useContext, useState } from "react";
-import { GlobalState, GlobalStateContext } from "./main";
+import { ChangeEvent, FormEvent, useContext, useState } from "react";
 import { Navigate, redirect } from "react-router-dom";
 import { handleResponse, setSessionToken } from "./lib/utils";
 
@@ -27,20 +26,19 @@ export function Login() {
     const [componentState, setComponentState] = useState(ComponentState.Idle);
 
     // Reset the login button when the user has updated either of the fields
-    const resetState = (event) => {
+    const resetState = (event: ChangeEvent) => {
         if (isLoading) {
             setIsLoading(false);
         }
     };
 
-    let globalState: GlobalState = useContext(GlobalStateContext);
+    // let globalState: GlobalState = useContext(GlobalStateContext);
 
-    const onSubmit = async (event) => {
+    const onSubmit = async (event: FormEvent) => {
         event.preventDefault();
         setIsLoading(true);
         const loginPayload = JSON.stringify({ email: username, password: password });
         console.log('login component')
-        console.log(globalState)
         try {
             const response = await fetch(`${BASE_URL}/auth/login`, {
                 method: "POST",
@@ -51,12 +49,12 @@ export function Login() {
                 body: loginPayload,
             });
             const result = await response.json();
-            handleResponse(response, globalState);
+            handleResponse(response);
 
             if (response.status === 200) {
                 // const result = await response.json();
                 setLoggedIn(true);
-                setSessionToken(response, globalState);
+                setSessionToken(response);
                 setLoginError('');
             } else if (response.status === 401) {
                 setLoginError(result.error.message);

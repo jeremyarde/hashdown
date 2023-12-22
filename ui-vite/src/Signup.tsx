@@ -2,8 +2,8 @@ import { Input } from "./components/ui/input";
 import { Button } from "./components/ui/button";
 import { Label } from "./components/ui/label";
 import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
-import { useContext, useState } from "react";
-import { GlobalState, GlobalStateContext } from "./main";
+import { FormEvent, useContext, useState } from "react";
+// import { GlobalState, GlobalStateContext } from "./main";
 
 /**
 * v0 by Vercel.
@@ -15,14 +15,13 @@ export function Signup() {
     const [password, setPassword] = useState('');
     const [loggedIn, setLoggedIn] = useState(false);
 
-    let globalState: GlobalState = useContext(GlobalStateContext);
+    // let globalState: GlobalState = useContext(GlobalStateContext);
 
-    const onSubmit = async (event: SubmitEvent) => {
+    const onSubmit = async (event: FormEvent) => {
         event.preventDefault();
         const payload = JSON.stringify({ email: username, password: password });
         console.log('login component')
         console.log(payload);
-        console.log(globalState)
         try {
             const response = await fetch(`${BASE_URL}/auth/signup`, {
                 method: "POST",
@@ -38,7 +37,6 @@ export function Signup() {
                 const session_header = response.headers.get(SESSION_TOKEN_KEY) || '';
 
                 setLoggedIn(true);
-                globalState.setSessionId(session_header);
                 window.sessionStorage.setItem(SESSION_TOKEN_KEY, session_header);
             }
 
