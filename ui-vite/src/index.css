@@ -83,3 +83,36 @@ input:checked+.slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+
+
+.table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.table-row {
+  display: flex;
+}
+
+.table-cell {
+  flex: 1;
+  padding: 10px;
+  border-right: 1px solid #ccc;
+}
+
+.table-cell:last-child {
+  border-right: none;
+}
+
+.header {
+  font-weight: bold;
+  background-color: #f2f2f2;
+}
+
+.mycols {
+  grid-template-columns: repeat(--columns, 2fr);
+}
