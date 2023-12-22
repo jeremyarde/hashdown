@@ -1,6 +1,6 @@
 import { BASE_URL } from "@/lib/constants";
 // import { GlobalState, GlobalStateContext } from "@/main";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
 import { Survey } from "@/lib/constants";
 import { getSessionToken } from "@/lib/utils";

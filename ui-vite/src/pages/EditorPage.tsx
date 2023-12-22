@@ -7,37 +7,13 @@ import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
 import { getSessionToken } from "@/lib/utils";
 
 export type EditorProps = {
-    mode: "test"
+    mode: "test" | "prod"
     editorContent: string;
     setEditorContent: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export function EditorPage({ mode = "test", editorContent, setEditorContent }: EditorProps) {
-    // let globalState = useContext(GlobalStateContext);
     const { toast } = useToast()
-    //     const [editorContent, setEditorContent] = useState(`# User Registration Form
-
-    // Text: First name [John Dog]
-
-    // Text: Email Address [john@dog.com]
-
-    // Textarea: This is nice [Enter your comments here]
-
-    // checkbox: subscribe?
-    // - [x] Subscribe to newsletter
-    // - [ ] second value here
-
-    // radio: my radio
-    // - radio button
-    // - another one
-    // - third radio
-
-    // Dropdown: My question here
-    //     - Option 1
-    //     - Option 2
-    //     - Option 3
-
-    // submit: Send [default values]`);
     console.log('editorContent: ' + editorContent);
     const [survey, setSurvey] = useState(markdown_to_form_wasm_v2(editorContent));
 
@@ -48,7 +24,7 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
     }, [editorContent]);
     // const [token, setToken] = useState('');
 
-    async function submitSurvey(event: MouseEvent) {
+    async function submitSurvey(event: React.MouseEvent<HTMLElement>) {
         const response = await fetch(`${BASE_URL}/surveys`, {
             method: "POST",
             // credentials: 'include',

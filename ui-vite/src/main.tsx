@@ -22,28 +22,52 @@ import { useGetSurvey } from './hooks/useGetSurvey.ts'
 // export const GlobalStateContext = createContext({ sessionId: undefined, setSessionId });
 
 // const routerContext = new RouterContext<GlobalState>()
+const exampleText = `# User Registration Form
 
+Text: First name [John Dog]
+
+Text: Email Address [john@dog.com]
+
+Textarea: This is nice [Enter your comments here]
+
+checkbox: subscribe?
+- [x] Subscribe to newsletter
+- [ ] second value here
+
+radio: my radio
+- radio button
+- another one
+- third radio
+
+Dropdown: My question here
+  - Option 1
+  - Option 2
+  - Option 3
+
+[Submit]`;
 function Home() {
+  const [editorContent, setEditorContent] = useState(exampleText);
+
   return (<>
     <h1 className='flex top-10 text-center justify-center m-12 text-xl'>
       The easiest way to create and share surveys.
       <br />
       Create using simple markdown, visualize, publish and share!
     </h1>
-    <EditorPage />
+    <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
   </>)
 }
 
-type Survey = {
-  id: string;
-  survey_id: string;
-  user_id: string;
-  created_at: Date;
-  modified_at: Date,
-  plaintext: string;
-  version: string;
-  parse_version: string;
-}
+// type Survey = {
+//   id: string;
+//   survey_id: string;
+//   user_id: string;
+//   created_at: Date;
+//   modified_at: Date,
+//   plaintext: string;
+//   version: string;
+//   parse_version: string;
+// }
 
 function RenderedSurvey() {
   // const data = useLoaderData();
@@ -74,29 +98,6 @@ export function Layout() {
 
 function App() {
   // const exampleText = '# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"';
-  const exampleText = `# User Registration Form
-
-Text: First name [John Dog]
-
-Text: Email Address [john@dog.com]
-
-Textarea: This is nice [Enter your comments here]
-
-checkbox: subscribe?
-- [x] Subscribe to newsletter
-- [ ] second value here
-
-radio: my radio
-- radio button
-- another one
-- third radio
-
-Dropdown: My question here
-  - Option 1
-  - Option 2
-  - Option 3
-
-[Submit]`;
 
   const [formtext, setFormtext] = useState(exampleText);
   const [token, setToken] = useState(window.sessionStorage.getItem(SESSION_TOKEN_KEY) ?? '');
@@ -113,7 +114,7 @@ Dropdown: My question here
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/editor" element={<EditorPage editorContent={formtext} setEditorContent={setFormtext} />} />
+            <Route path="/editor" element={<EditorPage mode='prod' editorContent={formtext} setEditorContent={setFormtext} />} />
             <Route path="/surveys" element={<ListSurveys />} />
             <Route path='/responses' element={<ListResponses />} />
             <Route path="*" element={<Navigate to="/" />} />
