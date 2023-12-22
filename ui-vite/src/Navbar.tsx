@@ -3,18 +3,15 @@
  * @see https://v0.dev/t/LUoP6hiokbX
  */
 // import a from "next/a"
-import { Button } from "@/components/ui/button"
-import { SelectTrigger, SelectItem, SelectGroup, SelectContent, Select } from "./components/ui/select"
-import { useContext } from "react";
-import { GlobalState, GlobalStateContext } from "./main";
 import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
 import { Link } from "react-router-dom";
 import { Toaster } from "./components/ui/toaster";
+import { getSessionToken } from "./lib/utils";
 
 
 
 export function Navbar() {
-    let globalState: GlobalState = useContext(GlobalStateContext);
+    // let globalState: GlobalState = useContext(GlobalStateContext);
 
     async function logout() {
         console.log('logging out');
@@ -27,7 +24,8 @@ export function Navbar() {
         //     // body: payload,
         // });
         window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
-        globalState.setSessionId('');
+        // globalState.setSessionId('');
+
     };
 
     return (
@@ -39,7 +37,7 @@ export function Navbar() {
                     </Link>
                 </div>
                 <div className="flex items-center space-x-4">
-                    {!globalState.sessionId ? (
+                    {!getSessionToken() ? (
                         <>
                             <Link className="hover:animate-pulse" to="/editor">Editor</Link>
                             <Link className="hover:animate-pulse" to="/login">Login</Link>

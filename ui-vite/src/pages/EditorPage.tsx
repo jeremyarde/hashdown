@@ -1,41 +1,19 @@
 import { useContext, useEffect, useState } from "react";
 import { RenderedForm } from "../RenderedForm";
 import { BASE_URL } from "@/lib/constants";
-import { GlobalStateContext } from "@/main";
+// import { GlobalStateContext } from "@/main";
 import { useToast } from "@/components/ui/use-toast";
 import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
+import { getSessionToken } from "@/lib/utils";
 
 export type EditorProps = {
+    mode: "test" | "prod"
     editorContent: string;
     setEditorContent: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function EditorPage({ mode = "test" }) {
-    let globalState = useContext(GlobalStateContext);
+export function EditorPage({ mode = "test", editorContent, setEditorContent }: EditorProps) {
     const { toast } = useToast()
-    const [editorContent, setEditorContent] = useState(`# User Registration Form
-
-Text: First name [John Dog]
-
-Text: Email Address [john@dog.com]
-
-Textarea: This is nice [Enter your comments here]
-
-checkbox: subscribe?
-- [x] Subscribe to newsletter
-- [ ] second value here
-
-radio: my radio
-- radio button
-- another one
-- third radio
-
-Dropdown: My question here
-    - Option 1
-    - Option 2
-    - Option 3
-
-submit: Send [default values]`);
     console.log('editorContent: ' + editorContent);
     const [survey, setSurvey] = useState(markdown_to_form_wasm_v2(editorContent));
 
@@ -46,13 +24,13 @@ submit: Send [default values]`);
     }, [editorContent]);
     // const [token, setToken] = useState('');
 
-    async function submitSurvey(event) {
+    async function submitSurvey(event: React.MouseEvent<HTMLElement>) {
         const response = await fetch(`${BASE_URL}/surveys`, {
             method: "POST",
             // credentials: 'include',
             headers: {
                 'content-type': 'application/json',
-                'session_id': globalState.sessionId ?? '',
+                'session_id': getSessionToken(),
             },
             body: JSON.stringify({ plaintext: editorContent })
         });

@@ -1,6 +1,4 @@
-import React from 'react';
-
-export function createTable(cols = [], dataKeys = [], data = []) {
+export function createTable(cols: string[], dataKeys: string[], data: any[]) {
     return (
         <div className="space-y-6">
             <form className="relative">
@@ -21,7 +19,7 @@ export function createTable(cols = [], dataKeys = [], data = []) {
                     {data.map(dataItem => {
                         return (
                             <>
-                                {dataKeys.map((dataKey) => {
+                                {dataKeys.map((dataKey: string) => {
                                     let nested = dataKey.split('.');
                                     let value = dataItem;
                                     nested.forEach(key => {
