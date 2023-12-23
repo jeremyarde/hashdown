@@ -67,8 +67,8 @@ Text: Email address
 
 Submit: Get updates`;
 
-const emailMarketingOptOut = `# Unsubscribe to
-checkbox: I don't want to recieve...
+const emailMarketingOptOut = `# Unsubscribe to Hashdown
+checkbox: I don't want to receive...
 - [ ] marketing emails
 - [ ] launch alerts
 - [ ] new product alerts
@@ -104,54 +104,42 @@ type TabContent = {
     template: string;
 }
 
-function TabItem({ item, setContentCallback }:
-    { item: TabContent, setContentCallback: React.Dispatch<React.SetStateAction<string>> }
+function TabItem({ item, setContentCallback, active, setSelected, index }:
+    {
+        item: TabContent,
+        setContentCallback: React.Dispatch<React.SetStateAction<string>>,
+        active: boolean,
+        setSelected: Function,
+        index: number,
+    }
 ) {
-    const [selected, setSelected] = useState(false);
-    console.log('tabitem', item);
-
     const onClick = (evt) => {
-        // console.log('jere/ callback', setContentCallback);
         setContentCallback(item.template);
-        setSelected(true);
+        setSelected(index);
     };
 
-    let sel_style = 'bg-blue p-3 active:bg-purple';
-    let unsel_style = 'bg-yellow p-3 active:bg-purple';
+    // let sel_style = 'bg-blue p-3';
+    // let unsel_style = 'bg-yellow p-3 ';
 
     return (
         <>
-            {selected ?
-                (<div className={sel_style} onClick={onClick}>{item.tabname}</div>) :
-                (<div className={unsel_style} onClick={onClick}>{item.tabname}</div>)
-            }
+            <div className={active ? 'bg-blue p-1 text-xs rounded-t-lg flex-grow shadow-md' : 'bg-yellow p-1 text-xs rounded-t-md flex-grow shadow-md'} onClick={onClick}>{item.tabname}</div>
         </>
     )
 }
 
 function SampleForms({ setEditorContent }: { setEditorContent: React.Dispatch<React.SetStateAction<string>> }) {
-    // const [selected, setSelected] = useState(tabTemplates.map((item) => false));
-    // const [selected, setSelected] = useState([false, false, false, false]);
-    // console.log('jere/ selected', selected);
-
-    // function tabClick(i, template) {
-    //     setEditorContent(template.template);
-    //     setSelected((curr) => {
-    //         let newSelected = tabTemplates.map((item) => false);
-    //         newSelected[i] = true;
-    //         curr = newSelected;
-    //     });
-    // };
+    const [selected, setSelected] = useState(0);
 
     return (
         <>
-            <div className='flex flex-row bg-pink p-4'>
+            <div className='flex w-full'>
                 {tabTemplates.map((template: TabContent, i) => {
                     // console.log('making tabs', selected);
                     // const styleName = selected[i] === true ? "bg-green p-3" : "bg-blue p-3";
                     return (
                         <>
-                            <TabItem key={i} item={template} setContentCallback={setEditorContent}></TabItem>
+                            <TabItem key={i} index={i} active={selected === i} setSelected={setSelected} item={template} setContentCallback={setEditorContent}></TabItem>
                             {/* <div className="bg-blue p-3 active:bg-purple" onClick={(evt) => tabClick(i, template)}>{template.tabname}</div> */}
                         </>
                     )
