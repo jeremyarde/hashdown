@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { MouseEvent, useContext, useEffect, useState } from "react";
 import { RenderedForm } from "../RenderedForm";
 import { BASE_URL } from "@/lib/constants";
 // import { GlobalStateContext } from "@/main";
@@ -113,7 +113,7 @@ function TabItem({ item, setContentCallback, active, setSelected, index }:
         index: number,
     }
 ) {
-    const onClick = (evt) => {
+    const onClick = () => {
         setContentCallback(item.template);
         setSelected(index);
     };
@@ -123,7 +123,10 @@ function TabItem({ item, setContentCallback, active, setSelected, index }:
 
     return (
         <>
-            <div className={active ? 'bg-blue p-1 text-xs rounded-t-lg flex-grow shadow-md' : 'bg-yellow p-1 text-xs rounded-t-md flex-grow shadow-md'} onClick={onClick}>{item.tabname}</div>
+            <div className={active ?
+                'bg-gray p-1 text-xs rounded-t-lg flex-grow shadow-md' :
+                'bg-gray-light p-1 text-xs rounded-t-md flex-grow shadow-md'}
+                onClick={onClick}>{item.tabname}</div>
         </>
     )
 }
@@ -198,8 +201,8 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
     return (
         <>
             <div className="h-screen w-full flex">
-                <div className="w-1/2 p-4">
-                    <h1 className="text-2xl font-bold mb-4">Enter Form Content</h1>
+                <div className="w-1/2 p-4 overflow-auto">
+                    <h1 className="text-2xl font-bold">Enter Form Content</h1>
                     <SampleForms setEditorContent={setEditorContent}></SampleForms>
                     <textarea
                         className="w-full h-4/6 p-2 rounded border border-gray-300"
@@ -211,8 +214,8 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
                         <button className="bg-green-200 border w-full p-1 flex-1" onClick={submitSurvey}>Publish</button>
                     </div>
                 </div>
-                <div className="w-1/2 p-4">
-                    <h1 className="text-2xl font-bold mb-4">Preview</h1>
+                <div className="w-1/2 p-4 overflow-auto">
+                    <h1 className="text-2xl font-bold">Preview</h1>
                     <RenderedForm survey={survey} mode={mode} ></RenderedForm>
                 </div>
             </div>

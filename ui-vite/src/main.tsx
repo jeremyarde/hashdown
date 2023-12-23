@@ -49,14 +49,20 @@ Submit: submit`;
 function Home() {
   const [editorContent, setEditorContent] = useState(exampleText);
 
-  return (<>
-    <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
-    <h1 className='flex top-10 text-center justify-center text-xl'>
-      The easiest way to create and share surveys.
-      <br />
-      Create using simple markdown, visualize, publish and share!
-    </h1>
-  </>)
+  return (
+    <>
+      <div className='flex-col flex'>
+
+        <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
+        <div className=''>
+          <h1 className='flex top-10 text-center justify-center text-xl'>
+            The easiest way to create and share surveys.
+            <br />
+            Create using simple markdown, visualize, publish and share!
+          </h1>
+        </div>
+      </div>
+    </>)
 }
 
 // type Survey = {
