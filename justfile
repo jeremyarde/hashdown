@@ -28,7 +28,4 @@ ls:
 
 migrate:
     cd server && sqlx migrate revert && sqlx migrate run
-
-runfe:
-    cd ui-vite && npm run dev
     

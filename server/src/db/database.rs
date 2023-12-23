@@ -137,18 +137,18 @@ pub struct UserModel {
     pub password_hash: String,
     pub created_at: DateTime<Utc>,
     pub modified_at: DateTime<Utc>,
-    pub email_status: EmailStatus,
+    pub email_status: String,
     pub user_id: String,
     pub deleted_at: Option<DateTime<Utc>>,
     // pub user_id: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, sqlx::Type)]
-#[sqlx(type_name = "email_status", rename_all = "snake_case")]
-pub enum EmailStatus {
-    Verified,
-    Unverified,
-}
+// #[derive(Debug, Serialize, Deserialize, Clone, sqlx::Type)]
+// #[sqlx(type_name = "email_status", rename_all = "snake_case")]
+// pub enum EmailStatus {
+//     Verified,
+//     Unverified,
+// }
 #[derive(Deserialize, Serialize, FromRow, Debug, Clone)]
 pub struct AnswerModel {
     id: i32,
@@ -192,18 +192,6 @@ impl Database {
         println!("->> create_user");
 
         let _time = chrono::Utc::now();
-        // let user = UserModel {
-        //     // id: todo!(),
-        //     email: request.email,
-        //     password_hash: request.password_hash,
-        //     created_at: time,
-        //     modified_at: time,
-        //     verified: false,
-        //     user_id: nanoid_gen(24),
-        //     id: 0,
-        // }
-        // .insert(&self.pool)
-        // .await?;
         let user = sqlx::query_as::<_, UserModel>(
             "insert into mdp.users (user_id, password_hash, email, created_at, modified_at) values($1, $2, $3, $4, $5) returning *",
         )
@@ -219,17 +207,15 @@ impl Database {
     }
 
     pub async fn get_user_by_email(&self, email: String) -> anyhow::Result<UserModel> {
-        // let result = sqlx::query_as::<_, UserModel>(
-        //     "select email, password_hash from users where users.email = $1",
-        // )
-        // .bind(email)
-        // .fetch_one(&self.pool)
-        // .await?;
         info!("Search for user with email: {email:?}");
 
-        let res = sqlx::query_as!(UserModel, r#"select id, user_id, email, password_hash, created_at, modified_at, deleted_at, email_status as "email_status: EmailStatus" from mdp.users where email = $1"#, email)
-            .fetch_one(&self.pool)
-            .await?;
+        let res = sqlx::query_as!(
+            UserModel,
+            r#"select * from mdp.users where email = $1"#,
+            email
+        )
+        .fetch_one(&self.pool)
+        .await?;
 
         // let res = UserModel::select()
         //     .where_bind("email = ", email)

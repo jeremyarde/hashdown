@@ -4,7 +4,8 @@ import { BASE_URL } from "@/lib/constants";
 // import { GlobalStateContext } from "@/main";
 import { useToast } from "@/components/ui/use-toast";
 import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
-import { getSessionToken } from "@/lib/utils";
+import { getSessionToken, handleResponse } from "@/lib/utils";
+import { redirect } from "react-router-dom";
 
 export type EditorProps = {
     mode: "test" | "prod"
@@ -178,16 +179,15 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
             },
             body: JSON.stringify({ plaintext: editorContent })
         });
-
+        handleResponse(response);
         const result = await response.json();
-        console.log('data: ', result);
 
         if (response.status === 401) {
-            // redirect({ to: "/login", replace: true });
             toast({
                 title: "Submit Survey: Failed",
                 description: result.message
             })
+            // redirect("/login");
         }
 
         if (response.status === 200) {

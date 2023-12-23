@@ -131,7 +131,7 @@ pub struct SurveyModel {
     pub version: Option<String>,
     pub parse_version: Option<String>,
     pub blocks: Value,
-    pub organization_id: String,
+    pub organization_id: Option<String>,
     // pub parsed_json: Option<Value>,
 }
 impl SurveyModel {

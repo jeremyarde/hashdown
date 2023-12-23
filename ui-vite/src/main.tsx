@@ -11,6 +11,7 @@ import { BASE_URL, SESSION_TOKEN_KEY } from './lib/constants.ts'
 import { EditorPage } from './pages/EditorPage.tsx'
 import { ListResponses } from './ListResponses.tsx'
 import { useGetSurvey } from './hooks/useGetSurvey.ts'
+import { markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
 
 
 // export type GlobalState = {
@@ -103,6 +104,19 @@ export function Layout() {
   )
 }
 
+function Waitlist() {
+  let survey = markdown_to_form_wasm_v2(`# Hashdown waitlist :)
+Text: Email
+textarea: What do you want to use Hashdown for?
+Submit: Put me on waitlist
+`);
+  return (
+    <>
+      <RenderedForm survey={survey}></RenderedForm>
+    </>
+  )
+}
+
 function App() {
   // const exampleText = '# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"';
 
@@ -124,6 +138,7 @@ function App() {
             <Route path="/editor" element={<EditorPage mode='prod' editorContent={formtext} setEditorContent={setFormtext} />} />
             <Route path="/surveys" element={<ListSurveys />} />
             <Route path='/responses' element={<ListResponses />} />
+            <Route path='/waitlist' element={<Waitlist />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Route>
           <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />

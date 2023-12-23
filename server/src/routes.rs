@@ -136,6 +136,7 @@ pub async fn create_survey(
         .to_str()
         .unwrap()
         .to_string();
+
     let session = state.db.get_session(session_id).await.unwrap();
 
     // let ctx = match &ctx {
@@ -216,7 +217,7 @@ pub enum SurveyFormat {
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct CreateSurveyRequest {
     pub plaintext: String,
-    pub organization: String,
+    pub organization: Option<String>,
 }
 
 // #[tracing::instrument]

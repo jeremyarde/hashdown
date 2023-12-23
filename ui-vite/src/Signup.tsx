@@ -19,16 +19,13 @@ export function Signup() {
 
     const onSubmit = async (event: FormEvent) => {
         event.preventDefault();
-        const payload = JSON.stringify({ email: username, password: password });
-        console.log('login component')
-        console.log(payload);
+        const payload = JSON.stringify({ email: username, password });
         try {
             const response = await fetch(`${BASE_URL}/auth/signup`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                // credentials: 'include',
                 body: payload,
             });
 

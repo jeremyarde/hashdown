@@ -24,10 +24,6 @@ use crate::routes::LoginPayload;
 use crate::ServerState;
 use crate::{db, ServerError};
 
-pub enum AuthError {
-    PasswordDoNotMatch,
-}
-
 #[axum::debug_handler]
 pub async fn signup(
     state: State<ServerState>,
@@ -41,7 +37,7 @@ pub async fn signup(
         .get_user_by_email(payload.email.clone())
         .await
         .with_context(|| "Checking if user already exists")
-        .is_err()
+        .is_ok()
     {
         return Err(ServerError::UserAlreadyExists);
     };
@@ -159,28 +155,6 @@ pub async fn login(
     match argon2.verify_password(payload.password.as_bytes(), &current_password_hash) {
         Ok(_) => true,
         Err(_) => return Err(ServerError::AuthPasswordsDoNotMatch),
-    };
-
-    match user.email_status {
-        db::database::EmailStatus::Verified => {
-            // state.mail.send(
-            //     &state.mail.test_to,
-            //     &state.mail.test_from,
-            //     "Yo here is your magic link: {}".to_string(),
-            // );
-        }
-        _ => {
-            // lets ask user to verify, or send a magic link?
-            // state.mail.send(
-            //     &state.mail.test_to,
-            //     &state.mail.test_from,
-            //     generate_magic_link(&state, ctext.).await,
-            // );
-
-            // return Err(ServerError::UserEmailNotVerified(
-            //     "Email not verified".to_string(),
-            // ));
-        }
     };
 
     // TODO: create success body

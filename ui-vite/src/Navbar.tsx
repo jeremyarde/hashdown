@@ -4,7 +4,7 @@
  */
 // import a from "next/a"
 import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Toaster } from "./components/ui/toaster";
 import { getSessionToken } from "./lib/utils";
 
@@ -12,6 +12,9 @@ import { getSessionToken } from "./lib/utils";
 
 export function Navbar() {
     // let globalState: GlobalState = useContext(GlobalStateContext);
+    const navigate = useNavigate();
+    const showWaitlist = true;
+    const showTabs = true;
 
     async function logout() {
         console.log('logging out');
@@ -24,9 +27,29 @@ export function Navbar() {
         //     // body: payload,
         // });
         window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
-        // globalState.setSessionId('');
-
     };
+
+    let tabs = !getSessionToken() ? (
+        <>
+            <Link className="hover:animate-pulse" to="/editor">Editor</Link>
+            <Link className="hover:animate-pulse" to="/login">Login</Link>
+        </>
+    ) : (
+        <>
+            <Link className="hover:animate-pulse" to="/surveys">Surveys</Link>
+            <Link className="hover:animate-pulse" to="/editor">Editor</Link>
+        </>
+    );
+
+    let waitlist = showWaitlist ? (
+        <div>
+            <button onClick={(evt) => navigate(`/waitlist`)
+            }>
+                {window.location.href.endsWith('waitlist') ? '' : 'Waitlist'}
+            </button>
+        </div>
+    ) : <></>;
+
 
     return (
         <>
@@ -37,19 +60,8 @@ export function Navbar() {
                     </Link>
                 </div>
                 <div className="flex items-center space-x-4">
-                    {!getSessionToken() ? (
-                        <>
-                            <Link className="hover:animate-pulse" to="/editor">Editor</Link>
-                            <Link className="hover:animate-pulse" to="/login">Login</Link>
-                        </>
-                    ) : (
-                        <>
-                            <Link className="hover:animate-pulse" to="/surveys">Surveys</Link>
-                            <Link className="hover:animate-pulse" to="/editor">Editor</Link>
-                            {/* <Link className="hover:animate-pulse" to='/' onClick={(e) => logout()} > Logout</Link> */}
-                        </>
-                    )
-                    }
+                    {showTabs ? tabs : ''}
+                    {waitlist}
                 </div>
             </div >
             <Toaster />

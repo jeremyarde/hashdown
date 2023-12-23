@@ -33,6 +33,8 @@ pub struct ServerState {
     config: EnvConfig,
 }
 
+const BINARY_NAME: &str = "mdpserver";
+
 #[tokio::main]
 #[instrument]
 async fn main() -> anyhow::Result<()> {
@@ -41,8 +43,8 @@ async fn main() -> anyhow::Result<()> {
     // return Ok(());
     // cargo watch -d 1.5 -- cargo run
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
-        .with_env_filter("server=debug,sqlx=debug")
+        .with_max_level(tracing::Level::TRACE)
+        .with_env_filter(format!("{BINARY_NAME}=info,sqlx=debug"))
         .init();
 
     // println!("Loading environment variables from file");
