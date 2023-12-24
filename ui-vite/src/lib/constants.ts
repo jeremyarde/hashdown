@@ -5,7 +5,7 @@ export enum STAGE {
 
 export const BASE_URL: { [stage: string]: string } = {
     [STAGE.DEV]: 'http://localhost:8080/v1',
-    [STAGE.PROD]: 'mdp-api.onrender.com/v1',
+    [STAGE.PROD]: 'https://mdp-api.onrender.com/v1',
 };
 
 
