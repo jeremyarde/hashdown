@@ -51,7 +51,8 @@ const formRulesCopy = `Each survey needs 3 things.
 
 var mystyle = {
   formCopy: {
-    'white-space': 'pre-wrap'
+    // 'white-space': 'pre-wrap',
+    whiteSpace: 'pre-wrap'
   }
 
 }
@@ -71,10 +72,10 @@ function Home() {
           </h2>
         </div>
         <div className='flex'>
-          <p style={mystyle.formCopy} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
+          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
             {formRulesCopy}
           </p>
-          <p style={mystyle.formCopy} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
+          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
             {formTypesCopy}
           </p>
         </div>
