@@ -1,10 +1,8 @@
-import { MouseEvent, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { RenderedForm } from "../RenderedForm";
-import { BASE_URL } from "@/lib/constants";
-// import { GlobalStateContext } from "@/main";
 import { useToast } from "@/components/ui/use-toast";
 import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
-import { getSessionToken, handleResponse } from "@/lib/utils";
+import { getBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
 import { redirect } from "react-router-dom";
 
 export type EditorProps = {
@@ -170,7 +168,7 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
     // const [token, setToken] = useState('');
 
     async function submitSurvey(event: React.MouseEvent<HTMLElement>) {
-        const response = await fetch(`${BASE_URL}/surveys`, {
+        const response = await fetch(`${getBaseUrl()}/surveys`, {
             method: "POST",
             // credentials: 'include',
             headers: {

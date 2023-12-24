@@ -1,10 +1,9 @@
 import { Input } from "./components/ui/input";
 import { Button } from "./components/ui/button";
 import { Label } from "./components/ui/label";
-import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
 import { ChangeEvent, FormEvent, useContext, useState } from "react";
 import { Navigate, redirect } from "react-router-dom";
-import { handleResponse, setSessionToken } from "./lib/utils";
+import { getBaseUrl, handleResponse, setSessionToken } from "./lib/utils";
 
 /**
 * v0 by Vercel.
@@ -40,7 +39,7 @@ export function Login() {
         const loginPayload = JSON.stringify({ email: username, password: password });
         console.log('login component')
         try {
-            const response = await fetch(`${BASE_URL}/auth/login`, {
+            const response = await fetch(`${getBaseUrl()}/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

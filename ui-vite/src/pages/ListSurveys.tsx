@@ -1,7 +1,5 @@
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../components/ui/button';
-import { BASE_URL } from '@/lib/constants';
-// import { GlobalState, GlobalStateContext } from '@/main';
 import {
     Table,
     TableBody,
@@ -14,7 +12,7 @@ import {
 import { Link, Navigate, redirect, useNavigate } from 'react-router-dom';
 import { MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { getSessionToken, handleResponse } from '@/lib/utils';
+import { getBaseUrl, getSessionToken, handleResponse } from '@/lib/utils';
 import { Survey } from '@/lib/constants';
 
 
@@ -28,7 +26,7 @@ export function ListSurveys() {
     }, [])
 
     async function getSurveys() {
-        const response = await fetch(`${BASE_URL}/surveys`, {
+        const response = await fetch(`${getBaseUrl()}/surveys`, {
             method: "GET",
             // credentials: 'include',
             headers: {

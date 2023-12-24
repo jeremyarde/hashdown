@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Button } from './components/ui/button';
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { BASE_URL } from "./lib/constants";
 import { Textarea } from "./components/ui/textarea";
+import { getBaseUrl } from "./lib/utils";
 
 function surveyToForm(survey: Survey) {
     let form = {};
@@ -51,7 +51,7 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
         }
 
         if (survey_id) {
-            const response = await fetch(`${BASE_URL}/submit`, {
+            const response = await fetch(`${getBaseUrl()}/submit`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -248,105 +248,6 @@ function textareaComponent(block) {
         </>
     )
 }
-
-// function renderSurveyV2(survey) {
-//     const [exampleSubmittion, setExampleSubmittion] = useState();
-
-//     let parsingError = undefined;
-//     if (!survey.blocks) {
-//         parsingError = survey;
-//     }
-//     console.log("renderSurveyV2", survey);
-
-//     const handleSubmit = async (evt) => {
-//         evt.preventDefault();
-//         let formdata = new FormData(evt.target);
-//         console.log('form entries');
-//         console.log(Object.fromEntries(formdata));
-
-//         const surveySubmission = {
-//             survey_id: survey.survey_id ?? '',
-//             answers: Object.fromEntries(formdata)
-//         }
-
-//         console.log(`submission: ${JSON.stringify(surveySubmission)}`)
-//         // setSubmittedValues((prev) => surveySubmission);
-
-//         if (survey.id) {
-//             const response = await fetch(`${BASE_URL}/submit`, {
-//                 method: "POST",
-//                 headers: {
-//                     "Content-Type": "application/json",
-//                 },
-//                 // credentials: 'include',
-//                 // body: JSON.stringify(surveySubmission),
-//                 body: JSON.stringify(surveySubmission)
-//             });
-//             console.log(`submit response: ${JSON.stringify(response)}`);
-//         } else {
-//             console.log("Not sending submittion");
-//         }
-//     }
-
-//     return (
-//         <>
-//             {parsingError ? (
-//                 <div style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>
-//                     <pre>
-//                         {/* <code className="bg-red-200">{parsingError}</code> */}
-//                     </pre>
-//                 </div >
-//             ) : ''}
-//             {exampleSubmittion ? (
-//                 <pre>
-//                     <code className="bg-blue-200">{JSON.stringify(exampleSubmittion, null, 2)}</code>
-//                 </pre>
-//             ) : ''}
-//             <div>
-//                 <form onSubmit={handleSubmit} >
-//                     {
-//                         survey.blocks?.map(block => {
-//                             console.log("map entries: ", block)
-
-//                             switch (block.block_type) {
-//                                 case "Title":
-//                                     return (
-//                                         <h1 className="text-3xl font-bold space-y-2" >
-//                                             {block.properties.title}
-//                                         </h1>)
-//                                 case "TextInput":
-//                                     return (
-//                                         <div>
-//                                             {textInput(block, setExampleSubmittion)}
-//                                         </div>
-//                                     )
-//                                 case "Checkbox":
-//                                     return (
-//                                         <div>
-//                                             {checkboxGroupV2(block, setExampleSubmittion)}
-//                                         </div>
-//                                     )
-//                                 case "Radio":
-//                                     return (
-//                                         <div>
-//                                             {radioGroupV2(block, setExampleSubmittion)}
-//                                         </div>
-//                                     )
-//                                 case "Submit":
-//                                     return (
-//                                         <div>
-//                                             {submitButton(block)}
-//                                         </div>
-//                                     )
-//                             }
-//                         })
-//                     }
-//                 </form>
-
-//             </div>
-
-//         </>)
-// }
 
 function submitButton(block) {
     return (

@@ -1,8 +1,9 @@
 import { Input } from "./components/ui/input";
 import { Button } from "./components/ui/button";
 import { Label } from "./components/ui/label";
-import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
+import { SESSION_TOKEN_KEY } from "./lib/constants";
 import { FormEvent, useContext, useState } from "react";
+import { getBaseUrl } from "./lib/utils";
 // import { GlobalState, GlobalStateContext } from "./main";
 
 /**
@@ -21,7 +22,7 @@ export function Signup() {
         event.preventDefault();
         const payload = JSON.stringify({ email: username, password });
         try {
-            const response = await fetch(`${BASE_URL}/auth/signup`, {
+            const response = await fetch(`${getBaseUrl()}/auth/signup`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -3,7 +3,7 @@
  * @see https://v0.dev/t/LUoP6hiokbX
  */
 // import a from "next/a"
-import { BASE_URL, SESSION_TOKEN_KEY } from "./lib/constants";
+import {  SESSION_TOKEN_KEY } from "./lib/constants";
 import { Link, useNavigate } from "react-router-dom";
 import { Toaster } from "./components/ui/toaster";
 import { getSessionToken } from "./lib/utils";

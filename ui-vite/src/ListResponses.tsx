@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { BASE_URL } from './lib/constants.ts';
-// import { GlobalState, GlobalStateContext } from './main.tsx';
 import { useGetSurvey } from './hooks/useGetSurvey.ts';
 import { createTable } from './createTable.tsx';
-import { getSessionToken } from './lib/utils.ts';
+import { getBaseUrl, getSessionToken } from './lib/utils.ts';
 
 
 export function ListResponses() {
@@ -23,7 +21,7 @@ export function ListResponses() {
             return;
         }
 
-        const response = await fetch(`${BASE_URL}/responses?${new URLSearchParams({
+        const response = await fetch(`${getBaseUrl()}/responses?${new URLSearchParams({
             survey_id: queryParams.get(SURVEY_ID_QUERY_KEY) || ''
         })}`, {
             method: "GET",

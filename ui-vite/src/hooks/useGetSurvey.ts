@@ -1,9 +1,7 @@
-import { BASE_URL } from "@/lib/constants";
-// import { GlobalState, GlobalStateContext } from "@/main";
 import { useEffect, useState } from "react";
 import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
 import { Survey } from "@/lib/constants";
-import { getSessionToken } from "@/lib/utils";
+import { getBaseUrl, getSessionToken } from "@/lib/utils";
 
 
 /**
@@ -24,7 +22,7 @@ export function useGetSurvey(surveyId: string | undefined): { survey: Survey | u
 
         setIsPending(true);
         try {
-            const response = await fetch(`${BASE_URL}/surveys/${getSurveyId}`, {
+            const response = await fetch(`${getBaseUrl()}/surveys/${getSurveyId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
