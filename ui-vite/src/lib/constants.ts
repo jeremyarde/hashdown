@@ -1,24 +1,15 @@
-export const BASE_URL = 'http://localhost:8080/v1';
+export enum STAGE {
+    DEV = 'development',
+    PROD = 'production',
+};
+
+export const BASE_URL: { [stage: string]: string } = {
+    [STAGE.DEV]: 'http://localhost:8080/v1',
+    [STAGE.PROD]: 'mdp-api.onrender.com/v1',
+};
+
+
 export const SESSION_TOKEN_KEY = 'session_id';
-// export type Survey = {
-//     title: string;
-//     parse_version: string;
-//     id: string;
-//     created_at: string;
-//     survey_id: string;
-//     questions: any[];
-//     blocks: 
-// };
-
-// export type Survey {
-//     blocks: Block[]
-//     id: string
-//     parse_version: string
-//     plaintext: string
-//     questions: any[]
-//     title: string
-// }
-
 
 export type RenderedFormProps = {
     // plaintext: string;

@@ -15,3 +15,5 @@ server/surveyapp.db-*
 server/.env
 research/
 server/.secrets
+# ui-vite/.env.development
+# ui-vite/.env.production
