@@ -120,7 +120,7 @@ INSERT INTO mdp.surveys (
     'nijh7m7klj83',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP,	
-    '# Hashdown waitlist :)
+    '# hashdown waitlist :)
 Text: Email
 textarea: What do you want to use Hashdown for?
 Submit: Put me on waitlist',

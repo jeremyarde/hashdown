@@ -107,7 +107,7 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                                 switch (block.block_type) {
                                     case "Title":
                                         blockHtml = (
-                                            <h1 className="text-3xl font-bold space-y-2 text-center" >
+                                            <h1 className="text-xl font-bold space-y-2 text-center" >
                                                 {block.properties.title}
                                             </h1>)
                                         break;

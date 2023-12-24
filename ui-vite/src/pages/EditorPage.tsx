@@ -11,9 +11,9 @@ export type EditorProps = {
     setEditorContent: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const userFeedbackTemplate = `# Hashdown User Feedback
+const userFeedbackTemplate = `# hashdown User Feedback
 
-Textarea: How was your experience using Hashdown
+Textarea: How was your experience using hashdown
 
 Textarea: What is the number one complaint you have?
 
@@ -75,7 +75,7 @@ checkbox: I don't want to receive...
 
 submit: Submit`;
 
-const tabTemplates = [
+let tabTemplates = [
     {
         tabname: 'User signup',
         template: userSignupTemplate,
@@ -198,9 +198,9 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
 
     return (
         <>
-            <div className="h-screen w-full flex">
-                <div className="w-1/2 p-4 overflow-auto">
-                    <h1 className="text-2xl font-bold">Enter Form Content</h1>
+            <div className=" w-full flex h-full flex-wrap flex-row">
+                <div className="w-1/2 p-4 overflow-auto flex-wrap">
+                    <h2 className="text-2xl font-bold">Enter Form Content</h2>
                     <SampleForms setEditorContent={setEditorContent}></SampleForms>
                     <textarea
                         className="w-full h-4/6 p-2 rounded border border-gray-300"
@@ -212,8 +212,8 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
                         <button className="bg-green-200 border w-full p-1 flex-1" onClick={submitSurvey}>Publish</button>
                     </div>
                 </div>
-                <div className="w-1/2 p-4 overflow-auto">
-                    <h1 className="text-2xl font-bold">Preview</h1>
+                <div className="w-1/2 p-4 overflow-auto flex-wrap">
+                    <h2 className="text-2xl font-bold">Preview</h2>
                     <RenderedForm survey={survey} mode={mode} ></RenderedForm>
                 </div>
             </div>

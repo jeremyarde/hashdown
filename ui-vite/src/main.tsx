@@ -1,4 +1,4 @@
-import React, { StrictMode, createContext, useContext, useState } from 'react'
+import { StrictMode, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useParams, Outlet } from 'react-router-dom'
 import './index.css'
@@ -7,22 +7,11 @@ import { Navbar } from './Navbar.tsx'
 import { ListSurveys } from './pages/ListSurveys.tsx'
 import { RenderedForm } from './RenderedForm.tsx'
 import { Signup } from './Signup.tsx'
-import { SESSION_TOKEN_KEY } from './lib/constants.ts'
 import { EditorPage } from './pages/EditorPage.tsx'
 import { ListResponses } from './ListResponses.tsx'
 import { useGetSurvey } from './hooks/useGetSurvey.ts'
-import { markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
 
 
-// export type GlobalState = {
-//   sessionId: string | undefined;
-//   setSessionId: React.Dispatch<React.SetStateAction<string>>,
-//   // refreshToken: string,
-//   // setRefreshToken: React.Dispatch<React.SetStateAction<string>>,
-// }
-// export const GlobalStateContext = createContext({ sessionId: undefined, setSessionId });
-
-// const routerContext = new RouterContext<GlobalState>()
 const exampleText = `# User Registration Form
 
 Text: First name [John Dog]
@@ -75,11 +64,11 @@ function Home() {
       <div className='flex-col flex'>
         <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
         <div className=''>
-          <h1 className='flex top-10 text-center justify-center text-xl'>
+          <h2 className='flex top-10 text-center justify-center text-xl'>
             The easiest way to create and share surveys.
             <br />
             Create using simple markdown, visualize, publish and share!
-          </h1>
+          </h2>
         </div>
         <div className='flex'>
           <p style={mystyle.formCopy} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
