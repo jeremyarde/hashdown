@@ -7,7 +7,7 @@ import { Navbar } from './Navbar.tsx'
 import { ListSurveys } from './pages/ListSurveys.tsx'
 import { RenderedForm } from './RenderedForm.tsx'
 import { Signup } from './Signup.tsx'
-import {  SESSION_TOKEN_KEY } from './lib/constants.ts'
+import { SESSION_TOKEN_KEY } from './lib/constants.ts'
 import { EditorPage } from './pages/EditorPage.tsx'
 import { ListResponses } from './ListResponses.tsx'
 import { useGetSurvey } from './hooks/useGetSurvey.ts'
@@ -47,13 +47,32 @@ Dropdown: My question here
 
 Submit: submit`;
 
+const formTypesCopy = `Available input types:
+- Text
+- Textarea
+- Checkbox
+- Radio
+- Submit (required)`;
+
+const formRulesCopy = `Each survey needs 3 things.
+1. Title - Title is found a the top, and starts with #
+2. Submit - The submit button can be placed anywhere in the form, and will send the current form data to be saved
+3. Questions - use any of the folling form input types to ask your questions
+`;
+
+var mystyle = {
+  formCopy: {
+    'white-space': 'pre-wrap'
+  }
+
+}
+
 function Home() {
   const [editorContent, setEditorContent] = useState(exampleText);
 
   return (
     <>
       <div className='flex-col flex'>
-
         <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
         <div className=''>
           <h1 className='flex top-10 text-center justify-center text-xl'>
@@ -62,29 +81,22 @@ function Home() {
             Create using simple markdown, visualize, publish and share!
           </h1>
         </div>
-      </div>
+        <div className='flex'>
+          <p style={mystyle.formCopy} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
+            {formRulesCopy}
+          </p>
+          <p style={mystyle.formCopy} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
+            {formTypesCopy}
+          </p>
+        </div>
+      </div >
     </>)
 }
 
-// type Survey = {
-//   id: string;
-//   survey_id: string;
-//   user_id: string;
-//   created_at: Date;
-//   modified_at: Date,
-//   plaintext: string;
-//   version: string;
-//   parse_version: string;
-// }
-
 function RenderedSurvey() {
-  // const data = useLoaderData();
   let { surveyId } = useParams();
   let { survey, error, isPending } = useGetSurvey(surveyId);
-  // let globalState: GlobalState = useContext(GlobalStateContext);
 
-  console.log('rendered from url: ' + JSON.stringify(survey));
-  console.log(`useGetSurvey: ${JSON.stringify(survey)}, ${error}, ${isPending}`);
   return (<>
     {error && <div>{error}</div>}
     <div>
@@ -105,32 +117,21 @@ export function Layout() {
 }
 
 function Waitlist() {
-  let survey = markdown_to_form_wasm_v2(`# Hashdown waitlist :)
-Text: Email
-textarea: What do you want to use Hashdown for?
-Submit: Put me on waitlist
-`);
+  const { survey, error, isPending } = useGetSurvey("k3itjqi4mxhq");
   return (
     <>
-      <RenderedForm survey={survey}></RenderedForm>
+      {survey &&
+        <RenderedForm survey={survey}></RenderedForm>
+      }
     </>
   )
 }
 
 function App() {
-  // const exampleText = '# A survey title here\n- q1\n  - option 1\n  - option 2\n  - option 3\n- question 2\n  - q2 option 1\n  - q2 option 2"';
-
   const [formtext, setFormtext] = useState(exampleText);
-  const [token, setToken] = useState(window.sessionStorage.getItem(SESSION_TOKEN_KEY) ?? '');
-
-  // const globalState: GlobalState = {
-  //   sessionId: token,
-  //   setSessionId: setToken,
-  // };
 
   return (
     <>
-      {/* <GlobalStateContext.Provider value={globalState}> */}
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
@@ -146,7 +147,6 @@ function App() {
           <Route path="/login" element={<Login />} />
         </Routes>
       </BrowserRouter>
-      {/* </GlobalStateContext.Provider > */}
     </>
   )
 }

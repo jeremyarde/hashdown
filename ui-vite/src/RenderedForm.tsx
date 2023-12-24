@@ -36,6 +36,9 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
     }
 
     const handleSubmit = async (evt) => {
+        console.log('jere/ submit survey');
+        console.log('jere/ survey', survey);
+
         evt.preventDefault();
         let formdata = new FormData(evt.target);
         const survey_id = survey.survey_id;
@@ -45,10 +48,12 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
             answers: Object.fromEntries(formdata)
         }
 
+        console.log('jere/ mode', mode);
         if (mode === "test") {
             setExampleSubmittion(surveySubmission);
             return;
         }
+        console.log('jere/ surveyid', survey_id);
 
         if (survey_id) {
             const response = await fetch(`${getBaseUrl()}/submit`, {

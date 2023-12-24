@@ -61,14 +61,14 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
             validate_session_middleware,
         ));
 
-    // let mut origins = vec![];
+    let mut origins = vec![];
     info!("Starting app in stage={:?}", &state.config.stage);
     if state.config.is_dev() {
-        // origins.append(&mut vec![
-        //     "http://localhost:8080".parse().unwrap(),
-        //     "http://localhost:5173".parse().unwrap(),
-        //     "http:127.0.0.1:5173".parse().unwrap(),
-        // ]);
+        origins.append(&mut vec![
+            //     "http://localhost:8080".parse().unwrap(),
+            "http://localhost:5173".parse().unwrap(), //     "http:127.0.0.1:5173".parse().unwrap(),
+            "https://mdp-api.onrender.com".parse().unwrap(),
+        ]);
     }
 
     let corslayer = CorsLayer::new()
@@ -86,8 +86,8 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         ])
         // .allow_headers(Any)
         // .allow_credentials(true)
-        // .allow_origin(origins)
-        .allow_origin(Any)
+        .allow_origin(origins)
+        // .allow_origin(Any)
         .expose_headers([
             axum::http::header::CONTENT_ENCODING,
             axum::http::HeaderName::from_static("session_id"),

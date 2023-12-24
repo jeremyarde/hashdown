@@ -10,12 +10,12 @@ import { getBaseUrl, getSessionToken } from "@/lib/utils";
  * @returns {Survey, string, boolean}
  */
 export function useGetSurvey(surveyId: string | undefined): { survey: Survey | undefined, error: string, isPending: boolean } {
-    // let globalState: GlobalState = useContext(GlobalStateContext);
     const [survey, setSurvey] = useState();
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState('');
 
     const getSurvey = async (getSurveyId: string | undefined) => {
+        console.log('jere/ getSurveyId', getSurveyId)
         if (!getSurveyId) {
             return;
         }
