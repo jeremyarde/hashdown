@@ -217,11 +217,6 @@ impl Database {
         .fetch_one(&self.pool)
         .await?;
 
-        // let res = UserModel::select()
-        //     .where_bind("email = ", email)
-        //     .fetch_one(&self.pool)
-        //     .await?;
-
         info!("Found user");
         // let result = UserModel::from_row(&row_result).expect("Could not turn row into user model");
 

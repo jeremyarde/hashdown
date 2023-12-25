@@ -8,8 +8,8 @@ docker:
     earthly --no-sat +docker
 
 push:
-    source .env
-    echo $DOCKERHUB_TOKEN | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+    # echo $DOCKERHUB_TOKEN | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+    docker login --username "$DOCKERHUB_USERNAME" --password "$DOCKERHUB_TOKEN"
     earthly --no-sat --push +docker
 
 test:
