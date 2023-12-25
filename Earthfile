@@ -55,4 +55,4 @@ fmt:
 all:
   BUILD +build
   # BUILD +test
-  BUILD +fmt
+  # BUILD +fmt
