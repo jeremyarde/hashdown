@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select id, user_id, email, password_hash, created_at, modified_at, deleted_at, email_status as \"email_status: EmailStatus\" from mdp.users where email = $1",
+  "query": "select * from mdp.users where email = $1",
   "describe": {
     "columns": [
       {
@@ -40,18 +40,8 @@
       },
       {
         "ordinal": 7,
-        "name": "email_status: EmailStatus",
-        "type_info": {
-          "Custom": {
-            "name": "email_status",
-            "kind": {
-              "Enum": [
-                "verified",
-                "unverified"
-              ]
-            }
-          }
-        }
+        "name": "email_status",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -70,5 +60,5 @@
       false
     ]
   },
-  "hash": "2941957fc9c55e0dc1bd9bf993c452db6a5fbcf86c2a639af7026dbab3632158"
+  "hash": "635f1b9eedb52c11320f21945eceeb2655a3c12efdf5df2da634a1e0ae631cb6"
 }
