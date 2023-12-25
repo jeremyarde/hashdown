@@ -184,9 +184,9 @@ impl Session {
 }
 
 impl Database {
-    pub async fn create_magic_link(&self, _user: UserModel) -> anyhow::Result<()> {
-        Ok(())
-    }
+    // pub async fn create_magic_link(&self, _user: UserModel) -> anyhow::Result<()> {
+    //     Ok(())
+    // }
 
     pub async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel> {
         println!("->> create_user");

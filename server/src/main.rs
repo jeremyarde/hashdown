@@ -1,4 +1,3 @@
-
 use config::EnvConfig;
 use mail::mailer::Mailer;
 

@@ -4,6 +4,9 @@ all:
 build:
     earthly --no-sat +build
 
+lint:
+    earthly --no-sat +lint
+
 docker:
     earthly --no-sat +docker
 
