@@ -1,4 +1,4 @@
-use crate::mail::mailer;
+
 use config::EnvConfig;
 use mail::mailer::Mailer;
 

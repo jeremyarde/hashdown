@@ -1,16 +1,15 @@
 use axum::{
-    body::Body,
     extract::{self, Path, State},
     http::{HeaderMap, Method},
     middleware::{self},
-    response::{IntoResponse, Response},
+    response::{Response},
     routing::{get, post},
     Extension, Json, Router,
 };
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::{CorsLayer};
 use tracing::{debug, info};
 
 use crate::{

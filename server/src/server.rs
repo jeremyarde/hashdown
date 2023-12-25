@@ -25,7 +25,7 @@ use crate::{
 };
 
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, net::SocketAddr, str::FromStr};
+use std::{net::SocketAddr, str::FromStr};
 
 pub struct ServerApplication {
     pub base_url: SocketAddr,

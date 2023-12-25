@@ -22,7 +22,7 @@ use crate::db::database::{CreateUserRequest, Session};
 use crate::mware::ctext::Ctext;
 use crate::routes::LoginPayload;
 use crate::ServerState;
-use crate::{db, ServerError};
+use crate::{ServerError};
 
 #[axum::debug_handler]
 pub async fn signup(
@@ -182,7 +182,7 @@ pub async fn login(
     ))
 }
 
-async fn generate_magic_link(_state: &ServerState, ctext: Ctext) -> String {
+async fn generate_magic_link(_state: &ServerState, _ctext: Ctext) -> String {
     // let jwt = create_jwt_token(&ctext).expect("JWT was not created properly");
     let token = nanoid_gen(16);
 

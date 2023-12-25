@@ -1,13 +1,13 @@
-use anyhow::Context;
+
 
 // use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
-use once_cell::sync::Lazy;
+
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-use tracing::log::info;
 
-use crate::{db::database::Session, ServerError};
+
+use crate::{db::database::Session};
 
 pub const AUTH_TOKEN: &str = "x-auth-token";
 // struct Keys {
