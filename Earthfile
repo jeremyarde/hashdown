@@ -20,8 +20,8 @@ source:
 # lint runs cargo clippy on the source code
 lint:
   FROM +source
-  # DO rust+CARGO --args="clippy --all-features --all-targets -- -D warnings"
-  DO rust+CARGO --args="clippy --all-features --all-targets"
+  DO rust+CARGO --args="clippy --all-features --all-targets -- -D warnings"
+  # DO rust+CARGO --args="clippy --all-features --all-targets"
 
 build:
   FROM +lint
