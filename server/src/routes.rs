@@ -2,14 +2,14 @@ use axum::{
     extract::{self, Path, State},
     http::{HeaderMap, Method},
     middleware::{self},
-    response::{Response},
+    response::Response,
     routing::{get, post},
     Extension, Json, Router,
 };
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tower_http::cors::{CorsLayer};
+use tower_http::cors::CorsLayer;
 use tracing::{debug, info};
 
 use crate::{
@@ -67,6 +67,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
             //     "http://localhost:8080".parse().unwrap(),
             "http://localhost:5173".parse().unwrap(), //     "http:127.0.0.1:5173".parse().unwrap(),
             "https://mdp-api.onrender.com".parse().unwrap(),
+            "https://api.gethashdown.com".parse().unwrap(),
         ]);
     }
 
