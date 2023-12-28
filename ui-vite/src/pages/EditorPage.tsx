@@ -198,7 +198,7 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
 
     return (
         <>
-            <div className=" w-full flex h-full flex-wrap flex-row">
+            <div className="w-full flex h-full flex-wrap">
                 <div className="w-1/2 p-4 overflow-auto flex-wrap">
                     <h2 className="text-2xl font-bold">Enter Form Content</h2>
                     <SampleForms setEditorContent={setEditorContent}></SampleForms>
@@ -212,7 +212,7 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
                         <button className="bg-green-200 border w-full p-1 flex-1" onClick={submitSurvey}>Publish</button>
                     </div>
                 </div>
-                <div className="w-1/2 p-4 overflow-auto flex-wrap">
+                <div className="w-1/2 flex-wrap">
                     <h2 className="text-2xl font-bold">Preview</h2>
                     <RenderedForm survey={survey} mode={mode} ></RenderedForm>
                 </div>

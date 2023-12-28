@@ -64,6 +64,7 @@ function Home() {
     <>
       <div className='flex-col flex'>
         <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
+        <hr className='p-6'></hr>
         <div className=''>
           <h2 className='flex top-10 text-center justify-center text-xl'>
             The easiest way to create and share surveys.

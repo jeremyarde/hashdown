@@ -90,7 +90,7 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
 
     return (
         <>
-            <div className="border border-gray-300 p-4 rounded">
+            <div className="items-center justify-center flex">
                 {parsingError ? (
                     <div style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>
                         <pre>
@@ -98,8 +98,12 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                         </pre>
                     </div >
                 ) : ''}
-                <div>
-                    <form onSubmit={handleSubmit} onChange={handleUpdate} className="text-left">
+                <div className="" style={{
+                    width: '1000px',
+                    maxWidth: '48rem',
+                    minWidth: '12rem'
+                }}>
+                    <form onSubmit={handleSubmit} onChange={handleUpdate} className="text-left w-full h-full">
                         {
                             survey.blocks?.map(block => {
                                 console.log("map entries: ", block)
@@ -161,7 +165,7 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
             </div>
             {exampleSubmission ? (
                 <>
-                    <div className="skeu">
+                    <div className="">
                         <div>
                             <h3>Submission data</h3>
                             <div>
@@ -210,12 +214,11 @@ function checkboxGroupV2(block, setStateFn) {
 }
 
 function radioGroupV2(block, setStateFn) {
-
     return (
         <>
-            <Label className="space-y-2 p-2 text-left">{block.properties.question}</Label>
-            <ul className="" >
-                <div className="flex flex-col space-y-2 ">
+            <Label className="space-y-2 text-left">{block.properties.question}</Label>
+            <div className="flex flex-col">
+                <ul className="space-y-2" >
                     {block.properties.options.map((option: string) => {
                         // if (!option.ListItem) { return; }
                         console.log("part - option:", option);
@@ -230,8 +233,8 @@ function radioGroupV2(block, setStateFn) {
                             </li>
                         )
                     })}
-                </div>
-            </ul>
+                </ul>
+            </div>
         </>
     )
 }

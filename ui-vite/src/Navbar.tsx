@@ -9,20 +9,7 @@ export function Navbar() {
     // let globalState: GlobalState = useContext(GlobalStateContext);
     const navigate = useNavigate();
     const showWaitlist = true;
-    const showTabs = false;
-
-    async function logout() {
-        console.log('logging out');
-        // const response = await fetch(`${BASE_URL}/auth/logout`, {
-        //     method: "POST",
-        //     headers: {
-        //         "Content-Type": "application/json",
-        //     },
-        //     // credentials: 'include',
-        //     // body: payload,
-        // });
-        window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
-    };
+    const showTabs = true;
 
     let tabs = !getSessionToken() ? (
         <>
