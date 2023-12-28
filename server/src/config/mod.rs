@@ -1,14 +1,14 @@
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Stage {
-    Dev,
-    Prod,
+    Development,
+    Production,
 }
 
 impl Stage {
     pub(crate) fn from(var: String) -> Stage {
         match var.to_lowercase().as_str() {
-            "dev" => Stage::Dev,
-            "prod" => Stage::Prod,
+            "development" => Stage::Development,
+            "production" => Stage::Production,
             _ => panic!("STAGE environment variable not available"),
         }
     }
@@ -30,6 +30,9 @@ impl EnvConfig {
     }
 
     pub(crate) fn is_dev(&self) -> bool {
-        self.stage == Stage::Dev
+        self.stage == Stage::Development
+    }
+    pub(crate) fn is_prod(&self) -> bool {
+        self.stage == Stage::Production
     }
 }

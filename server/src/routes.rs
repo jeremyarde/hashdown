@@ -66,7 +66,15 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         origins.append(&mut vec![
             //     "http://localhost:8080".parse().unwrap(),
             "http://localhost:5173".parse().unwrap(), //     "http:127.0.0.1:5173".parse().unwrap(),
-            "https://mdp-api.onrender.com".parse().unwrap(),
+                                                      // "https://mdp-api.onrender.com".parse().unwrap(),
+                                                      // "https://gethashdown.com".parse().unwrap(),
+        ]);
+    }
+    if state.config.is_prod() {
+        origins.append(&mut vec![
+            //     "http://localhost:8080".parse().unwrap(),
+            // "http://localhost:5173".parse().unwrap(), //     "http:127.0.0.1:5173".parse().unwrap(),
+            // "https://mdp-api.onrender.com".parse().unwrap(),
             "https://gethashdown.com".parse().unwrap(),
         ]);
     }
