@@ -189,21 +189,22 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
 
     return (
         <>
-            <div className="w-full flex h-full flex-wrap">
-                <div className="w-1/2 p-4 overflow-auto flex-wrap">
+            <div className="flex w-full h-full flex-wrap md:flex-row flex-col">
+                <div className="md:w-1/2 w-full flex flex-col">
                     <h2 className="text-2xl font-bold">Enter Form Content</h2>
                     <SampleForms setEditorContent={setEditorContent}></SampleForms>
                     <textarea
-                        className="w-full h-4/6 p-2 rounded border border-gray-300"
+                        className="w-full"
+                        style={{ height: '65vh' }}
                         placeholder="Enter form content here..."
                         value={editorContent}
                         onChange={evt => setEditorContent(evt.target.value)} />
-                    <div className="flex flex-row">
-                        <button className="bg-gray-200 border p-1 w-full" onClick={submitSurvey}>Save Survey</button>
+                    <div className="pb-2">
+                        <button className="p-2 h-full w-full border border-solid" onClick={submitSurvey}>Save Survey</button>
                         {/* <button className="bg-green-200 border w-full p-1 flex-1" onClick={submitSurvey}>Publish</button> */}
                     </div>
                 </div>
-                <div className="w-1/2 flex-wrap">
+                <div className="md:w-1/2 w-full flex flex-col">
                     <h2 className="text-2xl font-bold">Preview</h2>
                     <RenderedForm survey={survey} mode={mode} ></RenderedForm>
                 </div>
