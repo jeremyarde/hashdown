@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "./components/ui/textarea";
 import { getBaseUrl } from "./lib/utils";
+import { useNavigate } from 'react-router-dom';
 
 function surveyToForm(survey: Survey) {
     let form = {};
@@ -27,6 +28,9 @@ function surveyToForm(survey: Survey) {
 export function RenderedForm({ survey, mode }: RenderedFormProps) {
     const [exampleSubmission, setExampleSubmittion] = useState();
     const [displayTextMode, setDisplayTextMode] = useState(false);
+    const [showEndScreen, setShowEndScreen] = useState(false);
+    const navigate = useNavigate();
+
 
     const [_, surveyIdToText] = surveyToForm(survey);
 
@@ -36,7 +40,6 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
     }
 
     const handleSubmit = async (evt) => {
-        console.log('jere/ submit survey');
         console.log('jere/ survey', survey);
 
         evt.preventDefault();
@@ -64,6 +67,10 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                 body: JSON.stringify(surveySubmission)
             });
             console.log(`submit response: ${JSON.stringify(response)}`);
+
+            setShowEndScreen(true);
+            // navigate(() => (<EndScreen />));
+            // EndScreen
         }
     }
 
@@ -98,70 +105,73 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                         </pre>
                     </div >
                 ) : ''}
-                <div className="" style={{
-                    width: '1000px',
-                    maxWidth: '48rem',
-                    minWidth: '12rem'
-                }}>
-                    <form onSubmit={handleSubmit} onChange={handleUpdate} className="text-left w-full h-full">
-                        {
-                            survey.blocks?.map(block => {
-                                console.log("map entries: ", block)
-                                let blockHtml = undefined;
-                                switch (block.block_type) {
-                                    case "Title":
-                                        blockHtml = (
-                                            <h1 className="text-xl font-bold space-y-2 text-center" >
-                                                {block.properties.title}
-                                            </h1>)
-                                        break;
-                                    case "TextInput":
-                                        blockHtml = (
-                                            <div>
-                                                {textInput(block, setExampleSubmittion)}
-                                            </div>
-                                        )
-                                        break;
-                                    case "Textarea":
-                                        blockHtml = (
-                                            <div>
-                                                {textareaComponent(block, setExampleSubmittion)}
-                                            </div>
-                                        )
-                                        break;
-                                    case "Checkbox":
-                                        blockHtml = (
-                                            <div>
-                                                {checkboxGroupV2(block, setExampleSubmittion)}
-                                            </div>
-                                        )
-                                        break;
-                                    case "Radio":
-                                        blockHtml = (
-                                            <div>
-                                                {radioGroupV2(block, setExampleSubmittion)}
-                                            </div>
-                                        )
-                                        break;
-                                    case "Submit":
-                                        blockHtml = (
-                                            <div>
-                                                {submitButton(block)}
-                                            </div>
-                                        )
-                                        break;
-                                }
+                {showEndScreen ? <EndScreen></EndScreen> :
 
-                                return (
-                                    <div style={{ margin: "20px", border: "line" }}>
-                                        {blockHtml}
-                                    </div>
-                                )
-                            })
-                        }
-                    </form>
 
-                </div>
+                    <div className="" style={{
+                        width: '1000px',
+                        maxWidth: '48rem',
+                        minWidth: '12rem'
+                    }}>
+                        <form onSubmit={handleSubmit} onChange={handleUpdate} className="text-left w-full h-full">
+                            {
+                                survey.blocks?.map(block => {
+                                    console.log("map entries: ", block)
+                                    let blockHtml = undefined;
+                                    switch (block.block_type) {
+                                        case "Title":
+                                            blockHtml = (
+                                                <h1 className="text-xl font-bold space-y-2 text-center" >
+                                                    {block.properties.title}
+                                                </h1>)
+                                            break;
+                                        case "TextInput":
+                                            blockHtml = (
+                                                <div>
+                                                    {textInput(block, setExampleSubmittion)}
+                                                </div>
+                                            )
+                                            break;
+                                        case "Textarea":
+                                            blockHtml = (
+                                                <div>
+                                                    {textareaComponent(block, setExampleSubmittion)}
+                                                </div>
+                                            )
+                                            break;
+                                        case "Checkbox":
+                                            blockHtml = (
+                                                <div>
+                                                    {checkboxGroupV2(block, setExampleSubmittion)}
+                                                </div>
+                                            )
+                                            break;
+                                        case "Radio":
+                                            blockHtml = (
+                                                <div>
+                                                    {radioGroupV2(block, setExampleSubmittion)}
+                                                </div>
+                                            )
+                                            break;
+                                        case "Submit":
+                                            blockHtml = (
+                                                <div>
+                                                    {submitButton(block)}
+                                                </div>
+                                            )
+                                            break;
+                                    }
+
+                                    return (
+                                        <div style={{ margin: "20px", border: "line" }}>
+                                            {blockHtml}
+                                        </div>
+                                    )
+                                })
+                            }
+                        </form>
+                    </div>
+                }
             </div>
             {exampleSubmission ? (
                 <>
@@ -262,6 +272,16 @@ function submitButton(block) {
         <>
             <div>
                 <Button className="outline outline-1 active:bg-green" type="submit">{block.properties.question}</Button>
+            </div>
+        </>
+    )
+}
+
+function EndScreen(block) {
+    return (
+        <>
+            <div style={{ height: '50vh', display: 'flex' }}>
+                <h1>Thanks for your response!</h1>
             </div>
         </>
     )

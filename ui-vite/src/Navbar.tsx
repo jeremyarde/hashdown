@@ -9,7 +9,7 @@ export function Navbar() {
     // let globalState: GlobalState = useContext(GlobalStateContext);
     const navigate = useNavigate();
     const showWaitlist = isFeatureEnabled(FEATURES.WAITLIST);
-    const showTabs = !isFeatureEnabled(FEATURES.WAITLIST);
+    const showTabs = isFeatureEnabled(FEATURES.LOGIN);
 
     let tabs = !getSessionToken() ? (
         <>

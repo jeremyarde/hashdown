@@ -12,11 +12,12 @@ export const BASE_URL: { [stage: string]: string } = {
 };
 
 export enum FEATURES {
-    WAITLIST
+    WAITLIST,
+    LOGIN
 };
 
 export const EnabledFeatures: { [stage: string]: FEATURES[] } = {
-    [STAGE.DEV]: [],
+    [STAGE.DEV]: [FEATURES.WAITLIST, FEATURES.LOGIN],
     [STAGE.PROD]: [FEATURES.WAITLIST]
 };
 

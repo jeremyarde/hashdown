@@ -137,19 +137,12 @@ function SampleForms({ setEditorContent }: { setEditorContent: React.Dispatch<Re
         <>
             <div className='flex w-full'>
                 {tabTemplates.map((template: TabContent, i) => {
-                    // console.log('making tabs', selected);
-                    // const styleName = selected[i] === true ? "bg-green p-3" : "bg-blue p-3";
                     return (
                         <>
                             <TabItem key={i} index={i} active={selected === i} setSelected={setSelected} item={template} setContentCallback={setEditorContent}></TabItem>
-                            {/* <div className="bg-blue p-3 active:bg-purple" onClick={(evt) => tabClick(i, template)}>{template.tabname}</div> */}
                         </>
                     )
                 })}
-                {/* <div className='bg-blue p-3' onClick={(evt) => setEditorContent(userFeedbackTemplate)}>User signup</div>
-                <div className='bg-blue p-3' onClick={(evt) => setEditorContent(userFeedbackTemplate)}>Product feedback</div>
-                <div className='bg-blue p-3' onClick={(evt) => setEditorContent(emailCaptureSignup)}>Email capture</div>
-                <div className='bg-blue p-3' onClick={(evt) => setEditorContent(userFeedbackTemplate)}>Email opt out</div> */}
             </div >
         </>
     );
@@ -157,11 +150,9 @@ function SampleForms({ setEditorContent }: { setEditorContent: React.Dispatch<Re
 
 export function EditorPage({ mode = "test", editorContent, setEditorContent }: EditorProps) {
     const { toast } = useToast()
-    console.log('editorContent: ' + editorContent);
     const [survey, setSurvey] = useState(markdown_to_form_wasm_v2(editorContent));
 
     useEffect(() => {
-        console.log('editor useeffect');
         const newSurvey = markdown_to_form_wasm_v2(editorContent);
         setSurvey(newSurvey);
     }, [editorContent]);
