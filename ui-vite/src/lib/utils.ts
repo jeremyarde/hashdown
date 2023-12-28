@@ -1,7 +1,7 @@
 // import { GlobalState } from "@/main";
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { BASE_URL, SESSION_TOKEN_KEY, STAGE } from "./constants";
+import { BASE_URL, EnabledFeatures, FEATURES, SESSION_TOKEN_KEY, STAGE } from "./constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -34,4 +34,12 @@ export function getBaseUrl(): string {
   let stage: string = import.meta.env.MODE || STAGE.DEV;
 
   return BASE_URL[stage];
+}
+
+export function getStage(): STAGE {
+  return import.meta.env.MODE === 'production' ? STAGE.PROD : STAGE.DEV;
+}
+
+export function isFeatureEnabled(feature: FEATURES): boolean {
+  return EnabledFeatures[getStage()].includes(feature);
 }

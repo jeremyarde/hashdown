@@ -1,15 +1,15 @@
-import { SESSION_TOKEN_KEY } from "./lib/constants";
+import { FEATURES, SESSION_TOKEN_KEY, STAGE } from "./lib/constants";
 import { Link, useNavigate } from "react-router-dom";
 import { Toaster } from "./components/ui/toaster";
-import { getSessionToken } from "./lib/utils";
+import { getSessionToken, getStage, isFeatureEnabled } from "./lib/utils";
 
 
 
 export function Navbar() {
     // let globalState: GlobalState = useContext(GlobalStateContext);
     const navigate = useNavigate();
-    const showWaitlist = true;
-    const showTabs = true;
+    const showWaitlist = isFeatureEnabled(FEATURES.WAITLIST);
+    const showTabs = !isFeatureEnabled(FEATURES.WAITLIST);
 
     let tabs = !getSessionToken() ? (
         <>

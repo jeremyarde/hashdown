@@ -1,3 +1,5 @@
+import { getStage } from "./utils";
+
 export enum STAGE {
     DEV = 'development',
     PROD = 'production',
@@ -9,6 +11,14 @@ export const BASE_URL: { [stage: string]: string } = {
     [STAGE.PROD]: 'https://api.gethashdown.com/v1',
 };
 
+export enum FEATURES {
+    WAITLIST
+};
+
+export const EnabledFeatures: { [stage: string]: FEATURES[] } = {
+    [STAGE.DEV]: [],
+    [STAGE.PROD]: [FEATURES.WAITLIST]
+};
 
 export const SESSION_TOKEN_KEY = 'session_id';
 

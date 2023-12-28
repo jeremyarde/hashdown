@@ -209,7 +209,7 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
                         onChange={evt => setEditorContent(evt.target.value)} />
                     <div className="flex flex-row">
                         <button className="bg-gray-200 border p-1 w-full" onClick={submitSurvey}>Save Survey</button>
-                        <button className="bg-green-200 border w-full p-1 flex-1" onClick={submitSurvey}>Publish</button>
+                        {/* <button className="bg-green-200 border w-full p-1 flex-1" onClick={submitSurvey}>Publish</button> */}
                     </div>
                 </div>
                 <div className="w-1/2 flex-wrap">
