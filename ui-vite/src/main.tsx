@@ -46,7 +46,7 @@ const formTypesCopy = `Available input types:
 const formRulesCopy = `Each survey needs 3 things.
 1. Title - Title is found a the top, and starts with #
 2. Submit - The submit button can be placed anywhere in the form, and will send the current form data to be saved
-3. Questions - use any of the folling form input types to ask your questions
+3. Questions - use any of the following form input types to ask your questions
 `;
 
 var mystyle = {
