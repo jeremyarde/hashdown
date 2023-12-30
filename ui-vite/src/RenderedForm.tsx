@@ -113,7 +113,7 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                         maxWidth: '48rem',
                         minWidth: '12rem'
                     }}>
-                        <form onSubmit={handleSubmit} onChange={handleUpdate} className="text-left w-full h-full">
+                        <form onSubmit={handleSubmit} onChange={handleUpdate} className="text-left w-full h-full  border rounded-sm">
                             {
                                 survey.blocks?.map(block => {
                                     console.log("map entries: ", block)

@@ -54,7 +54,6 @@ var mystyle = {
     // 'white-space': 'pre-wrap',
     whiteSpace: 'pre-wrap'
   }
-
 }
 
 function Home() {
@@ -63,10 +62,8 @@ function Home() {
   return (
     <>
       <div className='flex-col flex'>
-        <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
-        <hr className='p-6'></hr>
-        <div className=''>
-          <h2 className='flex top-10 text-center justify-center text-xl'>
+        <div className='p-6'>
+          <h2 className='flex top-10 text-center justify-center text-xl p-6'>
             The easiest way to create and share surveys.
             <br />
             Create using simple markdown, visualize, publish and share!
@@ -81,6 +78,7 @@ function Home() {
           </p>
         </div>
       </div >
+      <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
     </>)
 }
 
