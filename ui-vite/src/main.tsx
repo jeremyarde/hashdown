@@ -10,6 +10,8 @@ import { Signup } from './Signup.tsx'
 import { EditorPage } from './pages/EditorPage.tsx'
 import { ListResponses } from './ListResponses.tsx'
 import { useGetSurvey } from './hooks/useGetSurvey.ts'
+import { NONAME } from 'dns'
+import { markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
 
 
 const exampleText = `# User Registration Form
@@ -49,6 +51,16 @@ const formRulesCopy = `Each survey needs 3 things.
 3. Questions - use any of the following form input types to ask your questions
 `;
 
+const simpleSurveyCopy = `# Dave's quick survey
+
+Text: How did you hear about us?
+
+radio: Can we contact you for follow up questions? making this longer to see if things are bad
+- yes
+- no
+
+submit: submit`;
+
 var mystyle = {
   formCopy: {
     // 'white-space': 'pre-wrap',
@@ -56,28 +68,75 @@ var mystyle = {
   }
 }
 
+const linedPaper = {
+  backgroundColor: '#fff',
+  backgroundImage:
+    'linearGradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px),linearGradient(#eee .1em, transparent .1em)',
+  backgroundSize: '100% 1.2em',
+}
+
+function HeroSection() {
+  let sampleSurvey = markdown_to_form_wasm_v2(simpleSurveyCopy)
+
+  return (
+    <div className='p-8'>
+      <div className='flex-col flex'>
+        <div className='p-6'>
+          <h1 className='text-xl' style={{ color: 'forestgreen' }}>Hashdown is the easiest text based form maker</h1>
+          <h2 className='flex top-10 text-center justify-center text-4xl pb-24 pt-4' style={{ fontWeight: '700', color: 'black' }}>
+            The fastest way to create and share surveys.
+            <br />
+            Write, visualize, share.
+          </h2>
+        </div>
+        <div className='flex'>
+          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
+            {'Forms are as easy as a few lines of text'}
+          </p>
+          {/* <p style={{ whiteSpace: 'pre-wrap', ...linedPaper }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
+            {simpleSurveyCopy}
+
+          </p> */}
+          <div className='p-6 w-1/2 border border-dashed'>
+            <ol style={{ whiteSpace: 'pre', wordWrap: 'normal' }}>
+              {simpleSurveyCopy.split('\n').map(item => {
+                return (
+                  <li style={{
+                    fontSize: '1rem', listStyleType: 'decimal',
+                    textAlign: 'left', color: 'gray', wordWrap: 'normal',
+                    wordBreak: 'normal',
+                    whiteSpace: 'normal',
+                    borderBottom: '1px dashed gray'
+                  }}>{item}</li>
+                )
+              })}
+            </ol>
+          </div>
+        </div>
+        <div className=''>
+          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
+            {'Turns into this'}
+          </p>
+          {/* <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
+            {'explanation of the output'}
+          </p> */}
+          <RenderedForm survey={sampleSurvey}></RenderedForm>
+        </div>
+      </div >
+    </div>
+  )
+}
+
 function Home() {
   const [editorContent, setEditorContent] = useState(exampleText);
 
   return (
     <>
-      <div className='flex-col flex'>
-        <div className='p-6'>
-          <h2 className='flex top-10 text-center justify-center text-xl p-6'>
-            The easiest way to create and share surveys.
-            <br />
-            Create using simple markdown, visualize, publish and share!
-          </h2>
-        </div>
-        <div className='flex'>
-          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
-            {formRulesCopy}
-          </p>
-          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
-            {formTypesCopy}
-          </p>
-        </div>
-      </div >
+      <HeroSection></HeroSection>
+      <div className='pt-24 pb-8'>
+        <h3 className='text-xl'>Try it below</h3>
+      </div>
+
       <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
     </>)
 }
