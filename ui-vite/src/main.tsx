@@ -90,7 +90,7 @@ function HeroSection() {
           </h2>
         </div>
         <div className='flex'>
-          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
+          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-lg flex-1 w-1/2 flex-wrap h-full'>
             {'Forms are as easy as a few lines of text'}
           </p>
           {/* <p style={{ whiteSpace: 'pre-wrap', ...linedPaper }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
@@ -113,14 +113,20 @@ function HeroSection() {
             </ol>
           </div>
         </div>
-        <div className=''>
-          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
+        <div className='flex flex-row'>
+          <p style={{
+            // whiteSpace: 'pre-wrap',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }} className='p-6 h-full w-1/2 flex'>
             {'Turns into this'}
           </p>
           {/* <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
             {'explanation of the output'}
           </p> */}
-          <RenderedForm survey={sampleSurvey}></RenderedForm>
+          <div className='w-1/2 h-full'>
+            <RenderedForm survey={sampleSurvey}></RenderedForm>
+          </div>
         </div>
       </div >
     </div>
