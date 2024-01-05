@@ -1,4 +1,4 @@
-import { StrictMode, useState } from 'react'
+import { StrictMode, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useParams, Outlet } from 'react-router-dom'
 import './index.css'
@@ -136,9 +136,10 @@ function Home() {
   return (
     <>
       <HeroSection></HeroSection>
-      <div className='pt-24 pb-8'>
+      <div className='flex flex-col pt-8 items-center pb-24'>
+        <h4 className='text-xl p-6 w-2/3 rounded'>Give it a try below</h4>
+        <a href='/waitlist' className='outline outline-1 p-6 w-2/3 rounded'>Get notified when available</a>
         <hr></hr>
-        <h3 className='pt-16 text-xl'>Give it a try</h3>
       </div>
       <div className="">
         <h4 className='text-left'>Click on one of the examples</h4>
@@ -147,6 +148,7 @@ function Home() {
       <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
     </>)
 }
+
 
 function RenderedSurvey() {
   let { surveyId } = useParams();
