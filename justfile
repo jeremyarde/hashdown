@@ -31,4 +31,7 @@ ls:
 
 migrate:
     cd server && sqlx migrate revert && sqlx migrate run
+
+buildwasm:
+    cd backend && wasm-pack build --target bundler
     

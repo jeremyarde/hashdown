@@ -7,7 +7,7 @@ import { Navbar } from './Navbar.tsx'
 import { ListSurveys } from './pages/ListSurveys.tsx'
 import { RenderedForm } from './RenderedForm.tsx'
 import { Signup } from './Signup.tsx'
-import { EditorPage } from './pages/EditorPage.tsx'
+import { EditorPage, SampleForms } from './pages/EditorPage.tsx'
 import { ListResponses } from './ListResponses.tsx'
 import { useGetSurvey } from './hooks/useGetSurvey.ts'
 import { NONAME } from 'dns'
@@ -51,9 +51,9 @@ const formRulesCopy = `Each survey needs 3 things.
 3. Questions - use any of the following form input types to ask your questions
 `;
 
-const simpleSurveyCopy = `# Dave's quick survey
+const simpleSurveyCopy = `# Feedback
 
-Text: How did you hear about us?
+text: How did you hear about us?
 
 radio: Can we contact you for follow up questions? making this longer to see if things are bad
 - yes
@@ -81,17 +81,17 @@ function HeroSection() {
   return (
     <div className='p-8'>
       <div className='flex-col flex'>
-        <div className='p-6'>
-          <h1 className='text-xl' style={{ color: 'forestgreen' }}>Hashdown is the easiest text based form maker</h1>
-          <h2 className='flex top-10 text-center justify-center text-4xl pb-24 pt-4' style={{ fontWeight: '700', color: 'black' }}>
+        <div className='p-6 pb-24'>
+          <h2 className='flex top-10 text-center justify-center text-4xl pt-4' style={{ fontWeight: '700', color: 'black' }}>
             The fastest way to create and share surveys.
             <br />
             Write, visualize, share.
           </h2>
+          <h1 className='text-xl' style={{ color: 'forestgreen' }}>Hashdown is the easiest text based form maker</h1>
         </div>
-        <div className='flex'>
-          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-lg flex-1 w-1/2 flex-wrap h-full'>
-            {'Forms are as easy as a few lines of text'}
+        <div className='flex flex-row pt-10 pb-10'>
+          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-2xl flex-1 w-1/2 flex-wrap justify-center'>
+            {'A few lines of text like this'}
           </p>
           {/* <p style={{ whiteSpace: 'pre-wrap', ...linedPaper }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
             {simpleSurveyCopy}
@@ -114,11 +114,8 @@ function HeroSection() {
           </div>
         </div>
         <div className='flex flex-row'>
-          <p style={{
-            // whiteSpace: 'pre-wrap',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }} className='p-6 h-full w-1/2 flex'>
+          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-2xl flex-1 w-1/2 flex-wrap justify-center'>
+
             {'Turns into this'}
           </p>
           {/* <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
@@ -140,9 +137,13 @@ function Home() {
     <>
       <HeroSection></HeroSection>
       <div className='pt-24 pb-8'>
-        <h3 className='text-xl'>Try it below</h3>
+        <hr></hr>
+        <h3 className='pt-16 text-xl'>Give it a try</h3>
       </div>
-
+      <div className="">
+        <h4 className='text-left'>Click on one of the examples</h4>
+        <SampleForms setEditorContent={setEditorContent}></SampleForms>
+      </div>
       <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
     </>)
 }

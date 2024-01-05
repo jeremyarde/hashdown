@@ -122,20 +122,20 @@ function TabItem({ item, setContentCallback, active, setSelected, index }:
 
     return (
         <>
-            <div className={active ?
-                'bg-gray p-1 text-xs rounded-t-lg flex-grow shadow-md' :
-                'bg-gray-light p-1 text-xs rounded-t-md flex-grow shadow-md'}
+            <div style={{ backgroundColor: active ? 'rgb(19, 206, 102)' : '#FFFFFF' }} className={active ?
+                'outline outline-1 p-1 m-1 text-xs rounded flex-grow bg-green' :
+                'outline outline-1 p-1 m-1 text-xs rounded flex-grow'}
                 onClick={onClick}>{item.tabname}</div>
         </>
     )
 }
 
-function SampleForms({ setEditorContent }: { setEditorContent: React.Dispatch<React.SetStateAction<string>> }) {
+export function SampleForms({ setEditorContent }: { setEditorContent: React.Dispatch<React.SetStateAction<string>> }) {
     const [selected, setSelected] = useState(0);
 
     return (
         <>
-            <div className='flex w-full'>
+            <div className='flex w-full pb-6'>
                 {tabTemplates.map((template: TabContent, i) => {
                     return (
                         <>
@@ -192,7 +192,6 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
             <div className="flex w-full h-full flex-wrap md:flex-row flex-col">
                 <div className="md:w-1/2 w-full flex flex-col">
                     <h2 className="text-2xl font-bold">Enter Form Content</h2>
-                    <SampleForms setEditorContent={setEditorContent}></SampleForms>
                     <textarea
                         className="w-full"
                         style={{ height: '65vh' }}
