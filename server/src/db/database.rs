@@ -140,6 +140,7 @@ pub struct UserModel {
     pub email_status: String,
     pub user_id: String,
     pub deleted_at: Option<DateTime<Utc>>,
+    pub workspace_id: String,
     // pub user_id: String,
 }
 
@@ -155,6 +156,7 @@ pub struct AnswerModel {
     submitted_at: Option<DateTime<Utc>>,
     answers: Option<Value>,
     survey_id: String,
+    workspace_id: String,
 }
 
 pub struct CreateUserRequest {
@@ -169,6 +171,7 @@ pub struct Session {
     pub session_id: String,
     pub active_period_expires_at: DateTime<Utc>,
     pub idle_period_expires_at: DateTime<Utc>,
+    pub workspace_id: String,
 }
 
 impl Session {
@@ -179,6 +182,7 @@ impl Session {
             session_id: String::from(""),
             active_period_expires_at: chrono::Utc::now(),
             idle_period_expires_at: chrono::Utc::now(),
+            workspace_id: String::from(""),
         }
     }
 }
@@ -239,12 +243,16 @@ impl Database {
         Ok(result)
     }
 
-    pub async fn create_survey(&self, survey: SurveyModel) -> anyhow::Result<SurveyModel> {
+    pub async fn create_survey(
+        &self,
+        survey: SurveyModel,
+        workspace_id: &str,
+    ) -> anyhow::Result<SurveyModel> {
         // let parsed_survey = parse_markdown_v3(payload.plaintext.clone())?;
         let res = sqlx::query_as!(
             SurveyModel,
             r#"insert into mdp.surveys (
-                    name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version, blocks, organization_id
+                    name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version, blocks, workspace_id
                 ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *"#,
             survey.name,
             survey.survey_id,
@@ -255,7 +263,7 @@ impl Database {
             survey.version,
             survey.parse_version,
             survey.blocks,
-            "organization here"
+            workspace_id,
         )
         .fetch_one(&self.pool)
         .await
@@ -307,24 +315,20 @@ impl Database {
     pub async fn list_responses(
         &self,
         survey_id: &str,
+        workspace_id: &str,
     ) -> anyhow::Result<Vec<AnswerModel>, ServerError> {
         info!("Listing responses for survey");
 
         let answers = sqlx::query_as!(
             AnswerModel,
-            r#"select * from mdp.responses where mdp.responses.survey_id = $1"#,
-            survey_id
+            r#"select * from mdp.responses where mdp.responses.survey_id = $1 and mdp.responses.workspace_id = $2"#,
+            survey_id,
+            workspace_id,
         )
         .fetch_all(&self.pool)
         .await
         .map_err(|_err| ServerError::Database("Did not find responses".to_string()))
         .unwrap();
-
-        // let res = sqlx::query!(r#"select * from mdp.responses where mdp.responses.survey_id = $1"#, survey_id)
-        //     .fetch_all(&self.pool)
-        //     .await.map_err(|err| Err(ServerError::Database("Did not find responses".to_string()))).unwrap();
-
-        // let answers = res.iter().map(|record| AnswerModel { id: record.id.to_string(), submitted_at: record.submitted_at, answers: record.answers, survey_id }).collect();
 
         Ok(answers)
     }
@@ -365,7 +369,7 @@ impl Database {
         };
     }
 
-    pub async fn create_session(&self, user_id: String) -> anyhow::Result<Session, ServerError> {
+    pub async fn create_session(&self, user: UserModel) -> anyhow::Result<Session, ServerError> {
         let session_id = nanoid_gen(32);
 
         let new_active_expires = Utc::now() + Duration::hours(1);
@@ -373,12 +377,12 @@ impl Database {
 
         let new_session = match sqlx::query_as!(Session,
             r#"
-            insert into mdp.sessions (session_id, user_id, active_period_expires_at, idle_period_expires_at) 
-            values ($1, $2, $3, $4)
+            insert into mdp.sessions (session_id, user_id, active_period_expires_at, idle_period_expires_at, workspace_id) 
+            values ($1, $2, $3, $4, $5)
             ON conflict (user_id) do update 
-            set session_id = $1, active_period_expires_at = $3, idle_period_expires_at = $4 
+            set session_id = $1, active_period_expires_at = $3, idle_period_expires_at = $4
             where sessions.user_id = $2 returning *"#, 
-        session_id, user_id, new_active_expires, new_idle_expires)
+        session_id, user.user_id, new_active_expires, new_idle_expires, user.workspace_id)
         .fetch_one(&self.pool).await {
             Ok(x) => x,
             Err(err) => {

@@ -1,13 +1,13 @@
 use axum::{
     extract::{self, Query, State},
-    Json,
+    Extension, Json,
 };
 
 use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::{debug, info};
 
-use crate::{db::database::AnswerModel, ServerError, ServerState};
+use crate::{db::database::AnswerModel, mware::ctext::Ctext, ServerError, ServerState};
 
 #[derive(Deserialize, Debug)]
 pub struct SubmitResponseRequest {
@@ -51,7 +51,7 @@ pub async fn list_response(
     State(state): State<ServerState>,
     // Path(survey_id): Path<String>,
     response_query: Query<ResponseQuery>,
-    // ctx: Option<Ctext>,
+    ctx: Extension<Ctext>,
     // Json(payload): extract::Json<Value>, // for urlencoded
 ) -> Result<Json<Value>, ServerError> {
     info!("->> submit_survey");
@@ -60,7 +60,7 @@ pub async fn list_response(
     // json version
     let responses: Vec<AnswerModel> = state
         .db
-        .list_responses(&response_query.survey_id)
+        .list_responses(&response_query.survey_id, &ctx.session.workspace_id)
         .await
         .expect("Could not get responses from db");
 

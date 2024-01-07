@@ -10,16 +10,21 @@
       },
       {
         "ordinal": 1,
+        "name": "workspace_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
         "name": "submitted_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 2,
+        "ordinal": 3,
         "name": "answers",
         "type_info": "Json"
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "survey_id",
         "type_info": "Text"
       }
@@ -32,6 +37,7 @@
       ]
     },
     "nullable": [
+      false,
       false,
       true,
       true,

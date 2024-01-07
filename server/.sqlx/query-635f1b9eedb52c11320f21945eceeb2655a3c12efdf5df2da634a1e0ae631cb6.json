@@ -15,31 +15,36 @@
       },
       {
         "ordinal": 2,
-        "name": "email",
+        "name": "workspace_id",
         "type_info": "Text"
       },
       {
         "ordinal": 3,
-        "name": "password_hash",
+        "name": "email",
         "type_info": "Text"
       },
       {
         "ordinal": 4,
+        "name": "password_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "modified_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "deleted_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "email_status",
         "type_info": "Text"
       }
@@ -50,6 +55,7 @@
       ]
     },
     "nullable": [
+      false,
       false,
       false,
       false,

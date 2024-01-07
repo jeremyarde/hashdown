@@ -30,7 +30,13 @@ ls:
     docker run --rm -it testserver ls -l /usr/local/bin
 
 migrate:
-    cd server && sqlx migrate revert && sqlx migrate run
+    cd server && source .env
+    cd server && sqlx migrate revert 
+    cd server && sqlx migrate run
+    cd server && cargo sqlx prepare
+
+gentypes:
+    supabase gen types typescript --project-id vbvounbggaxtaofatdyg > ui-vite/src/types/supabase.ts
 
 buildwasm:
     cd backend && wasm-pack build --target bundler

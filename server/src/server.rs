@@ -131,7 +131,7 @@ pub struct SurveyModel {
     pub version: Option<String>,
     pub parse_version: Option<String>,
     pub blocks: Value,
-    pub organization_id: Option<String>,
+    pub workspace_id: String,
     // pub parsed_json: Option<Value>,
 }
 impl SurveyModel {
@@ -153,7 +153,7 @@ impl SurveyModel {
             name: Some("name - todo".to_string()),
             version: Some("version - todo".to_string()),
             blocks: json!(&survey.blocks),
-            organization_id: payload.organization,
+            workspace_id: session.workspace_id.clone(),
         }
     }
 }

@@ -21,8 +21,8 @@ use crate::constants::SESSION_ID_KEY;
 use crate::db::database::{CreateUserRequest, Session};
 use crate::mware::ctext::Ctext;
 use crate::routes::LoginPayload;
+use crate::ServerError;
 use crate::ServerState;
-use crate::{ServerError};
 
 #[axum::debug_handler]
 pub async fn signup(
@@ -69,12 +69,13 @@ pub async fn signup(
     // Don't create a session for signing up - we need to verify email first
     // let transaction_result = transactions.commit().await;
 
-    let session = state.db.create_session(user.user_id.clone()).await?;
+    let email = user.email.clone();
+    let session = state.db.create_session(user).await?;
 
     // let _ = jar.add(Cookie::new("session_id", session.session_id.clone()));
     let headers = create_session_headers(&session);
 
-    Ok((headers, Json(json!({"email": user.email}))))
+    Ok((headers, Json(json!({"email": email}))))
 }
 
 #[axum::debug_handler]
@@ -160,7 +161,7 @@ pub async fn login(
     // TODO: create success body
     let username = payload.email.clone();
 
-    let session = state.db.create_session(user.user_id.clone()).await?;
+    let session = state.db.create_session(user).await?;
 
     // let _ = jar.add(Cookie::new(SESSION_ID_KEY, session.session_id.clone()));
 
@@ -326,6 +327,7 @@ pub async fn validate_session_middleware(
                 active_period_expires_at: new_active_expires,
                 idle_period_expires_at: new_idle_expires,
                 user_id: curr_session.user_id,
+                workspace_id: curr_session.workspace_id,
             })
             .await?;
         request.extensions_mut().insert(updated_session.clone());

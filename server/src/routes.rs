@@ -132,7 +132,7 @@ pub async fn ping() -> anyhow::Result<Json<Value>, ServerError> {
 pub async fn create_survey(
     headers: HeaderMap,
     State(state): State<ServerState>,
-    // Extension(ctx): Extension<Option<Ctext>>,
+    ctx: Extension<Ctext>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> create_survey");
@@ -145,21 +145,21 @@ pub async fn create_survey(
         .unwrap()
         .to_string();
 
-    let session = state.db.get_session(session_id).await.unwrap();
+    // let session = state.db.get_session(session_id).await.unwrap();
 
     // let ctx = match &ctx {
     //     Some(x) => x,
     //     None => return Err(ServerError::AuthFailNoTokenCookie),
     // };
 
-    info!("Creating new survey for user={:?}", session.user_id);
+    info!("Creating new survey for user={:?}", ctx.session.user_id);
     // Check that the survey is Ok
 
-    let survey = SurveyModel::new(payload, &session);
+    let survey = SurveyModel::new(payload, &ctx.session);
 
     let insert_result: SurveyModel = state
         .db
-        .create_survey(survey)
+        .create_survey(survey, &ctx.session.workspace_id)
         .await
         .map_err(|x| ServerError::Database(format!("Could not create new survey: {x}").to_string()))
         .unwrap();

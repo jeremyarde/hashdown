@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            insert into mdp.sessions (session_id, user_id, active_period_expires_at, idle_period_expires_at) \n            values ($1, $2, $3, $4)\n            ON conflict (user_id) do update \n            set session_id = $1, active_period_expires_at = $3, idle_period_expires_at = $4 \n            where sessions.user_id = $2 returning *",
+  "query": "\n            insert into mdp.sessions (session_id, user_id, active_period_expires_at, idle_period_expires_at, workspace_id) \n            values ($1, $2, $3, $4, $5)\n            ON conflict (user_id) do update \n            set session_id = $1, active_period_expires_at = $3, idle_period_expires_at = $4\n            where sessions.user_id = $2 returning *",
   "describe": {
     "columns": [
       {
@@ -10,21 +10,26 @@
       },
       {
         "ordinal": 1,
-        "name": "session_id",
+        "name": "workspace_id",
         "type_info": "Text"
       },
       {
         "ordinal": 2,
-        "name": "user_id",
+        "name": "session_id",
         "type_info": "Text"
       },
       {
         "ordinal": 3,
+        "name": "user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
         "name": "active_period_expires_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "idle_period_expires_at",
         "type_info": "Timestamptz"
       }
@@ -34,7 +39,8 @@
         "Text",
         "Text",
         "Timestamptz",
-        "Timestamptz"
+        "Timestamptz",
+        "Text"
       ]
     },
     "nullable": [
@@ -42,8 +48,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "08c245a1f997c11606a1bcaaae6613220a24e35dcc4ec0c8144e28ae226d47da"
+  "hash": "3a6c08a739dae75fc4c873ca3df5271031f8c728d1750445b86689af885365a1"
 }

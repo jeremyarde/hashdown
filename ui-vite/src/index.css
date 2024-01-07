@@ -116,3 +116,7 @@ input:checked+.slider:before {
 .mycols {
   grid-template-columns: repeat(--columns, 2fr);
 }
+
+* {
+  min-width: 0;
+}

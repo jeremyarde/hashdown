@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "insert into mdp.surveys (\n                    name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version, blocks, organization_id\n                ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *",
+  "query": "insert into mdp.surveys (\n                    name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version, blocks, workspace_id\n                ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *",
   "describe": {
     "columns": [
       {
@@ -15,7 +15,7 @@
       },
       {
         "ordinal": 2,
-        "name": "name",
+        "name": "workspace_id",
         "type_info": "Text"
       },
       {
@@ -25,43 +25,43 @@
       },
       {
         "ordinal": 4,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "modified_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "plaintext",
         "type_info": "Text"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "version",
         "type_info": "Text"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "parse_version",
         "type_info": "Text"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "blocks",
         "type_info": "Json"
-      },
-      {
-        "ordinal": 10,
-        "name": "organization_id",
-        "type_info": "Text"
       }
     ],
     "parameters": {
       "Left": [
-        "Text",
+        "Varchar",
         "Text",
         "Text",
         "Timestamptz",
@@ -76,16 +76,16 @@
     "nullable": [
       false,
       false,
-      true,
-      false,
-      false,
       false,
       false,
       true,
-      true,
       false,
+      false,
+      false,
+      true,
+      true,
       false
     ]
   },
-  "hash": "5d5bf0f966961d2d00d2851bb3a40fe0be2d0bff6051f477bcc118e811e049b9"
+  "hash": "a10baaa41c715e30699732af05283d63dbdcfd1eaffb9ee2beedbe35fe7d8461"
 }

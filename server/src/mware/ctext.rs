@@ -1,13 +1,9 @@
-
-
 // use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-
-
-use crate::{db::database::Session};
+use crate::db::database::Session;
 
 pub const AUTH_TOKEN: &str = "x-auth-token";
 // struct Keys {

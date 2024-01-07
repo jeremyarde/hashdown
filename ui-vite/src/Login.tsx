@@ -63,6 +63,7 @@ export function Login() {
                 setLoggedIn(false);
                 setLoginError(result.error);
             }
+            setIsLoading(false);
         } catch (error) {
             console.error("Error:", error);
 
@@ -72,7 +73,7 @@ export function Login() {
     let componentHtml = undefined;
     switch (componentState) {
         case ComponentState.Error:
-            componentHtml = (<div>{`${loginError}`}</div>)
+            componentHtml = (<div className="" style={{ color: 'red' }}>{`${loginError}`}</div>)
             break;
         case ComponentState.Loading:
             componentHtml = (<div className="bg-gray-200 w-full flex justify-center items-center">

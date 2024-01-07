@@ -14,42 +14,44 @@ import { MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { getBaseUrl, getSessionToken, handleResponse } from '@/lib/utils';
 import { Survey } from '@/lib/constants';
+import { useListSurveys } from '@/hooks/useListSurveys';
 
 
 export function ListSurveys() {
-    const [surveys, setSurveys] = useState([]);
-    const [error, setError] = useState('');
+    const { surveys, error, isPending } = useListSurveys();
+    // const [surveys, setSurveys] = useState([]);
+    // const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    useEffect(() => {
-        getSurveys();
-    }, [])
+    // useEffect(() => {
+    //     getSurveys();
+    // }, [])
 
-    async function getSurveys() {
-        const response = await fetch(`${getBaseUrl()}/surveys`, {
-            method: "GET",
-            // credentials: 'include',
-            headers: {
-                'session_id': getSessionToken() ?? '',
-            }
-        });
+    // async function getSurveys() {
+    //     const response = await fetch(`${getBaseUrl()}/surveys`, {
+    //         method: "GET",
+    //         // credentials: 'include',
+    //         headers: {
+    //             'session_id': getSessionToken() ?? '',
+    //         }
+    //     });
 
-        handleResponse(response);
+    //     handleResponse(response);
 
-        const result = await response.json();
-        console.log('data: ', result);
-        if (result.error) {
-            console.log('failed to get surveys: ', result);
-            setError(result.message ?? 'Generic error getting surveys');
-            if (response.status === 401) {
-                // redirect({ to: "/login", replace: true });
-            }
-        } else {
-            console.log('Found surveys: ', result);
-            setSurveys(result.surveys);
-            setError('');
-        }
-    }
+    //     const result = await response.json();
+    //     console.log('data: ', result);
+    //     if (result.error) {
+    //         console.log('failed to get surveys: ', result);
+    //         setError(result.message ?? 'Generic error getting surveys');
+    //         if (response.status === 401) {
+    //             // redirect({ to: "/login", replace: true });
+    //         }
+    //     } else {
+    //         console.log('Found surveys: ', result);
+    //         setSurveys(result.surveys);
+    //         setError('');
+    //     }
+    // }
 
     const viewSurvey = (surveyId: string) => {
         console.log('go to survey');
@@ -79,7 +81,7 @@ export function ListSurveys() {
                             </TableRow>
                         </TableHeader>
                         <TableBody className=''>
-                            {surveys.map((survey: Survey) => {
+                            {surveys?.surveys?.map((survey: Survey) => {
                                 return (
                                     <TableRow className='outline outline-1 outline-gray-300 hover:bg-blue-100'>
                                         <TableCell className="font-medium">{survey.survey_id}</TableCell>

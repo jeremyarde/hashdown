@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select * from mdp.responses where mdp.responses.survey_id = $1",
+  "query": "select * from mdp.responses where mdp.responses.survey_id = $1 and mdp.responses.workspace_id = $2",
   "describe": {
     "columns": [
       {
@@ -10,31 +10,38 @@
       },
       {
         "ordinal": 1,
+        "name": "workspace_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
         "name": "submitted_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 2,
+        "ordinal": 3,
         "name": "answers",
         "type_info": "Json"
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "survey_id",
         "type_info": "Text"
       }
     ],
     "parameters": {
       "Left": [
+        "Text",
         "Text"
       ]
     },
     "nullable": [
+      false,
       false,
       true,
       true,
       false
     ]
   },
-  "hash": "30e680e0119fa517fd4309db0e1b40a8cfd016c303448be00effa7348a611ec6"
+  "hash": "73ad290ad709253d42596aaa5bac6e131a824ba8f2b12784e0b081535e667bdd"
 }
