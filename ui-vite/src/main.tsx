@@ -12,6 +12,7 @@ import { ListResponses } from './ListResponses.tsx'
 import { useGetSurvey } from './hooks/useGetSurvey.ts'
 import { NONAME } from 'dns'
 import { markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
+import Dashboard from './pages/Dashboard.tsx'
 
 
 const exampleText = `# User Registration Form
@@ -184,6 +185,7 @@ function Faq() {
   ]
 }
 
+
 function Waitlist() {
   const { survey, error, isPending } = useGetSurvey("k3itjqi4mxhq");
   return (
@@ -208,6 +210,7 @@ function App() {
             <Route path="/surveys" element={<ListSurveys />} />
             <Route path='/responses' element={<ListResponses />} />
             <Route path='/waitlist' element={<Waitlist />} />
+            <Route path='/dashboard' element={<Dashboard />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Route>
           <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />
