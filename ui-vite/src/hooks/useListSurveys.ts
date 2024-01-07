@@ -3,11 +3,15 @@ import { Survey } from "@/lib/constants";
 import { getBaseUrl, getSessionToken } from "@/lib/utils";
 
 
+type ListSurvey = {
+    surveys: Survey[]
+};
+
 /**
  * 
  * @returns {Survey[], string, boolean}
  */
-export function useListSurveys(): { surveys: Survey[] | undefined, error: string, isPending: boolean } {
+export function useListSurveys(): { surveys: ListSurvey | undefined, error: string, isPending: boolean } {
     const [surveys, setSurveys] = useState();
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState('');

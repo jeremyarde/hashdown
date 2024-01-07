@@ -39,7 +39,7 @@ export default function Component() {
                     <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Dashboard</h2>
                     <div className="relative">
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                            <SearchIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                            {/* <SearchIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" /> */}
                         </span>
                         <Input
                             className="pl-10 pr-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-300"
@@ -72,25 +72,5 @@ export default function Component() {
                 </main>
             </div>
         </div>
-    )
-}
-
-function SearchIcon(props) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-        </svg>
     )
 }
