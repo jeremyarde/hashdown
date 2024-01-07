@@ -13,13 +13,13 @@ export function Navbar() {
 
     let tabs = !getSessionToken() ? (
         <>
-            <Link className="hover:animate-pulse" to="/editor">Editor</Link>
-            <Link className="hover:animate-pulse" to="/login">Login</Link>
+            <Link className="hover:text-green p-1" to="/editor">Editor</Link>
+            <Link className="hover:text-green p-1" to="/login">Login</Link>
         </>
     ) : (
         <>
-            <Link className="hover:animate-pulse" to="/surveys">Surveys</Link>
-            <Link className="hover:animate-pulse" to="/editor">Editor</Link>
+            <Link className="hover:text-green p-1" to="/surveys">Surveys</Link>
+            <Link className="hover:text-green p-1" to="/editor">Editor</Link>
         </>
     );
 
@@ -34,13 +34,13 @@ export function Navbar() {
 
     return (
         <>
-            <div className="flex items-center justify-between w-full">
+            <div className="flex justify-between w-full">
                 <h1>
                     <Link className="text-2xl font-bold" to="/">
                         <span>hashdown</span>
                     </Link>
                 </h1>
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center">
                     {showTabs ? tabs : ''}
                     {waitlist}
                 </div>

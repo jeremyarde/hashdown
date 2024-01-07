@@ -80,7 +80,7 @@ function HeroSection() {
   let sampleSurvey = markdown_to_form_wasm_v2(simpleSurveyCopy)
 
   return (
-    <div className='p-8'>
+    <div className=''>
       <div className='flex-col flex'>
         <div className='p-6 pb-24'>
           <h2 className='flex top-10 text-center justify-center text-4xl pt-4' style={{ fontWeight: '700', color: 'black' }}>
@@ -98,7 +98,7 @@ function HeroSection() {
             {simpleSurveyCopy}
 
           </p> */}
-          <div className='p-6 w-1/2 border border-dashed'>
+          <div style={{ backgroundColor: 'white' }} className='p-6 w-1/2 border border-dashed bg-white'>
             <ol style={{ whiteSpace: 'pre', wordWrap: 'normal' }}>
               {simpleSurveyCopy.split('\n').map(item => {
                 return (
