@@ -125,12 +125,12 @@ INSERT INTO mdp.surveys (
     'usr_default',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP,	
-    '# hashdown waitlist :)
+    '# Get emailed when hashdown is available
 Text: Email
 textarea: What do you want to use Hashdown for?
 Submit: Put me on waitlist',
 	'version - todo',
     '2',
-    '[{"id":"4cxmez99swdf","index":0,"block_type":"Title","properties":{"type":"Title","title":"Hashdown waitlist :)"}},{"id":"4wgpbx5nqiav","index":0,"block_type":"TextInput","properties":{"type":"TextInput","default":"","question":"Email"}},{"id":"93241ezrlet1","index":0,"block_type":"Textarea","properties":{"type":"Textarea","default":"","question":"What do you want to use Hashdown for?"}},{"id":"svjimprwun33","index":0,"block_type":"Submit","properties":{"type":"Submit","default":"","question":"Put me on waitlist"}},{"id":"3gvtzvmsz1ip","index":0,"block_type":"Empty","properties":{"type":"Nothing"}}]',
+    '[{"id":"4cxmez99swdf","index":0,"block_type":"Title","properties":{"type":"Title","title":"Get emailed when hashdown is available"}},{"id":"4wgpbx5nqiav","index":0,"block_type":"TextInput","properties":{"type":"TextInput","default":"","question":"Email"}},{"id":"93241ezrlet1","index":0,"block_type":"Textarea","properties":{"type":"Textarea","default":"","question":"What do you want to use Hashdown for?"}},{"id":"svjimprwun33","index":0,"block_type":"Submit","properties":{"type":"Submit","default":"","question":"Put me on waitlist"}},{"id":"3gvtzvmsz1ip","index":0,"block_type":"Empty","properties":{"type":"Nothing"}}]',
     'ws_default'
 );
