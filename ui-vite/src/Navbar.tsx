@@ -13,7 +13,6 @@ export function Navbar() {
 
     let tabs = !getSessionToken() ? (
         <>
-            <Link className="hover:text-green p-1" to="/editor">Editor</Link>
             <Link className="hover:text-green p-1" to="/login">Login</Link>
         </>
     ) : (
