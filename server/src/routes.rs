@@ -1,14 +1,17 @@
 use axum::{
+    error_handling::HandleErrorLayer,
     extract::{self, Path, State},
-    http::{HeaderMap, Method},
+    http::{HeaderMap, Method, StatusCode},
     middleware::{self},
     response::Response,
     routing::{get, post},
     Extension, Json, Router,
 };
-
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::time::Duration;
+use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
+
 use tower_http::cors::CorsLayer;
 use tracing::{debug, info};
 
@@ -43,6 +46,10 @@ pub async fn hello() -> Response {
 }
 
 pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
+    // let rate_limit = ServiceBuilder::new()
+    //     .layer(BufferLayer::new(1024))
+    //     .layer(RateLimitLayer::new(5, Duration::from_secs(1)));
+
     let public_routes = Router::new()
         .route("/v1/hello", get(hello))
         .route("/v1/auth/login", post(auth::login))
@@ -109,7 +116,14 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         .merge(auth_routes)
         .layer(middleware::map_response(main_response_mapper))
         .layer(corslayer)
+        // .layer(BufferLayer::new(1024))
+        // .layer(RateLimitLayer::new(5, Duration::from_secs(1)))
         .with_state(state.clone());
+    // .layer(
+    //     ServiceBuilder::new()
+    //         .layer(BufferLayer::new(1024))
+    //         .layer(RateLimitLayer::new(5, Duration::from_secs(1))),
+    // );
 
     // let router = all.layer(corslayer);
     // .layer(auth_session_service);
