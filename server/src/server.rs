@@ -20,7 +20,7 @@ use crate::{
         database::{ConnectionDetails, Session},
     },
     mail::mailer::Mailer,
-    routes::{get_router, CreateSurveyRequest},
+    routes::get_router,
     ServerState,
 };
 
@@ -108,52 +108,12 @@ pub struct Metadata {
 }
 
 impl Metadata {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             metadata_id: nanoid_gen(24),
             created_at: Utc::now(),
             modified_at: Utc::now(),
             version: "0".to_string(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
-pub struct SurveyModel {
-    pub id: i32,
-    pub name: Option<String>,
-    pub survey_id: String,
-    pub user_id: String,
-    pub created_at: DateTime<Utc>,
-    pub modified_at: DateTime<Utc>,
-    pub plaintext: String,
-    // pub questions: Option<Vec<Question>>,
-    pub version: Option<String>,
-    pub parse_version: Option<String>,
-    pub blocks: Value,
-    pub workspace_id: String,
-    // pub parsed_json: Option<Value>,
-}
-impl SurveyModel {
-    pub(crate) fn new(payload: CreateSurveyRequest, session: &Session) -> SurveyModel {
-        // let parsed_survey =
-        //     (payload.plaintext.clone()).expect("Could not parse the survey");
-        // let survey = markdown_to_form_wasm_v2(payload.plaintext);
-        let survey = ParsedSurvey::from(payload.plaintext.clone()).unwrap();
-        let metadata = Metadata::new();
-        SurveyModel {
-            id: 0,
-            survey_id: nanoid_gen(12),
-            plaintext: payload.plaintext.clone(),
-            user_id: session.user_id.to_owned(),
-            created_at: metadata.created_at,
-            modified_at: metadata.modified_at,
-            // version: Some(survey),
-            parse_version: Some(survey.parse_version.clone()),
-            name: Some("name - todo".to_string()),
-            version: Some("version - todo".to_string()),
-            blocks: json!(&survey.blocks),
-            workspace_id: session.workspace_id.clone(),
         }
     }
 }

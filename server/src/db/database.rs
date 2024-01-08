@@ -34,7 +34,9 @@ use tracing::{info, instrument};
 //     pub metadata: Metadata,
 // }
 
-use crate::{server::SurveyModel, survey_responses::SubmitResponseRequest, ServerError};
+use crate::{survey_responses::SubmitResponseRequest, ServerError};
+
+use super::survey::SurveyModel;
 
 // mod models;
 
