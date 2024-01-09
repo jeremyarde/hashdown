@@ -144,7 +144,7 @@ pub async fn ping() -> anyhow::Result<Json<Value>, ServerError> {
 // pub async fn create_survey(
 //     headers: HeaderMap,
 //     State(state): State<ServerState>,
-//     ctx: Extension<Ctext>,
+//     ctx: Extension<Option<Ctext>>,
 //     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 // ) -> anyhow::Result<Json<Value>, ServerError> {
 //     info!("->> create_survey");
@@ -224,7 +224,7 @@ pub async fn ping() -> anyhow::Result<Json<Value>, ServerError> {
 // #[axum::debug_handler]
 // pub async fn list_survey(
 //     state: State<ServerState>,
-//     Extension(session): Extension<Ctext>,
+//     Extension(session): Extension<Option<Ctext>>,
 //     // headers: HeaderMap,
 // ) -> anyhow::Result<Json<Value>, ServerError> {
 //     info!("->> list_survey");

@@ -6,15 +6,15 @@ use axum::http::{HeaderMap, HeaderValue};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use argon2::PasswordVerifier;
-use axum::Json;
 use axum::{
     extract::{Request, State},
     middleware::Next,
     response::{IntoResponse, Response},
 };
+use axum::{Extension, Json};
 use chrono::{Duration, Utc};
 use markdownparser::nanoid_gen;
-use serde_json::json;
+use serde_json::{json, Value};
 use tracing::log::info;
 
 use crate::constants::SESSION_ID_KEY;
@@ -82,19 +82,28 @@ pub async fn signup(
 pub async fn delete(
     state: State<ServerState>,
     // jar: CookieJar,
-    headers: HeaderMap,
+    // headers: HeaderMap,
     // payload: Json<LoginPayload>,
-) -> impl IntoResponse {
+    Extension(ctx): Extension<Option<Ctext>>,
+) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> delete user");
-    let session_header = if let Some(x) = headers.get(SESSION_ID_KEY) {
-        x.to_owned().to_str().unwrap().to_string()
-    } else {
-        return Err(ServerError::AuthFailNoTokenCookie);
+    let Some(ctx) = ctx else {
+        return Err(ServerError::SessionNotFound(
+            "Did not find session".to_string(),
+        ));
     };
+    // let session_header = if let Some(x) = headers.get(SESSION_ID_KEY) {
+    //     x.to_owned().to_str().unwrap().to_string()
+    // } else {
+    //     return Err(ServerError::AuthFailNoTokenCookie);
+    // };
     // must be signed in to delete yourself
-    state.db.delete_session(session_header.clone()).await?;
-    state.db.delete_user(session_header).await?;
-    Ok(())
+    state.db.delete_session(&ctx.session.session_id).await?;
+    state
+        .db
+        .delete_user(&ctx.session.session_id, &ctx.session.workspace_id)
+        .await?;
+    Ok(Json(json!("delete successful")))
 }
 
 #[axum::debug_handler]
@@ -103,18 +112,23 @@ pub async fn logout(
     // jar: CookieJar,
     headers: HeaderMap,
     // payload: Json<LoginPayload>,
-) -> impl IntoResponse {
+    Extension(ctx): Extension<Option<Ctext>>,
+) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> logout");
-
-    let session_header = if let Some(x) = headers.get(SESSION_ID_KEY) {
-        x.to_owned().to_str().unwrap().to_string()
-    } else {
-        return Err(ServerError::AuthFailNoTokenCookie);
+    let Some(ctx) = ctx else {
+        return Err(ServerError::SessionNotFound(
+            "Did not find session".to_string(),
+        ));
     };
+    // let session_header = if let Some(x) = headers.get(SESSION_ID_KEY) {
+    //     x.to_owned().to_str().unwrap().to_string()
+    // } else {
+    //     return Err(ServerError::AuthFailNoTokenCookie);
+    // };
 
-    state.db.delete_session(session_header).await?;
+    state.db.delete_session(&ctx.session.session_id).await?;
     // let _ = &headers.remove(session_header);
-    Ok(())
+    Ok(Json(json!("logout success")))
 }
 
 #[axum::debug_handler]
@@ -122,7 +136,7 @@ pub async fn login(
     state: State<ServerState>,
     // _jar: CookieJar,
     // headers: HeaderMap,
-    // ctext: Extension<Ctext>,
+    // ctext: Extension<Option<Ctext>>,
     // ctext: Ctext,
     payload: Json<LoginPayload>,
 ) -> impl IntoResponse {
@@ -295,14 +309,14 @@ pub async fn validate_session_middleware(
     // return Ok(next.run(request).await);
 
     let session_id = match session_header {
-        Some(x) => x.to_string(),
+        Some(x) => x,
         None => return Err(ServerError::AuthFailNoTokenCookie),
     };
 
     info!("Using session_id: {session_id:?}");
 
     // get session from database using existing Session
-    let curr_session = match state.db.get_session(session_id.clone()).await {
+    let curr_session = match state.db.get_session(session_id.to_string()).await {
         Ok(x) => x,
         Err(_) => {
             state.db.delete_session(session_id).await?;
@@ -342,6 +356,7 @@ pub async fn validate_session_middleware(
             user_id: curr_session.user_id.to_string(),
             session: curr_session,
         });
+        info!("Added ctext to request data");
     }
 
     Ok(next.run(request).await)

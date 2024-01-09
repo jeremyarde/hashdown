@@ -51,7 +51,7 @@ pub async fn list_response(
     State(state): State<ServerState>,
     // Path(survey_id): Path<String>,
     response_query: Query<ResponseQuery>,
-    ctx: Extension<Ctext>,
+    Extension(ctx): Extension<Ctext>,
     // Json(payload): extract::Json<Value>, // for urlencoded
 ) -> Result<Json<Value>, ServerError> {
     info!("->> submit_survey");

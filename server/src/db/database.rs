@@ -230,18 +230,17 @@ impl Database {
         Ok(res)
     }
 
-    pub async fn get_survey(&self, survey_id: &String) -> anyhow::Result<SurveyModel> {
+    pub async fn get_survey(
+        &self,
+        survey_id: &String,
+        // workspace_id: &str,
+    ) -> anyhow::Result<SurveyModel> {
         let result = sqlx::query_as::<_, SurveyModel>(
             "select * from mdp.surveys where surveys.survey_id = $1",
         )
         .bind(survey_id)
         .fetch_one(&self.pool)
         .await?;
-        // let result = SurveyModel::select()
-        //     .where_bind("survey_id = ?", survey_id)
-        //     .fetch_one(&self.pool)
-        //     .await?;
-        // let survey = parse_markdown_v3(result.plaintext);
         Ok(result)
     }
 
@@ -398,20 +397,30 @@ impl Database {
 
     pub async fn update_session(&self, session: Session) -> anyhow::Result<Session, ServerError> {
         let curr_session = sqlx::query_as::<_, Session>(
-            r#"update mdp.sessions sessions set active_period_expires_at = $1, idle_period_expires_at = $2 where sessions.session_id = $3 and sessions.user_id = $4 returning *"#
-        ).bind(session.active_period_expires_at).bind(session.idle_period_expires_at).bind(session.session_id).bind(session.user_id).fetch_one(&self.pool).await.unwrap();
+            r#"update mdp.sessions set active_period_expires_at = $1, idle_period_expires_at = $2 where mdp.sessions.session_id = $3 and mdp.sessions.user_id = $4 and mdp.sessions.workspace_id = $5 returning *"#
+        ).bind(session.active_period_expires_at)
+        .bind(session.idle_period_expires_at)
+        .bind(session.session_id)
+        .bind(session.user_id)
+        .bind(session.workspace_id)
+        .fetch_one(&self.pool).await.unwrap();
 
         Ok(curr_session)
     }
 
-    pub async fn delete_session(&self, session_id: String) -> anyhow::Result<bool, ServerError> {
+    pub async fn delete_session(
+        &self,
+        session_id: &str,
+        // workspace_id: &str,
+    ) -> anyhow::Result<bool, ServerError> {
         let result = sqlx::query!(
-            r#"delete from mdp.sessions sessions where sessions.session_id = $1"#,
-            session_id
+            r#"delete from mdp.sessions where mdp.sessions.session_id = $1"#,
+            session_id,
+            // workspace_id
         )
         .execute(&self.pool)
         .await
-        .unwrap_or_else(|_| panic!("Did not delete session: {}", &session_id.as_str()));
+        .unwrap_or_else(|_| panic!("Did not delete session: {}", &session_id));
 
         if result.rows_affected() == 1 {
             Ok(true)
@@ -420,45 +429,25 @@ impl Database {
         }
     }
 
-    pub async fn delete_user(&self, user_id: String) -> anyhow::Result<String, ServerError> {
-        let _result = sqlx::query!("delete from mdp.users where users.user_id = $1", user_id)
-            .execute(&self.pool)
-            .await
-            .map_err(|err| {
-                ServerError::Database(format!("Could not delete user: {}", err));
-            });
+    pub async fn delete_user(
+        &self,
+        user_id: &str,
+        workspace_id: &str,
+    ) -> anyhow::Result<String, ServerError> {
+        let _result = sqlx::query!(
+            "delete from mdp.users where users.user_id = $1 and mdp.users.workspace_id = $2",
+            user_id,
+            workspace_id
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|err| {
+            ServerError::Database(format!("Could not delete user: {}", err));
+        });
 
-        Ok(user_id)
+        Ok(user_id.to_string())
     }
 }
 
 #[cfg(test)]
-mod tests {
-    // use dotenvy::dotenv;
-
-    // use crate::{database::Database, todo};
-
-    // #[tokio::test]
-    // async fn test_create_table() -> anyhow::Result<()> {
-    //     let mut db = Database::new(true).await?;
-
-    //     let res = sqlx::query("insert into todos(description, status) values ($1, $2)")
-    //         .bind("this is a test")
-    //         .bind("done")
-    //         .execute(&mut db.pool)
-    //         .await?;
-
-    //     println!("result: {:?}", res);
-
-    //     let todos = sqlx::query_as::<_, todo::TodoModel>("select * from todos")
-    //         .fetch_all(&mut db.pool)
-    //         .await?;
-
-    //     println!("query result: {:?}", todos);
-    //     Ok(())
-    // }
-
-    // use db::{database::Database, models::CreateSurveyRequest};
-
-    // use crate::{database::Database, models::CreateSurveyRequest};
-}
+mod tests {}

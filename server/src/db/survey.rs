@@ -68,10 +68,15 @@ impl SurveyModel {
 pub async fn create_survey(
     headers: HeaderMap,
     State(state): State<ServerState>,
-    ctx: Extension<Ctext>,
+    Extension(ctx): Extension<Ctext>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> create_survey");
+    // let Some(ctx) = ctx else {
+    //     return Err(ServerError::SessionNotFound(
+    //         "Did not find session".to_string(),
+    //     ));
+    // };
     info!("Creating new survey for user={:?}", ctx.session.user_id);
 
     let survey = SurveyModel::new(payload, &ctx.session);
@@ -132,7 +137,7 @@ pub struct CreateSurveyRequest {
 #[axum::debug_handler]
 pub async fn get_survey(
     State(_state): State<ServerState>,
-    // Extension(ctx): Extension<Option<Ctext>>,
+    // Extension(ctx): Extension<Ctext>,
     // authorization: TypedHeader<Authorization<Bearer>>,
     Path(survey_id): Path<String>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
@@ -148,27 +153,40 @@ pub async fn get_survey(
 #[axum::debug_handler]
 pub async fn list_survey(
     state: State<ServerState>,
-    Extension(session): Extension<Ctext>,
+    Extension(ctx): Extension<Ctext>,
     // headers: HeaderMap,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> list_survey");
-    // println!("context: {:?}", ctx);
-
-    // let ctx = if ctx.is_none() {
-    //     return Err(ServerError::AuthFailNoTokenCookie);
-    // } else {
-    //     ctx.unwrap()
+    // let Some(Extension(ctx)) = ctx else {
+    //     return Err(ServerError::SessionNotFound(
+    //         "Did not find session".to_string(),
+    //     ));
+    // };
+    // let ctx: Ctext = match hasctx {
+    //     Some(x) => x,
+    //     None => {
+    //         return Err(ServerError::SessionNotFound(
+    //             "Did not find session".to_string(),
+    //         ))
+    //     }
+    // };
+    // let ctx: Ctext = match ctx {
+    //     Some(x) => x,
+    //     None => {
+    //         return Err(ServerError::SessionNotFound(
+    //             "Did not find session".to_string(),
+    //         ))
+    //     }
     // };
 
-    // let user_id = &ctx.user_id().clone();
-
-    println!("Getting surveys for user={}", session.user_id);
+    println!("Getting surveys for user={}", ctx.user_id);
     let pool = &state.db.pool;
 
     let res = sqlx::query_as::<_, SurveyModel>(
-        "select * from mdp.surveys where mdp.surveys.user_id = $1",
+        "select * from mdp.surveys where mdp.surveys.user_id = $1 and mdp.surveys.workspace_id = $2",
     )
-    .bind(session.user_id.clone())
+    .bind(ctx.user_id.clone())
+    .bind(ctx.session.workspace_id.clone())
     .fetch_all(pool)
     .await
     .map_err(|err| ServerError::Database(err.to_string()))
