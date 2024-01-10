@@ -37,6 +37,18 @@ pub enum ServerError {
     SessionNotFound(String),
 }
 
+#[derive(Debug, Deserialize, strum_macros::AsRefStr, Serialize, Clone)]
+#[serde(tag = "type", content = "data")]
+pub enum DatabaseError {
+    Misc(String),
+}
+
+pub fn database_to_server_error(error: DatabaseError) -> ServerError {
+    match error {
+        DatabaseError::Misc(x) => ServerError::Database(x),
+    }
+}
+
 pub async fn main_response_mapper(
     // Extension(ctx): Extension<Option<Ctext>>,
     uri: Uri,

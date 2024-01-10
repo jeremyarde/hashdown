@@ -1,6 +1,6 @@
 use std::fmt::{self};
 
-use anyhow::{self};
+use anyhow::{self, Error};
 
 use chrono::{DateTime, Duration, Utc};
 use markdownparser::nanoid_gen;
@@ -34,7 +34,7 @@ use tracing::{info, instrument};
 //     pub metadata: Metadata,
 // }
 
-use crate::{survey_responses::SubmitResponseRequest, ServerError};
+use crate::{error::DatabaseError, survey_responses::SubmitResponseRequest, ServerError};
 
 use super::survey::SurveyModel;
 
@@ -370,7 +370,7 @@ impl Database {
         };
     }
 
-    pub async fn create_session(&self, user: UserModel) -> anyhow::Result<Session, ServerError> {
+    pub async fn create_session(&self, user: UserModel) -> anyhow::Result<Session, DatabaseError> {
         let session_id = nanoid_gen(32);
 
         let new_active_expires = Utc::now() + Duration::hours(1);
@@ -388,7 +388,7 @@ impl Database {
             Ok(x) => x,
             Err(err) => {
                 info!("create session failed...");
-                return Err(ServerError::Database(err.to_string()));
+                return Err(DatabaseError::Misc(err.to_string()));
             }
         };
 
@@ -412,7 +412,7 @@ impl Database {
         &self,
         session_id: &str,
         // workspace_id: &str,
-    ) -> anyhow::Result<bool, ServerError> {
+    ) -> anyhow::Result<bool, DatabaseError> {
         let result = sqlx::query!(
             r#"delete from mdp.sessions where mdp.sessions.session_id = $1"#,
             session_id,
@@ -420,12 +420,18 @@ impl Database {
         )
         .execute(&self.pool)
         .await
-        .unwrap_or_else(|_| panic!("Did not delete session: {}", &session_id));
+        .map_err(|err| {
+            return DatabaseError::Misc(format!(
+                "Could not delete session {}: {}",
+                session_id, err
+            ));
+        })
+        .unwrap();
 
         if result.rows_affected() == 1 {
             Ok(true)
         } else {
-            Err(ServerError::AuthFailTokenExpired)
+            return Err(DatabaseError::Misc("Could not find session".to_string()));
         }
     }
 
@@ -433,7 +439,7 @@ impl Database {
         &self,
         user_id: &str,
         workspace_id: &str,
-    ) -> anyhow::Result<String, ServerError> {
+    ) -> anyhow::Result<String, DatabaseError> {
         let _result = sqlx::query!(
             "delete from mdp.users where users.user_id = $1 and mdp.users.workspace_id = $2",
             user_id,
@@ -442,8 +448,9 @@ impl Database {
         .execute(&self.pool)
         .await
         .map_err(|err| {
-            ServerError::Database(format!("Could not delete user: {}", err));
-        });
+            DatabaseError::Misc(format!("Could not delete user: {}", err));
+        })
+        .unwrap();
 
         Ok(user_id.to_string())
     }

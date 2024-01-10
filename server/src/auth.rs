@@ -17,12 +17,12 @@ use markdownparser::nanoid_gen;
 use serde_json::{json, Value};
 use tracing::log::info;
 
-use crate::constants::SESSION_ID_KEY;
 use crate::db::database::{CreateUserRequest, Session};
 use crate::mware::ctext::Ctext;
 use crate::routes::LoginPayload;
 use crate::ServerError;
 use crate::ServerState;
+use crate::{constants::SESSION_ID_KEY, error::database_to_server_error};
 
 #[axum::debug_handler]
 pub async fn signup(
@@ -70,7 +70,11 @@ pub async fn signup(
     // let transaction_result = transactions.commit().await;
 
     let email = user.email.clone();
-    let session = state.db.create_session(user).await?;
+    let session = state
+        .db
+        .create_session(user)
+        .await
+        .map_err(database_to_server_error)?;
 
     // let _ = jar.add(Cookie::new("session_id", session.session_id.clone()));
     let headers = create_session_headers(&session);
@@ -98,11 +102,16 @@ pub async fn delete(
     //     return Err(ServerError::AuthFailNoTokenCookie);
     // };
     // must be signed in to delete yourself
-    state.db.delete_session(&ctx.session.session_id).await?;
+    state
+        .db
+        .delete_session(&ctx.session.session_id)
+        .await
+        .map_err(database_to_server_error);
     state
         .db
         .delete_user(&ctx.session.session_id, &ctx.session.workspace_id)
-        .await?;
+        .await
+        .map_err(database_to_server_error);
     Ok(Json(json!("delete successful")))
 }
 
@@ -126,7 +135,11 @@ pub async fn logout(
     //     return Err(ServerError::AuthFailNoTokenCookie);
     // };
 
-    state.db.delete_session(&ctx.session.session_id).await?;
+    state
+        .db
+        .delete_session(&ctx.session.session_id)
+        .await
+        .map_err(database_to_server_error)?;
     // let _ = &headers.remove(session_header);
     Ok(Json(json!("logout success")))
 }
@@ -175,7 +188,11 @@ pub async fn login(
     // TODO: create success body
     let username = payload.email.clone();
 
-    let session = state.db.create_session(user).await?;
+    let session = state
+        .db
+        .create_session(user)
+        .await
+        .map_err(database_to_server_error)?;
 
     // let _ = jar.add(Cookie::new(SESSION_ID_KEY, session.session_id.clone()));
 
@@ -319,7 +336,11 @@ pub async fn validate_session_middleware(
     let curr_session = match state.db.get_session(session_id.to_string()).await {
         Ok(x) => x,
         Err(_) => {
-            state.db.delete_session(session_id).await?;
+            state
+                .db
+                .delete_session(session_id)
+                .await
+                .map_err(database_to_server_error);
             return Err(ServerError::AuthFailTokenDecodeIssue);
         }
     };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
 import { Survey } from "@/lib/constants";
-import { getBaseUrl, getSessionToken } from "@/lib/utils";
+import { getBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
 
 
 /**
@@ -31,6 +31,8 @@ export function useGetSurvey(surveyId: string | undefined): { survey: Survey | u
                 // credentials: 'include',
             });
             console.log(`response from API: ${JSON.stringify(response)}`)
+            handleResponse(response);
+
             if (response.status === 401) {
                 setError('Not authorized');
                 return
