@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "delete from mdp.users where users.user_id = $1",
+  "query": "delete from mdp.sessions where mdp.sessions.session_id = $1",
   "describe": {
     "columns": [],
     "parameters": {
@@ -10,5 +10,5 @@
     },
     "nullable": []
   },
-  "hash": "06c191b45748c1069a8cc53dfcda3ee06aed50dd97945e60144df35846da9af2"
+  "hash": "6433c1553b19e1093db73b04a52e1995b782060537b3922544990dd98175c4a2"
 }

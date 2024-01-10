@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from mdp.users where users.user_id = $1 and mdp.users.workspace_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "77deb62ea3223c0db548039411e5a64d749c427ff989ef911bd72a9bdcd7591c"
+}

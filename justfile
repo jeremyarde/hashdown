@@ -35,6 +35,9 @@ migrate:
     cd server && sqlx migrate run
     cd server && cargo sqlx prepare
 
+prepare:
+    cd server && cargo sqlx prepare
+
 gentypes:
     supabase gen types typescript --project-id vbvounbggaxtaofatdyg > ui-vite/src/types/supabase.ts
 
