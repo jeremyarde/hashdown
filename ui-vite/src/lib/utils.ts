@@ -40,6 +40,10 @@ export function getStage(): STAGE {
   return import.meta.env.MODE === 'production' ? STAGE.PROD : STAGE.DEV;
 }
 
+export function isDev(): boolean {
+  return getStage() === STAGE.DEV;
+}
+
 export function isFeatureEnabled(feature: FEATURES): boolean {
   return EnabledFeatures[getStage()].includes(feature);
 }

@@ -13,6 +13,7 @@ import { useGetSurvey } from './hooks/useGetSurvey.ts'
 import { NONAME } from 'dns'
 import { markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
 import Dashboard from './pages/Dashboard.tsx'
+import { isDev } from './lib/utils.ts'
 
 
 const exampleText = `# User Registration Form
@@ -127,6 +128,29 @@ function HeroSection() {
           </div>
         </div>
       </div >
+    </div>
+  )
+}
+
+function TestEditor() {
+  const [content, setContent] = useState('starting content');
+
+
+  const onchange = (evt) => {
+
+    setContent(evt.target.value);
+  }
+
+  return (
+    <div contentEditable style={{
+      minHeight: '50px',
+      // width: '300px',
+      backgroundColor: 'white'
+    }} className='w-full text-left'
+      onChange={(evt) => setContent(evt.target.value)}
+    >
+      {content}
+      <div className='h-2 w-2 bg-purple'></div>
     </div>
   )
 }
