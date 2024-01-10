@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Survey } from "@/lib/constants";
-import { getBaseUrl, getSessionToken } from "@/lib/utils";
+import { getBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
 
 
 type ListSurvey = {
@@ -27,6 +27,9 @@ export function useListSurveys(): { surveys: ListSurvey | undefined, error: stri
                 },
             });
             console.log(`response from API: ${JSON.stringify(response)}`)
+            handleResponse(response);
+
+            
             if (response.status === 401) {
                 setError('Not authorized');
                 return

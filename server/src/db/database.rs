@@ -7,7 +7,7 @@ use markdownparser::nanoid_gen;
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use sqlx::{FromRow, PgPool};
+use sqlx::{postgres::PgQueryResult, FromRow, PgPool};
 
 // use models::CreateAnswersModel;
 // use chrono::Local;
@@ -215,11 +215,9 @@ impl Database {
     pub async fn get_user_by_email(&self, email: String) -> anyhow::Result<UserModel> {
         info!("Search for user with email: {email:?}");
 
-        let res = sqlx::query_as!(
-            UserModel,
-            r#"select * from mdp.users where email = $1"#,
-            email
-        )
+        let res: UserModel = sqlx::query_as(
+            r#"select * from mdp.users where email = $1"#)
+            .bind(email)
         .fetch_one(&self.pool)
         .await?;
 
@@ -250,22 +248,20 @@ impl Database {
         workspace_id: &str,
     ) -> anyhow::Result<SurveyModel> {
         // let parsed_survey = parse_markdown_v3(payload.plaintext.clone())?;
-        let res = sqlx::query_as!(
-            SurveyModel,
+        let res: SurveyModel = sqlx::query_as(
             r#"insert into mdp.surveys (
                     name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version, blocks, workspace_id
-                ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *"#,
-            survey.name,
-            survey.survey_id,
-            survey.user_id,
-            Utc::now(),
-            Utc::now(),
-            survey.plaintext,
-            survey.version,
-            survey.parse_version,
-            survey.blocks,
-            workspace_id,
-        )
+                ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *"#)
+            .bind(survey.name)
+            .bind(survey.survey_id)
+            .bind(survey.user_id)
+            .bind(Utc::now())
+            .bind(Utc::now())
+            .bind(survey.plaintext)
+            .bind(survey.version)
+            .bind(survey.parse_version)
+            .bind(survey.blocks)
+            .bind(workspace_id)
         .fetch_one(&self.pool)
         .await
         .expect("Should insert a survey");
@@ -297,9 +293,14 @@ impl Database {
         // .execute(&self.pool)
         // .await?;
 
-        let _res= sqlx::query!(
-            r#"insert into mdp.responses (submitted_at, survey_id, answers) values ($1, $2, $3) returning *"#, 
-            Utc::now(), answer.survey_id, answer.answers)
+        // let _res= sqlx::query!(
+        //     r#"insert into mdp.responses (submitted_at, survey_id, answers) values ($1, $2, $3) returning *"#,
+        //     Utc::now(), answer.survey_id, answer.answers)
+        //     .fetch_one(&self.pool).await.expect("Should insert a response");
+
+        let _res: AnswerModel = sqlx::query_as(
+            r#"insert into mdp.responses (submitted_at, survey_id, answers) values ($1, $2, $3) returning *"#)
+            .bind( Utc::now()).bind(answer.survey_id).bind(answer.answers)
             .fetch_one(&self.pool).await.expect("Should insert a response");
 
         // let res = sqlx::query_as!(UserModel, r#"select id, user_id, email, password_hash, created_at, modified_at, deleted_at, email_status as "email_status: EmailStatus" from mdp.users where email = $1"#, email)
@@ -320,12 +321,10 @@ impl Database {
     ) -> anyhow::Result<Vec<AnswerModel>, ServerError> {
         info!("Listing responses for survey");
 
-        let answers = sqlx::query_as!(
-            AnswerModel,
-            r#"select * from mdp.responses where mdp.responses.survey_id = $1 and mdp.responses.workspace_id = $2"#,
-            survey_id,
-            workspace_id,
-        )
+        let answers: Vec<AnswerModel> = sqlx::query_as(
+            
+            r#"select * from mdp.responses where mdp.responses.survey_id = $1 and mdp.responses.workspace_id = $2"#)
+            .bind(survey_id).bind(workspace_id)
         .fetch_all(&self.pool)
         .await
         .map_err(|_err| ServerError::Database("Did not find responses".to_string()))
@@ -376,14 +375,15 @@ impl Database {
         let new_active_expires = Utc::now() + Duration::hours(1);
         let new_idle_expires = Utc::now() + Duration::hours(2);
 
-        let new_session = match sqlx::query_as!(Session,
-            r#"
+        let new_session: Session = match sqlx::query_as(            r#"
             insert into mdp.sessions (session_id, user_id, active_period_expires_at, idle_period_expires_at, workspace_id) 
             values ($1, $2, $3, $4, $5)
             ON conflict (user_id) do update 
             set session_id = $1, active_period_expires_at = $3, idle_period_expires_at = $4
-            where sessions.user_id = $2 returning *"#, 
-        session_id, user.user_id, new_active_expires, new_idle_expires, user.workspace_id)
+            where sessions.user_id = $2 returning *"#)
+            .bind(session_id).bind(user.user_id)
+            .bind(new_active_expires).bind( new_idle_expires)
+            .bind( user.workspace_id)
         .fetch_one(&self.pool).await {
             Ok(x) => x,
             Err(err) => {
@@ -413,20 +413,18 @@ impl Database {
         session_id: &str,
         // workspace_id: &str,
     ) -> anyhow::Result<bool, DatabaseError> {
-        let result = sqlx::query!(
-            r#"delete from mdp.sessions where mdp.sessions.session_id = $1"#,
-            session_id,
-            // workspace_id
-        )
-        .execute(&self.pool)
-        .await
-        .map_err(|err| {
-            return DatabaseError::Misc(format!(
-                "Could not delete session {}: {}",
-                session_id, err
-            ));
-        })
-        .unwrap();
+        let result: PgQueryResult =
+            sqlx::query(r#"delete from mdp.sessions where mdp.sessions.session_id = $1"#)
+                .bind(session_id)
+                .execute(&self.pool)
+                .await
+                .map_err(|err| {
+                    return DatabaseError::Misc(format!(
+                        "Could not delete session {}: {}",
+                        session_id, err
+                    ));
+                })
+                .unwrap();
 
         if result.rows_affected() == 1 {
             Ok(true)
@@ -440,12 +438,12 @@ impl Database {
         user_id: &str,
         workspace_id: &str,
     ) -> anyhow::Result<String, DatabaseError> {
-        let _result = sqlx::query!(
+        let _: () = sqlx::query_as(
             "delete from mdp.users where users.user_id = $1 and mdp.users.workspace_id = $2",
-            user_id,
-            workspace_id
         )
-        .execute(&self.pool)
+        .bind(user_id)
+        .bind(workspace_id)
+        .fetch_one(&self.pool)
         .await
         .map_err(|err| {
             DatabaseError::Misc(format!("Could not delete user: {}", err));
