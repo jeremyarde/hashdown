@@ -139,7 +139,7 @@ function Home() {
       <HeroSection></HeroSection>
       <div className='flex flex-col pt-8 items-center pb-24'>
         <h4 className='text-xl p-6 w-2/3 rounded'>Give it a try below</h4>
-        <a href='/waitlist' className='outline outline-1 p-6 w-2/3 rounded'>Get notified when available</a>
+        <a href='/waitlist' className='outline outline-1 p-6 w-2/3 rounded'>Join the waitlist</a>
         <hr></hr>
       </div>
       <div className="">
