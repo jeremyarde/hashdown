@@ -7,7 +7,7 @@ use markdownparser::nanoid_gen;
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use sqlx::{postgres::PgQueryResult, FromRow, PgPool};
+use sqlx::{postgres::{PgQueryResult, PgPoolOptions}, FromRow, PgPool};
 
 // use models::CreateAnswersModel;
 // use chrono::Local;
@@ -69,33 +69,16 @@ impl Settings {
     }
 }
 
-impl fmt::Display for ConnectionDetails {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let databasetype = self.0.split("://").nth(0);
-        match databasetype {
-            Some(x) => write!(f, "DB: {}", x),
-            None => write!(f, "DB: {}", &"Not sure DB type"),
-        }
-    }
-}
-
-impl fmt::Debug for ConnectionDetails {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("DBConnection")
-            .field("type", &self.0.split("://").nth(0))
-            .finish()
-    }
-}
 
 // pub type InsertTodosRequest = Vec<todo::TodoModel>;
 
 impl Database {
-    #[instrument]
     pub async fn new(database_url: ConnectionDetails) -> anyhow::Result<Self> {
         // println!("{:?}", std::env::current_dir()); //Ok("/Users/jarde/Documents/code/markdownparser/server")
         // let database_url = dotenvy::var("DATABASE_URL")?;
         let database_url = database_url.0;
-        let pool = PgPool::connect(&database_url).await?;
+        let pool =  PgPoolOptions::new().max_connections(1).connect(&database_url).await?;
+        // let pool = PgPool::connect(&database_url).await?;
 
         // info!("Running migrations");
         // sqlx::migrate!().run(&pool).await?;
