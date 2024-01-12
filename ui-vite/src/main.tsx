@@ -53,15 +53,15 @@ const formRulesCopy = `Each survey needs 3 things.
 3. Questions - use any of the following form input types to ask your questions
 `;
 
-const simpleSurveyCopy = `# Feedback
+// let simpleSurveyCopy = `# Feedback
 
-text: How did you hear about us?
+// text: How did you hear about us?
 
-radio: Can we contact you for follow up questions? making this longer to see if things are bad
-- yes
-- no
+// radio: Can we contact you for follow up questions? making this longer to see if things are bad
+// - yes
+// - no
 
-submit: submit`;
+// submit: submit`;
 
 var mystyle = {
   formCopy: {
@@ -78,7 +78,25 @@ const linedPaper = {
 }
 
 function HeroSection() {
-  let sampleSurvey = markdown_to_form_wasm_v2(simpleSurveyCopy)
+  const [heroContent, setHeroContent] = useState(`# Feedback
+
+text: How did you hear about us?
+
+radio: Can we contact you for follow up questions? making this longer to see if things are bad
+- yes
+- no
+
+submit: submit`);
+
+  let sampleSurvey = markdown_to_form_wasm_v2(heroContent)
+
+  const updatecontent = (newcontent: string, linenum: number) => {
+    let content = heroContent.split('\n');
+    content[linenum] = newcontent;
+    let allcontent = content.join('\n');
+    console.log('allcontent: ', allcontent);
+    setHeroContent(allcontent);
+  };
 
   return (
     <div className=''>
@@ -101,15 +119,20 @@ function HeroSection() {
           </p> */}
           <div style={{ backgroundColor: 'white' }} className='p-6 w-1/2 border border-dashed bg-white'>
             <ol style={{ whiteSpace: 'pre', wordWrap: 'normal' }}>
-              {simpleSurveyCopy.split('\n').map(item => {
+              {heroContent.split('\n').map((item, i) => {
                 return (
-                  <li style={{
-                    fontSize: '1rem', listStyleType: 'decimal',
-                    textAlign: 'left', color: 'gray', wordWrap: 'normal',
-                    wordBreak: 'normal',
-                    whiteSpace: 'normal',
-                    borderBottom: '1px dashed gray'
-                  }}>{item}</li>
+                  <li className='w-full justify-between'
+                    style={{
+                      fontSize: '1rem', listStyleType: 'decimal',
+                      textAlign: 'left', color: 'gray', wordWrap: 'normal',
+                      wordBreak: 'normal',
+                      whiteSpace: 'normal',
+                      borderBottom: '1px dashed gray',
+                    }}>
+                    <div className='w-full h-full justify-between' onChange={(evt) => updatecontent(evt.target.value, i)}>
+                      {item}
+                    </div>
+                  </li>
                 )
               })}
             </ol>

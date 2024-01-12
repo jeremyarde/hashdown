@@ -11,17 +11,6 @@ export function Navbar() {
     const showWaitlist = isFeatureEnabled(FEATURES.WAITLIST);
     const showTabs = isFeatureEnabled(FEATURES.LOGIN);
 
-    let tabs = !getSessionToken() ? (
-        <>
-            <Link className="hover:text-green p-1" to="/login">Login</Link>
-        </>
-    ) : (
-        <>
-            <Link className="hover:text-green p-1" to="/surveys">Surveys</Link>
-            <Link className="hover:text-green p-1" to="/editor">Editor</Link>
-        </>
-    );
-
     let waitlist = showWaitlist ? (
         <div>
             <button onClick={(evt) => navigate(`/waitlist`)
@@ -31,18 +20,51 @@ export function Navbar() {
         </div>
     ) : <></>;
 
+
+    const innerRadius = 16;
+    const distance = 2; // padding of outer element
+    const outerRadius = innerRadius + distance;
+
+
     return (
         <>
-            <div className="flex justify-between w-full">
+            <div className="flex flex-row p-4 pl-8 pr-8 justify-between align-middle items-center">
                 <h1>
                     <Link className="text-2xl font-bold" to="/">
                         <span>hashdown</span>
                     </Link>
                 </h1>
-                <div className="flex items-center">
-                    {showTabs ? tabs : ''}
-                    {waitlist}
+                <div className="flex flex-row border-solid items-center"
+                    style={{ borderRadius: `${outerRadius}px`, padding: `${distance}px`, backgroundColor: 'whitesmoke', borderWidth: '1.5px' }}>
+                    <ul className="flex">
+                        <li className=" hover:bg-blue p-1" style={{ borderRadius: `${outerRadius}px` }}>
+                            <Link className="" to="/surveys">Surveys</Link>
+                        </li>
+                        <li className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
+                            <Link className="" to="/editor">Editor</Link>
+                        </li>
+                    </ul>
                 </div>
+                <div className="flex flex-row border-solid border items-center"
+                    style={{ borderRadius: `${outerRadius}px`, padding: `${distance}px`, backgroundColor: 'black' }}>
+                    {!getSessionToken() && (
+                        <>
+                            <div className="">
+                                <div className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
+                                    <Link className="p-1" style={{ color: 'white' }} to="/login">Login</Link>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                    {showWaitlist && (
+                        <div className="">
+                            <div className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
+                                <Link className="p-1" style={{ color: 'white' }} to="/waitlist">Waitlist</Link>
+                            </div>
+                        </div>
+
+                    )}
+                </div >
             </div >
             <Toaster />
         </>

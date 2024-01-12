@@ -5,20 +5,7 @@
 * #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
-}
-
-.skeu {
-  /* margin: 50px; */
-  /* padding: 20px; */
-  border-radius: 5px;
-  /* background: #e0e0e0; */
-  border-style: solid;
-  border-color: black;
-  border-width: 1px;
-  /* box-shadow: 20px 20px 60px #bebebe,
-    -20px -20px 60px #ffffff; */
 }
 
 /* The switch - the box around the slider */
