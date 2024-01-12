@@ -129,7 +129,7 @@ submit: submit`);
                       whiteSpace: 'normal',
                       borderBottom: '1px dashed gray',
                     }}>
-                    <div className='w-full h-full justify-between' onChange={(evt) => updatecontent(evt.target.value, i)}>
+                    <div className='w-full h-full justify-between' >
                       {item}
                     </div>
                   </li>
@@ -151,7 +151,7 @@ submit: submit`);
           </div>
         </div>
       </div >
-    </div>
+    </div >
   )
 }
 
@@ -159,18 +159,13 @@ function TestEditor() {
   const [content, setContent] = useState('starting content');
 
 
-  const onchange = (evt) => {
-
-    setContent(evt.target.value);
-  }
-
   return (
     <div contentEditable style={{
       minHeight: '50px',
       // width: '300px',
       backgroundColor: 'white'
     }} className='w-full text-left'
-      onChange={(evt) => setContent(evt.target.value)}
+    // onChange={(evt) => setContent(evt.target.value)}
     >
       {content}
       <div className='h-2 w-2 bg-purple'></div>
