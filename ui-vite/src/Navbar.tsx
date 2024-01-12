@@ -1,7 +1,7 @@
 import { FEATURES, SESSION_TOKEN_KEY, STAGE } from "./lib/constants";
 import { Link, useNavigate } from "react-router-dom";
 import { Toaster } from "./components/ui/toaster";
-import { getSessionToken, getStage, isFeatureEnabled } from "./lib/utils";
+import { getSessionToken, getStage, isDev, isFeatureEnabled } from "./lib/utils";
 
 
 
@@ -34,20 +34,23 @@ export function Navbar() {
                         <span>hashdown</span>
                     </Link>
                 </h1>
-                <div className="flex flex-row border-solid items-center"
-                    style={{ borderRadius: `${outerRadius}px`, padding: `${distance}px`, backgroundColor: 'whitesmoke', borderWidth: '1.5px' }}>
-                    <ul className="flex">
-                        <li className=" hover:bg-blue p-1" style={{ borderRadius: `${outerRadius}px` }}>
-                            <Link className="" to="/surveys">Surveys</Link>
-                        </li>
-                        <li className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
-                            <Link className="" to="/editor">Editor</Link>
-                        </li>
-                    </ul>
-                </div>
+
+                {showTabs &&
+                    <div className="flex flex-row border-solid items-center"
+                        style={{ borderRadius: `${outerRadius}px`, padding: `${distance}px`, backgroundColor: 'whitesmoke', borderWidth: '1.5px' }}>
+                        <ul className="flex">
+                            <li className=" hover:bg-blue p-1" style={{ borderRadius: `${outerRadius}px` }}>
+                                <Link className="" to="/surveys">Surveys</Link>
+                            </li>
+                            <li className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
+                                <Link className="" to="/editor">Editor</Link>
+                            </li>
+                        </ul>
+                    </div>
+                }
                 <div className="flex flex-row border-solid border items-center"
                     style={{ borderRadius: `${outerRadius}px`, padding: `${distance}px`, backgroundColor: 'black' }}>
-                    {!getSessionToken() && (
+                    {!getSessionToken() && isDev() && (
                         <>
                             <div className="">
                                 <div className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
