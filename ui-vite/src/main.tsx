@@ -109,22 +109,27 @@ submit: submit`);
           </h2>
           <h1 className='text-xl' style={{ color: 'forestgreen' }}>Hashdown is the easiest text based form maker</h1>
         </div>
-        <div className='flex flex-row pt-10 pb-10'>
-          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-2xl flex-1 w-1/2 flex-wrap justify-center'>
+        <div className='flex flex-row pt-10 pb-10 pr-10'>
+          <p
+            style={{ whiteSpace: 'pre-wrap' }}
+            className='p-6 text-2xl flex-1 w-1/2 flex-wrap self-center'
+          >
             {'A few lines of text like this'}
           </p>
-          {/* <p style={{ whiteSpace: 'pre-wrap', ...linedPaper }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
-            {simpleSurveyCopy}
-
-          </p> */}
-          <div style={{ backgroundColor: 'white' }} className='p-6 w-1/2 border border-dashed bg-white'>
-            <ol style={{ whiteSpace: 'pre', wordWrap: 'normal' }}>
+          <div
+            className=' w-1/2 h-full'
+          >
+            <ol style={{ whiteSpace: 'pre', wordWrap: 'normal', backgroundColor: 'white' }}
+              className='flex flex-col pl-2 ml-4 border border-dashed bg-white'>
               {heroContent.split('\n').map((item, i) => {
                 return (
-                  <li className='w-full justify-between'
+                  <li className='text-left justify-between min-h-6 text-xl '
                     style={{
-                      fontSize: '1rem', listStyleType: 'decimal',
-                      textAlign: 'left', color: 'gray', wordWrap: 'normal',
+                      fontSize: '1rem',
+                      // listStyleType: 'decimal',
+                      // textAlign: 'left', 
+                      // color: 'gray',
+                      wordWrap: 'normal',
                       wordBreak: 'normal',
                       whiteSpace: 'normal',
                       borderBottom: '1px dashed gray',
@@ -136,17 +141,25 @@ submit: submit`);
                 )
               })}
             </ol>
+            {/* <pre className='h-full'>
+              <p className='text-left break-all'>
+                {heroContent}
+              </p>
+            </pre> */}
           </div>
         </div>
         <div className='flex flex-row'>
-          <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-2xl flex-1 w-1/2 flex-wrap justify-center'>
+          <p
+            style={{ whiteSpace: 'pre-wrap' }}
+            className='p-6 text-2xl w-1/2 flex-wrap justify-center self-center'
+          >
 
             {'Turns into this'}
           </p>
           {/* <p style={{ whiteSpace: 'pre-wrap' }} className='p-6 text-left flex-1 w-1/2 flex-wrap h-full'>
             {'explanation of the output'}
           </p> */}
-          <div className='w-1/2 h-full'>
+          <div className='w-1/2 h-full pr-10'>
             <RenderedForm survey={sampleSurvey}></RenderedForm>
           </div>
         </div>
@@ -179,9 +192,13 @@ function Home() {
   return (
     <>
       <HeroSection></HeroSection>
-      <div className='flex flex-col pt-8 items-center pb-24'>
-        <h4 className='text-xl p-6 w-2/3 rounded'>Give it a try below</h4>
+      <div className='flex flex-col pt-8 items-center pb-16'>
         <a href='/waitlist' className='outline outline-1 p-6 w-2/3 rounded'>Join the waitlist</a>
+        <h4
+          style={{ fontSize: '4rem' }}
+          className='p-6 w-2/3 rounded pt-10'>
+          Try it below
+        </h4>
         <hr></hr>
       </div>
       <div className="">
