@@ -49,7 +49,7 @@ export function Login() {
 
         setIsPending(true);
         try {
-            const response = await fetch(`${getBaseUrl()}/login`, {
+            const response = await fetch(`${getBaseUrl()}/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
