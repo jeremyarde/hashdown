@@ -69,6 +69,7 @@ export function Login() {
                 return
             }
             const data = await response.json();
+            setSessionToken(response);
             setIsPending(false);
             setResult(data);
             setError('');
