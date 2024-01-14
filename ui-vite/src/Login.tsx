@@ -22,7 +22,7 @@ export function Login() {
     const [loggedIn, setLoggedIn] = useState(false);
     const [loginError, setLoginError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [componentState, setComponentState] = useState(ComponentState.Idle);
+    // const [componentState, setComponentState] = useState(ComponentState.Idle);
 
     // Reset the login button when the user has updated either of the fields
     const resetState = (event: ChangeEvent) => {
@@ -58,36 +58,39 @@ export function Login() {
             } else if (response.status === 401) {
                 setLoginError(result.error.message);
                 setLoggedIn(false);
-                setComponentState(ComponentState.Error);
+                // setComponentState(ComponentState.Error);
             } else {
                 setLoggedIn(false);
                 setLoginError(result.error);
+                // setComponentState(ComponentState.Error);
             }
             setIsLoading(false);
         } catch (error) {
             console.error("Error:", error);
-
+            setLoggedIn(false);
+            setLoginError('Unknown error - please try again');
+            // setComponentState(ComponentState.Error);
         }
     };
 
-    let componentHtml = undefined;
-    switch (componentState) {
-        case ComponentState.Error:
-            componentHtml = (<div className="" style={{ color: 'red' }}>{`${loginError}`}</div>)
-            break;
-        case ComponentState.Loading:
-            componentHtml = (<div className="bg-gray-200 w-full flex justify-center items-center">
-                <div className="flex  w-full items-center justify-center bg-gray-200">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 animate-spin">
-                        <div className="h-9 w-9 rounded-full bg-gray-600"></div>
-                    </div>
-                </div>
-            </div>)
-            break;
-        case ComponentState.Idle:
-            componentHtml = '';
-            break;
-    }
+    // let componentHtml = undefined;
+    // switch (componentState) {
+    //     case ComponentState.Error:
+    //         componentHtml = (<div className="" style={{ color: 'red' }}>{`${loginError}`}</div>)
+    //         break;
+    //     case ComponentState.Loading:
+    //         componentHtml = (<div className="bg-gray-200 w-full flex justify-center items-center">
+    //             <div className="flex  w-full items-center justify-center bg-gray-200">
+    //                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 animate-spin">
+    //                     <div className="h-9 w-9 rounded-full bg-gray-600"></div>
+    //                 </div>
+    //             </div>
+    //         </div>)
+    //         break;
+    //     case ComponentState.Idle:
+    //         componentHtml = '';
+    //         break;
+    // }
 
     return (
         <>
@@ -106,8 +109,15 @@ export function Login() {
                                 <Label className="" htmlFor="password" > Password </Label>
                                 <Input id="password" required type="password" onChange={e => { setPassword(e.target.value);; resetState(e) }} />
                                 <div className="p-4">
-                                    {componentHtml ? (componentHtml) : (<div></div>)}
-                                </div>
+                                    {isLoading &&
+                                        <div className="bg-gray-200 w-full flex justify-center items-center">
+                                            <div className="flex  w-full items-center justify-center bg-gray-200">
+                                                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 animate-spin">
+                                                    <div className="h-9 w-9 rounded-full bg-gray-600"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }                                </div>
                                 <Button disabled={isLoading} className="border shadow-md p-2 w-full hover:bg-slate-400 hover:bg-green disabled:opacity-50" type="submit" >
                                     Login
                                 </Button>

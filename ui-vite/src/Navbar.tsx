@@ -45,6 +45,9 @@ export function Navbar() {
                             <li className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
                                 <Link className="" to="/editor">Editor</Link>
                             </li>
+                            <li className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
+                                <Link className="" to="/dev">Dev</Link>
+                            </li>
                         </ul>
                     </div>
                 }
