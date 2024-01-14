@@ -15,6 +15,7 @@ import { markdown_to_form_wasm_v2 } from '../../backend/pkg/markdownparser'
 import Dashboard from './pages/Dashboard.tsx'
 import { isDev } from './lib/utils.ts'
 import { Crud } from './components/Crud.tsx'
+import TestPage from './pages/TestPage.tsx'
 
 
 const exampleText = `# User Registration Form
@@ -272,6 +273,7 @@ function App() {
             <Route path='/waitlist' element={<Waitlist />} />
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/dev' element={<Crud />} />
+            <Route path='/test' element={<TestPage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Route>
           <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />

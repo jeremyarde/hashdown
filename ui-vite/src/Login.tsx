@@ -40,7 +40,7 @@ export function Login() {
         }
     };
 
-    const sendLogin = async (evt) => {
+    const sendLogin = async (evt: any) => {
         evt.preventDefault();
         // useLogin(email, password)
         if (!email && !password) {

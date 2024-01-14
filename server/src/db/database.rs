@@ -263,36 +263,11 @@ impl Database {
     pub async fn create_answer(&self, answer: SubmitResponseRequest) -> anyhow::Result<()> {
         info!("Creating answers in database");
 
-        // let _res = sqlx::query(
-        //     r#"insert into mdp.surveys_submissions (survey_id, submitted_at, answers)
-        // values
-        // ($1, $2, $3, $4)
-        // "#,
-        // )
-        // // .bind(answer.answer_id)
-        // .bind(answer.survey_id)
-        // .bind(answer.submitted_at)
-        // .bind(json!(answer.answers))
-        // .execute(&self.pool)
-        // .await?;
-
-        // let _res= sqlx::query!(
-        //     r#"insert into mdp.responses (submitted_at, survey_id, answers) values ($1, $2, $3) returning *"#,
-        //     Utc::now(), answer.survey_id, answer.answers)
-        //     .fetch_one(&self.pool).await.expect("Should insert a response");
-
+        let workspace_id: (String,) = sqlx::query_as("select workspace_id from mdp.surveys where mdp.surveys.survey_id = $1").bind(answer.survey_id.clone()).fetch_one(&self.pool).await?;
         let _res: AnswerModel = sqlx::query_as(
-            r#"insert into mdp.responses (submitted_at, survey_id, answers) values ($1, $2, $3) returning *"#)
-            .bind( Utc::now()).bind(answer.survey_id).bind(answer.answers)
+            r#"insert into mdp.responses (submitted_at, survey_id, answers, workspace_id) values ($1, $2, $3, $4) returning *"#)
+            .bind( Utc::now()).bind(answer.survey_id).bind(answer.answers).bind(workspace_id.0)
             .fetch_one(&self.pool).await.expect("Should insert a response");
-
-        // let res = sqlx::query_as!(UserModel, r#"select id, user_id, email, password_hash, created_at, modified_at, deleted_at, email_status as "email_status: EmailStatus" from mdp.users where email = $1"#, email)
-        // .fetch_one(&self.pool)
-        // .await?;
-
-        // answer.insert(&self.pool).await?;
-
-        // info!("created rows={}", res.rows_affected());
 
         Ok(())
     }

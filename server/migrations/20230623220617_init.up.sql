@@ -53,21 +53,6 @@ CREATE table mdp.responses (
     foreign key(survey_id) references mdp.surveys(survey_id)
 );
 
--- create table mdp.pageviews (
---     id serial,
---     workspace_id text not null,
---     page_url TEXT not null,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
---     user_id text,
---     device text,
---     referrer text,
---     ip_address TEXT,
---     user_agent TEXT,
-
---     primary key (workspace_id, id),
---     foreign key (workspace_id) references mdp.workspaces(workspace_id),
---     foreign key (user_id) references mdp.users(user_id)
--- );
 
 create table mdp.sessions (
     id serial,

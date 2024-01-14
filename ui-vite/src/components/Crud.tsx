@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 const inputExample = {
     title: 'my string',
     date: '2000-11-01',
@@ -5,7 +7,7 @@ const inputExample = {
     quantity: 5,
 }
 
-export function Crud(inputType) {
+export function Crud(inputType: any) {
     inputType = inputExample;
 
     return (
@@ -26,6 +28,7 @@ export function Crud(inputType) {
                         return (
                             <div className="flex justify-between max-w-screen-sm border border-solid">
                                 <label className="pr-4">{key}</label>
+
                                 <input value={value}></input>
                             </div>
                         )

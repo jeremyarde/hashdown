@@ -25,6 +25,12 @@ export function Navbar() {
     const distance = 2; // padding of outer element
     const outerRadius = innerRadius + distance;
 
+    const middleTabs = [
+        { route: "/surveys", display: "Surveys" },
+        { route: "/editor", display: "Editor" },
+        { route: "/dev", display: "dev" },
+        { route: "/test", display: "test" },
+    ]
 
     return (
         <>
@@ -39,15 +45,13 @@ export function Navbar() {
                     <div className="flex flex-row border-solid items-center"
                         style={{ borderRadius: `${outerRadius}px`, padding: `${distance}px`, backgroundColor: 'whitesmoke', borderWidth: '1.5px' }}>
                         <ul className="flex">
-                            <li className=" hover:bg-blue p-1" style={{ borderRadius: `${outerRadius}px` }}>
-                                <Link className="" to="/surveys">Surveys</Link>
-                            </li>
-                            <li className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
-                                <Link className="" to="/editor">Editor</Link>
-                            </li>
-                            <li className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
-                                <Link className="" to="/dev">Dev</Link>
-                            </li>
+                            {middleTabs.map((tab) => {
+                                return (
+                                    <li className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
+                                        <Link className="" to={tab.route}>{tab.display}</Link>
+                                    </li>
+                                )
+                            })}
                         </ul>
                     </div>
                 }
