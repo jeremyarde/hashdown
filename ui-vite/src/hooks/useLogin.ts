@@ -16,14 +16,6 @@ export function useLogin(): { result: LoginResult | undefined, error: string, is
     // to retrieve the session token, or to refresh 
     //the current token
     const getResult = async () => {
-        // look for a refresh token?
-
-        // if (!getSessionToken()) {
-        //     setResult(undefined);
-        //     setError('No session token available')
-        //     return;
-        // }
-
         setIsPending(true);
         try {
             const response = await fetch(`${getBaseUrl()}/login}`, {
