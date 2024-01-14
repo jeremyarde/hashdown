@@ -18,9 +18,15 @@ enum ComponentState {
 }
 
 export function Login() {
-    const [username, setUsername] = useState('');
+    const [email, setemail] = useState('');
     const [password, setPassword] = useState('');
-    const { result, isPending, error } = useLogin();
+    // const { result, isPending, error } = useLogin(undefined, undefined);
+    // const { result, isPending, error } = {};
+
+    const [result, setResult] = useState('');
+    const [isPending, setIsPending] = useState(false);
+    const [error, setError] = useState('');
+
     const [disabled, setDisabled] = useState(false);
     // const [loggedIn, setLoggedIn] = useState(false);
     // const [loginError, setLoginError] = useState('');
@@ -34,12 +40,49 @@ export function Login() {
         }
     };
 
+    const sendLogin = async (evt) => {
+        evt.preventDefault();
+        // useLogin(email, password)
+        if (!email && !password) {
+            return;
+        }
+
+        setIsPending(true);
+        try {
+            const response = await fetch(`${getBaseUrl()}/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    // "session_id": getSessionToken()
+                },
+                body: JSON.stringify({ email: email, password })
+            });
+            console.log(`response from API: ${JSON.stringify(response)}`)
+            handleResponse(response);
+
+            if (response.status === 401) {
+                setError('Not authorized');
+                return
+            }
+            if (response.status === 400) {
+                setError('Survey not found');
+                return
+            }
+            const data = await response.json();
+            setIsPending(false);
+            setResult(data);
+            setError('');
+        } catch (error) {
+            setIsPending(false);
+            setError(`Could not fetch data: ${error}`);
+        }
+    }
     // let globalState: GlobalState = useContext(GlobalStateContext);
 
     // const onSubmit = async (event: FormEvent) => {
     //     event.preventDefault();
     //     // setIsLoading(true);
-    //     const loginPayload = JSON.stringify({ email: username, password: password });
+    //     const loginPayload = JSON.stringify({ email: email, password: password });
     //     console.log('login component')
     //     try {
     //         const response = await fetch(`${getBaseUrl()}/auth/login`, {
@@ -105,9 +148,9 @@ export function Login() {
                             Login
                         </h1>
                         <div className="space-y-4 text-left" >
-                            <form onSubmit={useLogin}>
+                            <form onSubmit={sendLogin}>
                                 <Label className="" htmlFor="email" > Email </Label>
-                                <Input id="email" placeholder="m@example.com" required type="email" onChange={e => { setUsername(e.target.value); resetState(e) }}
+                                <Input id="email" placeholder="m@example.com" required type="email" onChange={e => { setemail(e.target.value); resetState(e) }}
                                     className="invalid:border-pink-500 invalid:text-pink-600" />
                                 <Label className="" htmlFor="password" > Password </Label>
                                 <Input id="password" required type="password" onChange={e => { setPassword(e.target.value);; resetState(e) }} />
@@ -120,7 +163,14 @@ export function Login() {
                                                 </div>
                                             </div>
                                         </div>
-                                    }                                </div>
+                                    }
+                                    {error && (
+                                        <div>
+                                            <div>Problem logging in: {error}</div>
+                                            {/* {error} */}
+                                        </div>
+                                    )}
+                                </div>
                                 <Button disabled={disabled} className="border shadow-md p-2 w-full hover:bg-slate-400 hover:bg-green disabled:opacity-50" type="submit" >
                                     Login
                                 </Button>

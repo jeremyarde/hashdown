@@ -7,7 +7,10 @@ type LoginResult = {
     email: string
 };
 
-export function useLogin(): { result: LoginResult | undefined, error: string, isPending: boolean } {
+export function useLogin(
+    username: string | undefined,
+    password: string | undefined
+): { result: LoginResult | undefined, error: string, isPending: boolean } {
     const [result, setResult] = useState();
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState('');
@@ -16,15 +19,19 @@ export function useLogin(): { result: LoginResult | undefined, error: string, is
     // to retrieve the session token, or to refresh 
     //the current token
     const getResult = async () => {
+        if (!username && !password) {
+            return;
+        }
+
         setIsPending(true);
         try {
             const response = await fetch(`${getBaseUrl()}/login}`, {
-                method: "GET",
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     // "session_id": getSessionToken()
                 },
-                // credentials: 'include',
+                body: JSON.stringify({ username, password })
             });
             console.log(`response from API: ${JSON.stringify(response)}`)
             handleResponse(response);
