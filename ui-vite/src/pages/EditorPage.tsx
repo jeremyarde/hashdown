@@ -190,10 +190,10 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
     return (
         <>
             <div className="flex w-full h-full flex-wrap md:flex-row flex-col">
-                <div className="md:w-1/2 w-full flex flex-col">
+                <div className="md:w-1/2 w-full flex flex-col flex-1">
                     <h2 className="text-2xl font-bold">Enter Form Content</h2>
                     <textarea
-                        className="w-full"
+                        className="w-full p-2 border border-solid rounded-xl"
                         style={{ height: '65vh' }}
                         placeholder="Enter form content here..."
                         value={editorContent}
@@ -203,7 +203,8 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
                         {/* <button className="bg-green-200 border w-full p-1 flex-1" onClick={submitSurvey}>Publish</button> */}
                     </div>
                 </div>
-                <div className="md:w-1/2 w-full flex flex-col">
+                <div className="p-2 align-middle"></div>
+                <div className="md:w-1/2 w-full flex flex-col flex-1">
                     <h2 className="text-2xl font-bold">Preview</h2>
                     <RenderedForm survey={survey} mode={mode} ></RenderedForm>
                 </div>

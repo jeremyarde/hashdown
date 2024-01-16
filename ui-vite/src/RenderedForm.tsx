@@ -97,7 +97,7 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
 
     return (
         <>
-            <div className="items-center justify-center flex">
+            <div className="flex w-full h-full items-center align-middle justify-center">
                 {parsingError ? (
                     <div style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>
                         <pre>
@@ -113,7 +113,7 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                         maxWidth: '48rem',
                         minWidth: '12rem'
                     }}>
-                        <form onSubmit={handleSubmit} onChange={handleUpdate} className="text-left w-full h-full  border rounded-sm">
+                        <form onSubmit={handleSubmit} onChange={handleUpdate} className="text-left border border-solid rounded-xl">
                             {
                                 survey.blocks?.map(block => {
                                     console.log("map entries: ", block)
