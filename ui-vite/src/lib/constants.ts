@@ -54,3 +54,12 @@ export interface Properties {
     question?: string
     text?: string
 }
+
+export const styleTokens = {
+    /* CSS HSL */
+    blue: 'hsla(229, 22%, 29%, 1)',
+    pink: 'hsla(26, 80%, 88%, 1)',
+    powderBlue: 'hsla(218, 50%, 73%, 1)',
+    melon: 'hsla(10, 61%, 78%, 1)',
+    umber: 'hsla(20, 21%, 34%, 1)',
+}

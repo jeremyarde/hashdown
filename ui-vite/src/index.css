@@ -2,6 +2,46 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+
+/*  from here: https://twitter.com/souporserious/status/1746378842787459501/photo/1 */
+* {
+  /* include padding and border in size calculation */
+  box-sizing: border-box;
+  /* position based on immediate parent and allow adjusting trbl */
+  /* position: relative; */
+  /* prevent grid and flex items from spilling out of container */
+  min-width: 0;
+}
+
+body {
+  /* body fills entire view port */
+  min-height: 100dvh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  /* balance headings across multiple lines into even block */
+  text-wrap: balance;
+}
+
+p {
+  /* prevent single words of text on new line */
+  text-wrap: pretty;
+}
+
+/* .passwordinputform {
+  display: grid;
+  grid-template-columns: min-content 1fr;
+}
+
+.passwordinputform>label:has(input[type="checkbox"]) {
+  grid-column: 2;
+} */
+
+/* end */
+
 * #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -107,3 +147,20 @@ input:checked+.slider:before {
 * {
   min-width: 0;
 }
+
+
+
+/* https://coolors.co/3a405a-f9dec9-99b2dd-e9afa3-685044 */
+/* CSS HEX */
+--delft-blue: #3a405aff;
+--champagne-pink: #f9dec9ff;
+--powder-blue: #99b2ddff;
+--melon: #e9afa3ff;
+--umber: #685044ff;
+
+/* CSS HSL */
+--delft-blue: hsla(229, 22%, 29%, 1);
+--champagne-pink: hsla(26, 80%, 88%, 1);
+--powder-blue: hsla(218, 50%, 73%, 1);
+--melon: hsla(10, 61%, 78%, 1);
+--umber: hsla(20, 21%, 34%, 1);

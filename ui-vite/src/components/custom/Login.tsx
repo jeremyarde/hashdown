@@ -1,10 +1,10 @@
-import { Input } from "./components/ui/input";
-import { Button } from "./components/ui/button";
-import { Label } from "./components/ui/label";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import { Label } from "../ui/label";
 import { ChangeEvent, FormEvent, useContext, useState } from "react";
 import { Navigate, redirect } from "react-router-dom";
-import { getBaseUrl, handleResponse, setSessionToken } from "./lib/utils";
-import { useLogin } from "./hooks/useLogin";
+import { getBaseUrl, handleResponse, setSessionToken } from "../../lib/utils";
+import { useLogin } from "../../hooks/useLogin";
 
 /**
 * v0 by Vercel.

@@ -1,7 +1,7 @@
-import { FEATURES, SESSION_TOKEN_KEY, STAGE } from "./lib/constants";
+import { FEATURES, SESSION_TOKEN_KEY, STAGE } from "../../lib/constants";
 import { Link, useNavigate } from "react-router-dom";
-import { Toaster } from "./components/ui/toaster";
-import { getSessionToken, getStage, isDev, isFeatureEnabled } from "./lib/utils";
+import { Toaster } from "../ui/toaster";
+import { getSessionToken, getStage, isDev, isFeatureEnabled } from "../../lib/utils";
 
 
 

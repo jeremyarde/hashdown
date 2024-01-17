@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RenderedForm } from "../RenderedForm";
+import { RenderedForm } from "../components/custom/RenderedForm";
 import { useToast } from "@/components/ui/use-toast";
 import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
 import { getBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";

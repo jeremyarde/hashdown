@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useGetSurvey } from './hooks/useGetSurvey.ts';
+import { useGetSurvey } from '../../hooks/useGetSurvey.ts';
 import { createTable } from './createTable.tsx';
-import { getBaseUrl, getSessionToken } from './lib/utils.ts';
+import { getBaseUrl, getSessionToken } from '../../lib/utils.ts';
 
 
 export function ListResponses() {
