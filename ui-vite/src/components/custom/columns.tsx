@@ -64,6 +64,7 @@ export const data2: Survey[] =
             version: survey.version,
             created_at: survey.created_at,
             plaintext: survey.plaintext,
+            modified_at: survey.modified_at,
         }
     });
 
