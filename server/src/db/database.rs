@@ -3,7 +3,7 @@ use std::fmt::{self};
 use anyhow::{self, Error};
 
 use chrono::{DateTime, Duration, Utc};
-use markdownparser::nanoid_gen;
+use markdownparser::{nanoid_gen, NanoId};
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -36,7 +36,7 @@ use tracing::{info, instrument};
 
 use crate::{error::DatabaseError, survey_responses::SubmitResponseRequest, ServerError};
 
-use super::survey::SurveyModel;
+use super::survey::{SurveyModel, CreateSurveyRequest};
 
 // mod models;
 
@@ -68,6 +68,70 @@ impl Settings {
         }
     }
 }
+
+struct UpdateSurveyRequest {
+    id: NanoId
+}
+
+
+trait Crud<T, C, U> {
+    fn create(create: C) -> T;
+    fn read(id: NanoId) -> T;
+    fn update(update: U) -> T;
+    fn delete(id: NanoId) -> NanoId;
+}
+
+impl Crud<SurveyModel, CreateSurveyRequest, UpdateSurveyRequest> for SurveyModel {
+    fn create(create_request: CreateSurveyRequest) -> SurveyModel {
+        todo!()
+    }
+
+    fn read(id: NanoId) -> SurveyModel {
+        todo!()
+    }
+
+    fn update(update: UpdateSurveyRequest) -> SurveyModel {
+        todo!()
+    }
+
+    fn delete(id: NanoId) -> NanoId {
+        todo!()
+    }
+}
+
+struct UpdateUserModel {
+    id: NanoId
+}
+
+struct CreateUserModel {
+    id: NanoId
+}
+
+impl Crud<UserModel, CreateUserModel, UpdateUserModel> for UserModel {
+    fn create(create: CreateUserModel) -> UserModel {
+        todo!()
+    }
+
+    fn read(id: NanoId) -> UserModel {
+        todo!()
+    }
+
+    fn update(update: UpdateUserModel) -> UserModel {
+        todo!()
+    }
+
+    fn delete(id: NanoId) -> NanoId {
+        todo!()
+    }
+}
+
+// would be nice to do...
+// #[orm(Create, Delete, Update, Read)]
+// struct UserModel {
+//     myvalue: String
+// }
+
+
 
 
 // pub type InsertTodosRequest = Vec<todo::TodoModel>;

@@ -19,7 +19,7 @@ radio    =  {
     ^"radio:" ~ SPACE? ~ question_text ~ NEWLINE ~ listitem+
 }
 dropdown =  {
-    ^"Dropdown:" ~ SPACE? ~ question_text ~ NEWLINE ~ listitem+
+    ^"dropdown:" ~ SPACE? ~ question_text ~ NEWLINE ~ listitem+
 }
 submit   =  {
     ^"submit:" ~ question_with_default ~ NEWLINE?
