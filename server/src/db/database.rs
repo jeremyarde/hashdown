@@ -3,6 +3,7 @@ use std::fmt::{self};
 use anyhow::{self, Error};
 
 use chrono::{DateTime, Duration, Utc};
+use lettre::transport::smtp::commands::Data;
 use markdownparser::{nanoid_gen, NanoId};
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
@@ -99,42 +100,12 @@ impl Crud<SurveyModel, CreateSurveyRequest, UpdateSurveyRequest> for SurveyModel
     }
 }
 
-struct UpdateUserModel {
-    id: NanoId
-}
-
-struct CreateUserModel {
-    id: NanoId
-}
-
-impl Crud<UserModel, CreateUserModel, UpdateUserModel> for UserModel {
-    fn create(create: CreateUserModel) -> UserModel {
-        todo!()
-    }
-
-    fn read(id: NanoId) -> UserModel {
-        todo!()
-    }
-
-    fn update(update: UpdateUserModel) -> UserModel {
-        todo!()
-    }
-
-    fn delete(id: NanoId) -> NanoId {
-        todo!()
-    }
-}
 
 // would be nice to do...
 // #[orm(Create, Delete, Update, Read)]
 // struct UserModel {
 //     myvalue: String
 // }
-
-
-
-
-// pub type InsertTodosRequest = Vec<todo::TodoModel>;
 
 impl Database {
     pub async fn new(database_url: ConnectionDetails) -> anyhow::Result<Self> {
@@ -193,12 +164,6 @@ pub struct UserModel {
     // pub user_id: String,
 }
 
-// #[derive(Debug, Serialize, Deserialize, Clone, sqlx::Type)]
-// #[sqlx(type_name = "email_status", rename_all = "snake_case")]
-// pub enum EmailStatus {
-//     Verified,
-//     Unverified,
-// }
 #[derive(Deserialize, Serialize, FromRow, Debug, Clone)]
 pub struct AnswerModel {
     id: i32,
@@ -236,45 +201,13 @@ impl Session {
     }
 }
 
+
+
+trait SurveyCrud {
+    async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel>;
+}
+
 impl Database {
-    // pub async fn create_magic_link(&self, _user: UserModel) -> anyhow::Result<()> {
-    //     Ok(())
-    // }
-
-    pub async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel> {
-        println!("->> create_user");
-
-        let _time = chrono::Utc::now();
-        let user = sqlx::query_as::<_, UserModel>(
-            "insert into mdp.users (user_id, password_hash, email, created_at, modified_at) values($1, $2, $3, $4, $5) returning *",
-        )
-        .bind(nanoid_gen(self.settings.nanoid_length.expect("Settings not set.")))
-        .bind(request.password_hash)
-        .bind(request.email)
-        .bind(chrono::Utc::now())
-        .bind(chrono::Utc::now())
-        .fetch_one(&self.pool)
-        .await?;
-
-        Ok(user)
-    }
-
-    pub async fn get_user_by_email(&self, email: String) -> anyhow::Result<UserModel> {
-        info!("Search for user with email: {email:?}");
-
-        let res: UserModel = sqlx::query_as(
-            r#"select * from mdp.users where email = $1"#)
-            .bind(email)
-        .fetch_one(&self.pool)
-        .await?;
-
-        info!("Found user");
-        // let result = UserModel::from_row(&row_result).expect("Could not turn row into user model");
-
-        info!("Successfully found user");
-        Ok(res)
-    }
-
     pub async fn get_survey(
         &self,
         survey_id: &String,

@@ -17,7 +17,10 @@ use markdownparser::nanoid_gen;
 use serde_json::{json, Value};
 use tracing::log::info;
 
-use crate::db::database::{CreateUserRequest, Session};
+use crate::db::{
+    database::{CreateUserRequest, Session},
+    users::UserCrud,
+};
 use crate::mware::ctext::Ctext;
 use crate::routes::LoginPayload;
 use crate::ServerError;
@@ -129,11 +132,6 @@ pub async fn logout(
             "Did not find session".to_string(),
         ));
     };
-    // let session_header = if let Some(x) = headers.get(SESSION_ID_KEY) {
-    //     x.to_owned().to_str().unwrap().to_string()
-    // } else {
-    //     return Err(ServerError::AuthFailNoTokenCookie);
-    // };
 
     state
         .db
