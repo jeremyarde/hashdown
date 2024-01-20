@@ -17,7 +17,7 @@ use tracing::info;
 
 use crate::{
     auth::{self, validate_session_middleware},
-    db::survey::{create_survey, get_survey, list_survey, submit_survey, SurveyModel},
+    db::surveys::{create_survey, get_survey, list_survey, submit_survey, SurveyModel},
     error::main_response_mapper,
     survey_responses::{self, submit_response, SubmitResponseRequest},
     ServerError, ServerState,

@@ -15,10 +15,7 @@ use tracing::log::info;
 
 use crate::{
     config::EnvConfig,
-    db::{
-        self,
-        database::{ConnectionDetails, Session},
-    },
+    db::{self, database::ConnectionDetails},
     mail::mailer::Mailer,
     routes::get_router,
     ServerState,

@@ -17,11 +17,9 @@ use markdownparser::nanoid_gen;
 use serde_json::{json, Value};
 use tracing::log::info;
 
-use crate::db::{
-    database::{CreateUserRequest, Session},
-    users::UserCrud,
-};
-use crate::mware::ctext::Ctext;
+use crate::db::sessions::Session;
+use crate::db::{database::CreateUserRequest, users::UserCrud};
+use crate::mware::ctext::SessionContext;
 use crate::routes::LoginPayload;
 use crate::ServerError;
 use crate::ServerState;
@@ -91,7 +89,7 @@ pub async fn delete(
     // jar: CookieJar,
     // headers: HeaderMap,
     // payload: Json<LoginPayload>,
-    Extension(ctx): Extension<Option<Ctext>>,
+    Extension(ctx): Extension<Option<SessionContext>>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> delete user");
     let Some(ctx) = ctx else {
@@ -121,10 +119,8 @@ pub async fn delete(
 #[axum::debug_handler]
 pub async fn logout(
     state: State<ServerState>,
-    // jar: CookieJar,
-    headers: HeaderMap,
-    // payload: Json<LoginPayload>,
-    Extension(ctx): Extension<Option<Ctext>>,
+    // headers: HeaderMap,
+    Extension(ctx): Extension<Option<SessionContext>>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> logout");
     let Some(ctx) = ctx else {
@@ -212,7 +208,7 @@ pub async fn login(
     ))
 }
 
-async fn generate_magic_link(_state: &ServerState, _ctext: Ctext) -> String {
+async fn generate_magic_link(_state: &ServerState, _ctext: SessionContext) -> String {
     // let jwt = create_jwt_token(&ctext).expect("JWT was not created properly");
     let token = nanoid_gen(16);
 
@@ -364,14 +360,14 @@ pub async fn validate_session_middleware(
             })
             .await?;
         request.extensions_mut().insert(updated_session.clone());
-        request.extensions_mut().insert(Ctext {
+        request.extensions_mut().insert(SessionContext {
             user_id: updated_session.user_id.to_string(),
             session: updated_session,
         });
     } else {
         // remove this later
         info!("Session still active, not updating");
-        request.extensions_mut().insert(Ctext {
+        request.extensions_mut().insert(SessionContext {
             user_id: curr_session.user_id.to_string(),
             session: curr_session,
         });

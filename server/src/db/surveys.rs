@@ -6,7 +6,7 @@ use sqlx::FromRow;
 
 use crate::{routes::ListSurveyResponse, server::Metadata};
 
-use super::database::Session;
+use super::sessions::Session;
 
 use axum::{
     extract::{self, Path, State},
@@ -20,7 +20,7 @@ use tower_http::cors::CorsLayer;
 use tracing::{debug, info};
 
 use crate::{
-    mware::ctext::Ctext, survey_responses::SubmitResponseRequest, ServerError, ServerState,
+    mware::ctext::SessionContext, survey_responses::SubmitResponseRequest, ServerError, ServerState,
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
@@ -68,15 +68,10 @@ impl SurveyModel {
 pub async fn create_survey(
     headers: HeaderMap,
     State(state): State<ServerState>,
-    Extension(ctx): Extension<Ctext>,
+    Extension(ctx): Extension<SessionContext>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> create_survey");
-    // let Some(ctx) = ctx else {
-    //     return Err(ServerError::SessionNotFound(
-    //         "Did not find session".to_string(),
-    //     ));
-    // };
     info!("Creating new survey for user={:?}", ctx.session.user_id);
 
     let survey = SurveyModel::new(payload, &ctx.session);
@@ -153,7 +148,7 @@ pub async fn get_survey(
 #[axum::debug_handler]
 pub async fn list_survey(
     state: State<ServerState>,
-    Extension(ctx): Extension<Ctext>,
+    Extension(ctx): Extension<SessionContext>,
     // headers: HeaderMap,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> list_survey");

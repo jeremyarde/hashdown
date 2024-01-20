@@ -37,7 +37,7 @@ use tracing::{info, instrument};
 
 use crate::{error::DatabaseError, survey_responses::SubmitResponseRequest, ServerError};
 
-use super::survey::{SurveyModel, CreateSurveyRequest};
+use super::{surveys::{SurveyModel, CreateSurveyRequest}, sessions::Session};
 
 // mod models;
 
@@ -176,29 +176,6 @@ pub struct AnswerModel {
 pub struct CreateUserRequest {
     pub email: String,
     pub password_hash: String,
-}
-
-#[derive(Serialize, Debug, Clone, FromRow)]
-pub struct Session {
-    pub id: i32,
-    pub user_id: String,
-    pub session_id: String,
-    pub active_period_expires_at: DateTime<Utc>,
-    pub idle_period_expires_at: DateTime<Utc>,
-    pub workspace_id: String,
-}
-
-impl Session {
-    pub fn new() -> Self {
-        Session {
-            id: 0,
-            user_id: String::from(""),
-            session_id: String::from(""),
-            active_period_expires_at: chrono::Utc::now(),
-            idle_period_expires_at: chrono::Utc::now(),
-            workspace_id: String::from(""),
-        }
-    }
 }
 
 

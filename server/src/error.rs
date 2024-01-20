@@ -8,8 +8,8 @@ use serde_json::json;
 use tracing::info;
 use uuid::Uuid;
 
-use crate::db::database::Session;
-use crate::mware::ctext::Ctext;
+use crate::db::sessions::Session;
+use crate::mware::ctext::SessionContext;
 use crate::mware::log::log_request;
 
 #[derive(Debug, Deserialize, strum_macros::AsRefStr, Serialize, Clone)]
@@ -55,7 +55,7 @@ pub async fn main_response_mapper(
     req_method: Method,
     res: Response,
 ) -> Response {
-    let ctx = Some(Ctext::new(String::from(""), Session::new()));
+    let ctx = Some(SessionContext::new(String::from(""), Session::new()));
     println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
     let uuid = Uuid::new_v4();
 

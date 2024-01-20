@@ -5,7 +5,7 @@ use serde::Serialize;
 use serde_with::skip_serializing_none;
 use uuid::Uuid;
 
-use crate::{error::ClientError, mware::ctext::Ctext, ServerError};
+use crate::{error::ClientError, mware::ctext::SessionContext, ServerError};
 
 #[skip_serializing_none]
 #[derive(Serialize, Debug)]
@@ -27,7 +27,7 @@ pub async fn log_request(
     uuid: Uuid,
     req_method: Method,
     uri: Uri,
-    Extension(ctx): Extension<Option<Ctext>>,
+    Extension(ctx): Extension<Option<SessionContext>>,
     service_error: Option<&ServerError>,
     client_error: Option<ClientError>,
 ) -> anyhow::Result<()> {

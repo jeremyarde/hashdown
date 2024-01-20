@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-use crate::db::database::Session;
+use crate::db::sessions::Session;
 
 pub const AUTH_TOKEN: &str = "x-auth-token";
 // struct Keys {
@@ -187,19 +187,19 @@ pub struct JwtResult {
 // }
 
 #[derive(Clone, Debug)]
-pub struct Ctext {
+pub struct SessionContext {
     pub user_id: String,
     pub session: Session,
     // parse cookies in here?
 }
 
-impl Ctext {
+impl SessionContext {
     // pub fn user_id(&self) -> &String {
     //     &self.user_id
     // }
 
     pub fn new(user_id: String, session: Session) -> Self {
-        Ctext { user_id, session }
+        SessionContext { user_id, session }
     }
 }
 
