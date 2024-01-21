@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::FromRow;
 
-use crate::{routes::ListSurveyResponse, server::Metadata};
+use crate::{db::database::SurveyCrud, routes::ListSurveyResponse, server::Metadata};
 
 use super::sessions::Session;
 
@@ -144,50 +144,29 @@ pub async fn get_survey(
     Ok(Json(json!(db_response)))
 }
 
-#[tracing::instrument]
-#[axum::debug_handler]
-pub async fn list_survey(
-    state: State<ServerState>,
-    Extension(ctx): Extension<SessionContext>,
-    // headers: HeaderMap,
-) -> anyhow::Result<Json<Value>, ServerError> {
-    info!("->> list_survey");
-    // let Some(Extension(ctx)) = ctx else {
-    //     return Err(ServerError::SessionNotFound(
-    //         "Did not find session".to_string(),
-    //     ));
-    // };
-    // let ctx: Ctext = match hasctx {
-    //     Some(x) => x,
-    //     None => {
-    //         return Err(ServerError::SessionNotFound(
-    //             "Did not find session".to_string(),
-    //         ))
-    //     }
-    // };
-    // let ctx: Ctext = match ctx {
-    //     Some(x) => x,
-    //     None => {
-    //         return Err(ServerError::SessionNotFound(
-    //             "Did not find session".to_string(),
-    //         ))
-    //     }
-    // };
+// #[tracing::instrument]
+// #[axum::debug_handler]
+// pub async fn list_survey(
+//     state: State<ServerState>,
+//     Extension(ctx): Extension<SessionContext>,
+//     // headers: HeaderMap,
+// ) -> anyhow::Result<Json<Value>, ServerError> {
+//     info!("->> list_survey");
 
-    println!("Getting surveys for user={}", ctx.user_id);
-    let pool = &state.db.pool;
+//     println!("Getting surveys for user={}", ctx.user_id);
+//     let pool = &state.db.pool;
 
-    let res = sqlx::query_as::<_, SurveyModel>(
-        "select * from mdp.surveys where mdp.surveys.user_id = $1 and mdp.surveys.workspace_id = $2",
-    )
-    .bind(ctx.user_id.clone())
-    .bind(ctx.session.workspace_id.clone())
-    .fetch_all(pool)
-    .await
-    .map_err(|err| ServerError::Database(err.to_string()))
-    .unwrap();
+//     let res = sqlx::query_as::<_, SurveyModel>(
+//         "select * from mdp.surveys where mdp.surveys.user_id = $1 and mdp.surveys.workspace_id = $2",
+//     )
+//     .bind(ctx.user_id.clone())
+//     .bind(ctx.session.workspace_id.clone())
+//     .fetch_all(pool)
+//     .await
+//     .map_err(|err| ServerError::Database(err.to_string()))
+//     .unwrap();
 
-    let resp = ListSurveyResponse { surveys: res };
+//     let resp = ListSurveyResponse { surveys: res };
 
-    Ok(Json(json!(resp)))
-}
+//     Ok(Json(json!(resp)))
+// }

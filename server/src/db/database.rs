@@ -8,7 +8,10 @@ use markdownparser::{nanoid_gen, NanoId};
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use sqlx::{postgres::{PgQueryResult, PgPoolOptions}, FromRow, PgPool};
+use sqlx::{
+    postgres::{PgPoolOptions, PgQueryResult},
+    FromRow, PgPool,
+};
 
 // use models::CreateAnswersModel;
 // use chrono::Local;
@@ -35,9 +38,15 @@ use tracing::{info, instrument};
 //     pub metadata: Metadata,
 // }
 
-use crate::{error::DatabaseError, survey_responses::SubmitResponseRequest, ServerError};
+use crate::{
+    error::DatabaseError, mware::ctext::SessionContext, routes::ListSurveyResponse,
+    survey_responses::SubmitResponseRequest, ServerError,
+};
 
-use super::{surveys::{SurveyModel, CreateSurveyRequest}, sessions::Session};
+use super::{
+    sessions::Session,
+    surveys::{CreateSurveyRequest, SurveyModel},
+};
 
 // mod models;
 
@@ -71,35 +80,8 @@ impl Settings {
 }
 
 struct UpdateSurveyRequest {
-    id: NanoId
+    id: NanoId,
 }
-
-
-trait Crud<T, C, U> {
-    fn create(create: C) -> T;
-    fn read(id: NanoId) -> T;
-    fn update(update: U) -> T;
-    fn delete(id: NanoId) -> NanoId;
-}
-
-impl Crud<SurveyModel, CreateSurveyRequest, UpdateSurveyRequest> for SurveyModel {
-    fn create(create_request: CreateSurveyRequest) -> SurveyModel {
-        todo!()
-    }
-
-    fn read(id: NanoId) -> SurveyModel {
-        todo!()
-    }
-
-    fn update(update: UpdateSurveyRequest) -> SurveyModel {
-        todo!()
-    }
-
-    fn delete(id: NanoId) -> NanoId {
-        todo!()
-    }
-}
-
 
 // would be nice to do...
 // #[orm(Create, Delete, Update, Read)]
@@ -112,7 +94,10 @@ impl Database {
         // println!("{:?}", std::env::current_dir()); //Ok("/Users/jarde/Documents/code/markdownparser/server")
         // let database_url = dotenvy::var("DATABASE_URL")?;
         let database_url = database_url.0;
-        let pool =  PgPoolOptions::new().max_connections(1).connect(&database_url).await?;
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect(&database_url)
+            .await?;
         // let pool = PgPool::connect(&database_url).await?;
 
         // info!("Running migrations");
@@ -178,14 +163,19 @@ pub struct CreateUserRequest {
     pub password_hash: String,
 }
 
-
-
-trait SurveyCrud {
-    async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel>;
+pub trait SurveyCrud {
+    // async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel>;
+    async fn list_survey(&self, ctx: SessionContext) -> anyhow::Result<ListSurveyResponse>;
+    async fn get_survey(&self, survey_id: &String) -> anyhow::Result<SurveyModel>;
+    async fn create_survey(
+        &self,
+        survey: SurveyModel,
+        workspace_id: &str,
+    ) -> anyhow::Result<SurveyModel>;
 }
 
-impl Database {
-    pub async fn get_survey(
+impl SurveyCrud for Database {
+    async fn get_survey(
         &self,
         survey_id: &String,
         // workspace_id: &str,
@@ -199,7 +189,21 @@ impl Database {
         Ok(result)
     }
 
-    pub async fn create_survey(
+    async fn list_survey(&self, ctx: SessionContext) -> anyhow::Result<ListSurveyResponse> {
+        let result = sqlx::query_as::<_, SurveyModel>(
+                "select * from mdp.surveys where mdp.surveys.user_id = $1 and mdp.surveys.workspace_id = $2",
+            )
+            .bind(ctx.user_id.clone())
+            .bind(ctx.session.workspace_id.clone())
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|err| ServerError::Database(err.to_string()))
+            .unwrap();
+
+        Ok(ListSurveyResponse { surveys: result })
+    }
+
+    async fn create_survey(
         &self,
         survey: SurveyModel,
         workspace_id: &str,
@@ -223,21 +227,21 @@ impl Database {
         .await
         .expect("Should insert a survey");
 
-        // let res = survey.insert(&self.pool).await?;
-
-        // let res = Survey:
-
-        // let rows = _res.rows_affected();
-        // println!("create survey rows affected={rows}");
         info!("Successfully created a new survey");
 
         Ok(res)
     }
+}
 
+impl Database {
     pub async fn create_answer(&self, answer: SubmitResponseRequest) -> anyhow::Result<()> {
         info!("Creating answers in database");
 
-        let workspace_id: (String,) = sqlx::query_as("select workspace_id from mdp.surveys where mdp.surveys.survey_id = $1").bind(answer.survey_id.clone()).fetch_one(&self.pool).await?;
+        let workspace_id: (String,) =
+            sqlx::query_as("select workspace_id from mdp.surveys where mdp.surveys.survey_id = $1")
+                .bind(answer.survey_id.clone())
+                .fetch_one(&self.pool)
+                .await?;
         let _res: AnswerModel = sqlx::query_as(
             r#"insert into mdp.responses (submitted_at, survey_id, answers, workspace_id) values ($1, $2, $3, $4) returning *"#)
             .bind( Utc::now()).bind(answer.survey_id).bind(answer.answers).bind(workspace_id.0)
@@ -254,7 +258,6 @@ impl Database {
         info!("Listing responses for survey");
 
         let answers: Vec<AnswerModel> = sqlx::query_as(
-            
             r#"select * from mdp.responses where mdp.responses.survey_id = $1 and mdp.responses.workspace_id = $2"#)
             .bind(survey_id).bind(workspace_id)
         .fetch_all(&self.pool)
@@ -266,21 +269,6 @@ impl Database {
     }
 
     pub async fn get_session(&self, session_id: String) -> anyhow::Result<Session, ServerError> {
-        // let curr_session: Session = match sqlx::query(
-        //     r#"select * from sessions where sessions.session_id = $1"#
-        // ).bind(session_id).execute(&self.pool).await {
-        //     Ok(x) => {
-        //         if x.rows_affected() == 1 {
-        //             return Ok(Some(x.into()));
-        //         } else if x.rows_affected() == 0 {
-        //             return Ok(None);
-        //         }
-        //     },
-        //     Err(error) => {
-        //         return Err(ServerError::AuthFailTokenNotVerified("User session not available".to_string()));
-        //     },
-        // };
-
         let _curr_session: Session = match sqlx::query_as::<_, Session>(
             r#"select * from mdp.sessions sessions where sessions.session_id = $1"#,
         )
@@ -385,6 +373,3 @@ impl Database {
         Ok(user_id.to_string())
     }
 }
-
-#[cfg(test)]
-mod tests {}

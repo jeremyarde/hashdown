@@ -34,12 +34,11 @@ rand = "0.8.5"
 serde = {version = "1.0.155", features = ["derive"]}
 serde_json = "1.0.94"
 sqlx = {version = "0.7.1", features = ["postgres", "chrono", "postgres", "uuid", "runtime-tokio"]}
-ormlite = { version = "0.18.0", features = ["postgres"] }
-
+# ormlite = { version = "0.18.0", features = ["postgres"] }
 # openssl = {version = "0.10", features = ["vendored"]}
 
 [dev-dependencies]
-serial_test = "1.0.0"
+# serial_test = "1.0.0"
 
 # [profile.release]
 # debug = true

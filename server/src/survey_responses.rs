@@ -7,7 +7,11 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::{debug, info};
 
-use crate::{db::database::AnswerModel, mware::ctext::SessionContext, ServerError, ServerState};
+use crate::{
+    db::database::{AnswerModel, SurveyCrud},
+    mware::ctext::SessionContext,
+    ServerError, ServerState,
+};
 
 #[derive(Deserialize, Debug)]
 pub struct SubmitResponseRequest {
@@ -74,9 +78,3 @@ pub async fn list_response(
     // let test = serde_json::to_value(responses).unwrap();
     Ok(Json(json!({ "responses": responses })))
 }
-
-// struct AnswerData {
-//     answer_id: String,
-//     survey_id: String,
-//     answer_text: HashMap<String, String> //
-// }
