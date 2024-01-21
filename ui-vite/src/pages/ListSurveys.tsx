@@ -74,7 +74,8 @@ export function ListSurveys() {
             </div >
             <div className="container mx-auto py-10">
                 {/* <DataTable columns={columns} data={data} /> */}
-                <DataTable columns={columns2} data={data2} />
+                {/* <DataTable columns={columns2} data={data2} /> */}
+                <DataTable columns={columns2} data={surveys?.surveys ?? []} />
             </div>
         </>
     );

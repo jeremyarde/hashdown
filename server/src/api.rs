@@ -32,18 +32,6 @@ pub async fn list_survey(
         .await
         .map_err(|err| ServerError::Database(err.to_string()))
         .unwrap();
-    // let res = &state.db.
-    // let pool = &state.db.pool;
-
-    // let res = sqlx::query_as::<_, SurveyModel>(
-    //     "select * from mdp.surveys where mdp.surveys.user_id = $1 and mdp.surveys.workspace_id = $2",
-    // )
-    // .bind(ctx.user_id.clone())
-    // .bind(ctx.session.workspace_id.clone())
-    // .fetch_all(pool)
-    // .await
-    // .map_err(|err| ServerError::Database(err.to_string()))
-    // .unwrap();
 
     let resp = ListSurveyResponse {
         surveys: res.to_vec(),

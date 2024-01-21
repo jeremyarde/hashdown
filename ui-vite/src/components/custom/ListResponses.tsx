@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useGetSurvey } from '../../hooks/useGetSurvey.ts';
 import { createTable } from './createTable.tsx';
 import { getBaseUrl, getSessionToken } from '../../lib/utils.ts';
+import { DataTable } from './data-table.tsx';
 
 
 export function ListResponses() {
@@ -60,6 +61,10 @@ export function ListResponses() {
         <>
             <div>
                 {createTable(columns, ['id', 'submitted_at', ...Object.keys(idToTitle).map((key) => 'answers.' + key)], surveyResponses)}
+            </div>
+            <div className="container mx-auto py-10">
+                {/* <DataTable columns={columns} data={data} /> */}
+                <DataTable columns={columns2} data={data2} />
             </div>
         </>
     );

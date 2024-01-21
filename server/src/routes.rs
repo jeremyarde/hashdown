@@ -16,7 +16,7 @@ use tower_http::cors::CorsLayer;
 use tracing::info;
 
 use crate::{
-    api::submit_response,
+    api::{list_survey, submit_response},
     auth::{self, validate_session_middleware},
     db::surveys::{create_survey, get_survey, submit_survey, SurveyModel},
     error::main_response_mapper,
@@ -63,7 +63,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         .route("/v1/surveys/:id", get(get_survey).post(submit_survey));
 
     let auth_routes = Router::new()
-        .route("/v1/surveys", post(create_survey).get(get_survey))
+        .route("/v1/surveys", post(create_survey).get(list_survey))
         .route("/v1/responses", get(survey_responses::list_response))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
