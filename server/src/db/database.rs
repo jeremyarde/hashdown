@@ -165,7 +165,7 @@ pub struct CreateUserRequest {
 
 pub trait SurveyCrud {
     // async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel>;
-    async fn list_survey(&self, ctx: SessionContext) -> anyhow::Result<ListSurveyResponse>;
+    async fn list_survey(&self, ctx: SessionContext) -> anyhow::Result<Vec<SurveyModel>>;
     async fn get_survey(&self, survey_id: &String) -> anyhow::Result<SurveyModel>;
     async fn create_survey(
         &self,
@@ -189,7 +189,7 @@ impl SurveyCrud for Database {
         Ok(result)
     }
 
-    async fn list_survey(&self, ctx: SessionContext) -> anyhow::Result<ListSurveyResponse> {
+    async fn list_survey(&self, ctx: SessionContext) -> anyhow::Result<Vec<SurveyModel>> {
         let result = sqlx::query_as::<_, SurveyModel>(
                 "select * from mdp.surveys where mdp.surveys.user_id = $1 and mdp.surveys.workspace_id = $2",
             )
@@ -200,7 +200,7 @@ impl SurveyCrud for Database {
             .map_err(|err| ServerError::Database(err.to_string()))
             .unwrap();
 
-        Ok(ListSurveyResponse { surveys: result })
+        Ok(result)
     }
 
     async fn create_survey(

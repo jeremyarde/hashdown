@@ -16,10 +16,11 @@ use tower_http::cors::CorsLayer;
 use tracing::info;
 
 use crate::{
+    api::submit_response,
     auth::{self, validate_session_middleware},
     db::surveys::{create_survey, get_survey, submit_survey, SurveyModel},
     error::main_response_mapper,
-    survey_responses::{self, submit_response, SubmitResponseRequest},
+    survey_responses::{self, SubmitResponseRequest},
     ServerError, ServerState,
 };
 

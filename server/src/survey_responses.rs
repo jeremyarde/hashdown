@@ -19,31 +19,6 @@ pub struct SubmitResponseRequest {
     pub answers: Value,
 }
 
-#[tracing::instrument]
-#[axum::debug_handler]
-pub async fn submit_response(
-    State(state): State<ServerState>,
-    // extract(session): Extract<Session>,
-    Json(payload): extract::Json<SubmitResponseRequest>,
-) -> Result<Json<Value>, ServerError> {
-    info!("->> submit_response");
-    debug!("    ->> request: {:#?}", payload);
-
-    if payload.survey_id.is_empty() {
-        return Err(ServerError::BadRequest("No survey_id found".to_string()));
-    }
-
-    state
-        .db
-        .create_answer(payload)
-        .await
-        .map_err(|_| ServerError::Database("Not able to insert response".to_string()))?;
-
-    info!("completed submit_response");
-
-    Ok(Json(json!({"accepted": "true"})))
-}
-
 #[derive(Deserialize, Debug)]
 pub struct ResponseQuery {
     survey_id: String,
