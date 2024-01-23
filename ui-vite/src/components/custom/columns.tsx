@@ -14,6 +14,7 @@ import { MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { styleTokens } from "@/lib/constants";
 import { getBaseUrl } from "@/lib/utils";
+import { table } from "console";
 
 export const data: Payment[] = [
     {
@@ -89,7 +90,55 @@ export type Survey = {
     // workspace_id: string;
 };
 
-export const columns2: ColumnDef<Survey>[] = [
+export type FilterConfig = {
+    name: string;
+    displayName: string,
+    type: string;
+}
+
+export type ColumnSettings = {
+    name: string;
+    displayName: string;
+    sortable: boolean;
+}
+
+export type TableSettings = {
+    columns: ColumnSettings[];
+    filters: FilterConfig;
+
+}
+
+interface DataTableProps<TData, TValue> {
+    columns: ColumnDef<TData, TValue>[]
+    data: TData[]
+}
+
+function createColumnDef(columnDetail: ColumnSettings): ColumnDef<any> {
+    // function createColumnDef(columnDetails: ColumnSettings): ColumnDef<any> {
+    // return columnDetails.map((columnDetail) => {
+    return ({
+        accessorKey: columnDetail.name,
+        header: ({ column }) => {
+            let sortable = columnDetail.sortable ? (
+                < Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")
+                    }
+                >
+                    {columnDetail.displayName}
+                    < CaretSortIcon className="ml-2 h-4 w-4" />
+                </Button >)
+                : <div className="text-right">{columnDetail.displayName}</div>
+            return (
+                sortable
+            );
+        },
+        cell: ({ row }) => <div className="lowercase">{row.getValue(columnDetail.name)}</div>,
+    })
+}
+
+
+export const columns2: ColumnDef<any>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -115,86 +164,43 @@ export const columns2: ColumnDef<Survey>[] = [
             <div className="capitalize">{row.getValue("status")}</div>
         ),
     },
-    {
-        accessorKey: "created_at",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    created_at
-                    <CaretSortIcon className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div className="lowercase">{row.getValue("created_at")}</div>,
-    },
-    {
-        accessorKey: "modified_at",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    modified_at
-                    <CaretSortIcon className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div className="lowercase">{row.getValue("modified_at")}</div>,
-    },
-    {
-        accessorKey: "survey_id",
-        header: () => <div className="text-right">survey_id</div>,
-        cell: ({ row }) => {
-            return <div className="text-right font-medium">{row.getValue('survey_id')}</div>;
-        },
-    },
-    {
-        accessorKey: "plaintext",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    plaintext
-                    <CaretSortIcon className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div className="lowercase">{row.getValue("plaintext")}</div>,
-    },
+    // {
+    //     accessorKey: "created_at",
+    //     header: ({ column }) => {
+    //         return (
+    //             <Button
+    //                 variant="ghost"
+    //                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    //             >
+    //                 created_at
+    //                 <CaretSortIcon className="ml-2 h-4 w-4" />
+    //             </Button>
+    //         );
+    //     },
+    //     cell: ({ row }) => <div className="lowercase">{row.getValue("created_at")}</div>,
+    // },
+    // {
+    //     accessorKey: "survey_id",
+    //     header: () => <div className="text-right">survey_id</div>,
+    //     cell: ({ row }) => {
+    //         return <div className="text-right font-medium">{row.getValue('survey_id')}</div>;
+    //     },
+    // },
+    ...[
+        { name: "survey_id", displayName: "ID", sortable: false },
+        { name: "created_at", displayName: "Created", sortable: true },
+        { name: "modified_at", displayName: "Modified", sortable: true },
+        { name: "plaintext", displayName: "Plaintext", sortable: true },
+    ].map(createColumnDef),
     {
         id: "actions",
         enableHiding: false,
+        header: ({ column }) => <div className="text-right">{'Actions'}</div>,
         cell: ({ row }) => {
             const survey = row.original;
             const navigate = useNavigate();
 
-
             return (
-                // <DropdownMenu>
-                //     <DropdownMenuTrigger asChild>
-                //         <Button variant="ghost" className="h-8 w-8 p-0">
-                //             <span className="sr-only">Open menu</span>
-                //             <DotsHorizontalIcon className="h-4 w-4" />
-                //         </Button>
-                //     </DropdownMenuTrigger>
-                //     <DropdownMenuContent align="end">
-                //         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                //         <DropdownMenuItem
-                //             onClick={() => navigator.clipboard.writeText(survey.survey_id)}
-                //         >
-                //             Copy survey ID
-                //         </DropdownMenuItem>
-                //         <DropdownMenuSeparator />
-                //         <DropdownMenuItem>View customer</DropdownMenuItem>
-                //         <DropdownMenuItem>View payment details</DropdownMenuItem>
-                //     </DropdownMenuContent>
-                // </DropdownMenu>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild className=''>
                         <Button variant="ghost" className="h-8 w-8 p-0">

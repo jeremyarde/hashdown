@@ -4,6 +4,7 @@ import { useGetSurvey } from '../../hooks/useGetSurvey.ts';
 import { createTable } from './createTable.tsx';
 import { getBaseUrl, getSessionToken } from '../../lib/utils.ts';
 import { DataTable } from './data-table.tsx';
+import { columns2, data2 } from './columns.tsx';
 
 
 export function ListResponses() {

@@ -32,6 +32,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { styleTokens } from "@/lib/constants"
+import { FilterConfig } from "./columns"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -41,6 +42,7 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
     columns,
     data,
+    // columnConfig,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -72,9 +74,23 @@ export function DataTable<TData, TValue>({
     return (
         <div className="w-full">
             <div className="flex items-center py-4">
+                {/* {columnConfig.filters.map((filterDef: FilterConfig) => {
+                    return (
+                        <Input
+                            placeholder={`Search ${filterDef.displayName}`}
+                            value={(table.getColumn(filterDef.name)?.getFilterValue() as string) ?? ""
+                            }
+                            onChange={(event) =>
+                                table.getColumn(filterDef.name)?.setFilterValue(event.target.value)
+                            }
+                            className="max-w-sm"
+                        />
+                    )
+                })} */}
                 <Input
                     placeholder="Search"
-                    value={(table.getColumn("plaintext")?.getFilterValue() as string) ?? ""}
+                    value={(table.getColumn("plaintext")?.getFilterValue() as string) ?? ""
+                    }
                     onChange={(event) =>
                         table.getColumn("plaintext")?.setFilterValue(event.target.value)
                     }

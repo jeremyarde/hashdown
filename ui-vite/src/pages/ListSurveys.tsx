@@ -65,9 +65,6 @@ export function ListSurveys() {
     return (
         <>
             <div className=''>
-                <h1>
-                    My Surveys
-                </h1>
                 <div className='bg-red-600'>
                     {error ? error : ''}
                 </div>

@@ -15,6 +15,9 @@ export function handleResponse(apiResponse: Response) {
     case 401:
       window.sessionStorage.setItem(SESSION_TOKEN_KEY, '');
       break;
+    default:
+      window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
+      break;
   }
   return apiResponse;
 }
