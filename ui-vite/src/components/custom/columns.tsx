@@ -213,10 +213,16 @@ const exampleResponsesData = {
     ]
 };
 
+export type Answer = {
+    id: string;
+    questionText: string;
+    value: string;
+};
+
 export type Response = {
     // answers: { [key: string]: string };
-    answers: any;
-    id: string;
+    answers: Answer[];
+    id: number;
     submitted_at: string,
     survey_id: string;
     workspace_id: string;
@@ -224,7 +230,7 @@ export type Response = {
 
 export const responseData: Response[] = exampleResponsesData.responses.map(responses => {
     return {
-        answers: responses.answers,
+        answers: [],
         id: responses.id,
         submitted_at: responses.submitted_at,
         survey_id: responses.survey_id,
