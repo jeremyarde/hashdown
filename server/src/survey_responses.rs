@@ -1,3 +1,4 @@
+use argon2::password_hash::rand_core::block;
 use axum::{
     extract::{self, Query, State},
     Extension, Json,
@@ -66,24 +67,44 @@ pub async fn list_response(
     println!("jere/ after: {:?}", block_ids);
 
     info!("completed survey submit");
-    Ok(Json(json!({ "responses": responses })))
+    Ok(Json(json!({ "responses": responses, "survey": [] })))
+}
+
+// #[derive(Debug)]
+// struct BlockIdName(String, String);
+
+fn get_block_details(survey: SurveyModel) -> () {
+    let block_ids = survey.blocks.as_array().map(|blocks| {
+        // println!("jere/ {:#?}", blocks);
+        blocks.into_iter().map(|block| block.as_object())
+    });
+    println!("jere/ {:#?}", block_ids);
+    // return block_ids;
+    return ();
 }
 
 fn combine_survey_with_response(survey: SurveyModel, response: Value) -> Value {
-    let block_ids = survey
-        .blocks
-        .as_array()
-        .map(|blocks| println!("jere/ {:?}", blocks));
+    //     let block_ids: Vec<BlockIdName> = survey.blocks.as_array().map(|blocks| {
+    //         println!("jere/ {:#?}", blocks);
+    //         blocks.iter().map(|block| {
+    //             BlockIdName(
+    //                 block.get("id"),
+    //                 block.get("properties").unwrap().get("question"),
+    //             )
+    //         })
+    //     });
+    //     println!("jere/ blocks: {:#?}", block_ids);
     return json!({"test": "another"});
 }
 
 #[cfg(test)]
 mod tests {
+    use chrono::{DateTime, Utc};
     use serde_json::json;
 
     use crate::db::surveys::SurveyModel;
 
-    use super::combine_survey_with_response;
+    use super::{combine_survey_with_response, get_block_details};
 
     #[test]
     fn test_combine() {
@@ -92,7 +113,7 @@ mod tests {
           "93241ezrlet1": "test"
         });
 
-        let survey: SurveyModel = serde_json::from_value(json!([
+        let answers = json!([
           {
             "id": "4cxmez99swdf",
             "index": 0,
@@ -140,9 +161,23 @@ mod tests {
               "type": "Nothing"
             }
           }
-        ]))
-        .unwrap();
+        ]);
 
-        combine_survey_with_response(survey, response);
+        let survey: SurveyModel = SurveyModel {
+            id: 0,
+            name: Some(String::new()),
+            survey_id: String::new(),
+            user_id: String::new(),
+            created_at: Utc::now(),
+            modified_at: Utc::now(),
+            plaintext: String::new(),
+            version: Some(String::new()),
+            parse_version: Some(String::new()),
+            blocks: answers,
+            workspace_id: String::new(),
+        };
+
+        // combine_survey_with_response(survey, response);
+        get_block_details(survey);
     }
 }
