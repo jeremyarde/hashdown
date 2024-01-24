@@ -210,8 +210,128 @@ const exampleResponsesData = {
             "survey_id": "uam8mduu4cke",
             "workspace_id": "ws_default"
         }
-    ]
-};
+    ],
+    "survey": {
+        "blocks": [
+            {
+                "block_type": "Title",
+                "id": "z8uk113ayprw",
+                "index": 0,
+                "properties": {
+                    "title": "User Registration Form",
+                    "type": "Title"
+                }
+            },
+            {
+                "block_type": "TextInput",
+                "id": "yj1alcizau7j",
+                "index": 0,
+                "properties": {
+                    "default": "John Dog",
+                    "question": "First name",
+                    "type": "TextInput"
+                }
+            },
+            {
+                "block_type": "TextInput",
+                "id": "hxy5ehspwefi",
+                "index": 0,
+                "properties": {
+                    "default": "john@dog.com",
+                    "question": "Email Address",
+                    "type": "TextInput"
+                }
+            },
+            {
+                "block_type": "Textarea",
+                "id": "7qznmc661p6a",
+                "index": 0,
+                "properties": {
+                    "default": "Enter your comments here",
+                    "question": "This is nice",
+                    "type": "Textarea"
+                }
+            },
+            {
+                "block_type": "Checkbox",
+                "id": "1386c4b6vaam",
+                "index": 0,
+                "properties": {
+                    "options": [
+                        {
+                            "checked": true,
+                            "id": "85d74zqlcunz",
+                            "text": "Subscribe to newsletter"
+                        },
+                        {
+                            "checked": false,
+                            "id": "ul23qbi1laq9",
+                            "text": "second value here"
+                        }
+                    ],
+                    "question": "subscribe?",
+                    "type": "Checkbox"
+                }
+            },
+            {
+                "block_type": "Radio",
+                "id": "nauxsg2padlp",
+                "index": 0,
+                "properties": {
+                    "options": [
+                        "radio button",
+                        "another one",
+                        "third radio"
+                    ],
+                    "question": "my radio",
+                    "type": "Radio"
+                }
+            },
+            {
+                "block_type": "Dropdown",
+                "id": "apu67mvnly7u",
+                "index": 0,
+                "properties": {
+                    "options": [
+                        "Option 1",
+                        "Option 2",
+                        "Option 3"
+                    ],
+                    "question": "My question here",
+                    "type": "Dropdown"
+                }
+            },
+            {
+                "block_type": "Submit",
+                "id": "atkl7vuhqdyw",
+                "index": 0,
+                "properties": {
+                    "default": "",
+                    "question": "submit",
+                    "type": "Submit"
+                }
+            },
+            {
+                "block_type": "Empty",
+                "id": "63p1uttvg5ey",
+                "index": 0,
+                "properties": {
+                    "type": "Nothing"
+                }
+            }
+        ],
+        "created_at": "2024-01-16T04:57:27.448004Z",
+        "id": 3,
+        "modified_at": "2024-01-16T04:57:27.448015Z",
+        "name": "name - todo",
+        "parse_version": "2",
+        "plaintext": "# User Registration Form\n\nText: First name [John Dog]\n\nText: Email Address [john@dog.com]\n\nTextarea: This is nice [Enter your comments here]\n\ncheckbox: subscribe?\n- [x] Subscribe to newsletter\n- [ ] second value here\n\nradio: my radio\n- radio button\n- another one\n- third radio\n\nDropdown: My question here\n  - Option 1\n  - Option 2\n  - Option 3\n\nSubmit: submit",
+        "survey_id": "uam8mduu4cke",
+        "user_id": "usr_default2",
+        "version": "version - todo",
+        "workspace_id": "ws_default"
+    }
+}
 
 export type Answer = {
     id: string;
@@ -228,15 +348,36 @@ export type Response = {
     workspace_id: string;
 };
 
-export const responseData: Response[] = exampleResponsesData.responses.map(responses => {
-    return {
-        answers: [],
-        id: responses.id,
-        submitted_at: responses.submitted_at,
-        survey_id: responses.survey_id,
-        workspace_id: responses.workspace_id,
-    }
-});
+// export const responseData: Answer[] = exampleResponsesData.survey.blocks.map((block) => {
+//     let id = block.id;
+//     let surveyText = block.properties?.question;
+//     let value = exampleResponsesData.responses.map(response => {
+
+//     })
+//     // return {
+//     //     answers: [],
+//     //     id: responses.id,
+//     //     submitted_at: responses.submitted_at,
+//     //     survey_id: responses.survey_id,
+//     //     workspace_id: responses.workspace_id,
+//     // }
+// });
+
+function mapRealQuestionToAnswers(responseData = exampleResponsesData) {
+    const idToQuestion = Object.fromEntries(responseData.survey.blocks.map((block) => {
+        return [block.id, block.properties?.question]
+    }));
+    return exampleResponsesData.responses.map((response) => {
+        let thing = Object.entries(response.answers).map(([key, value]) => {
+            let accessorKey = key;
+            let displayName = idToQuestion[accessorKey];
+            return { value, name: accessorKey, displayName }
+        });
+    });
+}
+
+
+console.log("mapped: " + mapRealQuestionToAnswers(exampleResponsesData));
 
 
 export const responseColumns: ColumnDef<any>[] = [

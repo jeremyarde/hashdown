@@ -67,7 +67,7 @@ pub async fn list_response(
     println!("jere/ after: {:?}", block_ids);
 
     info!("completed survey submit");
-    Ok(Json(json!({ "responses": responses, "survey": [] })))
+    Ok(Json(json!({ "responses": responses, "survey": survey })))
 }
 
 // #[derive(Debug)]
