@@ -153,7 +153,7 @@ pub struct UserModel {
 pub struct AnswerModel {
     id: i32,
     submitted_at: Option<DateTime<Utc>>,
-    answers: Option<Value>,
+    pub answers: Option<Value>,
     survey_id: String,
     workspace_id: String,
 }

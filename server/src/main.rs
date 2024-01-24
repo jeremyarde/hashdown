@@ -152,6 +152,33 @@ mod tests {
 
     #[tokio::test]
     // #[serial]
+    async fn test_get_responses() {
+        let mut router = ServerApplication::get_router().await;
+        // router.ready().await.unwrap();
+
+        let url = "/v1/surveys";
+        let client_url = format!("http://{}{}", "localhost:8080", url);
+
+        let request = LoginPayload {
+            email: "test@test.com".to_string(),
+            password: "a".to_string(),
+        };
+        let create_request: Request<Body> = Request::builder()
+            .method("POST")
+            .uri(client_url)
+            // .header("x-auth-token", token.to_string())
+            .header(
+                axum::http::header::CONTENT_TYPE,
+                mime::APPLICATION_JSON.to_string(),
+            )
+            .body(Body::from(serde_json::to_vec(&json!(request)).unwrap()))
+            .unwrap();
+
+        let response = router.borrow_mut().oneshot(create_request).await.unwrap();
+    }
+
+    #[tokio::test]
+    // #[serial]
     async fn test_login() {
         setup_environment();
 
