@@ -34,9 +34,6 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { styleTokens } from "@/lib/constants"
-import { FilterConfig, priorities } from "./columns"
-import { DataTableToolbar } from "./data-table-toolbar"
-import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -81,7 +78,7 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="w-full">
-            <DataTableToolbar table={table}></DataTableToolbar>
+            {/* <DataTableToolbar table={table}></DataTableToolbar> */}
             <div className="flex items-center py-4">
                 {/* {columnConfig.filters.map((filterDef: FilterConfig) => {
                     return (
@@ -105,7 +102,7 @@ export function DataTable<TData, TValue>({
                     }
                     className="max-w-sm"
                 />
-                {table.getColumn("priority") && (
+                {/* {table.getColumn("priority") && (
                     <DataTableFacetedFilter
                         column={table.getColumn("priority")}
                         title="Priority"
@@ -121,7 +118,7 @@ export function DataTable<TData, TValue>({
                         Reset
                         <Cross2Icon className="ml-2 h-4 w-4" />
                     </Button>
-                )}
+                )} */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="ml-auto">
