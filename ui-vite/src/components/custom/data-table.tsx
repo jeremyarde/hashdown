@@ -1,6 +1,6 @@
 import * as React from "react"
 import {
-    ChevronDownIcon,
+    ChevronDownIcon, Cross2Icon
 } from "@radix-ui/react-icons"
 import {
     ColumnDef,
@@ -9,6 +9,8 @@ import {
     VisibilityState,
     flexRender,
     getCoreRowModel,
+    getFacetedRowModel,
+    getFacetedUniqueValues,
     getFilteredRowModel,
     getPaginationRowModel,
     getSortedRowModel,
@@ -32,7 +34,9 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { styleTokens } from "@/lib/constants"
-import { FilterConfig } from "./columns"
+import { FilterConfig, priorities } from "./columns"
+import { DataTableToolbar } from "./data-table-toolbar"
+import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -44,13 +48,13 @@ export function DataTable<TData, TValue>({
     data,
     // columnConfig,
 }: DataTableProps<TData, TValue>) {
-    const [sorting, setSorting] = React.useState<SortingState>([])
+    const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
-    )
+    );
     const [columnVisibility, setColumnVisibility] =
-        React.useState<VisibilityState>({})
-    const [rowSelection, setRowSelection] = React.useState({})
+        React.useState<VisibilityState>({});
+    const [rowSelection, setRowSelection] = React.useState({});
 
     const table = useReactTable({
         data,
@@ -63,16 +67,21 @@ export function DataTable<TData, TValue>({
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
+        enableRowSelection: true,
+        getFacetedRowModel: getFacetedRowModel(),
+        getFacetedUniqueValues: getFacetedUniqueValues(),
         state: {
             sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
         },
-    })
+    });
+    const isFiltered = table.getState().columnFilters.length > 0
 
     return (
         <div className="w-full">
+            <DataTableToolbar table={table}></DataTableToolbar>
             <div className="flex items-center py-4">
                 {/* {columnConfig.filters.map((filterDef: FilterConfig) => {
                     return (
@@ -96,6 +105,23 @@ export function DataTable<TData, TValue>({
                     }
                     className="max-w-sm"
                 />
+                {table.getColumn("priority") && (
+                    <DataTableFacetedFilter
+                        column={table.getColumn("priority")}
+                        title="Priority"
+                        options={priorities}
+                    />
+                )}
+                {isFiltered && (
+                    <Button
+                        variant="ghost"
+                        onClick={() => table.resetColumnFilters()}
+                        className="h-8 px-2 lg:px-3"
+                    >
+                        Reset
+                        <Cross2Icon className="ml-2 h-4 w-4" />
+                    </Button>
+                )}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="ml-auto">

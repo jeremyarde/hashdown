@@ -10,7 +10,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon, CircleIcon, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { styleTokens } from "@/lib/constants";
 import { getBaseUrl } from "@/lib/utils";
@@ -49,6 +49,51 @@ export const data: Payment[] = [
     },
 ];
 
+export const statuses = [
+    {
+        value: "backlog",
+        label: "Backlog",
+        icon: ArrowDownIcon,
+    },
+    {
+        value: "todo",
+        label: "Todo",
+        icon: CircleIcon,
+    },
+    {
+        value: "in progress",
+        label: "In Progress",
+        icon: ArrowDownIcon,
+    },
+    {
+        value: "done",
+        label: "Done",
+        icon: ArrowDownIcon,
+    },
+    {
+        value: "canceled",
+        label: "Canceled",
+        icon: ArrowDownIcon,
+    },
+]
+
+export const priorities = [
+    {
+        label: "Low",
+        value: "low",
+        icon: ArrowDownIcon,
+    },
+    {
+        label: "Medium",
+        value: "medium",
+        icon: ArrowRightIcon,
+    },
+    {
+        label: "High",
+        value: "high",
+        icon: ArrowUpIcon,
+    },
+]
 export const data2: Survey[] =
     [{
         "blocks": [
