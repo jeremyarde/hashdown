@@ -363,12 +363,13 @@ export type Response = {
 //     // }
 // });
 
-function mapRealQuestionToAnswers(responseData = exampleResponsesData) {
+export function mapRealQuestionToAnswers(responseData = exampleResponsesData) {
     const idToQuestion = Object.fromEntries(responseData.survey.blocks.map((block) => {
-        return [block.id, block.properties?.question]
+        return [block.id, block.properties.question]
     }));
+    console.log('idToQuestion' + JSON.stringify(idToQuestion))
     return exampleResponsesData.responses.map((response) => {
-        let thing = Object.entries(response.answers).map(([key, value]) => {
+        return Object.entries(response.answers).map(([key, value]) => {
             let accessorKey = key;
             let displayName = idToQuestion[accessorKey];
             return { value, name: accessorKey, displayName }

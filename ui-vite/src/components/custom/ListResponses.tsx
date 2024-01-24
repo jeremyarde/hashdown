@@ -4,7 +4,7 @@ import { useGetSurvey } from '../../hooks/useGetSurvey.ts';
 import { createTable } from './createTable.tsx';
 import { getBaseUrl, getSessionToken } from '../../lib/utils.ts';
 import { DataTable } from './data-table.tsx';
-import { surveyColumns, data2, responseColumns } from './columns.tsx';
+import { surveyColumns, data2, responseColumns, mapRealQuestionToAnswers } from './columns.tsx';
 
 
 export function ListResponses() {
@@ -44,12 +44,12 @@ export function ListResponses() {
             }
         } else {
             console.log('Found surveys: ', result);
-            setSurveyResponses(result["responses"]);
+            setSurveyResponses(result);
             // setError('');
         }
     }
 
-    const idToTitle: { [id: string]: string } = {};
+    // const idToTitle: { [id: string]: string } = {};
     // let columns = ['ID', 'Submitted at'];
     // let columns = [];
     // survey?.blocks.forEach((block) => {
@@ -60,6 +60,7 @@ export function ListResponses() {
     // });
 
     // console.log(`jere/ cols: ${columns}`)
+    mapRealQuestionToAnswers(surveyResponses);
     return (
         <>
             <div>
