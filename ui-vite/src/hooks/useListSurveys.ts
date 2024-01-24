@@ -29,14 +29,19 @@ export function useListSurveys(): { surveys: ListSurvey | undefined, error: stri
             console.log(`response from API: ${JSON.stringify(response)}`)
             handleResponse(response);
 
-            
             if (response.status === 401) {
                 setError('Not authorized');
-                return
+                setIsPending(false);
+                return {
+                    surveys, error, isPending
+                }
             }
             if (response.status === 400) {
                 setError('Survey not found');
-                return
+                setIsPending(false);
+                return {
+                    surveys, error, isPending
+                }
             }
             const data = await response.json();
             setIsPending(false);

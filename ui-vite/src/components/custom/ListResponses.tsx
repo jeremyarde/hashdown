@@ -4,7 +4,7 @@ import { useGetSurvey } from '../../hooks/useGetSurvey.ts';
 import { createTable } from './createTable.tsx';
 import { getBaseUrl, getSessionToken } from '../../lib/utils.ts';
 import { DataTable } from './data-table.tsx';
-import { columns2, data2 } from './columns.tsx';
+import { surveyColumns, data2, responseColumns } from './columns.tsx';
 
 
 export function ListResponses() {
@@ -50,22 +50,24 @@ export function ListResponses() {
     }
 
     const idToTitle: { [id: string]: string } = {};
-    let columns = ['ID', 'Submitted at'];
-    survey?.blocks.forEach((block) => {
-        if (block.properties.question) {
-            idToTitle[block.id] = block.properties.question;
-            columns.push(block.properties.question);
-        }
-    });
+    // let columns = ['ID', 'Submitted at'];
+    // let columns = [];
+    // survey?.blocks.forEach((block) => {
+    //     if (block.properties.question) {
+    //         idToTitle[block.id] = block.properties.question;
+    //         columns.push({ displayName: block.properties.question, name: block.id });
+    //     }
+    // });
 
+    // console.log(`jere/ cols: ${columns}`)
     return (
         <>
             <div>
-                {createTable(columns, ['id', 'submitted_at', ...Object.keys(idToTitle).map((key) => 'answers.' + key)], surveyResponses)}
+                {/* {createTable(columns, ['id', 'submitted_at', ...Object.keys(idToTitle).map((key) => 'answers.' + key)], surveyResponses)} */}
             </div>
             <div className="container mx-auto py-10">
                 {/* <DataTable columns={columns} data={data} /> */}
-                <DataTable columns={columns2} data={data2} />
+                <DataTable columns={responseColumns} data={data2} />
             </div>
         </>
     );

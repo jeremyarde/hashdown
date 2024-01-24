@@ -16,84 +16,7 @@ import { styleTokens } from "@/lib/constants";
 import { getBaseUrl } from "@/lib/utils";
 import { table } from "console";
 
-export const data: Payment[] = [
-    {
-        id: "m5gr84i9",
-        amount: 316,
-        status: "success",
-        email: "ken99@yahoo.com",
-    },
-    {
-        id: "3u1reuv4",
-        amount: 242,
-        status: "success",
-        email: "Abe45@gmail.com",
-    },
-    {
-        id: "derv1ws0",
-        amount: 837,
-        status: "processing",
-        email: "Monserrat44@gmail.com",
-    },
-    {
-        id: "5kma53ae",
-        amount: 874,
-        status: "success",
-        email: "Silas22@gmail.com",
-    },
-    {
-        id: "bhqecj4p",
-        amount: 721,
-        status: "failed",
-        email: "carmella@hotmail.com",
-    },
-];
 
-export const statuses = [
-    {
-        value: "backlog",
-        label: "Backlog",
-        icon: ArrowDownIcon,
-    },
-    {
-        value: "todo",
-        label: "Todo",
-        icon: CircleIcon,
-    },
-    {
-        value: "in progress",
-        label: "In Progress",
-        icon: ArrowDownIcon,
-    },
-    {
-        value: "done",
-        label: "Done",
-        icon: ArrowDownIcon,
-    },
-    {
-        value: "canceled",
-        label: "Canceled",
-        icon: ArrowDownIcon,
-    },
-]
-
-export const priorities = [
-    {
-        label: "Low",
-        value: "low",
-        icon: ArrowDownIcon,
-    },
-    {
-        label: "Medium",
-        value: "medium",
-        icon: ArrowRightIcon,
-    },
-    {
-        label: "High",
-        value: "high",
-        icon: ArrowUpIcon,
-    },
-]
 export const data2: Survey[] =
     [{
         "blocks": [
@@ -114,12 +37,12 @@ export const data2: Survey[] =
         }
     });
 
-export type Payment = {
-    id: string;
-    amount: number;
-    status: "pending" | "processing" | "success" | "failed";
-    email: string;
-};
+// export type Payment = {
+//     id: string;
+//     amount: number;
+//     status: "pending" | "processing" | "success" | "failed";
+//     email: string;
+// };
 
 export type Survey = {
     id: number;
@@ -159,8 +82,7 @@ interface DataTableProps<TData, TValue> {
 }
 
 function createColumnDef(columnDetail: ColumnSettings): ColumnDef<any> {
-    // function createColumnDef(columnDetails: ColumnSettings): ColumnDef<any> {
-    // return columnDetails.map((columnDetail) => {
+
     return ({
         accessorKey: columnDetail.name,
         header: ({ column }) => {
@@ -183,7 +105,7 @@ function createColumnDef(columnDetail: ColumnSettings): ColumnDef<any> {
 }
 
 
-export const columns2: ColumnDef<any>[] = [
+export const surveyColumns: ColumnDef<any>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -209,28 +131,6 @@ export const columns2: ColumnDef<any>[] = [
             <div className="capitalize">{row.getValue("status")}</div>
         ),
     },
-    // {
-    //     accessorKey: "created_at",
-    //     header: ({ column }) => {
-    //         return (
-    //             <Button
-    //                 variant="ghost"
-    //                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-    //             >
-    //                 created_at
-    //                 <CaretSortIcon className="ml-2 h-4 w-4" />
-    //             </Button>
-    //         );
-    //     },
-    //     cell: ({ row }) => <div className="lowercase">{row.getValue("created_at")}</div>,
-    // },
-    // {
-    //     accessorKey: "survey_id",
-    //     header: () => <div className="text-right">survey_id</div>,
-    //     cell: ({ row }) => {
-    //         return <div className="text-right font-medium">{row.getValue('survey_id')}</div>;
-    //     },
-    // },
     ...[
         { name: "survey_id", displayName: "ID", sortable: false },
         { name: "created_at", displayName: "Created", sortable: true },
@@ -282,7 +182,58 @@ export const columns2: ColumnDef<any>[] = [
 ];
 
 
-export const columns: ColumnDef<Payment>[] = [
+const exampleResponsesData = {
+    "responses": [
+        {
+            "answers": {
+                "7qznmc661p6a": "a test",
+                "85d74zqlcunz": "on",
+                "hxy5ehspwefi": "is ",
+                "nauxsg2padlp": "radio button",
+                "ul23qbi1laq9": "on",
+                "yj1alcizau7j": "this "
+            },
+            "id": 6,
+            "submitted_at": "2024-01-16T04:57:50.080803Z",
+            "survey_id": "uam8mduu4cke",
+            "workspace_id": "ws_default"
+        },
+        {
+            "answers": {
+                "7qznmc661p6a": "",
+                "85d74zqlcunz": "on",
+                "hxy5ehspwefi": "",
+                "yj1alcizau7j": ""
+            },
+            "id": 7,
+            "submitted_at": "2024-01-21T07:19:02.826826Z",
+            "survey_id": "uam8mduu4cke",
+            "workspace_id": "ws_default"
+        }
+    ]
+};
+
+export type Response = {
+    // answers: { [key: string]: string };
+    answers: any;
+    id: string;
+    submitted_at: string,
+    survey_id: string;
+    workspace_id: string;
+};
+
+export const responseData: Response[] = exampleResponsesData.responses.map(responses => {
+    return {
+        answers: responses.answers,
+        id: responses.id,
+        submitted_at: responses.submitted_at,
+        survey_id: responses.survey_id,
+        workspace_id: responses.workspace_id,
+    }
+});
+
+
+export const responseColumns: ColumnDef<any>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -308,60 +259,49 @@ export const columns: ColumnDef<Payment>[] = [
             <div className="capitalize">{row.getValue("status")}</div>
         ),
     },
-    {
-        accessorKey: "email",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Email
-                    <CaretSortIcon className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
-    },
-    {
-        accessorKey: "amount",
-        header: () => <div className="text-right">Amount</div>,
-        cell: ({ row }) => {
-            const amount = parseFloat(row.getValue("amount"));
-
-            // Format the amount as a dollar amount
-            const formatted = new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-            }).format(amount);
-
-            return <div className="text-right font-medium">{formatted}</div>;
-        },
-    },
+    ...[
+        { name: "survey_id", displayName: "ID", sortable: false },
+        { name: "created_at", displayName: "Created", sortable: true },
+        { name: "modified_at", displayName: "Modified", sortable: true },
+        { name: "plaintext", displayName: "Plaintext", sortable: true },
+    ].map(createColumnDef),
     {
         id: "actions",
         enableHiding: false,
+        header: ({ column }) => <div className="text-right">{'Actions'}</div>,
         cell: ({ row }) => {
-            const payment = row.original;
+            const survey = row.original;
+            const navigate = useNavigate();
 
             return (
                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                    <DropdownMenuTrigger asChild className=''>
                         <Button variant="ghost" className="h-8 w-8 p-0">
                             <span className="sr-only">Open menu</span>
                             <DotsHorizontalIcon className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="" style={{ backgroundColor: styleTokens.pink }}>
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(payment.id)}
+                            onClick={(evt) => {
+                                navigate(`/surveys/${survey.survey_id}`);
+                            }}
+                            className='hover:bg-blue-900'
                         >
-                            Copy payment ID
+                            View Survey
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>View customer</DropdownMenuItem>
-                        <DropdownMenuItem>View payment details</DropdownMenuItem>
+                        {/* <DropdownMenuSeparator /> */}
+                        <DropdownMenuItem
+                            onClick={(evt) => navigate(`/responses?survey_id=${survey.survey_id}`)}
+                        >
+                            Responses
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={(evt) => navigator.clipboard.writeText(`${getBaseUrl()}/${survey.survey_id}`)}
+                        >
+                            Copy public link
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             );
