@@ -4,7 +4,7 @@ import { useGetSurvey } from '../../hooks/useGetSurvey.ts';
 import { createTable } from './createTable.tsx';
 import { getBaseUrl, getSessionToken, handleResponse } from '../../lib/utils.ts';
 import { DataTable } from './data-table.tsx';
-import { surveyColumns, data2, responseColumns, mapRealQuestionToAnswers, mapAnswersToColumns, GetResponses } from './columns.tsx';
+import { surveyColumns, data2, mapRealQuestionToAnswers, mapAnswersToColumns, GetResponses } from './columns.tsx';
 
 
 export function ListResponses() {
@@ -70,7 +70,7 @@ export function ListResponses() {
             {surveyResponses ?
                 (<div className="container mx-auto py-10">
                     {/* <DataTable columns={columns} data={data} /> */}
-                    <DataTable columns={responseColumns} data={tableData} />
+                    <DataTable columns={responseColumns ?? []} data={tableData ?? []} />
                 </div>) : <h2>Not available</h2>
             }
         </>
