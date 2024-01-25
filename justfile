@@ -30,10 +30,10 @@ ls:
     docker run --rm -it testserver ls -l /usr/local/bin
 
 migrate:
-    cd server && source .env && sqlx migrate revert && sqlx migrate run
+    cd server && source .env && sqlx migrate run
 
 migrateprod:
-    cd server && source .prod.env && sqlx migrate revert --database-url $DATABASE_URL  && sqlx migrate run --database-url $DATABASE_URL
+    cd server && source .prod.env && sqlx migrate run --database-url $DATABASE_URL
 
 prepare:
     cd server && cargo sqlx prepare
