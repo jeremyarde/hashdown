@@ -4,11 +4,11 @@ import { useGetSurvey } from '../../hooks/useGetSurvey.ts';
 import { createTable } from './createTable.tsx';
 import { getBaseUrl, getSessionToken, handleResponse } from '../../lib/utils.ts';
 import { DataTable } from './data-table.tsx';
-import { surveyColumns, data2, responseColumns, mapRealQuestionToAnswers, mapAnswersToColumns } from './columns.tsx';
+import { surveyColumns, data2, responseColumns, mapRealQuestionToAnswers, mapAnswersToColumns, GetResponses } from './columns.tsx';
 
 
 export function ListResponses() {
-    const [surveyResponses, setSurveyResponses] = useState(undefined);
+    const [surveyResponses, setSurveyResponses] = useState<GetResponses | undefined>(undefined);
     const [queryParams, setQueryParams] = useSearchParams();
     // let globalState: GlobalState = useContext(GlobalStateContext);
     const SURVEY_ID_QUERY_KEY = "survey_id";

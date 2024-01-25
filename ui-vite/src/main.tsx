@@ -89,7 +89,7 @@ function RenderedSurvey() {
     {error && <div>{error}</div>}
     <div>
       {survey &&
-        <RenderedForm survey={survey} ></RenderedForm>
+        <RenderedForm mode="prod" survey={survey} ></RenderedForm>
       }
     </div >
   </>)

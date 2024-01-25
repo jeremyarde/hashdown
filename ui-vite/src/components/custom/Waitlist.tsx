@@ -6,7 +6,7 @@ export function Waitlist() {
     return (
         <>
             {survey &&
-                <RenderedForm survey={survey}></RenderedForm>}
+                <RenderedForm mode='prod' survey={survey}></RenderedForm>}
         </>
     );
 }

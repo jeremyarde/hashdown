@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { CaretSortIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
 import { ColumnDef } from "@tanstack/react-table";
@@ -12,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon, CircleIcon, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { styleTokens } from "@/lib/constants";
+import { Block, styleTokens } from "@/lib/constants";
 import { getBaseUrl } from "@/lib/utils";
 import { table } from "console";
 
@@ -210,7 +211,12 @@ export type Response = {
     workspace_id: string;
 };
 
-export function mapRealQuestionToAnswers(responseData) {
+export type GetResponses = {
+    survey: any,
+    responses: any,
+}
+
+export function mapRealQuestionToAnswers(responseData: GetResponses | undefined) {
     if (!responseData) {
         return undefined;
     }
@@ -221,7 +227,7 @@ export function mapRealQuestionToAnswers(responseData) {
         //     let displayName = idToQuestion[accessorKey];
         //     return { value, name: accessorKey, displayName }
         // });
-        let curr = {}
+        let curr: { [key: string]: any } = {};
         response.answers.forEach(answer => curr[answer.question_id] = answer.value)
         curr = {
             id: response.response_id,
@@ -239,14 +245,14 @@ export function mapRealQuestionToAnswers(responseData) {
     return result;
 }
 
-export function mapAnswersToColumns(responsesData): ColumnDef<any>[] {
+export function mapAnswersToColumns(responsesData: GetResponses | undefined): ColumnDef<any>[] | undefined {
     if (!responsesData) {
         return undefined;
     }
 
     // let result = mapRealQuestionToAnswers(responsesData);
 
-    const idToQuestion = Object.fromEntries(responsesData?.survey?.blocks?.map((block) => {
+    const idToQuestion = Object.fromEntries(responsesData?.survey?.blocks?.map((block: Block) => {
         return [block.id, block.properties.question]
     }));
 
@@ -301,6 +307,7 @@ export function mapAnswersToColumns(responsesData): ColumnDef<any>[] {
             }).filter((val) => val),
             { name: "response_id", displayName: "Response ID", sortable: false },
             { name: "submitted_at", displayName: "submitted_at", sortable: true },
+            // @ts-ignore
         ].map(createColumnDef),
         {
             id: "actions",
