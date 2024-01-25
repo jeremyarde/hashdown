@@ -23,8 +23,18 @@ const NANOID_ALPHA: [char; 34] = [
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NanoId(String);
 impl NanoId {
-    fn new() -> NanoId {
+    pub fn new() -> NanoId {
         NanoId(nanoid_gen(NANOID_LEN))
+    }
+
+    pub fn from(pre: &str) -> NanoId {
+        return NanoId(format!("{}_{}", pre, nanoid_gen(NANOID_LEN)));
+    }
+}
+
+impl ToString for NanoId {
+    fn to_string(&self) -> String {
+        return self.0.to_string();
     }
 }
 

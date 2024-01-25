@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from "react";
 import { Button } from '../ui/button';
 import { Label } from "@/components/ui/label"
@@ -6,23 +5,32 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "../ui/textarea";
 import { getBaseUrl } from "../../lib/utils";
 import { useNavigate } from 'react-router-dom';
+import { RenderedFormProps } from "@/lib/constants";
 
 function surveyToForm(survey: Survey) {
-    let form = {};
-    let idToText = {};
+    let form = [];
+    // let idToText = {};
 
+    // survey.blocks?.forEach((block) => {
+    //     if (block.block_type === 'Checkbox') {
+    //         block.properties.options?.forEach((option, i) => {
+    //             form[option.id] = Boolean(option.checked)
+    //             idToText[option.id] = option.text
+    //         });
+    //     } else {
+    //         form[block.id] = '';
+    //         idToText[block.id] = block.properties.question
+    //     }
+    // });
+    // return [form, idToText]
     survey.blocks?.forEach((block) => {
-        if (block.block_type === 'Checkbox') {
-            block.properties.options?.forEach((option, i) => {
-                form[option.id] = Boolean(option.checked)
-                idToText[option.id] = option.text
-            });
-        } else {
-            form[block.id] = '';
-            idToText[block.id] = block.properties.question
-        }
+        form.push({
+            block_id: block.id,
+            index: block.index,
+            value: undefined,
+        })
     });
-    return [form, idToText]
+    console.log('jere/ form', form)
 }
 
 export function RenderedForm({ survey, mode }: RenderedFormProps) {
@@ -32,7 +40,7 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
     const navigate = useNavigate();
 
 
-    const [_, surveyIdToText] = surveyToForm(survey);
+    // const [_, surveyIdToText] = surveyToForm(survey);
 
     let parsingError = undefined;
     if (!survey.blocks) {
@@ -43,8 +51,20 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
         console.log('jere/ survey', survey);
 
         evt.preventDefault();
+        console.log('jere/ target', evt.target);
+
         let formdata = new FormData(evt.target);
+        console.log('jere/ formdata', formdata);
+
         const survey_id = survey.survey_id;
+
+        // formdata = Object.fromEntries(formdata).map(([key, value]) => {
+        //     return {
+        //         id: key,
+        //         value: value,
+        //         block_id: key,
+        //     }
+        // })
 
         const surveySubmission = {
             survey_id: survey_id ?? '',
@@ -76,11 +96,18 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
 
     const handleUpdate = (evt) => {
         let formdata = new FormData(evt.target.form);
+
         const survey_id = survey.survey_id;
 
         const surveySubmission = {
             survey_id: survey_id ?? 'surveyid',
-            answers: Object.fromEntries(formdata)
+            answers: Object.entries(Object.fromEntries(formdata)).map(([key, value]) => {
+                return {
+                    id: key,
+                    block_id: key,
+                    value: value,
+                }
+            })
         }
 
         if (mode === "test") {
@@ -89,11 +116,16 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
         }
     }
 
-    function substituteSubmissionIdToText(exampleSubmission): any {
-        let textVersion = {};
-        Object.entries(exampleSubmission.answers).map((([key, value]) => textVersion[surveyIdToText[key]] = value));
-        return { ...exampleSubmission, answers: textVersion }
-    }
+    // function substituteSubmissionIdToText(exampleSubmission): any {
+    //     let textVersion = [];
+    //     Object.entries(exampleSubmission.answers).map((([key, value]) => {
+    //         return {
+    //             block_id: textVersion[surveyIdToText[key]],
+    //             value: value
+    //         }
+    //     }));
+    //     return { ...exampleSubmission, answers: textVersion }
+    // }
 
     return (
         <>
@@ -116,7 +148,7 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                         <form onSubmit={handleSubmit} onChange={handleUpdate} className="text-left border border-solid rounded-xl">
                             {
                                 survey.blocks?.map(block => {
-                                    console.log("map entries: ", block)
+                                    // console.log("map entries: ", block)
                                     let blockHtml = undefined;
                                     switch (block.block_type) {
                                         case "Title":
@@ -230,8 +262,6 @@ function radioGroupV2(block, setStateFn) {
             <div className="flex flex-col">
                 <ul className="space-y-2" >
                     {block.properties.options.map((option: string) => {
-                        // if (!option.ListItem) { return; }
-                        console.log("part - option:", option);
                         return (
                             <li>
                                 <div className="flex items-center space-x-2">

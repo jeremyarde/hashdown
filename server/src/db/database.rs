@@ -152,6 +152,7 @@ pub struct UserModel {
 #[derive(Deserialize, Serialize, FromRow, Debug, Clone)]
 pub struct AnswerModel {
     id: i32,
+    response_id: String,
     submitted_at: Option<DateTime<Utc>>,
     pub answers: Option<Value>,
     survey_id: String,
@@ -243,8 +244,11 @@ impl Database {
                 .fetch_one(&self.pool)
                 .await?;
         let _res: AnswerModel = sqlx::query_as(
-            r#"insert into mdp.responses (submitted_at, survey_id, answers, workspace_id) values ($1, $2, $3, $4) returning *"#)
-            .bind( Utc::now()).bind(answer.survey_id).bind(answer.answers).bind(workspace_id.0)
+            r#"insert into mdp.responses (response_id, submitted_at, survey_id, answers, workspace_id) values ($1, $2, $3, $4, $5) returning *"#)
+            .bind(NanoId::from("res").to_string())
+            .bind(Utc::now())
+            .bind(answer.survey_id).bind(answer.answers)
+            .bind(workspace_id.0)
             .fetch_one(&self.pool).await.expect("Should insert a response");
 
         Ok(())

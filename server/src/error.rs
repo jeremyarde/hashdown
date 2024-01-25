@@ -56,7 +56,7 @@ pub async fn main_response_mapper(
     res: Response,
 ) -> Response {
     let ctx = Some(SessionContext::new(String::from(""), Session::new()));
-    println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
+    // println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
     let uuid = Uuid::new_v4();
 
     // -- Get the eventual response error.

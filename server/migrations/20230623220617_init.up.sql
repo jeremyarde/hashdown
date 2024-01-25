@@ -43,6 +43,7 @@ CREATE table mdp.surveys (
 
 CREATE table mdp.responses (
     id SERIAL,
+    response_id TEXT not null unique,
     workspace_id text not null,
     submitted_at TIMESTAMP WITH TIME ZONE,
     answers JSON,

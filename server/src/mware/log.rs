@@ -3,6 +3,7 @@ use axum::http::Uri;
 use axum::Extension;
 use serde::Serialize;
 use serde_with::skip_serializing_none;
+use tracing::info;
 use uuid::Uuid;
 
 use crate::{error::ClientError, mware::ctext::SessionContext, ServerError};
@@ -61,7 +62,7 @@ pub async fn log_request(
         error_data,
     };
 
-    println!("      ->> LOG: {:?}", log_line);
+    info!("->> LOG: {:?}", log_line);
 
     Ok(())
 }

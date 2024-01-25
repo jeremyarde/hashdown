@@ -348,38 +348,135 @@ export type Response = {
     workspace_id: string;
 };
 
-// export const responseData: Answer[] = exampleResponsesData.survey.blocks.map((block) => {
-//     let id = block.id;
-//     let surveyText = block.properties?.question;
-//     let value = exampleResponsesData.responses.map(response => {
+export function mapRealQuestionToAnswers(responseData) {
+    if (!responseData) {
+        return undefined;
+    }
 
-//     })
-//     // return {
-//     //     answers: [],
-//     //     id: responses.id,
-//     //     submitted_at: responses.submitted_at,
-//     //     survey_id: responses.survey_id,
-//     //     workspace_id: responses.workspace_id,
-//     // }
-// });
+    // console.log('mapRealQuestionToAnswers', JSON.stringify(responseData))
 
-export function mapRealQuestionToAnswers(responseData = exampleResponsesData) {
-    const idToQuestion = Object.fromEntries(responseData.survey.blocks.map((block) => {
+    const idToQuestion = Object.fromEntries(responseData?.survey?.blocks?.map((block) => {
         return [block.id, block.properties.question]
     }));
-    console.log('idToQuestion' + JSON.stringify(idToQuestion))
-    return exampleResponsesData.responses.map((response) => {
-        return Object.entries(response.answers).map(([key, value]) => {
+    console.log('idToQuestion', JSON.stringify(idToQuestion))
+
+    let result = exampleResponsesData.responses.map((response) => {
+        // let curr = Object.entries(response.answers).map(([key, value]) => {
+        //     let accessorKey = key;
+        //     let displayName = idToQuestion[accessorKey];
+        //     return { value, name: accessorKey, displayName }
+        // });
+        let curr = {}
+        Object.entries(response.answers).map(([key, value]) => {
+            console.log('key, val: ', key, value)
+            if (!value) {
+                return
+            }
             let accessorKey = key;
             let displayName = idToQuestion[accessorKey];
-            return { value, name: accessorKey, displayName }
+            curr = {
+                // ...curr,
+                key: value
+            }
+            // return { value, name: accessorKey, displayName }
         });
+        curr = {
+            ...curr,
+            // response.
+            idnum: response.id,
+            response_id: response.response_id,
+            submitted_at: response.submitted_at,
+            survey_id: response.survey_id,
+            workspace_id: response.workspace_id,
+        }
+        return curr;
     });
+
+    console.log('finished transforming: ', result);
+    return result;
 }
 
+export function mapAnswersToColumns(answers): ColumnDef<any>[] {
 
-console.log("mapped: " + mapRealQuestionToAnswers(exampleResponsesData));
+    // return []
+    const responseColumns: ColumnDef<any>[] = [
+        {
+            id: "select",
+            header: ({ table }) => (
+                <Checkbox
+                    checked={table.getIsAllPageRowsSelected() ||
+                        (table.getIsSomePageRowsSelected() && "indeterminate")}
+                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                    aria-label="Select all" />
+            ),
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    aria-label="Select row" />
+            ),
+            enableSorting: false,
+            enableHiding: false,
+        },
+        {
+            accessorKey: "status",
+            header: "Status",
+            cell: ({ row }) => (
+                <div className="capitalize">{row.getValue("status")}</div>
+            ),
+        },
+        ...[
+            { name: "response_id", displayName: "ID", sortable: false },
+            { name: "created_at", displayName: "Created", sortable: true },
+            { name: "submitted_at", displayName: "submitted_at", sortable: true },
+            { name: "workspace_id", displayName: "workspace_id", sortable: true },
+        ].map(createColumnDef),
+        {
+            id: "actions",
+            enableHiding: false,
+            header: ({ column }) => <div className="text-right">{'Actions'}</div>,
+            cell: ({ row }) => {
+                const survey = row.original;
+                const navigate = useNavigate();
 
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild className=''>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <DotsHorizontalIcon className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="" style={{ backgroundColor: styleTokens.pink }}>
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem
+                                onClick={(evt) => {
+                                    navigate(`/surveys/${survey.survey_id}`);
+                                }}
+                                className='hover:bg-blue-900'
+                            >
+                                View Survey
+                            </DropdownMenuItem>
+                            {/* <DropdownMenuSeparator /> */}
+                            <DropdownMenuItem
+                                onClick={(evt) => navigate(`/responses?survey_id=${survey.survey_id}`)}
+                            >
+                                Responses
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={(evt) => navigator.clipboard.writeText(`${getBaseUrl()}/${survey.survey_id}`)}
+                            >
+                                Copy public link
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                );
+            },
+        },
+    ];
+
+    return responseColumns;
+}
 
 export const responseColumns: ColumnDef<any>[] = [
     {
@@ -408,10 +505,10 @@ export const responseColumns: ColumnDef<any>[] = [
         ),
     },
     ...[
-        { name: "survey_id", displayName: "ID", sortable: false },
+        { name: "response_id", displayName: "ID", sortable: false },
         { name: "created_at", displayName: "Created", sortable: true },
-        { name: "modified_at", displayName: "Modified", sortable: true },
-        { name: "plaintext", displayName: "Plaintext", sortable: true },
+        { name: "submitted_at", displayName: "submitted_at", sortable: true },
+        { name: "workspace_id", displayName: "workspace_id", sortable: true },
     ].map(createColumnDef),
     {
         id: "actions",
