@@ -95,11 +95,11 @@ export function DataTable<TData, TValue>({
                 })} */}
                 <Input
                     placeholder="Search"
-                    value={(table.getColumn("plaintext")?.getFilterValue() as string) ?? ""
-                    }
-                    onChange={(event) =>
-                        table.getColumn("plaintext")?.setFilterValue(event.target.value)
-                    }
+                    // value={(table.getColumn("plaintext")?.getFilterValue() as string) ?? ""
+                    // }
+                    // onChange={(event) =>
+                    //     table.getColumn("plaintext")?.setFilterValue(event.target.value)
+                    // }
                     className="max-w-sm"
                 />
                 {/* {table.getColumn("priority") && (

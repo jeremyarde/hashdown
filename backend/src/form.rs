@@ -186,16 +186,16 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
         }
         FormValue::Submit { properties } => {
             let mut default = String::new();
-            let mut question = String::new();
+            let mut button = String::new();
             for formvalue in properties {
                 match formvalue {
-                    FormValue::QuestionText { text } => question = text.clone(),
+                    FormValue::QuestionText { text } => button = text.clone(),
                     FormValue::DefaultValue { text } => default = text.clone(),
                     _ => unreachable!(),
                 }
             }
             // SurveyPart::TextInput { question, default }
-            SurveyPart::Submit { question, default }
+            SurveyPart::Submit { button, default }
         }
         FormValue::Textarea { properties } => {
             let mut default = String::new();
@@ -256,7 +256,7 @@ pub enum SurveyPart {
     },
     Nothing,
     Submit {
-        question: String,
+        button: String,
         default: String,
     },
 }
@@ -280,7 +280,7 @@ impl SurveyPart {
             } => BlockType::Textarea,
             SurveyPart::Nothing => BlockType::Empty,
             SurveyPart::Submit {
-                question: _,
+                button: _,
                 default: _,
             } => BlockType::Submit,
         }

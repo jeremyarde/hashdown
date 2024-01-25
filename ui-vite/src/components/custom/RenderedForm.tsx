@@ -7,31 +7,31 @@ import { getBaseUrl } from "../../lib/utils";
 import { useNavigate } from 'react-router-dom';
 import { RenderedFormProps } from "@/lib/constants";
 
-function surveyToForm(survey: Survey) {
-    let form = [];
-    // let idToText = {};
+// function surveyToForm(survey: Survey) {
+//     let form = [];
+//     // let idToText = {};
 
-    // survey.blocks?.forEach((block) => {
-    //     if (block.block_type === 'Checkbox') {
-    //         block.properties.options?.forEach((option, i) => {
-    //             form[option.id] = Boolean(option.checked)
-    //             idToText[option.id] = option.text
-    //         });
-    //     } else {
-    //         form[block.id] = '';
-    //         idToText[block.id] = block.properties.question
-    //     }
-    // });
-    // return [form, idToText]
-    survey.blocks?.forEach((block) => {
-        form.push({
-            block_id: block.id,
-            index: block.index,
-            value: undefined,
-        })
-    });
-    console.log('jere/ form', form)
-}
+//     // survey.blocks?.forEach((block) => {
+//     //     if (block.block_type === 'Checkbox') {
+//     //         block.properties.options?.forEach((option, i) => {
+//     //             form[option.id] = Boolean(option.checked)
+//     //             idToText[option.id] = option.text
+//     //         });
+//     //     } else {
+//     //         form[block.id] = '';
+//     //         idToText[block.id] = block.properties.question
+//     //     }
+//     // });
+//     // return [form, idToText]
+//     survey.blocks?.forEach((block) => {
+//         form.push({
+//             block_id: block.id,
+//             index: block.index,
+//             value: undefined,
+//         })
+//     });
+//     console.log('jere/ form', form)
+// }
 
 export function RenderedForm({ survey, mode }: RenderedFormProps) {
     const [exampleSubmission, setExampleSubmittion] = useState();
@@ -67,8 +67,14 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
         // })
 
         const surveySubmission = {
-            survey_id: survey_id ?? '',
-            answers: Object.fromEntries(formdata)
+            survey_id: survey_id ?? 'surveyid',
+            answers: Object.entries(Object.fromEntries(formdata)).map(([key, value]) => {
+                return {
+                    question_id: key,
+                    value: value,
+                    // question: 
+                }
+            })
         }
 
         console.log('jere/ mode', mode);
@@ -87,15 +93,13 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                 body: JSON.stringify(surveySubmission)
             });
             console.log(`submit response: ${JSON.stringify(response)}`);
-
             setShowEndScreen(true);
-            // navigate(() => (<EndScreen />));
-            // EndScreen
         }
     }
 
     const handleUpdate = (evt) => {
         let formdata = new FormData(evt.target.form);
+        console.log('jere formdate', formdata)
 
         const survey_id = survey.survey_id;
 
@@ -103,9 +107,9 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
             survey_id: survey_id ?? 'surveyid',
             answers: Object.entries(Object.fromEntries(formdata)).map(([key, value]) => {
                 return {
-                    id: key,
-                    block_id: key,
+                    question_id: key,
                     value: value,
+                    // question: 
                 }
             })
         }
@@ -115,17 +119,6 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
             return;
         }
     }
-
-    // function substituteSubmissionIdToText(exampleSubmission): any {
-    //     let textVersion = [];
-    //     Object.entries(exampleSubmission.answers).map((([key, value]) => {
-    //         return {
-    //             block_id: textVersion[surveyIdToText[key]],
-    //             value: value
-    //         }
-    //     }));
-    //     return { ...exampleSubmission, answers: textVersion }
-    // }
 
     return (
         <>

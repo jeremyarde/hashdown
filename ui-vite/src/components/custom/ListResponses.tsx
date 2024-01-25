@@ -4,7 +4,7 @@ import { useGetSurvey } from '../../hooks/useGetSurvey.ts';
 import { createTable } from './createTable.tsx';
 import { getBaseUrl, getSessionToken, handleResponse } from '../../lib/utils.ts';
 import { DataTable } from './data-table.tsx';
-import { surveyColumns, data2, responseColumns, mapRealQuestionToAnswers } from './columns.tsx';
+import { surveyColumns, data2, responseColumns, mapRealQuestionToAnswers, mapAnswersToColumns } from './columns.tsx';
 
 
 export function ListResponses() {
@@ -49,15 +49,18 @@ export function ListResponses() {
     }
 
     console.log('ListResponses - data: ', JSON.stringify(surveyResponses))
-    let responseColumns = mapRealQuestionToAnswers(surveyResponses);
+    let responseColumns = mapAnswersToColumns(surveyResponses);
+    let tableData = mapRealQuestionToAnswers(surveyResponses);
+    console.log('final data: ', tableData)
+    // let tableData = surveyResponses?.responses;
 
-    const tabledata = surveyResponses?.responses?.map((response) => {
-        return {
-            id: response.response_id,
-            // ...response.answers,
-            // ...response,
-        }
-    })
+    // const tabledata = surveyResponses?.responses?.map((response) => {
+    //     return {
+    //         id: response.response_id,
+    //         // ...response.answers,
+    //         // ...response,
+    //     }
+    // })
 
     return (
         <>
@@ -67,7 +70,7 @@ export function ListResponses() {
             {surveyResponses ?
                 (<div className="container mx-auto py-10">
                     {/* <DataTable columns={columns} data={data} /> */}
-                    <DataTable columns={responseColumns} data={tabledata} />
+                    <DataTable columns={responseColumns} data={tableData} />
                 </div>) : <h2>Not available</h2>
             }
         </>
