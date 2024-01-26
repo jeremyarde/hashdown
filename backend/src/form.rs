@@ -121,7 +121,11 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                 })
                 .collect();
 
-            SurveyPart::Checkbox(CheckboxQuestion { options, question })
+            SurveyPart::Checkbox {
+                options,
+                question,
+                id: NanoId::from("qes").to_string(),
+            }
         }
         FormValue::Radio { properties } => {
             let question = match properties.get(0).unwrap() {
@@ -148,7 +152,11 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                 })
                 .collect();
 
-            SurveyPart::Radio(RadioQuestion { options, question })
+            SurveyPart::Radio {
+                options,
+                question,
+                id: NanoId::from("qes").to_string(),
+            }
         }
         FormValue::TextInput { properties } => {
             let mut default = String::new();
@@ -160,7 +168,11 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                     _ => unreachable!(),
                 }
             }
-            SurveyPart::TextInput { question, default }
+            SurveyPart::TextInput {
+                question,
+                default,
+                id: NanoId::from("qes").to_string(),
+            }
         }
         FormValue::Dropdown { properties } => {
             let question = match properties.get(0).unwrap() {
@@ -182,7 +194,11 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                     }
                 })
                 .collect();
-            SurveyPart::Dropdown { question, options }
+            SurveyPart::Dropdown {
+                question,
+                options,
+                id: NanoId::from("qes").to_string(),
+            }
         }
         FormValue::Submit { properties } => {
             let mut default = String::new();
@@ -208,26 +224,30 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                 }
             }
             // SurveyPart::TextInput { question, default }
-            SurveyPart::Textarea { question, default }
+            SurveyPart::Textarea {
+                question,
+                default,
+                id: NanoId::from("qes").to_string(),
+            }
         }
         // FormValue::DefaultValue { text } => todo!(), // _ => SurveyPart::Nothing,
         _ => SurveyPart::Nothing,
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct RadioQuestion {
-    question: String,
-    options: Vec<String>,
-}
+// #[derive(Deserialize, Serialize, Clone, Debug)]
+// pub struct RadioQuestion {
+//     question: String,
+//     options: Vec<String>,
+// }
 
+// #[derive(Deserialize, Serialize, Clone, Debug)]
+// pub struct CheckboxQuestion {
+//     question: String,
+//     options: Vec<CheckboxItem>,
+// }
 #[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct CheckboxQuestion {
-    question: String,
-    options: Vec<CheckboxItem>,
-}
-#[derive(Deserialize, Serialize, Clone, Debug)]
-struct CheckboxItem {
+pub struct CheckboxItem {
     checked: bool,
     text: String,
     id: String,
@@ -240,17 +260,28 @@ pub enum SurveyPart {
     Title {
         title: String,
     },
-    Radio(RadioQuestion),
-    Checkbox(CheckboxQuestion),
+    Radio {
+        id: String,
+        question: String,
+        options: Vec<String>,
+    },
+    Checkbox {
+        id: String,
+        question: String,
+        options: Vec<CheckboxItem>,
+    },
     Dropdown {
+        id: String,
         question: String,
         options: Vec<String>,
     },
     TextInput {
+        id: String,
         question: String,
         default: String,
     },
     Textarea {
+        id: String,
         question: String,
         default: String,
     },
@@ -260,23 +291,35 @@ pub enum SurveyPart {
         default: String,
     },
 }
+
 impl SurveyPart {
     fn get_block_type(&self) -> BlockType {
         match self {
             SurveyPart::Title { title: _ } => BlockType::Title,
-            SurveyPart::Radio(_) => BlockType::Radio,
-            SurveyPart::Checkbox(_) => BlockType::Checkbox,
+            SurveyPart::Radio {
+                id,
+                question,
+                options,
+            } => BlockType::Radio,
+            SurveyPart::Checkbox {
+                id,
+                question,
+                options,
+            } => BlockType::Checkbox,
             SurveyPart::Dropdown {
                 question: _,
                 options: _,
+                id,
             } => BlockType::Dropdown,
             SurveyPart::TextInput {
                 question: _,
                 default: _,
+                id,
             } => BlockType::TextInput,
             SurveyPart::Textarea {
                 question: _,
                 default: _,
+                id,
             } => BlockType::Textarea,
             SurveyPart::Nothing => BlockType::Empty,
             SurveyPart::Submit {
@@ -299,12 +342,12 @@ struct SurveyV2 {
     blocks: Vec<Block>,
 }
 
-fn formvalue_to_block(formvalue: &FormValue) -> Block {
+fn formvalue_to_block(formvalue: &FormValue, index: usize) -> Block {
     let survey_part = form_value_to_survey_part(formvalue);
     let block_type = survey_part.get_block_type();
     Block {
         id: NanoId::new(),
-        index: 0.0,
+        index: index,
         properties: survey_part,
         block_type,
     }
@@ -331,7 +374,7 @@ pub enum BlockType {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Block {
     id: NanoId,
-    index: f32,
+    index: usize,
     // #[serde(flatten)]
     properties: SurveyPart,
     block_type: BlockType,
@@ -349,8 +392,8 @@ pub fn formvalue_to_survey(formvalues: Vec<FormValue>) -> ParsedSurvey {
         blocks: vec![],
     };
 
-    for formvalue in formvalues {
-        survey.blocks.push(formvalue_to_block(&formvalue));
+    for (i, formvalue) in formvalues.iter().enumerate() {
+        survey.blocks.push(formvalue_to_block(&formvalue, i));
     }
     survey
 }
@@ -399,9 +442,9 @@ mod tests {
         // // let res = do_thing();
         println!("{:#?}", &res);
 
-        // let serialized = formvalue_to_survey(res.unwrap());
-        // println!("{:#?}", serialized);
-
-        // println!("{:#}", json!(serialized));
+        let serialized = formvalue_to_survey(res.unwrap());
+        // let serialized = json!(res.unwrap());
+        println!("{:#?}", serialized);
+        println!("JSON version\n{:#}", json!(serialized));
     }
 }

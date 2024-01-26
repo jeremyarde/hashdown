@@ -125,13 +125,13 @@ export const surveyColumns: ColumnDef<any>[] = [
         enableSorting: false,
         enableHiding: false,
     },
-    {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("status")}</div>
-        ),
-    },
+    // {
+    //     accessorKey: "status",
+    //     header: "Status",
+    //     cell: ({ row }) => (
+    //         <div className="capitalize">{row.getValue("status")}</div>
+    //     ),
+    // },
     ...[
         { name: "survey_id", displayName: "ID", sortable: false },
         { name: "created_at", displayName: "Created", sortable: true },
@@ -196,24 +196,30 @@ const exampleResponsesData = {
     "survey": { "blocks": [{ "block_type": "Title", "id": "d33f5kstxg5e", "index": 0.0, "properties": { "title": "User Registration Form", "type": "Title" } }, { "block_type": "TextInput", "id": "nsxanc62rty9", "index": 0.0, "properties": { "default": "John Dog", "question": "this is a test", "type": "TextInput" } }, { "block_type": "TextInput", "id": "f52fja9lpd3a", "index": 0.0, "properties": { "default": "John Dog", "question": "First name", "type": "TextInput" } }, { "block_type": "TextInput", "id": "c4qrqgcx4jfe", "index": 0.0, "properties": { "default": "john@dog.com", "question": "Email Address", "type": "TextInput" } }, { "block_type": "Textarea", "id": "mnvlwpe299kb", "index": 0.0, "properties": { "default": "Enter your comments here", "question": "This is nice", "type": "Textarea" } }, { "block_type": "Submit", "id": "ldc9f2hed41t", "index": 0.0, "properties": { "default": "", "question": "submit", "type": "Submit" } }, { "block_type": "Empty", "id": "bljfg9nzsx2r", "index": 0.0, "properties": { "type": "Nothing" } }], "created_at": "2024-01-25T06:54:22.634859Z", "id": 3, "modified_at": "2024-01-25T06:54:22.634865Z", "name": "name - todo", "parse_version": "2", "plaintext": "# User Registration Form\n\nText: this is a test [John Dog]\nText: First name [John Dog]\n\nText: Email Address [john@dog.com]\n\nTextarea: This is nice [Enter your comments here]\n\n\nSubmit: submit", "survey_id": "sq1yy4z1qvuj", "user_id": "usr_default2", "version": "version - todo", "workspace_id": "ws_default" }
 }
 
-export type Answer = {
-    id: string;
-    questionText: string;
-    value: string;
-};
+// export type Answer = {
+//     id: string;
+//     questionText: string;
+//     value: string;
+// };
 
-export type Response = {
-    // answers: { [key: string]: string };
-    answers: Answer[];
-    id: number;
-    submitted_at: string,
-    survey_id: string;
-    workspace_id: string;
-};
+export interface Response {
+    answers: Answer[]
+    id: number
+    response_id: string
+    submitted_at: string
+    survey_id: string
+    workspace_id: string
+}
+
+export interface Answer {
+    question_id: string
+    value: string
+}
+
 
 export type GetResponses = {
     survey: any,
-    responses: any,
+    responses: Response[],
 }
 
 export function mapRealQuestionToAnswers(responseData: GetResponses | undefined) {
@@ -221,14 +227,15 @@ export function mapRealQuestionToAnswers(responseData: GetResponses | undefined)
         return undefined;
     }
 
-    let result = exampleResponsesData.responses.map((response) => {
+    let result = responseData.responses?.map((response) => {
         // let curr = Object.entries(response.answers).map(([key, value]) => {
         //     let accessorKey = key;
         //     let displayName = idToQuestion[accessorKey];
         //     return { value, name: accessorKey, displayName }
         // });
         let curr: { [key: string]: any } = {};
-        response.answers.forEach(answer => curr[answer.question_id] = answer.value)
+        response.answers?.forEach(answer => curr[answer.question_id] = answer.value)
+
         curr = {
             id: response.response_id,
             ...curr,
@@ -287,13 +294,13 @@ export function mapAnswersToColumns(responsesData: GetResponses | undefined): Co
             enableSorting: false,
             enableHiding: false,
         },
-        {
-            accessorKey: "status",
-            header: "Status",
-            cell: ({ row }) => (
-                <div className="capitalize">{row.getValue("status")}</div>
-            ),
-        },
+        // {
+        //     accessorKey: "status",
+        //     header: "Status",
+        //     cell: ({ row }) => (
+        //         <div className="capitalize">{row.getValue("status")}</div>
+        //     ),
+        // },
         ...[
             ...Object.entries(idToQuestion ?? {}).map(([key, value]) => {
                 if (!value) {

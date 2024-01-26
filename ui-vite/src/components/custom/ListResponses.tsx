@@ -52,19 +52,13 @@ export function ListResponses() {
     let responseColumns = mapAnswersToColumns(surveyResponses);
     let tableData = mapRealQuestionToAnswers(surveyResponses);
     console.log('final data: ', tableData)
-    // let tableData = surveyResponses?.responses;
-
-    // const tabledata = surveyResponses?.responses?.map((response) => {
-    //     return {
-    //         id: response.response_id,
-    //         // ...response.answers,
-    //         // ...response,
-    //     }
-    // })
 
     return (
         <>
             <div>
+                <pre>
+                    {JSON.stringify(tableData, null, 2)}
+                </pre>
                 {/* {createTable(columns, ['id', 'submitted_at', ...Object.keys(idToTitle).map((key) => 'answers.' + key)], surveyResponses)} */}
             </div>
             {surveyResponses ?

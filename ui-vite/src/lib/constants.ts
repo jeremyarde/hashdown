@@ -29,9 +29,33 @@ export type RenderedFormProps = {
     mode: "test" | "prod"
 }
 
-export interface Survey {
-    survey_id: string;
-    created_at: string;
+// export interface Survey {
+//     survey_id: string;
+//     created_at: string;
+//     blocks: Block[]
+//     id: string
+//     parse_version: string
+//     plaintext: string
+//     questions: any[]
+//     title: string
+// }
+
+// export interface Block {
+//     block_type: string
+//     id: string
+//     index: number
+//     properties: Properties
+// }
+
+// export interface Properties {
+//     title?: string
+//     type: string
+//     options?: any[]
+//     question?: string
+//     text?: string
+// }
+
+export interface Root {
     blocks: Block[]
     id: string
     parse_version: string
@@ -50,10 +74,13 @@ export interface Block {
 export interface Properties {
     title?: string
     type: string
-    options?: any[]
+    default?: string
+    id?: string
     question?: string
-    text?: string
+    options?: any[]
+    button?: string
 }
+
 
 export const styleTokens = {
     /* CSS HSL */
