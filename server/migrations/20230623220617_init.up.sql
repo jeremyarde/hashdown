@@ -68,6 +68,17 @@ create table mdp.sessions (
     foreign key(user_id) references mdp.users(user_id)
 );
 
+/* useful for frontend to show # responses on listsurvey screen */
+create materialized view
+  mdp.survey_summary as
+select
+  responses.survey_id,
+  count(*) as count
+from
+  mdp.responses
+group by
+  responses.survey_id;
+
 INSERT INTO mdp.workspaces (
     workspace_id,
     name

@@ -150,17 +150,21 @@ input:checked+.slider:before {
 
 
 
-/* https://coolors.co/3a405a-f9dec9-99b2dd-e9afa3-685044 */
+/* https://coolors.co/3a405a-f9dec9-99b2dd-e9afa3-685044
 /* CSS HEX */
+/*
 --delft-blue: #3a405aff;
 --champagne-pink: #f9dec9ff;
 --powder-blue: #99b2ddff;
 --melon: #e9afa3ff;
 --umber: #685044ff;
+*/
 
 /* CSS HSL */
+/*
 --delft-blue: hsla(229, 22%, 29%, 1);
 --champagne-pink: hsla(26, 80%, 88%, 1);
 --powder-blue: hsla(218, 50%, 73%, 1);
 --melon: hsla(10, 61%, 78%, 1);
---umber: hsla(20, 21%, 34%, 1);
+--umber: hsla(20, 21%, 34%, 1); 
+*/
