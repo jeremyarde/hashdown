@@ -137,7 +137,10 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                     <div className="" style={{
                         width: '1000px',
                         maxWidth: '48rem',
-                        minWidth: '12rem'
+                        minWidth: '12rem',
+                        // height: '1vh',
+                        // justifyContent: 'center',
+                        // alignSelf: 'center'
                     }}>
                         <form onSubmit={handleSubmit} onChange={handleUpdate} className="text-left border border-solid rounded-xl">
                             {
@@ -154,35 +157,35 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                                         case "TextInput":
                                             blockHtml = (
                                                 <div>
-                                                    {textInput(block, setExampleSubmittion)}
+                                                    {TextInput(block, setExampleSubmittion)}
                                                 </div>
                                             )
                                             break;
                                         case "Textarea":
                                             blockHtml = (
                                                 <div>
-                                                    {textareaComponent(block, setExampleSubmittion)}
+                                                    {TextareaComponent(block, setExampleSubmittion)}
                                                 </div>
                                             )
                                             break;
                                         case "Checkbox":
                                             blockHtml = (
                                                 <div>
-                                                    {checkboxGroupV2(block, setExampleSubmittion)}
+                                                    {CheckboxGroup(block, setExampleSubmittion)}
                                                 </div>
                                             )
                                             break;
                                         case "Radio":
                                             blockHtml = (
                                                 <div>
-                                                    {radioGroupV2(block, setExampleSubmittion)}
+                                                    {RadioGroup(block, setExampleSubmittion)}
                                                 </div>
                                             )
                                             break;
                                         case "Submit":
                                             blockHtml = (
                                                 <div>
-                                                    {submitButton(block)}
+                                                    {SubmitButton(block)}
                                                 </div>
                                             )
                                             break;
@@ -228,19 +231,47 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
     );
 }
 
-function checkboxGroupV2(block, setStateFn) {
+function CheckboxGroup(block, setStateFn) {
+    const [checkboxGroup, setCheckboxGroup] = useState(
+        block.properties.options.map(option => option.checked ? option.text : undefined).filter(item => item)
+    )
+
+    console.log('jere/ checkbox: ', checkboxGroup)
     return (
         <>
             <Label className="font-semibold">{block.properties.question}</Label>
             <div className="flex flex-col space-y-2">
                 {block.properties.options.map((option, i) => {
+                    // if (option.checked) {
+                    //     setCheckboxGroup(curr => {
+                    //         curr.push(option.text)
+                    //     })
+                    // }
                     return (
                         <div className="flex items-center">
                             {/* <input type="checkbox" defaultChecked={option.checked} id={block.id + `_${i}`} name={block.id + `_${i}`} /> */}
-                            <input type="checkbox" defaultChecked={option.checked} id={option.id} name={option.id} />
-                            <Label className="ml-2 text-sm items-center" htmlFor={option.id}>
+                            <input type="checkbox"
+                                // defaultChecked={option.checked}
+                                checked={checkboxGroup.includes(option.text) ? true : false}
+                                //  id={`${block.properties.id}.${option.id}`} name={`${block.properties.id}.${option.id}`}
+                                onChange={e => {
+                                    // e.preventDefault()
+                                    if (checkboxGroup.includes(option.text)) {
+                                        setCheckboxGroup(checkboxGroup.filter(c => c !== option.text))
+                                    } else {
+                                        setCheckboxGroup([
+                                            ...checkboxGroup,
+                                            option.text
+                                        ])
+                                    }
+                                }}
+                            />
+                            <Label className="ml-2 text-sm items-center" htmlFor={`${block.properties.id}.${option.id}`}>
                                 {option.text}
                             </Label>
+                            <div>
+                                checked: {checkboxGroup}
+                            </div>
                         </div>
                     )
                 })}
@@ -249,7 +280,7 @@ function checkboxGroupV2(block, setStateFn) {
     )
 }
 
-function radioGroupV2(block, setStateFn) {
+function RadioGroup(block, setStateFn) {
     return (
         <>
             <Label className="space-y-2 text-left">{block.properties.question}</Label>
@@ -259,7 +290,7 @@ function radioGroupV2(block, setStateFn) {
                         return (
                             <li>
                                 <div className="flex items-center space-x-2">
-                                    <input type="radio" id={option} name={block.id} value={option} />
+                                    <input type="radio" id={option} name={block.properties.id} value={option} />
                                     <Label className="items-center" htmlFor={option} >
                                         {option}
                                     </Label >
@@ -273,29 +304,29 @@ function radioGroupV2(block, setStateFn) {
     )
 }
 
-function textInput(block) {
+function TextInput(block) {
     return (
         <>
-            <Label htmlFor={block.id}>{block.properties.question}</Label>
-            <Input id={block.id} name={block.id} placeholder="Enter text" />
+            <Label htmlFor={block.properties.id}>{block.properties.question}</Label>
+            <Input id={block.properties.id} name={block.properties.id} placeholder="Enter text" />
         </>
     )
 }
 
-function textareaComponent(block) {
+function TextareaComponent(block) {
     return (
         <>
-            <Label htmlFor={block.id}>{block.properties.question}</Label>
-            <Textarea id={block.id} name={block.id} placeholder="Enter text" />
+            <Label htmlFor={block.properties.id}>{block.properties.question}</Label>
+            <Textarea id={block.properties.id} name={block.properties.id} placeholder="Enter text" />
         </>
     )
 }
 
-function submitButton(block) {
+function SubmitButton(block) {
     return (
         <>
             <div>
-                <Button className="outline outline-1 active:bg-green" type="submit">{block.properties.question}</Button>
+                <Button className="outline outline-1 active:bg-green" type="submit">{block.properties.button}</Button>
             </div>
         </>
     )

@@ -201,7 +201,7 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
             }
         }
         FormValue::Submit { properties } => {
-            let mut default = String::new();
+            let mut default = String::from("Submit");
             let mut button = String::new();
             for formvalue in properties {
                 match formvalue {

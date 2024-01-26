@@ -222,6 +222,8 @@ export type GetResponses = {
     responses: Response[],
 }
 
+
+
 export function mapRealQuestionToAnswers(responseData: GetResponses | undefined) {
     if (!responseData) {
         return undefined;
