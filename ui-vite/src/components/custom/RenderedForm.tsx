@@ -347,7 +347,7 @@ function TextInput(block, setStateFn, handleEvent) {
 }
 
 function TextareaComponent(block, setStateFn, handleEvent) {
-    const [state, setState] = useState('')
+    // const [state, setState] = useState('')
 
     // const updateTextInput = (evt, id) => {
     //     setState(evt.target.value)
@@ -360,9 +360,9 @@ function TextareaComponent(block, setStateFn, handleEvent) {
         <>
             <Label htmlFor={block.properties.id}>{block.properties.question}</Label>
             <Textarea
-                value={state}
+                // value={state}
                 onChange={evt => {
-                    setState(evt.target.value)
+                    // setState(evt.target.value)
                     handleEvent({ value: state, question_id: block.properties.id })
                 }}
                 id={block.properties.id} name={block.properties.id} placeholder="Enter text" />
