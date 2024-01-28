@@ -29,8 +29,6 @@ runbe:
 ls:
     docker run --rm -it testserver ls -l /usr/local/bin
 
-
-
 migrate:
     cd server && source .env && sqlx migrate run
 
@@ -52,3 +50,5 @@ gentypes:
 buildwasm:
     cd backend && wasm-pack build --target bundler
     
+buildfe:
+    cd ui-vite && npm run build

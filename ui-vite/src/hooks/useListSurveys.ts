@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Survey } from "@/lib/constants";
 import { getBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
+import { Survey } from "@/components/custom/columns";
 
 
 type ListSurvey = {

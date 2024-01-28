@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
-import { Survey } from "@/lib/constants";
 import { getBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
 
 type LoginResult = {
