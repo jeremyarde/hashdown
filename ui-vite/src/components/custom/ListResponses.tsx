@@ -56,9 +56,9 @@ export function ListResponses() {
     return (
         <>
             <div>
-                <pre>
+                {/* <pre>
                     {JSON.stringify(tableData, null, 2)}
-                </pre>
+                </pre> */}
                 {/* {createTable(columns, ['id', 'submitted_at', ...Object.keys(idToTitle).map((key) => 'answers.' + key)], surveyResponses)} */}
             </div>
             {surveyResponses ?

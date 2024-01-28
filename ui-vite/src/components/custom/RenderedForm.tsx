@@ -248,7 +248,7 @@ function CheckboxGroup(block, setStateFn, handleEvent) {
     //     }
     // }
 
-    console.log('jere/ checkbox: ', checkboxGroup)
+    // console.log('jere/ checkbox: ', checkboxGroup)
     return (
         <>
             <Label className="font-semibold">{block.properties.question}</Label>

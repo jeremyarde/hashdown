@@ -103,9 +103,10 @@ function createColumnDef(columnDetail: ColumnSettings): ColumnDef<any> {
         },
         cell: ({ row }) => {
             let displayValue = row.getValue(columnDetail.name) ?? ''
-            if (displayValue.split('\n').length > 1) {
-                displayValue = displayValue.split('\n')
-            }
+            // doing this messes up the plaintext column. Could probably have an allowlist?
+            // if (displayValue.split('\n').length > 1) {
+            //     displayValue = displayValue.split('\n')
+            // }
             return (
                 <div className="lowercase">
                     {Array.isArray(displayValue) ?

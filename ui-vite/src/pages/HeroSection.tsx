@@ -40,7 +40,9 @@ submit: submit`);
                             className='flex flex-col pl-2 ml-4 border border-dashed bg-white'>
                             {heroContent.split('\n').map((item, i) => {
                                 return (
-                                    <li className='text-left justify-between min-h-6 text-xl '
+                                    <li
+                                        key={i}
+                                        className='text-left justify-between min-h-6 text-xl '
                                         style={{
                                             fontSize: '1rem',
                                             wordWrap: 'normal',

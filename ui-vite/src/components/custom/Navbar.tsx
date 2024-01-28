@@ -47,7 +47,9 @@ export function Navbar() {
                         <ul className="flex">
                             {middleTabs.map((tab) => {
                                 return (
-                                    <li className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
+                                    <li
+                                        key={tab.display}
+                                        className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
                                         <Link className="" to={tab.route}>{tab.display}</Link>
                                     </li>
                                 )
