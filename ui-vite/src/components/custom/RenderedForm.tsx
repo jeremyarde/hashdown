@@ -172,6 +172,14 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
                     </div>
                 }
             </div>
+            {showEndScreen && mode === 'test' ?
+                (<div>
+                    <button
+                        onClick={evt => setShowEndScreen(false)}
+                        className="bg-purple p-2 w-2/3"
+                    >Go back</button>
+                </div>) : <></>
+            }
             {exampleSubmission && showSubmissionData ? (
                 <>
                     <div className="">
