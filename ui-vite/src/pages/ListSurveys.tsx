@@ -13,7 +13,7 @@ export function ListSurveys() {
     //     navigate(`/surveys/${surveyId}`);
     //     console.log('go to survey - END');
     // };
-    console.log(`jere/ pending: ${isPending}, error: ${error}, condition: ${(!error || !isPending)}`)
+    // console.log(`jere/ pending: ${isPending}, error: ${error}, condition: ${(!error || !isPending)}`)
     return (
         <>
             <div className=''>
@@ -22,8 +22,6 @@ export function ListSurveys() {
                 </div>
             </div >
             {!(error || isPending) && <div className="container mx-auto py-10">
-                {/* <DataTable columns={columns} data={data} /> */}
-                {/* <DataTable columns={columns2} data={data2} /> */}
                 <DataTable columns={surveyColumns} data={surveys?.surveys ?? []} />
             </div>}
         </>
