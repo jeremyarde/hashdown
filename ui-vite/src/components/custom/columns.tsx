@@ -101,19 +101,28 @@ function createColumnDef(columnDetail: ColumnSettings): ColumnDef<any> {
                 sortable
             );
         },
-        cell: ({ row }) =>
-            <div className="lowercase">
-                {Array.isArray(row.getValue(columnDetail.name)) ?
-                    (<ol>
-                        {row.getValue(columnDetail.name).map(item => {
-                            console.log('col value', item)
-                            return (<li>{item}</li>)
-                        })}
-                    </ol>) : (<div>
-                        {row.getValue(columnDetail.name)}
-                    </div>
-                    )}
-            </div>
+        cell: ({ row }) => {
+            let displayValue = row.getValue(columnDetail.name) ?? ''
+            if (displayValue.split('\n').length > 1) {
+                displayValue = displayValue.split('\n')
+            }
+            return (
+                <div className="lowercase">
+                    {Array.isArray(displayValue) ?
+                        (<ol style={{ listStyleType: 'counter-style' }}>
+                            {displayValue.map(item => {
+                                console.log('col value', item)
+                                return (<li>{item}</li>)
+                            })}
+                        </ol>) : (
+                            <div>
+                                {row.getValue(columnDetail.name)}
+                            </div>
+                        )}
+                </div>
+            )
+
+        }
     })
 }
 
