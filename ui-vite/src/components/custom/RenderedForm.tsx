@@ -253,12 +253,12 @@ function CheckboxGroup(block, setStateFn, handleEvent) {
                                 //  id={`${block.properties.id}.${option.id}`} name={`${block.properties.id}.${option.id}`}
                                 onChange={e => {
                                     // onChange(e, option)
-                                    handleEvent({ value: option, question_id: block.properties.id })
+                                    handleEvent({ value: option.text, question_id: block.properties.id })
                                 }}
                             />
                             <Label
                                 onClick={e => {
-                                    handleEvent({ value: option, question_id: block.properties.id })
+                                    handleEvent({ value: option.text, question_id: block.properties.id })
                                 }}
                                 className="ml-2 text-sm items-center" htmlFor={`${block.properties.id}.${option.id}`}>
                                 {option.text}
