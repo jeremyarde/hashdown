@@ -101,7 +101,19 @@ function createColumnDef(columnDetail: ColumnSettings): ColumnDef<any> {
                 sortable
             );
         },
-        cell: ({ row }) => <div className="lowercase">{row.getValue(columnDetail.name)}</div>,
+        cell: ({ row }) =>
+            <div className="lowercase">
+                {Array.isArray(row.getValue(columnDetail.name)) ?
+                    (<ol>
+                        {row.getValue(columnDetail.name).map(item => {
+                            console.log('col value', item)
+                            return (<li>{item}</li>)
+                        })}
+                    </ol>) : (<div>
+                        {row.getValue(columnDetail.name)}
+                    </div>
+                    )}
+            </div>
     })
 }
 
@@ -228,15 +240,22 @@ export function mapRealQuestionToAnswers(responseData: GetResponses | undefined)
     if (!responseData) {
         return undefined;
     }
-
-    let result = responseData.responses?.map((response) => {
+    console.log('debug - mapRealQuestionToAnswers: ', responseData)
+    let result = responseData?.responses?.map((response) => {
         // let curr = Object.entries(response.answers).map(([key, value]) => {
         //     let accessorKey = key;
         //     let displayName = idToQuestion[accessorKey];
         //     return { value, name: accessorKey, displayName }
         // });
         let curr: { [key: string]: any } = {};
-        response.answers?.forEach(answer => curr[answer.question_id] = answer.value)
+        // response?.answers.forEach(answer => curr[answer.question_id] = answer.value)
+        Object.entries(response.answers).forEach(([response_id, answer]) => {
+            if (Array.isArray(answer)) {
+                curr[response_id] = answer.join('\n')
+            } else {
+                curr[response_id] = answer
+            }
+        })
 
         curr = {
             id: response.response_id,
@@ -262,7 +281,7 @@ export function mapAnswersToColumns(responsesData: GetResponses | undefined): Co
     // let result = mapRealQuestionToAnswers(responsesData);
 
     const idToQuestion = Object.fromEntries(responsesData?.survey?.blocks?.map((block: Block) => {
-        return [block.id, block.properties.question]
+        return [block.properties.id, block.properties.question]
     }));
 
     let test = Object.entries(idToQuestion ?? {}).map(([key, value]) => {

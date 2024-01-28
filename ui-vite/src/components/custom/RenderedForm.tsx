@@ -38,35 +38,26 @@ type SurveyEvent = {
     question_id: string;
     value: any;
 }
+export type RenderedFormProps = {
+    // plaintext: string;
+    survey: object;
+    mode: "test" | "prod",
+    showSubmissionData: boolean,
+}
 
-export function RenderedForm({ survey, mode }: RenderedFormProps) {
+export function RenderedForm({ survey, mode, showSubmissionData = false }: RenderedFormProps) {
     const [displayTextMode, setDisplayTextMode] = useState(false);
     const [showEndScreen, setShowEndScreen] = useState(false);
-    const [exampleSubmission, setExampleSubmittion] = useState(
-        {
-            survey_id: survey.id,
-            answers: {}
-            // Object.fromEntries(survey?.blocks?.map(block => {
-            //     console.log('entry', block)
-            //     if (block.properties.id) {
-            //         return [block.properties.id, []]
-            //         // return {
-            //         //     question_id: block.properties.id,
-            //         //     value: []
-            //         // }
-            //         // return 
-            //     } else {
-            //         console.log('not real', block)
-            //         return []
-            //         // return {
-            //         //     question_id: block.properties.id,
-            //         //     value: undefined
-            //         // }
-            //     }
-            // }))
-        }
-    );
+    const [dummy, setDummy] = useState(true); // use to trigger rerender
+    const [exampleSubmission, setExampleSubmittion] = useState(getDefaultState());
     console.log('ex', exampleSubmission)
+
+    function getDefaultState() {
+        return {
+            survey_id: survey.survey_id,
+            answers: {}
+        }
+    }
 
     function handleEvent(surveyEvent: SurveyEvent) {
         console.log('handleEvent: ', surveyEvent)
@@ -74,6 +65,8 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
             curr.answers[surveyEvent.question_id] = surveyEvent.value
             return curr
         })
+        // use this to trigger a rerender
+        setDummy(dummy ? false : true)
     }
 
     let parsingError = undefined;
@@ -197,7 +190,7 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                     </div>
                 }
             </div>
-            {exampleSubmission ? (
+            {exampleSubmission && showSubmissionData ? (
                 <>
                     <div className="">
                         <div>
@@ -218,43 +211,42 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
     );
 }
 
-function CheckboxGroup(block, setStateFn) {
-    const [checkboxGroup, setCheckboxGroup] = useState(
-        block.properties.options.map(option => option.checked ? option.text : undefined).filter(item => item)
-    )
-
-    const onChange = (evt, option) => {
-        // e.preventDefault()
-        if (checkboxGroup.includes(option.text)) {
-            setCheckboxGroup(checkboxGroup.filter(c => c !== option.text))
-            setStateFn(curr => {
-                if (!curr.answers[block.properties.id]) {
-                    curr.answers[block.properties.id] = []
-                }
-                curr.answers[block.properties.id] = curr.answers[block.properties.id].filter((c => c !== option.text))
-                return curr
-            })
-        } else {
-            setCheckboxGroup([
-                ...checkboxGroup,
-                option.text
-            ])
-            setStateFn(curr => {
-                curr.answers[block.properties.id] = [
-                    ...checkboxGroup,
-                    option.text
-                ]
-                return curr
-                // return {
-                //     ...curr,
-                //     [block.properties.id]: [
-                //         ...checkboxGroup,
-                //         option.text
-                //     ]
-                // }
-            })
-        }
-    }
+function CheckboxGroup(block, setStateFn, handleEvent) {
+    // const [checkboxGroup, setCheckboxGroup] = useState(
+    //     block.properties.options.map(option => option.checked ? option.text : undefined).filter(item => item)
+    // )
+    // const onChange = (evt, option) => {
+    //     // e.preventDefault()
+    //     if (checkboxGroup.includes(option.text)) {
+    //         setCheckboxGroup(checkboxGroup.filter(c => c !== option.text))
+    //         setStateFn(curr => {
+    //             if (!curr.answers[block.properties.id]) {
+    //                 curr.answers[block.properties.id] = []
+    //             }
+    //             curr.answers[block.properties.id] = curr.answers[block.properties.id].filter((c => c !== option.text))
+    //             return curr
+    //         })
+    //     } else {
+    //         setCheckboxGroup([
+    //             ...checkboxGroup,
+    //             option.text
+    //         ])
+    //         setStateFn(curr => {
+    //             curr.answers[block.properties.id] = [
+    //                 ...checkboxGroup,
+    //                 option.text
+    //             ]
+    //             return curr
+    //             // return {
+    //             //     ...curr,
+    //             //     [block.properties.id]: [
+    //             //         ...checkboxGroup,
+    //             //         option.text
+    //             //     ]
+    //             // }
+    //         })
+    //     }
+    // }
 
     console.log('jere/ checkbox: ', checkboxGroup)
     return (
@@ -267,10 +259,11 @@ function CheckboxGroup(block, setStateFn) {
                             {/* <input type="checkbox" defaultChecked={option.checked} id={block.id + `_${i}`} name={block.id + `_${i}`} /> */}
                             <input type="checkbox"
                                 // defaultChecked={option.checked}
-                                checked={checkboxGroup.includes(option.text) ? true : false}
+                                // checked={checkboxGroup.includes(option.text) ? true : false}
                                 //  id={`${block.properties.id}.${option.id}`} name={`${block.properties.id}.${option.id}`}
                                 onChange={e => {
-                                    onChange(e, option)
+                                    // onChange(e, option)
+                                    handleEvent({ value: option, question_id: block.properties.id })
                                 }}
                             />
                             <Label
@@ -327,20 +320,23 @@ function RadioGroup(block, setStateFn, handleEvent) {
 }
 
 function TextInput(block, setStateFn, handleEvent) {
-    const [state, setState] = useState('')
+    // const [state, setState] = useState('')
 
-    const updateTextInput = (evt, id) => {
-        setState(evt.target.value)
-        setStateFn(curr => {
-            curr.answers[id] = evt.target.value
-            return curr
-        })
-    }
+    // const updateTextInput = (evt, id) => {
+    //     setState(evt.target.value)
+    //     setStateFn(curr => {
+    //         curr.answers[id] = evt.target.value
+    //         return curr
+    //     })
+    // }
     return (
         <>
             <Label htmlFor={block.properties.id}>{block.properties.question}</Label>
             <Input
-                onChange={evt => updateTextInput(evt, block.properties.id)}
+                onChange={evt => {
+                    // updateTextInput(evt, block.properties.id)
+                    handleEvent({ value: evt.target.value, question_id: block.properties.id })
+                }}
                 id={block.properties.id} name={block.properties.id} placeholder="Enter text" />
         </>
     )
@@ -363,7 +359,7 @@ function TextareaComponent(block, setStateFn, handleEvent) {
                 // value={state}
                 onChange={evt => {
                     // setState(evt.target.value)
-                    handleEvent({ value: state, question_id: block.properties.id })
+                    handleEvent({ value: evt.target.value, question_id: block.properties.id })
                 }}
                 id={block.properties.id} name={block.properties.id} placeholder="Enter text" />
         </>

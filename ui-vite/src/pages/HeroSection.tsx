@@ -69,10 +69,10 @@ submit: submit`);
               {'explanation of the output'}
             </p> */}
                     <div className='w-1/2 h-full pr-10'>
-                        <RenderedForm survey={sampleSurvey} mode="test"></RenderedForm>
+                        <RenderedForm survey={sampleSurvey} mode="test" showSubmissionData={false}></RenderedForm>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

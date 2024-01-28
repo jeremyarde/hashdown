@@ -23,12 +23,6 @@ export const EnabledFeatures: { [stage: string]: FEATURES[] } = {
 
 export const SESSION_TOKEN_KEY = 'session_id';
 
-export type RenderedFormProps = {
-    // plaintext: string;
-    survey: object;
-    mode: "test" | "prod"
-}
-
 // export interface Survey {
 //     survey_id: string;
 //     created_at: string;
