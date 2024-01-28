@@ -24,7 +24,6 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
     const [showEndScreen, setShowEndScreen] = useState(false);
     const [dummy, setDummy] = useState(true); // use to trigger rerender
     const [exampleSubmission, setExampleSubmittion] = useState(getDefaultState());
-    console.log('ex', exampleSubmission)
 
     function getDefaultState() {
         return {
@@ -38,21 +37,22 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
         setExampleSubmittion(curr => {
             if (surveyEvent.type === 'checkbox') {
                 // e.preventDefault()
+                console.log('debug curr: ', curr.answers[surveyEvent.question_id])
                 if (!curr.answers[surveyEvent.question_id]) {
                     curr.answers[surveyEvent.question_id] = []
                 }
 
-                if (curr.answers[surveyEvent.question_id].includes(surveyEvent.value)) {
-
+                // if (curr.answers[surveyEvent.question_id].includes(surveyEvent.value)) {
+                if (!surveyEvent.checked) {
                     // setCheckboxGroup(checkboxGroup.filter(c => c !== option.text))
 
                     curr.answers[surveyEvent.question_id] = curr.answers[surveyEvent.question_id].filter((c => c !== surveyEvent.value))
                     return curr
                 } else {
-                    curr.answers[surveyEvent.question_id] = [
-                        ...curr.answers[surveyEvent.question_id],
-                        surveyEvent.value
-                    ]
+                    curr.answers[surveyEvent.question_id] = [...new Set(
+                        [...curr.answers[surveyEvent.question_id],
+                        surveyEvent.value]
+                    )]
                     return curr
 
                 }
@@ -260,29 +260,28 @@ function CheckboxGroup(block, setStateFn, handleEvent) {
     //     }
     // }
 
-    // console.log('jere/ checkbox: ', checkboxGroup)
+    // console.log('jere/ checkbox: ', values)
     return (
         <>
             <Label className="font-semibold">{block.properties.question}</Label>
             <div className="flex flex-col space-y-2">
                 {block.properties.options.map((option, i) => {
                     return (
-                        <div className="flex items-center">
-                            {/* <input type="checkbox" defaultChecked={option.checked} id={block.id + `_${i}`} name={block.id + `_${i}`} /> */}
+                        <div
+                            className="flex items-center">
                             <input type="checkbox"
                                 // defaultChecked={option.checked}
-                                // checked={checkboxGroup.includes(option.text) ? true : false}
-                                //  id={`${block.properties.id}.${option.id}`} name={`${block.properties.id}.${option.id}`}
+                                id={`${block.properties.id}.${option.id}`} name={`${block.properties.id}.${option.id}`}
                                 onChange={e => {
-                                    // onChange(e, option)
-                                    handleEvent({ value: option.text, question_id: block.properties.id })
+                                    handleEvent({ value: option.text, question_id: block.properties.id, type: 'checkbox', checked: e.target.checked })
                                 }}
                             />
                             <Label
-                                onClick={e => {
-                                    handleEvent({ value: option.text, question_id: block.properties.id, type: 'checkbox' })
-                                }}
-                                className="ml-2 text-sm items-center" htmlFor={`${block.properties.id}.${option.id}`}>
+                                // onClick={e => {
+                                //     handleEvent({ value: option.text, question_id: block.properties.id, type: 'checkbox', checked: e.target.checked })
+                                // }}
+                                className="ml-2 text-sm items-center"
+                                htmlFor={`${block.properties.id}.${option.id}`}>
                                 {option.text}
                             </Label>
                         </div>
