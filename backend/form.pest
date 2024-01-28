@@ -6,7 +6,7 @@ block     = _{
   | textarea
   | checkbox
   | radio
-  | dropdown
+//   | dropdown
   | submit
   | comment
 }

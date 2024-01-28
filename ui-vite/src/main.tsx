@@ -38,11 +38,6 @@ radio: my radio
 - another one
 - third radio
 
-Dropdown: My question here
-  - Option 1
-  - Option 2
-  - Option 3
-
 Submit: submit`;
 
 const formTypesCopy = `Available input types:

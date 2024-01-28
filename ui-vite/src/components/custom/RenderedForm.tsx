@@ -108,7 +108,8 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
 
     return (
         <>
-            <div className="flex w-full h-full items-center align-middle justify-center">
+            <div className="flex w-full h-full items-center align-middle justify-center"
+                style={{}}>
                 {parsingError ? (
                     <div style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>
                         <pre>
@@ -174,6 +175,13 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
                                                 </div>
                                             )
                                             break;
+                                        // case "Dropdown":
+                                        //     blockHtml = (
+                                        //         <div>
+                                        //             {Dropdown(block, handleEvent)}
+                                        //         </div>
+                                        //     )
+                                        //     break;
                                         case "Submit":
                                             blockHtml = (
                                                 <div>
@@ -224,43 +232,6 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
 }
 
 function CheckboxGroup(block, setStateFn, handleEvent) {
-    // const [checkboxGroup, setCheckboxGroup] = useState(
-    //     block.properties.options.map(option => option.checked ? option.text : undefined).filter(item => item)
-    // )
-    // const onChange = (evt, option) => {
-    //     // e.preventDefault()
-    //     if (checkboxGroup.includes(option.text)) {
-    //         setCheckboxGroup(checkboxGroup.filter(c => c !== option.text))
-    //         setStateFn(curr => {
-    //             if (!curr.answers[block.properties.id]) {
-    //                 curr.answers[block.properties.id] = []
-    //             }
-    //             curr.answers[block.properties.id] = curr.answers[block.properties.id].filter((c => c !== option.text))
-    //             return curr
-    //         })
-    //     } else {
-    //         setCheckboxGroup([
-    //             ...checkboxGroup,
-    //             option.text
-    //         ])
-    //         setStateFn(curr => {
-    //             curr.answers[block.properties.id] = [
-    //                 ...checkboxGroup,
-    //                 option.text
-    //             ]
-    //             return curr
-    //             // return {
-    //             //     ...curr,
-    //             //     [block.properties.id]: [
-    //             //         ...checkboxGroup,
-    //             //         option.text
-    //             //     ]
-    //             // }
-    //         })
-    //     }
-    // }
-
-    // console.log('jere/ checkbox: ', values)
     return (
         <>
             <Label className="font-semibold">{block.properties.question}</Label>
@@ -293,17 +264,6 @@ function CheckboxGroup(block, setStateFn, handleEvent) {
 }
 
 function RadioGroup(block, setStateFn, handleEvent) {
-    // const [state, setState] = useState('')
-
-    // function onClick(evt, option, id) {
-    //     // setState(option)
-    //     setStateFn(curr => {
-    //         console.log('radio group', curr)
-    //         curr.answers[id] = option
-    //         return curr
-    //     })
-    // }
-
     return (
         <>
             <Label className="space-y-2 text-left">{block.properties.question}</Label>
@@ -331,15 +291,6 @@ function RadioGroup(block, setStateFn, handleEvent) {
 }
 
 function TextInput(block, setStateFn, handleEvent) {
-    // const [state, setState] = useState('')
-
-    // const updateTextInput = (evt, id) => {
-    //     setState(evt.target.value)
-    //     setStateFn(curr => {
-    //         curr.answers[id] = evt.target.value
-    //         return curr
-    //     })
-    // }
     return (
         <>
             <Label htmlFor={block.properties.id}>{block.properties.question}</Label>
@@ -354,15 +305,6 @@ function TextInput(block, setStateFn, handleEvent) {
 }
 
 function TextareaComponent(block, setStateFn, handleEvent) {
-    // const [state, setState] = useState('')
-
-    // const updateTextInput = (evt, id) => {
-    //     setState(evt.target.value)
-    //     setStateFn(curr => {
-    //         curr.answers[id] = evt.target.value
-    //         return curr
-    //     })
-    // }
     return (
         <>
             <Label htmlFor={block.properties.id}>{block.properties.question}</Label>
@@ -373,6 +315,27 @@ function TextareaComponent(block, setStateFn, handleEvent) {
                     handleEvent({ value: evt.target.value, question_id: block.properties.id })
                 }}
                 id={block.properties.id} name={block.properties.id} placeholder="Enter text" />
+        </>
+    )
+}
+
+function Dropdown(block, handleEvent) {
+    console.log('dropdown block', block)
+    if (!block.properties) {
+        return (<>not available</>)
+    }
+    return (
+        <>
+            <Label htmlFor={block.properties.id}>{block.properties.question}</Label>
+            <Dropdown>
+                <ul>
+                    {block.properties.options.map(option => {
+                        <li>
+                            {option}
+                        </li>
+                    })}
+                </ul>
+            </Dropdown>
         </>
     )
 }
@@ -391,7 +354,7 @@ function EndScreen(block) {
     return (
         <>
             <div
-                className="outline outline-solid rounded-2xl w-2/3 text-center flex justify-center"
+                className="border border-solid rounded-xl outline outline-1 outline-solid w-2/3 text-center flex justify-center"
                 style={{ height: '50vh', display: '', alignItems: 'center' }}>
                 <h1>Thanks for your response!</h1>
             </div>

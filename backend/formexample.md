@@ -15,9 +15,4 @@ radio: my radio
 - another one
 - third radio
 
-Dropdown: My question here
-  - Option 1
-  - Option 2
-  - Option 3
-
 submit: this is my content [default values]
