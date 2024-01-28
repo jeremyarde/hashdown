@@ -36,8 +36,30 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
     function handleEvent(surveyEvent: SurveyEvent) {
         console.log('handleEvent: ', surveyEvent)
         setExampleSubmittion(curr => {
-            curr.answers[surveyEvent.question_id] = surveyEvent.value
-            return curr
+            if (surveyEvent.type === 'checkbox') {
+                // e.preventDefault()
+                if (!curr.answers[surveyEvent.question_id]) {
+                    curr.answers[surveyEvent.question_id] = []
+                }
+
+                if (curr.answers[surveyEvent.question_id].includes(surveyEvent.value)) {
+
+                    // setCheckboxGroup(checkboxGroup.filter(c => c !== option.text))
+
+                    curr.answers[surveyEvent.question_id] = curr.answers[surveyEvent.question_id].filter((c => c !== surveyEvent.value))
+                    return curr
+                } else {
+                    curr.answers[surveyEvent.question_id] = [
+                        ...curr.answers[surveyEvent.question_id],
+                        surveyEvent.value
+                    ]
+                    return curr
+
+                }
+            } else {
+                curr.answers[surveyEvent.question_id] = surveyEvent.value
+                return curr
+            }
         })
         // use this to trigger a rerender
         setDummy(dummy ? false : true)
@@ -258,7 +280,7 @@ function CheckboxGroup(block, setStateFn, handleEvent) {
                             />
                             <Label
                                 onClick={e => {
-                                    handleEvent({ value: option.text, question_id: block.properties.id })
+                                    handleEvent({ value: option.text, question_id: block.properties.id, type: 'checkbox' })
                                 }}
                                 className="ml-2 text-sm items-center" htmlFor={`${block.properties.id}.${option.id}`}>
                                 {option.text}
