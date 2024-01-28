@@ -34,14 +34,47 @@ import { RenderedFormProps } from "@/lib/constants";
 //     console.log('jere/ form', form)
 // }
 
+type SurveyEvent = {
+    question_id: string;
+    value: any;
+}
+
 export function RenderedForm({ survey, mode }: RenderedFormProps) {
-    const [exampleSubmission, setExampleSubmittion] = useState();
     const [displayTextMode, setDisplayTextMode] = useState(false);
     const [showEndScreen, setShowEndScreen] = useState(false);
-    const navigate = useNavigate();
+    const [exampleSubmission, setExampleSubmittion] = useState(
+        {
+            survey_id: survey.id,
+            answers: {}
+            // Object.fromEntries(survey?.blocks?.map(block => {
+            //     console.log('entry', block)
+            //     if (block.properties.id) {
+            //         return [block.properties.id, []]
+            //         // return {
+            //         //     question_id: block.properties.id,
+            //         //     value: []
+            //         // }
+            //         // return 
+            //     } else {
+            //         console.log('not real', block)
+            //         return []
+            //         // return {
+            //         //     question_id: block.properties.id,
+            //         //     value: undefined
+            //         // }
+            //     }
+            // }))
+        }
+    );
+    console.log('ex', exampleSubmission)
 
-
-    // const [_, surveyIdToText] = surveyToForm(survey);
+    function handleEvent(surveyEvent: SurveyEvent) {
+        console.log('handleEvent: ', surveyEvent)
+        setExampleSubmittion(curr => {
+            curr.answers[surveyEvent.question_id] = surveyEvent.value
+            return curr
+        })
+    }
 
     let parsingError = undefined;
     if (!survey.blocks) {
@@ -49,34 +82,9 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
     }
 
     const handleSubmit = async (evt) => {
-        console.log('jere/ survey', survey);
-
         evt.preventDefault();
-        console.log('jere/ target', evt.target);
-
-        let formdata = new FormData(evt.target);
-        console.log('jere/ formdata', formdata);
-
         const survey_id = survey.survey_id;
-
-        // formdata = Object.fromEntries(formdata).map(([key, value]) => {
-        //     return {
-        //         id: key,
-        //         value: value,
-        //         block_id: key,
-        //     }
-        // })
-
-        const surveySubmission = {
-            survey_id: survey_id ?? 'surveyid',
-            answers: Object.entries(Object.fromEntries(formdata)).map(([key, value]) => {
-                return {
-                    question_id: key,
-                    value: value,
-                    // question: 
-                }
-            })
-        }
+        const surveySubmission = exampleSubmission;
 
         console.log('jere/ mode', mode);
         if (mode === "test") {
@@ -99,22 +107,9 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
     }
 
     const handleUpdate = (evt) => {
-        let formdata = new FormData(evt.target.form);
-        console.log('jere formdate', formdata)
-
         const survey_id = survey.survey_id;
 
-        const surveySubmission = {
-            survey_id: survey_id ?? 'surveyid',
-            answers: Object.entries(Object.fromEntries(formdata)).map(([key, value]) => {
-                return {
-                    question_id: key,
-                    value: value,
-                    // question: 
-                }
-            })
-        }
-
+        const surveySubmission = exampleSubmission
         if (mode === "test") {
             setExampleSubmittion(surveySubmission);
             return;
@@ -157,28 +152,28 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                                         case "TextInput":
                                             blockHtml = (
                                                 <div>
-                                                    {TextInput(block, setExampleSubmittion)}
+                                                    {TextInput(block, setExampleSubmittion, handleEvent)}
                                                 </div>
                                             )
                                             break;
                                         case "Textarea":
                                             blockHtml = (
                                                 <div>
-                                                    {TextareaComponent(block, setExampleSubmittion)}
+                                                    {TextareaComponent(block, setExampleSubmittion, handleEvent)}
                                                 </div>
                                             )
                                             break;
                                         case "Checkbox":
                                             blockHtml = (
                                                 <div>
-                                                    {CheckboxGroup(block, setExampleSubmittion)}
+                                                    {CheckboxGroup(block, setExampleSubmittion, handleEvent)}
                                                 </div>
                                             )
                                             break;
                                         case "Radio":
                                             blockHtml = (
                                                 <div>
-                                                    {RadioGroup(block, setExampleSubmittion)}
+                                                    {RadioGroup(block, setExampleSubmittion, handleEvent)}
                                                 </div>
                                             )
                                             break;
@@ -207,14 +202,6 @@ export function RenderedForm({ survey, mode }: RenderedFormProps) {
                     <div className="">
                         <div>
                             <h3>Submission data</h3>
-                            <div>
-                                <label>{"Show real questions"}</label>
-                                <label className="switch">
-                                    <input type="checkbox" onClick={(evt) => displayTextMode ? setDisplayTextMode(false) : setDisplayTextMode(true)} />
-                                    <span className="slider round"></span>
-                                </label>
-
-                            </div>
                         </div>
                         <div className="text-left p-6 border-dotted border">
                             <pre>
@@ -236,17 +223,45 @@ function CheckboxGroup(block, setStateFn) {
         block.properties.options.map(option => option.checked ? option.text : undefined).filter(item => item)
     )
 
+    const onChange = (evt, option) => {
+        // e.preventDefault()
+        if (checkboxGroup.includes(option.text)) {
+            setCheckboxGroup(checkboxGroup.filter(c => c !== option.text))
+            setStateFn(curr => {
+                if (!curr.answers[block.properties.id]) {
+                    curr.answers[block.properties.id] = []
+                }
+                curr.answers[block.properties.id] = curr.answers[block.properties.id].filter((c => c !== option.text))
+                return curr
+            })
+        } else {
+            setCheckboxGroup([
+                ...checkboxGroup,
+                option.text
+            ])
+            setStateFn(curr => {
+                curr.answers[block.properties.id] = [
+                    ...checkboxGroup,
+                    option.text
+                ]
+                return curr
+                // return {
+                //     ...curr,
+                //     [block.properties.id]: [
+                //         ...checkboxGroup,
+                //         option.text
+                //     ]
+                // }
+            })
+        }
+    }
+
     console.log('jere/ checkbox: ', checkboxGroup)
     return (
         <>
             <Label className="font-semibold">{block.properties.question}</Label>
             <div className="flex flex-col space-y-2">
                 {block.properties.options.map((option, i) => {
-                    // if (option.checked) {
-                    //     setCheckboxGroup(curr => {
-                    //         curr.push(option.text)
-                    //     })
-                    // }
                     return (
                         <div className="flex items-center">
                             {/* <input type="checkbox" defaultChecked={option.checked} id={block.id + `_${i}`} name={block.id + `_${i}`} /> */}
@@ -255,23 +270,16 @@ function CheckboxGroup(block, setStateFn) {
                                 checked={checkboxGroup.includes(option.text) ? true : false}
                                 //  id={`${block.properties.id}.${option.id}`} name={`${block.properties.id}.${option.id}`}
                                 onChange={e => {
-                                    // e.preventDefault()
-                                    if (checkboxGroup.includes(option.text)) {
-                                        setCheckboxGroup(checkboxGroup.filter(c => c !== option.text))
-                                    } else {
-                                        setCheckboxGroup([
-                                            ...checkboxGroup,
-                                            option.text
-                                        ])
-                                    }
+                                    onChange(e, option)
                                 }}
                             />
-                            <Label className="ml-2 text-sm items-center" htmlFor={`${block.properties.id}.${option.id}`}>
+                            <Label
+                                onClick={e => {
+                                    onChange(e, option)
+                                }}
+                                className="ml-2 text-sm items-center" htmlFor={`${block.properties.id}.${option.id}`}>
                                 {option.text}
                             </Label>
-                            <div>
-                                checked: {checkboxGroup}
-                            </div>
                         </div>
                     )
                 })}
@@ -280,7 +288,18 @@ function CheckboxGroup(block, setStateFn) {
     )
 }
 
-function RadioGroup(block, setStateFn) {
+function RadioGroup(block, setStateFn, handleEvent) {
+    // const [state, setState] = useState('')
+
+    // function onClick(evt, option, id) {
+    //     // setState(option)
+    //     setStateFn(curr => {
+    //         console.log('radio group', curr)
+    //         curr.answers[id] = option
+    //         return curr
+    //     })
+    // }
+
     return (
         <>
             <Label className="space-y-2 text-left">{block.properties.question}</Label>
@@ -289,7 +308,10 @@ function RadioGroup(block, setStateFn) {
                     {block.properties.options.map((option: string) => {
                         return (
                             <li>
-                                <div className="flex items-center space-x-2">
+                                <div
+                                    // onClick={evt => onClick(evt, option, block.properties.id)}
+                                    onClick={evt => handleEvent({ value: option, question_id: block.properties.id })}
+                                    className="flex items-center space-x-2">
                                     <input type="radio" id={option} name={block.properties.id} value={option} />
                                     <Label className="items-center" htmlFor={option} >
                                         {option}
@@ -304,20 +326,46 @@ function RadioGroup(block, setStateFn) {
     )
 }
 
-function TextInput(block) {
+function TextInput(block, setStateFn, handleEvent) {
+    const [state, setState] = useState('')
+
+    const updateTextInput = (evt, id) => {
+        setState(evt.target.value)
+        setStateFn(curr => {
+            curr.answers[id] = evt.target.value
+            return curr
+        })
+    }
     return (
         <>
             <Label htmlFor={block.properties.id}>{block.properties.question}</Label>
-            <Input id={block.properties.id} name={block.properties.id} placeholder="Enter text" />
+            <Input
+                onChange={evt => updateTextInput(evt, block.properties.id)}
+                id={block.properties.id} name={block.properties.id} placeholder="Enter text" />
         </>
     )
 }
 
-function TextareaComponent(block) {
+function TextareaComponent(block, setStateFn, handleEvent) {
+    const [state, setState] = useState('')
+
+    // const updateTextInput = (evt, id) => {
+    //     setState(evt.target.value)
+    //     setStateFn(curr => {
+    //         curr.answers[id] = evt.target.value
+    //         return curr
+    //     })
+    // }
     return (
         <>
             <Label htmlFor={block.properties.id}>{block.properties.question}</Label>
-            <Textarea id={block.properties.id} name={block.properties.id} placeholder="Enter text" />
+            <Textarea
+                value={state}
+                onChange={evt => {
+                    setState(evt.target.value)
+                    handleEvent({ value: state, question_id: block.properties.id })
+                }}
+                id={block.properties.id} name={block.properties.id} placeholder="Enter text" />
         </>
     )
 }
@@ -335,7 +383,7 @@ function SubmitButton(block) {
 function EndScreen(block) {
     return (
         <>
-            <div style={{ height: '50vh', display: 'flex' }}>
+            <div style={{ height: '50vh', display: '' }}>
                 <h1>Thanks for your response!</h1>
             </div>
         </>
