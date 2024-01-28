@@ -12,11 +12,13 @@ import { ListResponses } from './components/custom/ListResponses.tsx'
 import { useGetSurvey } from './hooks/useGetSurvey.ts'
 import { NONAME } from 'dns'
 import Dashboard from './pages/Dashboard.tsx'
-import { isDev } from './lib/utils.ts'
+import { getStage, isDev } from './lib/utils.ts'
 import { Crud } from './components/Crud.tsx'
 import TestPage from './pages/TestPage.tsx'
 import { Home } from './pages/Home.tsx'
 import { Waitlist } from './components/custom/Waitlist.tsx'
+import { getHeapStatistics } from 'v8'
+import { STAGE } from './lib/constants.ts'
 
 
 export const exampleText = `# User Registration Form
@@ -113,7 +115,7 @@ function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/editor" element={<EditorPage mode='prod' editorContent={formtext} setEditorContent={setFormtext} />} />
+            <Route path="/editor" element={<EditorPage mode={getStage() === STAGE.PROD ? 'prod' : 'test'} editorContent={formtext} setEditorContent={setFormtext} />} />
             <Route path="/surveys" element={<ListSurveys />} />
             <Route path='/responses' element={<ListResponses />} />
             <Route path='/waitlist' element={<Waitlist />} />

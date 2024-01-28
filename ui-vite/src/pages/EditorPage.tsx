@@ -206,7 +206,7 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
                 <div className="p-2 align-middle"></div>
                 <div className="md:w-1/2 w-full flex flex-col flex-1">
                     <h2 className="text-2xl font-bold">Preview</h2>
-                    <RenderedForm survey={survey} mode={mode} ></RenderedForm>
+                    <RenderedForm survey={survey} mode={mode} showSubmissionData={true}></RenderedForm>
                 </div>
             </div>
         </>

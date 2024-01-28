@@ -8,32 +8,6 @@ import { getBaseUrl } from "../../lib/utils";
 import { useNavigate } from 'react-router-dom';
 import { RenderedFormProps } from "@/lib/constants";
 
-// function surveyToForm(survey: Survey) {
-//     let form = [];
-//     // let idToText = {};
-
-//     // survey.blocks?.forEach((block) => {
-//     //     if (block.block_type === 'Checkbox') {
-//     //         block.properties.options?.forEach((option, i) => {
-//     //             form[option.id] = Boolean(option.checked)
-//     //             idToText[option.id] = option.text
-//     //         });
-//     //     } else {
-//     //         form[block.id] = '';
-//     //         idToText[block.id] = block.properties.question
-//     //     }
-//     // });
-//     // return [form, idToText]
-//     survey.blocks?.forEach((block) => {
-//         form.push({
-//             block_id: block.id,
-//             index: block.index,
-//             value: undefined,
-//         })
-//     });
-//     console.log('jere/ form', form)
-// }
-
 type SurveyEvent = {
     question_id: string;
     value: any;
@@ -82,6 +56,7 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
         console.log('jere/ mode', mode);
         if (mode === "test") {
             setExampleSubmittion(surveySubmission);
+            setShowEndScreen(true);
             return;
         }
         console.log('jere/ surveyid', survey_id);
@@ -130,7 +105,14 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
                         // justifyContent: 'center',
                         // alignSelf: 'center'
                     }}>
-                        <form onSubmit={handleSubmit} onChange={handleUpdate} className="text-left border border-solid rounded-xl">
+                        <form
+                            onKeyUp={evt => {
+                                console.log('onkeyup...', evt.key)
+                                evt.key === "Enter" ? handleSubmit(evt) : ''
+                            }}
+                            onSubmit={handleSubmit}
+                            onChange={handleUpdate}
+                            className="text-left border border-solid rounded-xl">
                             {
                                 survey.blocks?.map(block => {
                                     // console.log("map entries: ", block)
@@ -268,7 +250,7 @@ function CheckboxGroup(block, setStateFn, handleEvent) {
                             />
                             <Label
                                 onClick={e => {
-                                    onChange(e, option)
+                                    handleEvent({ value: option, question_id: block.properties.id })
                                 }}
                                 className="ml-2 text-sm items-center" htmlFor={`${block.properties.id}.${option.id}`}>
                                 {option.text}
@@ -379,7 +361,9 @@ function SubmitButton(block) {
 function EndScreen(block) {
     return (
         <>
-            <div style={{ height: '50vh', display: '' }}>
+            <div
+                className="outline outline-solid rounded-2xl w-2/3 text-center flex justify-center"
+                style={{ height: '50vh', display: '', alignItems: 'center' }}>
                 <h1>Thanks for your response!</h1>
             </div>
         </>

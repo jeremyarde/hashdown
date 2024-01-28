@@ -21,7 +21,9 @@ export function Home() {
             <div className="p-16">
                 <h4 className='text-left'>Click on one of the examples</h4>
                 <SampleForms setEditorContent={setEditorContent}></SampleForms>
-                <EditorPage mode={'test'} editorContent={editorContent} setEditorContent={setEditorContent} />
+                <EditorPage mode={'test'} editorContent={editorContent}
+                    setEditorContent={setEditorContent}
+                />
             </div>
         </>);
 }
