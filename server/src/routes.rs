@@ -59,7 +59,6 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         .route("/v1/auth/signup", post(auth::signup))
         .route("/v1/auth/remove", post(auth::delete))
         .route("/v1/submit", post(submit_response))
-        // .route("/v1/ping", get(ping))
         .route("/v1/surveys/:id", get(get_survey).post(submit_survey));
 
     let auth_routes = Router::new()
@@ -97,7 +96,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
             // axum::http::header::AUTHORIZATION,
             // axum::http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
             // axum::http::header::ACCESS_CONTROL_REQUEST_METHOD,
-            axum::http::HeaderName::from_static("x-auth-token"),
+            // axum::http::HeaderName::from_static("x-auth-token"),
             // axum::http::HeaderName::from_static("x-sid"),
             axum::http::HeaderName::from_static("session_id"),
             // axum::http::HeaderName::from_static("credentials"),

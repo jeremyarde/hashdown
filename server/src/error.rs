@@ -12,32 +12,24 @@ use crate::db::sessions::Session;
 use crate::mware::ctext::SessionContext;
 use crate::mware::log::log_request;
 
-#[derive(Debug, Deserialize, strum_macros::AsRefStr, Serialize, Clone)]
+#[derive(Debug, strum_macros::AsRefStr, Serialize, Clone)]
 #[serde(tag = "type", content = "data")]
 pub enum ServerError {
-    SurveyFail(String),
-    BadRequest(String),
+    LoginFail,
+
+    // Auth stuff
+    AuthFailNoSession,
+    AuthFailCtxNotInRequest,
+
+    // Model/DB errors
     Database(String),
-
-    // Auth
-    UserAlreadyExists,
-    UserDoesNotExist(String),
-    MissingCredentials,
-    WrongCredentials,
-    AuthPasswordsDoNotMatch,
-    AuthFailNoTokenCookie,
-    AuthTokenCreationFail,
-    PasswordDoesNotMatch,
-    AuthFailTokenNotVerified(String),
-    AuthFailTokenDecodeIssue,
-    AuthFailTokenExpired,
-    UserEmailNotVerified(String),
-
-    // Sessions
-    SessionNotFound(String),
 }
 
-#[derive(Debug, Deserialize, strum_macros::AsRefStr, Serialize, Clone)]
+impl core::fmt::Display for ServerError {
+    
+}
+
+#[derive(Debug, strum_macros::AsRefStr, Serialize, Clone)]
 #[serde(tag = "type", content = "data")]
 pub enum DatabaseError {
     Misc(String),
