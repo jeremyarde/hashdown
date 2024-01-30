@@ -3,11 +3,12 @@ use std::fmt::{self};
 use anyhow::{self, Error};
 
 use chrono::{DateTime, Duration, Utc};
+use hyper::Server;
 use lettre::transport::smtp::commands::Data;
 use markdownparser::{nanoid_gen, NanoId};
 // use ormlite::{postgres::PgPool, Model};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 use sqlx::{
     postgres::{PgPoolOptions, PgQueryResult},
     FromRow, PgPool,
@@ -21,6 +22,7 @@ use sqlx::{
 //     ConnectOptions, FromRow, PgPool, Row, SqliteConnection, SqlitePool,
 // };
 use tracing::{info, instrument};
+use tracing_subscriber::fmt::format;
 
 // mod models;
 // use models::{CreateAnswersModel, CreateSurveyRequest, SurveyModel};
@@ -38,10 +40,7 @@ use tracing::{info, instrument};
 //     pub metadata: Metadata,
 // }
 
-use crate::{
-    error::DatabaseError, mware::ctext::SessionContext, routes::ListSurveyResponse,
-    survey_responses::SubmitResponseRequest, ServerError,
-};
+use crate::{mware::ctext::SessionContext, survey_responses::SubmitResponseRequest, ServerError};
 
 use super::{
     sessions::Session,
@@ -235,23 +234,25 @@ impl SurveyCrud for Database {
 }
 
 impl Database {
-    pub async fn create_answer(&self, answer: SubmitResponseRequest) -> anyhow::Result<()> {
+    pub async fn create_answer(&self, answer: SubmitResponseRequest) -> Result<Value, ServerError> {
         info!("Creating answers in database");
 
         let workspace_id: (String,) =
             sqlx::query_as("select workspace_id from mdp.surveys where mdp.surveys.survey_id = $1")
                 .bind(answer.survey_id.clone())
                 .fetch_one(&self.pool)
-                .await?;
-        let _res: AnswerModel = sqlx::query_as(
+                .await
+                .map_err(|ex| ServerError::Database(format!("Could not create answer: {ex}")))?;
+        let res: AnswerModel = sqlx::query_as(
             r#"insert into mdp.responses (response_id, submitted_at, survey_id, answers, workspace_id) values ($1, $2, $3, $4, $5) returning *"#)
             .bind(NanoId::from("res").to_string())
             .bind(Utc::now())
             .bind(answer.survey_id).bind(answer.answers)
             .bind(workspace_id.0)
-            .fetch_one(&self.pool).await.expect("Should insert a response");
+            .fetch_one(&self.pool).await
+            .map_err(|ex| ServerError::Database(format!("Could not create answer: {ex}")))?;
 
-        Ok(())
+        Ok(json!(res))
     }
 
     pub async fn list_responses(
@@ -266,40 +267,30 @@ impl Database {
             .bind(survey_id).bind(workspace_id)
         .fetch_all(&self.pool)
         .await
-        .map_err(|_err| ServerError::Database("Did not find responses".to_string()))
-        .unwrap();
+        .map_err(|_err| ServerError::Database("Did not find responses".to_string()))?;
 
         Ok(answers)
     }
 
     pub async fn get_session(&self, session_id: String) -> anyhow::Result<Session, ServerError> {
-        let _curr_session: Session = match sqlx::query_as::<_, Session>(
+        let curr_session: Session = sqlx::query_as::<_, Session>(
             r#"select * from mdp.sessions sessions where sessions.session_id = $1"#,
         )
         .bind(session_id)
         .fetch_one(&self.pool)
         .await
-        {
-            Ok(x) => {
-                info!("GET_SESSION - found");
-                return Ok(x);
-            }
-            Err(_error) => {
-                info!("GET_SESSION - not found");
-                return Err(ServerError::AuthFailTokenNotVerified(
-                    "User session not available".to_string(),
-                ));
-            }
-        };
+        .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
+
+        Ok(curr_session)
     }
 
-    pub async fn create_session(&self, user: UserModel) -> anyhow::Result<Session, DatabaseError> {
+    pub async fn create_session(&self, user: UserModel) -> anyhow::Result<Session, ServerError> {
         let session_id = nanoid_gen(32);
 
         let new_active_expires = Utc::now() + Duration::hours(1);
         let new_idle_expires = Utc::now() + Duration::hours(2);
 
-        let new_session: Session = match sqlx::query_as(            r#"
+        let new_session: Session = sqlx::query_as(r#"
             insert into mdp.sessions (session_id, user_id, active_period_expires_at, idle_period_expires_at, workspace_id) 
             values ($1, $2, $3, $4, $5)
             ON conflict (user_id) do update 
@@ -308,13 +299,7 @@ impl Database {
             .bind(session_id).bind(user.user_id)
             .bind(new_active_expires).bind( new_idle_expires)
             .bind( user.workspace_id)
-        .fetch_one(&self.pool).await {
-            Ok(x) => x,
-            Err(err) => {
-                info!("create session failed...");
-                return Err(DatabaseError::Misc(err.to_string()));
-            }
-        };
+        .fetch_one(&self.pool).await.map_err(|err| ServerError::Database(err.to_string()))?;
 
         Ok(new_session)
     }
@@ -336,24 +321,26 @@ impl Database {
         &self,
         session_id: &str,
         // workspace_id: &str,
-    ) -> anyhow::Result<bool, DatabaseError> {
+    ) -> anyhow::Result<bool, ServerError> {
         let result: PgQueryResult =
             sqlx::query(r#"delete from mdp.sessions where mdp.sessions.session_id = $1"#)
                 .bind(session_id)
                 .execute(&self.pool)
                 .await
                 .map_err(|err| {
-                    return DatabaseError::Misc(format!(
+                    ServerError::Database(format!(
                         "Could not delete session {}: {}",
                         session_id, err
-                    ));
-                })
-                .unwrap();
+                    ))
+                })?;
 
         if result.rows_affected() == 1 {
             Ok(true)
         } else {
-            return Err(DatabaseError::Misc("Could not find session".to_string()));
+            return Err(ServerError::Database(format!(
+                "Session does not exist: {}",
+                session_id
+            )));
         }
     }
 
@@ -361,7 +348,7 @@ impl Database {
         &self,
         user_id: &str,
         workspace_id: &str,
-    ) -> anyhow::Result<String, DatabaseError> {
+    ) -> anyhow::Result<String, ServerError> {
         let _: () = sqlx::query_as(
             "delete from mdp.users where users.user_id = $1 and mdp.users.workspace_id = $2",
         )
@@ -369,10 +356,7 @@ impl Database {
         .bind(workspace_id)
         .fetch_one(&self.pool)
         .await
-        .map_err(|err| {
-            DatabaseError::Misc(format!("Could not delete user: {}", err));
-        })
-        .unwrap();
+        .map_err(|err| ServerError::Database(format!("Could not delete user: {}", err)))?;
 
         Ok(user_id.to_string())
     }

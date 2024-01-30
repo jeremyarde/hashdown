@@ -1,3 +1,4 @@
+use hyper::Server;
 use tracing::info;
 
 use markdownparser::nanoid_gen;
@@ -8,7 +9,7 @@ use chrono::Utc;
 
 use chrono;
 
-use crate::Database;
+use crate::{Database, ServerError};
 
 use crate::db::database::UserModel;
 
@@ -17,12 +18,12 @@ use anyhow;
 use super::database::CreateUserRequest;
 
 pub trait UserCrud {
-    async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel>;
-    async fn get_user_by_email(&self, email: String) -> anyhow::Result<UserModel>;
+    async fn create_user(&self, request: CreateUserRequest) -> Result<UserModel, ServerError>;
+    async fn get_user_by_email(&self, email: String) -> Result<UserModel, ServerError>;
 }
 
 impl UserCrud for Database {
-    async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel> {
+    async fn create_user(&self, request: CreateUserRequest) -> Result<UserModel, ServerError> {
         println!("->> create_user");
 
         let _time = chrono::Utc::now();
@@ -35,22 +36,23 @@ impl UserCrud for Database {
             .bind(chrono::Utc::now())
             .bind(chrono::Utc::now())
             .fetch_one(&self.pool)
-            .await?;
+            .await.map_err(|err| ServerError::Database(format!("Could not create user: {err}")))?;
 
         Ok(user)
     }
 
-    async fn get_user_by_email(&self, email: String) -> anyhow::Result<UserModel> {
+    async fn get_user_by_email(&self, email: String) -> Result<UserModel, ServerError> {
         info!("Search for user with email: {email:?}");
 
         let res: UserModel = sqlx::query_as(r#"select * from mdp.users where email = $1"#)
             .bind(email)
             .fetch_one(&self.pool)
-            .await?;
+            .await
+            .map_err(|err| {
+                ServerError::Database(format!("Could not find user with email: {err}"))
+            })?;
 
         info!("Found user");
-        // let result = UserModel::from_row(&row_result).expect("Could not turn row into user model");
-
         info!("Successfully found user");
         Ok(res)
     }

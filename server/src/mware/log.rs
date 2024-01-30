@@ -1,11 +1,17 @@
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
+
 use axum::http::Method;
 use axum::http::Uri;
 use axum::Extension;
 use serde::Serialize;
+use serde_json::json;
+use serde_json::Value;
 use serde_with::skip_serializing_none;
 use tracing::info;
 use uuid::Uuid;
 
+use crate::db::sessions::Session;
 use crate::{error::ClientError, mware::ctext::SessionContext, ServerError};
 
 #[skip_serializing_none]
@@ -20,30 +26,26 @@ struct RequestLogLine {
     req_method: String,
     // Errors
     client_error_type: Option<String>,
-    error_data: Option<String>,
+    error_data: Option<Value>,
     error_type: Option<String>,
 }
-
 pub async fn log_request(
     uuid: Uuid,
     req_method: Method,
     uri: Uri,
-    Extension(ctx): Extension<Option<SessionContext>>,
+    ctx: Option<SessionContext>,
     service_error: Option<&ServerError>,
     client_error: Option<ClientError>,
 ) -> anyhow::Result<()> {
-    let timestamp = chrono::Utc::now().timestamp().to_string();
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
 
-    let error_type = service_error.map(|se| se.as_ref().to_string());
+    let error_type = service_error.map(|se| se.to_string());
     let error_data = serde_json::to_value(service_error)
         .ok()
-        .and_then(|mut v| v.get_mut("data").map(|v| v.take().to_string()));
-
-    // let ctx = if ctx.is_none() {
-    //     Ctext::new(None, None)
-    // } else {
-    //     ctx.unwrap()
-    // };
+        .and_then(|mut v| v.get_mut("data").map(|v| v.take()));
 
     // Create the RequestLogLine
     let log_line = RequestLogLine {
@@ -53,8 +55,7 @@ pub async fn log_request(
         req_path: uri.to_string(),
         req_method: req_method.to_string(),
 
-        // user_id: ctx..map(|c| c.user_id().clone()),
-        user_id: ctx.map(|x| x.user_id).or(None),
+        user_id: ctx.map(|c| c.user_id),
 
         client_error_type: client_error.map(|e| e.as_ref().to_string()),
 
@@ -62,7 +63,9 @@ pub async fn log_request(
         error_data,
     };
 
-    info!("->> LOG: {:?}", log_line);
+    println!("   ->> log_request: \n{}", json!(log_line));
+
+    // TODO - Send to cloud-watch.
 
     Ok(())
 }

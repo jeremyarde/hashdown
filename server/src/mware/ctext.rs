@@ -1,11 +1,14 @@
 // use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 
+use async_trait::async_trait;
+use axum::{extract::FromRequestParts, http::request::Parts};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-use crate::db::sessions::Session;
+use crate::{db::sessions::Session, ServerError};
 
 pub const AUTH_TOKEN: &str = "x-auth-token";
+use super::super::error::Result;
 // struct Keys {
 //     encoding: EncodingKey,
 //     decoding: DecodingKey,
@@ -200,6 +203,21 @@ impl SessionContext {
 
     pub fn new(user_id: String, session: Session) -> Self {
         SessionContext { user_id, session }
+    }
+}
+
+#[async_trait]
+impl<S: Send + Sync> FromRequestParts<S> for SessionContext {
+    type Rejection = crate::error::ServerError;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
+        println!("->> {:<12} - Ctx", "EXTRACTOR");
+
+        parts
+            .extensions
+            .get::<Result<SessionContext>>()
+            .ok_or(ServerError::AuthFailCtxNotInRequest)?
+            .clone()
     }
 }
 

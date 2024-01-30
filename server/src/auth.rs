@@ -15,67 +15,48 @@ use axum::{Extension, Json};
 use chrono::{Duration, Utc};
 use markdownparser::nanoid_gen;
 use serde_json::{json, Value};
+use tower_http::follow_redirect::policy::PolicyExt;
 use tracing::log::info;
 
+use crate::constants::SESSION_ID_KEY;
 use crate::db::sessions::Session;
 use crate::db::{database::CreateUserRequest, users::UserCrud};
 use crate::mware::ctext::SessionContext;
 use crate::routes::LoginPayload;
 use crate::ServerError;
 use crate::ServerState;
-use crate::{constants::SESSION_ID_KEY, error::database_to_server_error};
 
 #[axum::debug_handler]
 pub async fn signup(
     state: State<ServerState>,
     // _jar: CookieJar,
     payload: Json<LoginPayload>,
-) -> impl IntoResponse {
+) -> Result<(HeaderMap, Json<Value>), ServerError> {
     info!("->> signup");
 
-    if state
-        .db
-        .get_user_by_email(payload.email.clone())
-        .await
-        .with_context(|| "Checking if user already exists")
-        .is_ok()
-    {
-        return Err(ServerError::UserAlreadyExists);
-    };
+    state.db.get_user_by_email(payload.email.clone()).await?;
 
     let argon2 = argon2::Argon2::default();
     let salt = SaltString::generate(OsRng);
     let hash = argon2
         .hash_password(payload.password.as_bytes(), &salt)
         .unwrap();
-    // let _password_hash_string = hash.to_string();
 
     // let mut transactions = state.db.pool.begin().await.unwrap();
 
-    let user = match state
+    let user = state
         .db
         .create_user(CreateUserRequest {
             email: payload.email.clone(),
             password_hash: hash.to_string(),
         })
-        .await
-    {
-        Ok(user) => user,
-        Err(e) => {
-            println!("Could not create user, error in database: {e}");
-            return Err(ServerError::WrongCredentials);
-        }
-    };
+        .await?;
 
     // Don't create a session for signing up - we need to verify email first
     // let transaction_result = transactions.commit().await;
 
     let email = user.email.clone();
-    let session = state
-        .db
-        .create_session(user)
-        .await
-        .map_err(database_to_server_error)?;
+    let session = state.db.create_session(user).await?;
 
     // let _ = jar.add(Cookie::new("session_id", session.session_id.clone()));
     let headers = create_session_headers(&session);
@@ -90,12 +71,11 @@ pub async fn delete(
     // headers: HeaderMap,
     // payload: Json<LoginPayload>,
     Extension(ctx): Extension<Option<SessionContext>>,
-) -> anyhow::Result<Json<Value>, ServerError> {
+) -> Result<Json<Value>, ServerError> {
     info!("->> delete user");
+
     let Some(ctx) = ctx else {
-        return Err(ServerError::SessionNotFound(
-            "Did not find session".to_string(),
-        ));
+        return Err(ServerError::AuthFailCtxNotInRequest);
     };
     // let session_header = if let Some(x) = headers.get(SESSION_ID_KEY) {
     //     x.to_owned().to_str().unwrap().to_string()
@@ -103,16 +83,11 @@ pub async fn delete(
     //     return Err(ServerError::AuthFailNoTokenCookie);
     // };
     // must be signed in to delete yourself
-    state
-        .db
-        .delete_session(&ctx.session.session_id)
-        .await
-        .map_err(database_to_server_error);
+    state.db.delete_session(&ctx.session.session_id).await?;
     state
         .db
         .delete_user(&ctx.session.session_id, &ctx.session.workspace_id)
-        .await
-        .map_err(database_to_server_error);
+        .await?;
     Ok(Json(json!("delete successful")))
 }
 
@@ -124,17 +99,11 @@ pub async fn logout(
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> logout");
     let Some(ctx) = ctx else {
-        return Err(ServerError::SessionNotFound(
-            "Did not find session".to_string(),
-        ));
+        return Err(ServerError::AuthFailCtxNotInRequest);
     };
 
-    state
-        .db
-        .delete_session(&ctx.session.session_id)
-        .await
-        .map_err(database_to_server_error)?;
-    // let _ = &headers.remove(session_header);
+    state.db.delete_session(&ctx.session.session_id).await?;
+
     Ok(Json(json!("logout success")))
 }
 
@@ -151,24 +120,13 @@ pub async fn login(
     info!("Payload: {payload:#?}");
 
     if payload.email.is_empty() || payload.password.is_empty() {
-        return Err(ServerError::MissingCredentials);
+        return Err(ServerError::RequestParams(
+            "Missing credentials".to_string(),
+        ));
     }
 
     // look for user in database
-    let user = match state
-        .db
-        .get_user_by_email(payload.email.clone())
-        .await
-        .with_context(|| "Could not get find user by email")
-    {
-        Ok(x) => x,
-        Err(_) => {
-            info!("Did not find user in database");
-            return Err(ServerError::UserDoesNotExist(
-                "Username and password did not match or user does not exist".to_string(),
-            ));
-        }
-    };
+    let user = state.db.get_user_by_email(payload.email.clone()).await?;
 
     // check if password matches
     let argon2 = argon2::Argon2::default();
@@ -176,17 +134,13 @@ pub async fn login(
 
     match argon2.verify_password(payload.password.as_bytes(), &current_password_hash) {
         Ok(_) => true,
-        Err(_) => return Err(ServerError::AuthPasswordsDoNotMatch),
+        Err(_) => return Err(ServerError::LoginFail),
     };
 
     // TODO: create success body
     let username = payload.email.clone();
 
-    let session = state
-        .db
-        .create_session(user)
-        .await
-        .map_err(database_to_server_error)?;
+    let session = state.db.create_session(user).await?;
 
     // let _ = jar.add(Cookie::new(SESSION_ID_KEY, session.session_id.clone()));
 
@@ -321,26 +275,16 @@ pub async fn validate_session_middleware(
 
     let session_id = match session_header {
         Some(x) => x,
-        None => return Err(ServerError::AuthFailNoTokenCookie),
+        None => return Err(ServerError::LoginFail),
     };
 
     info!("Using session_id: {session_id:?}");
 
     // get session from database using existing Session
-    let curr_session = match state.db.get_session(session_id.to_string()).await {
-        Ok(x) => x,
-        Err(_) => {
-            state
-                .db
-                .delete_session(session_id)
-                .await
-                .map_err(database_to_server_error);
-            return Err(ServerError::AuthFailTokenDecodeIssue);
-        }
-    };
+    let curr_session = state.db.get_session(session_id.to_string()).await?;
 
     if Utc::now() > curr_session.idle_period_expires_at {
-        return Err(ServerError::AuthFailTokenExpired);
+        return Err(ServerError::LoginFail);
     }
 
     info!("Current session: {:?}", curr_session);

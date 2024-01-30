@@ -51,14 +51,13 @@ pub async fn submit_response(
     debug!("    ->> request: {:#?}", payload);
 
     if payload.survey_id.is_empty() {
-        return Err(ServerError::BadRequest("No survey_id found".to_string()));
+        return Err(ServerError::RequestParams(
+            "Missing required parameters: survey_id".to_string(),
+        ));
     }
 
-    state
-        .db
-        .create_answer(payload)
-        .await
-        .map_err(|_| ServerError::Database("Not able to insert response".to_string()))?;
+    state.db.create_answer(payload).await?;
+    // .map_err(|_| ServerError::Database("Not able to insert response".to_string()))?;
 
     info!("completed submit_response");
 
