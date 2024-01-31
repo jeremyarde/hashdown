@@ -108,8 +108,10 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
 
     return (
         <>
-            <div className="flex w-full h-full items-center align-middle justify-center"
-                style={{}}>
+            <div className="flex w-full h-full items-center justify-center"
+                style={{
+                    height: mode === 'prod' ? '100vh' : ''
+                }}>
                 {parsingError ? (
                     <div style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>
                         <pre>
@@ -120,11 +122,12 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
                 {showEndScreen ? <EndScreen></EndScreen> :
 
 
-                    <div className="" style={{
+                    <div className="align-middle" style={{
                         width: '1000px',
                         maxWidth: '48rem',
                         minWidth: '12rem',
-                        // height: '1vh',
+                        // height: mode === 'prod' ? '100vh' : '100vh',
+                        // height: '100vh'
                         // justifyContent: 'center',
                         // alignSelf: 'center'
                     }}>

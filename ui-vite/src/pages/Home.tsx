@@ -9,13 +9,14 @@ export function Home() {
     return (
         <>
             <HeroSection></HeroSection>
-            <div className='flex flex-col pt-8 items-center pb-16'>
-                <a href='/waitlist' className='outline outline-1 p-6 w-2/3 rounded'>Join the waitlist</a>
-                <h4
+            <div className='flex flex-row pt-8 items-center pb-16 p-5 justify-center'>
+                <a href='/editor' className='outline outline-1 p-6 text-2xl rounded w-1/3 bg-green'>Try it now</a>
+                <a href='/waitlist' className='outline outline-1 p-6 text-2xl rounded w-1/3 bg-purple'>Join the waitlist</a>
+                {/* <h4
                     style={{ fontSize: '4rem' }}
                     className='p-6 w-2/3 rounded pt-10'>
                     Try it below
-                </h4>
+                </h4> */}
                 <hr></hr>
             </div>
             <div className="p-16">

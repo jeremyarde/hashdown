@@ -19,12 +19,12 @@ submit: submit`);
         <div className=''>
             <div className='flex-col flex'>
                 <div className='p-6 pb-24'>
-                    <h2 className='flex top-10 text-center justify-center text-4xl pt-4' style={{ fontWeight: '700', color: 'black' }}>
+                    <h1 className='flex top-10 text-center justify-center text-4xl pt-4' style={{ fontWeight: '700', color: 'black' }}>
                         The fastest way to create and share surveys.
                         <br />
                         Write, visualize, share.
-                    </h2>
-                    <h3 className='text-xl' style={{ color: 'forestgreen' }}>Hashdown is the easiest text based form maker</h3>
+                    </h1>
+                    <p className='text-xl' style={{ color: 'forestgreen' }}>Hashdown is the easiest text based form maker</p>
                 </div>
                 <div className='flex flex-row pt-10 pb-10 pr-10'>
                     <p
