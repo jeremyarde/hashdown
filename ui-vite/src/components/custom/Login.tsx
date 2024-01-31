@@ -65,7 +65,7 @@ export function Login() {
                 return
             }
             if (response.status === 400) {
-                setError('Survey not found');
+                setError('Could not find account');
                 return
             }
             const data = await response.json();

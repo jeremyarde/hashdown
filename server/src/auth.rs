@@ -1,4 +1,3 @@
-use anyhow::Context;
 use argon2::{PasswordHash, PasswordHasher};
 
 use axum::http::{HeaderMap, HeaderValue};
@@ -15,7 +14,6 @@ use axum::{Extension, Json};
 use chrono::{Duration, Utc};
 use markdownparser::nanoid_gen;
 use serde_json::{json, Value};
-use tower_http::follow_redirect::policy::PolicyExt;
 use tracing::log::info;
 
 use crate::constants::SESSION_ID_KEY;
