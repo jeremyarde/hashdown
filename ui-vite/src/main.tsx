@@ -16,7 +16,6 @@ import { Crud } from './components/Crud.tsx'
 import TestPage from './pages/TestPage.tsx'
 import { Home } from './pages/Home.tsx'
 import { Waitlist } from './components/custom/Waitlist.tsx'
-import { getHeapStatistics } from 'v8'
 import { STAGE } from './lib/constants.ts'
 
 
