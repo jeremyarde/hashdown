@@ -247,33 +247,23 @@ pub async fn validate_session_middleware(
     // other version
     info!("->> Validating session");
 
-    let session_header = request
+    let session_id = match request
         .headers()
         .get(SESSION_ID_KEY)
-        .and_then(|header| header.to_str().ok());
-
-    // let session_cookie = jar
-    //     .get(SESSION_ID_KEY)
-    //     .and_then(|cookie| Some(cookie.value()));
-
-    info!("Session header: {session_header:?}");
-    // info!("Session cookies: {session_cookie:?}");
-
-    // let session_id = match session_header {
-    //     Some(x) => x.to_string(),
-    //     None => session_cookie.unwrap_or({
-
-    //     }),
-    // };
-
-    // request
-    //     .extensions_mut()
-    //     .insert(Ctext::new("fake".to_string(), Session::new()));
-    // return Ok(next.run(request).await);
-
-    let session_id = match session_header {
-        Some(x) => x,
-        None => return Err(ServerError::LoginFail),
+        .and_then(|header| header.to_str().ok())
+    {
+        Some(x) => {
+            info!("Session header: {x:?}");
+            if x == "" {
+                x
+            } else {
+                return Err(ServerError::AuthFailNoSession);
+            }
+        }
+        None => {
+            info!("No session was found");
+            return Err(ServerError::LoginFail);
+        }
     };
 
     info!("Using session_id: {session_id:?}");

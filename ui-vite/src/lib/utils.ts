@@ -50,3 +50,8 @@ export function isDev(): boolean {
 export function isFeatureEnabled(feature: FEATURES): boolean {
   return EnabledFeatures[getStage()].includes(feature);
 }
+
+// create a nicer interface for the rust api...
+export function logout() {
+  window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
+}

@@ -13,12 +13,13 @@ export const BASE_URL: { [stage: string]: string } = {
 
 export enum FEATURES {
     WAITLIST,
-    LOGIN
+    LOGIN,
+    TESTTABS,
 };
 
 export const EnabledFeatures: { [stage: string]: FEATURES[] } = {
-    [STAGE.DEV]: [FEATURES.WAITLIST, FEATURES.LOGIN],
-    [STAGE.PROD]: [FEATURES.WAITLIST]
+    [STAGE.DEV]: [FEATURES.LOGIN, FEATURES.TESTTABS],
+    [STAGE.PROD]: [FEATURES.LOGIN]
 };
 
 export const SESSION_TOKEN_KEY = 'session_id';

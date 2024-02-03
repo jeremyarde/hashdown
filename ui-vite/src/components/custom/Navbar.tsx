@@ -1,7 +1,7 @@
 import { FEATURES, SESSION_TOKEN_KEY, STAGE } from "../../lib/constants";
 import { Link, useNavigate } from "react-router-dom";
 import { Toaster } from "../ui/toaster";
-import { getSessionToken, getStage, isDev, isFeatureEnabled } from "../../lib/utils";
+import { getSessionToken, getStage, isDev, isFeatureEnabled, logout } from "../../lib/utils";
 
 
 
@@ -9,7 +9,8 @@ export function Navbar() {
     // let globalState: GlobalState = useContext(GlobalStateContext);
     const navigate = useNavigate();
     const showWaitlist = isFeatureEnabled(FEATURES.WAITLIST);
-    const showTabs = isFeatureEnabled(FEATURES.LOGIN);
+    const showTabs = isFeatureEnabled(FEATURES.LOGIN) && getSessionToken();
+    const testTabs = isFeatureEnabled(FEATURES.TESTTABS)
 
     let waitlist = showWaitlist ? (
         <div>
@@ -25,12 +26,15 @@ export function Navbar() {
     const distance = 2; // padding of outer element
     const outerRadius = innerRadius + distance;
 
-    const middleTabs = [
+    let middleTabs = [
         { route: "/surveys", display: "Surveys" },
         { route: "/editor", display: "Editor" },
-        { route: "/dev", display: "dev" },
-        { route: "/test", display: "test" },
     ]
+
+    if (testTabs) {
+        middleTabs.push({ route: "/dev", display: "dev" })
+        middleTabs.push({ route: "/test", display: "test" })
+    }
 
     return (
         <>
@@ -57,24 +61,29 @@ export function Navbar() {
                         </ul>
                     </div>
                 }
-                <div className="flex flex-row border-solid border items-center"
-                    style={{ borderRadius: `${outerRadius}px`, padding: `${distance}px`, backgroundColor: 'black' }}>
+                <div className="flex flex-row items-center">
                     {!getSessionToken() && isDev() && (
                         <>
-                            <div className="">
+                            <div className="border-solid border" style={{ borderRadius: `${outerRadius}px`, padding: `${distance}px`, backgroundColor: 'black' }}>
                                 <div className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
                                     <Link className="p-1" style={{ color: 'white' }} to="/login">Login</Link>
                                 </div>
                             </div>
                         </>
                     )}
-                    {showWaitlist && (
-                        <div className="">
-                            <div className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
-                                <Link className="p-1" style={{ color: 'white' }} to="/waitlist">Waitlist</Link>
+                    {getSessionToken() && (
+                        <>
+                            <div className="border-solid border" style={{ borderRadius: `${outerRadius}px`, padding: `${distance}px`, backgroundColor: 'black' }}>
+                                <div className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
+                                    <Link className="p-1" style={{ color: 'white' }} to="/" onClick={logout}>Logout</Link>
+                                </div>
                             </div>
+                        </>
+                    )}
+                    {showWaitlist && (
+                        <div className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
+                            <Link className="p-1" style={{ color: 'white' }} to="/waitlist">Waitlist</Link>
                         </div>
-
                     )}
                 </div >
             </div >
