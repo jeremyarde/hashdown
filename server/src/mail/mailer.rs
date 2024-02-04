@@ -1,3 +1,4 @@
+use chrono::format;
 use lettre::{message::header::ContentType, Message, SmtpTransport, Transport};
 
 #[derive(Clone)]
@@ -14,11 +15,28 @@ impl std::fmt::Debug for Mailer {
     }
 }
 
+pub struct EmailIdentity {
+    display_name: String,
+    email_address: String,
+}
+impl EmailIdentity {
+    fn to_string(&self) -> String {
+        return format!("{} <{}>", self.display_name, self.email_address);
+    }
+
+    pub fn new(display_name: &str, email_address: &str) -> EmailIdentity {
+        return EmailIdentity {
+            display_name: display_name.to_string(),
+            email_address: email_address.to_string(),
+        };
+    }
+}
+
 impl Mailer {
     pub fn new() -> Self {
         use lettre::transport::smtp::authentication::Credentials;
 
-        let from_email = "Test FROM <test@jeremyarde.com>";
+        let from_email: &str = "Test FROM <test@jeremyarde.com>";
         let to_email = "Test TO <test@jeremyarde.com>";
         let smtp_server = "email-smtp.us-east-1.amazonaws.com";
 
@@ -51,15 +69,33 @@ impl Mailer {
         }
     }
 
-    pub fn send(&self, to: &str, from: &str, message: String) {
+    pub fn send(&self, to: EmailIdentity, from: EmailIdentity, message: &str, subject: &str) {
         let email = Message::builder()
-            .from(from.parse().unwrap())
-            .to(to.parse().unwrap())
-            .subject("Test email")
+            .from(from.to_string().parse().unwrap())
+            .to(to.to_string().parse().unwrap())
+            .subject(subject.to_string())
             .header(ContentType::TEXT_PLAIN)
-            .body(message)
+            .body(message.to_string())
             .unwrap();
 
         let _response = &self.mailer.send(&email).expect("Email sent successfully");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::constants::LOGIN_EMAIL_SENDER;
+
+    use super::Mailer;
+
+    #[test]
+    fn test_email_send() {
+        let mailer = Mailer::new();
+        mailer.send(
+            super::EmailIdentity::new("test", "test@jeremyarde.com"),
+            super::EmailIdentity::new("Email confirmation", LOGIN_EMAIL_SENDER),
+            "Yo this better work",
+            "Email confirmation",
+        )
     }
 }

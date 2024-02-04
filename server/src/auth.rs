@@ -16,13 +16,16 @@ use markdownparser::nanoid_gen;
 use serde_json::{json, Value};
 use tracing::log::info;
 
-use crate::constants::{LOGIN_EMAIL_SENDER, SESSION_ID_KEY};
 use crate::db::sessions::Session;
 use crate::db::{database::CreateUserRequest, users::UserCrud};
 use crate::mware::ctext::SessionContext;
 use crate::routes::LoginPayload;
 use crate::ServerError;
 use crate::ServerState;
+use crate::{
+    constants::{LOGIN_EMAIL_SENDER, SESSION_ID_KEY},
+    mail::mailer::EmailIdentity,
+};
 
 #[axum::debug_handler]
 pub async fn signup(
@@ -45,14 +48,14 @@ pub async fn signup(
 
     // let mut transactions = state.db.pool.begin().await.unwrap();
     // need to create a workspace if request does not have oneshot
-    state.db.create_workspace().await?;
+    let workspace = state.db.create_workspace().await?;
 
     let user = state
         .db
         .create_user(CreateUserRequest {
             email: payload.email.clone(),
             password_hash: hash.to_string(),
-            workspace_id: None,
+            workspace_id: Some(workspace.workspace_id),
         })
         .await?;
 
@@ -60,12 +63,14 @@ pub async fn signup(
     // let transaction_result = transactions.commit().await;
 
     state.mail.send(
-        &payload.email,
-        LOGIN_EMAIL_SENDER,
+        EmailIdentity::new("John Doe", &payload.email),
+        EmailIdentity::new("Hashdown - Email confirmation", LOGIN_EMAIL_SENDER),
         format!(
-            "Welcome to hashdown!\n\n Please click on this link to confirm your email: {}",
-            user.confirmation_token
-        ),
+            "Welcome to hashdown!\n\n Please click on this link to confirm your email: {}{}",
+            "https://gethashdown.com/v1/auth/confirm/", user.confirmation_token
+        )
+        .as_str(),
+        "Email confirmation",
     );
 
     let email = user.email.clone();

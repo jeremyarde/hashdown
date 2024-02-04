@@ -59,7 +59,6 @@ impl UserCrud for Database {
             })?;
 
         info!("Found user");
-        info!("Successfully found user");
         Ok(res)
     }
 }

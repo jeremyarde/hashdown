@@ -143,9 +143,9 @@ pub struct UserModel {
     pub password_hash: String,
     pub created_at: DateTime<Utc>,
     pub modified_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
     pub email_status: Option<String>,
     pub user_id: String,
-    pub deleted_at: Option<DateTime<Utc>>,
     pub workspace_id: Option<String>,
     pub email_confirmed_at: Option<DateTime<Utc>>,
     pub confirmation_token: String,
@@ -267,17 +267,19 @@ impl SurveyCrud for Database {
 
 #[derive(Deserialize, Serialize, FromRow, Debug, Clone)]
 pub struct WorkspaceModel {
-    workspace_id: String,
-    name: String,
+    pub id: i32,
+    pub workspace_id: String,
+    pub name: String,
 }
 
 impl Database {
     pub async fn create_workspace(&self) -> Result<WorkspaceModel, ServerError> {
         let workspace_id = NanoId::from("ws").to_string();
         let name = "";
+        info!("Creating workspace with workspace_id={workspace_id}");
 
         let workspace: WorkspaceModel = sqlx::query_as(
-            "insert into mdp.workspace (workspace_id, name) values ($1, $2) returning *",
+            "insert into mdp.workspaces (workspace_id, name) values ($1, $2) returning *",
         )
         .bind(workspace_id)
         .bind(name)
