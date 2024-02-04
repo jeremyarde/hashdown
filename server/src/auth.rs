@@ -20,8 +20,8 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::log::info;
 
-use crate::db::sessions::Session;
 use crate::db::{database::CreateUserRequest, users::UserCrud};
+use crate::db::{database::UserModel, sessions::Session};
 use crate::mware::ctext::SessionContext;
 use crate::routes::LoginPayload;
 use crate::ServerError;
@@ -32,10 +32,8 @@ use crate::{
 };
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
-struct EmailConfirmationToken {
-    confirmation_token: String,
-    email: String,
+pub struct EmailConfirmationToken {
+    t: String, // token
 }
 
 // async fn login_authorized(
@@ -45,9 +43,7 @@ struct EmailConfirmationToken {
 pub async fn confirm(
     State(state): State<ServerState>,
     Query(query): Query<EmailConfirmationToken>,
-    // Extension(ctx): Extension<Ctext>,
-    // authorization: TypedHeader<Authorization<Bearer>>,
-    Path(confirmation_id): Path<String>,
+    Extension(ctx): Extension<SessionContext>,
 ) -> Result<Json<Value>, ServerError> {
     info!("->> confirm");
 
@@ -59,15 +55,34 @@ pub async fn confirm(
     4.
     */
 
-    let user = state.db.get_user_by_email(query.email).await?;
+    // is this unneccesary? session probably already gets the user
+    let mut user = state.db.get_user_by_email(ctx.session.user_id).await?;
 
-    return Ok(Json(json!("{}")));
+    match verify_confirmation_token(query.t, &user) {
+        true => {}
+        false => return Err(ServerError::LoginFail),
+    }
+
+    user = state.db.verify_user(&mut user).await?;
+
+    return Ok(Json(json!({"user_id": user.user_id})));
+}
+
+fn verify_confirmation_token(token: String, user: &UserModel) -> bool {
+    if !user.confirmation_token.eq(&token) {
+        return false;
+    }
+
+    if user.confirmation_token_expire_at > Utc::now() {
+        return false;
+    }
+
+    return true;
 }
 
 #[axum::debug_handler]
 pub async fn signup(
     state: State<ServerState>,
-    // _jar: CookieJar,
     payload: Json<LoginPayload>,
 ) -> Result<(HeaderMap, Json<Value>), ServerError> {
     info!("->> signup");
@@ -103,8 +118,8 @@ pub async fn signup(
         EmailIdentity::new("John Doe", &payload.email),
         EmailIdentity::new("Hashdown - Email confirmation", LOGIN_EMAIL_SENDER),
         format!(
-            "Welcome to hashdown!\n\n Please click on this link to confirm your email: {}{}",
-            "https://gethashdown.com/v1/auth/confirm/", user.confirmation_token
+            "Welcome to hashdown!\n\n Please click on this link to confirm your email: {}{}{}",
+            state.config.frontend_url, "/signup/confirm", user.confirmation_token
         )
         .as_str(),
         "Email confirmation",

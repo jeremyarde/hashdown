@@ -1,4 +1,7 @@
-use std::fmt::{self};
+use std::{
+    fmt::{self},
+    ops::Add,
+};
 
 use anyhow::{self, Error};
 
@@ -149,6 +152,7 @@ pub struct UserModel {
     pub workspace_id: Option<String>,
     pub email_confirmed_at: Option<DateTime<Utc>>,
     pub confirmation_token: String,
+    pub confirmation_token_expire_at: DateTime<Utc>,
     pub role: Option<String>,
 }
 
@@ -173,7 +177,8 @@ impl UserModel {
             deleted_at: None,
             workspace_id,
             email_confirmed_at: None,
-            confirmation_token: NanoId::from("cfm").to_string(),
+            confirmation_token: NanoId::from_len(24).to_string(),
+            confirmation_token_expire_at: chrono::Utc::now().add(Duration::days(1)),
             role: None,
         }
     }
@@ -286,6 +291,8 @@ impl Database {
         .fetch_one(&self.pool)
         .await
         .map_err(|err| ServerError::Database(format!("Could not create workspace: {err:?}")))?;
+
+        info!("Workspace created");
 
         return Ok(workspace);
     }

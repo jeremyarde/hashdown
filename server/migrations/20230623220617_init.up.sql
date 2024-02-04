@@ -19,6 +19,7 @@ CREATE table mdp.users (
     email_status TEXT NOT NULL default 'unverified',
     email_confirmed_at TIMESTAMP with time zone,
     confirmation_token TEXT NOT NULL,
+    confirmation_token_expire_at TIMESTAMP WITH TIME ZONE,
     role TEXT,
 
     primary key (workspace_id, user_id),
@@ -68,7 +69,7 @@ create table mdp.sessions (
 
     primary key (workspace_id, id),
     foreign key (workspace_id) references mdp.workspaces(workspace_id),
-    foreign key(user_id) references mdp.users(user_id)
+    foreign key(user_id) references mdp.users(user_id) on delete cascade
 );
 
 /* useful for frontend to show # responses on listsurvey screen */

@@ -1,6 +1,6 @@
-import { StrictMode, useRef, useState } from 'react'
+import { StrictMode, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate, useParams, Outlet } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams, Outlet, useSearchParams } from 'react-router-dom'
 import './index.css'
 import { Login } from './components/custom/Login.tsx'
 import { Navbar } from './components/custom/Navbar.tsx'
@@ -11,7 +11,7 @@ import { EditorPage } from './pages/EditorPage.tsx'
 import { ListResponses } from './components/custom/ListResponses.tsx'
 import { useGetSurvey } from './hooks/useGetSurvey.ts'
 import Dashboard from './pages/Dashboard.tsx'
-import { getStage, isDev } from './lib/utils.ts'
+import { getBaseUrl, getSessionToken, getStage, handleResponse, isDev } from './lib/utils.ts'
 import { Crud } from './components/Crud.tsx'
 import TestPage from './pages/TestPage.tsx'
 import { Home } from './pages/Home.tsx'
@@ -99,6 +99,55 @@ export function Layout() {
   )
 }
 
+export function ConfirmEmail() {
+  let [params, setParams] = useSearchParams();
+  let [error, setError] = useState('');
+
+  console.log('jere. current params: ', params)
+
+  const confirmEmail = async () => {
+    try {
+      const response = await fetch(`${getBaseUrl()}/auth/confirm?` + new URLSearchParams({ t: params.get('t') }),
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "session_id": getSessionToken()
+          },
+        });
+      console.log(`response from API: ${JSON.stringify(response)}`)
+      handleResponse(response);
+
+      if (response.status === 401) {
+        setError('Not authorized');
+        return
+      }
+      if (response.status === 400) {
+        setError('Could not find account');
+        return
+      }
+      const data = await response.json();
+      // setSessionToken(response);
+      // setIsPending(false);
+      // setResult(data);
+      setError('');
+    } catch (error) {
+      // setIsPending(false);
+      setError(`Could not fetch data: ${error}`);
+    }
+  };
+
+  useEffect(() => {
+    confirmEmail();
+  })
+
+  return (
+    <>
+      <div>Confirmed your email, redirecting shortly...</div>
+    </>
+  )
+}
+
 function App() {
   const [formtext, setFormtext] = useState(exampleText);
 
@@ -115,6 +164,7 @@ function App() {
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/dev' element={<Crud />} />
             <Route path='/test' element={<TestPage />} />
+            <Route path='/signup/confirm' element={<ConfirmEmail />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Route>
           <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />

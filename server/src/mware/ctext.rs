@@ -174,14 +174,14 @@ pub struct JwtResult {
 //     };
 
 //     // return Ok(claim);
-//     let jwt = match encode(&Header::default(), &claim, &KEYS.encoding) {
-//         Ok(t) => t,
-//         Err(_) => {
-//             return Err(ServerError::BadRequest(
-//                 "yo this request is messed".to_string(),
-//             ))
-//         }
-//     };
+// let jwt = match encode(&Header::default(), &claim, &KEYS.encoding) {
+//     Ok(t) => t,
+//     Err(_) => {
+//         return Err(ServerError::BadRequest(
+//             "yo this request is messed".to_string(),
+//         ))
+//     }
+// };
 
 //     return Ok(JwtResult {
 //         token: jwt,

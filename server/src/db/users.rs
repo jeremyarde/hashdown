@@ -2,7 +2,7 @@ use tracing::{debug, info};
 
 use sqlx;
 
-use chrono;
+use chrono::{self, Utc};
 
 use crate::{Database, ServerError};
 
@@ -13,6 +13,7 @@ use super::database::CreateUserRequest;
 pub trait UserCrud {
     async fn create_user(&self, request: CreateUserRequest) -> Result<UserModel, ServerError>;
     async fn get_user_by_email(&self, email: String) -> Result<UserModel, ServerError>;
+    async fn verify_user(&self, new_user: &mut UserModel) -> Result<UserModel, ServerError>;
 }
 
 impl UserCrud for Database {
@@ -30,8 +31,9 @@ impl UserCrud for Database {
                     created_at, 
                     modified_at,
                     workspace_id,
-                    confirmation_token
-                ) values ($1, $2, $3, $4, $5, $6, $7) returning *",
+                    confirmation_token,
+                    confirmation_token_expire_at
+                ) values ($1, $2, $3, $4, $5, $6, $7, $8) returning *",
         )
         .bind(new_user.user_id)
         .bind(new_user.password_hash)
@@ -40,6 +42,7 @@ impl UserCrud for Database {
         .bind(new_user.modified_at)
         .bind(new_user.workspace_id)
         .bind(new_user.confirmation_token)
+        .bind(new_user.confirmation_token_expire_at)
         .fetch_one(&self.pool)
         .await
         .map_err(|err| ServerError::Database(format!("Could not create user: {err}")))?;
@@ -60,6 +63,33 @@ impl UserCrud for Database {
 
         info!("Found user");
         Ok(res)
+    }
+
+    async fn verify_user(&self, user: &mut UserModel) -> Result<UserModel, ServerError> {
+        let user: UserModel = sqlx::query_as(
+            "update mdp.users users set 
+            email_status = $1,
+            confirmation_token = $2,
+            confirmation_token_expire_at = $3,
+            modified_at = $4,
+            email_confirmed_at = $5,
+            
+            where users.user_id = $6 and users.workspace_id = $7
+            returning *
+            ",
+        )
+        .bind("verified")
+        .bind("")
+        .bind("")
+        .bind(Utc::now())
+        .bind(Utc::now())
+        .bind(&user.user_id)
+        .bind(&user.workspace_id)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| ServerError::Database(format!("Could not update User: {err:?}")))?;
+
+        return Ok(user);
     }
 }
 
