@@ -1,6 +1,9 @@
 use argon2::{PasswordHash, PasswordHasher};
 
-use axum::http::{HeaderMap, HeaderValue};
+use axum::{
+    extract::{Path, Query},
+    http::{HeaderMap, HeaderValue},
+};
 
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
@@ -13,6 +16,7 @@ use axum::{
 use axum::{Extension, Json};
 use chrono::{Duration, Utc};
 use markdownparser::nanoid_gen;
+use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::log::info;
 
@@ -26,6 +30,39 @@ use crate::{
     constants::{LOGIN_EMAIL_SENDER, SESSION_ID_KEY},
     mail::mailer::EmailIdentity,
 };
+
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+struct EmailConfirmationToken {
+    confirmation_token: String,
+    email: String,
+}
+
+// async fn login_authorized(
+//     Query(query): Query<AuthRequest>,
+
+#[axum::debug_handler]
+pub async fn confirm(
+    State(state): State<ServerState>,
+    Query(query): Query<EmailConfirmationToken>,
+    // Extension(ctx): Extension<Ctext>,
+    // authorization: TypedHeader<Authorization<Bearer>>,
+    Path(confirmation_id): Path<String>,
+) -> Result<Json<Value>, ServerError> {
+    info!("->> confirm");
+
+    /*
+    steps to confirm:
+    1. get confirm token from url
+    2. check expiration of token, maybe 24h?
+    3. mark email as verified
+    4.
+    */
+
+    let user = state.db.get_user_by_email(query.email).await?;
+
+    return Ok(Json(json!("{}")));
+}
 
 #[axum::debug_handler]
 pub async fn signup(

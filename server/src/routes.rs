@@ -52,6 +52,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
     let public_routes = Router::new()
         .route("/v1/hello", get(hello))
         .route("/v1/auth/login", post(auth::login))
+        .route("/v1/auth/confirm/:id", post(auth::confirm))
         .route("/v1/auth/signup", post(auth::signup))
         .route("/v1/auth/remove", post(auth::delete))
         .route("/v1/submit", post(submit_response))
