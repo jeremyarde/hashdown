@@ -265,7 +265,29 @@ impl SurveyCrud for Database {
     }
 }
 
+#[derive(Deserialize, Serialize, FromRow, Debug, Clone)]
+pub struct WorkspaceModel {
+    workspace_id: String,
+    name: String,
+}
+
 impl Database {
+    pub async fn create_workspace(&self) -> Result<WorkspaceModel, ServerError> {
+        let workspace_id = NanoId::from("ws").to_string();
+        let name = "";
+
+        let workspace: WorkspaceModel = sqlx::query_as(
+            "insert into mdp.workspace (workspace_id, name) values ($1, $2) returning *",
+        )
+        .bind(workspace_id)
+        .bind(name)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| ServerError::Database(format!("Could not create workspace: {err:?}")))?;
+
+        return Ok(workspace);
+    }
+
     pub async fn create_answer(&self, answer: SubmitResponseRequest) -> Result<Value, ServerError> {
         info!("Creating answers in database");
 

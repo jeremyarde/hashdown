@@ -45,7 +45,7 @@ pub async fn signup(
 
     // let mut transactions = state.db.pool.begin().await.unwrap();
     // need to create a workspace if request does not have oneshot
-    state.db.create_workspace()
+    state.db.create_workspace().await?;
 
     let user = state
         .db

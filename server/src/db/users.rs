@@ -1,19 +1,12 @@
-use hyper::Server;
 use tracing::{debug, info};
 
-use markdownparser::nanoid_gen;
-
 use sqlx;
-
-use chrono::Utc;
 
 use chrono;
 
 use crate::{Database, ServerError};
 
 use crate::db::database::UserModel;
-
-use anyhow;
 
 use super::database::CreateUserRequest;
 
