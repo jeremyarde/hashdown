@@ -52,7 +52,6 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
     let public_routes = Router::new()
         .route("/v1/hello", get(hello))
         .route("/v1/auth/login", post(auth::login))
-        .route("/v1/auth/confirm", get(auth::confirm))
         .route("/v1/auth/signup", post(auth::signup))
         .route("/v1/auth/remove", post(auth::delete))
         .route("/v1/submit", post(submit_response))
@@ -61,6 +60,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
     let auth_routes = Router::new()
         .route("/v1/surveys", post(create_survey).get(list_survey))
         .route("/v1/responses", get(survey_responses::list_response))
+        .route("/v1/auth/confirm", get(auth::confirm))
         .route("/v1/auth/logout", get(auth::logout))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
