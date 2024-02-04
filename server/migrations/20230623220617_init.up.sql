@@ -17,6 +17,9 @@ CREATE table mdp.users (
     modified_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE,
     email_status TEXT NOT NULL default 'unverified',
+    email_confirmed_at TIMESTAMP with time zone,
+    confirmation_token TEXT NOT NULL,
+    role TEXT,
 
     primary key (workspace_id, user_id),
     foreign key (workspace_id) references mdp.workspaces(workspace_id)
@@ -85,16 +88,23 @@ INSERT INTO mdp.workspaces (
 ) VALUES (
     'ws_default',
     'default'
+), (
+    'ws_test',
+    'test_workspace'
 );
 
-INSERT INTO mdp.users (user_id, email, password_hash, created_at, modified_at, email_status, workspace_id) VALUES (
+
+INSERT INTO mdp.users (
+    user_id, email, password_hash, created_at, modified_at, email_status, workspace_id, confirmation_token
+) VALUES (
     'usr_default', 
     'test@test.com', 
     '$argon2id$v=19$m=19456,t=2,p=1$JaOOu6OXcVP+B9IUlHX34Q$JGxXSdEtM90s58YlwkIDXn9WfoJTpueOvJrhBlKNF9c', 
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP,
     'verified',
-    'ws_default'
+    'ws_default',
+    'cfm_fake'
 ), (
     'usr_default2',
     '5jlyqrjzu@mozmail.com',
@@ -102,7 +112,8 @@ INSERT INTO mdp.users (user_id, email, password_hash, created_at, modified_at, e
     '2023-12-23 18:41:33.418423+00',
     '2023-12-23 18:41:33.418429+00',
     'unverified',
-    'ws_default'
+    'ws_default',
+    'cfm_fake2'
 );
 
 INSERT INTO mdp.surveys (

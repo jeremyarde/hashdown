@@ -52,6 +52,23 @@ export function isFeatureEnabled(feature: FEATURES): boolean {
 }
 
 // create a nicer interface for the rust api...
-export function logout() {
-  window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
+export async function logout() {
+  try {
+    const response = await fetch(`${getBaseUrl()}/auth/logout`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "session_id": getSessionToken()
+      },
+    });
+    console.log(`response from API: ${JSON.stringify(response)}`)
+    handleResponse(response);
+
+    const data = await response.json();
+    window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
+  } catch (error) {
+    // setIsPending(false);
+    // setError(`Could not fetch data: ${error}`);
+  }
+
 }

@@ -89,10 +89,12 @@ struct UpdateSurveyRequest {
 // }
 
 impl Database {
-    pub async fn new(database_url: ConnectionDetails) -> anyhow::Result<Self> {
+    pub async fn new() -> anyhow::Result<Self> {
+        let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
+        let db_url = ConnectionDetails(uri);
         // println!("{:?}", std::env::current_dir()); //Ok("/Users/jarde/Documents/code/markdownparser/server")
         // let database_url = dotenvy::var("DATABASE_URL")?;
-        let database_url = database_url.0;
+        let database_url = db_url.0;
         let pool = PgPoolOptions::new()
             .max_connections(1)
             .connect(&database_url)
@@ -136,16 +138,45 @@ pub struct Answer {
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
 pub struct UserModel {
-    pub id: i32,
+    pub id: Option<i32>,
     pub email: String,
     pub password_hash: String,
     pub created_at: DateTime<Utc>,
     pub modified_at: DateTime<Utc>,
-    pub email_status: String,
+    pub email_status: Option<String>,
     pub user_id: String,
     pub deleted_at: Option<DateTime<Utc>>,
-    pub workspace_id: String,
-    // pub user_id: String,
+    pub workspace_id: Option<String>,
+    pub email_confirmed_at: Option<DateTime<Utc>>,
+    pub confirmation_token: String,
+    pub role: Option<String>,
+}
+
+impl UserModel {
+    pub fn from(
+        email: String,
+        password_hash: String,
+        mut workspace_id: Option<String>,
+    ) -> UserModel {
+        if workspace_id.is_none() {
+            workspace_id = Some(NanoId::from("ws").to_string());
+        }
+
+        UserModel {
+            id: None,
+            email: email,
+            password_hash: password_hash,
+            created_at: chrono::Utc::now(),
+            modified_at: chrono::Utc::now(),
+            email_status: Some(String::from("unverified")),
+            user_id: NanoId::from("usr").to_string(),
+            deleted_at: None,
+            workspace_id,
+            email_confirmed_at: None,
+            confirmation_token: NanoId::from("cfm").to_string(),
+            role: None,
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, FromRow, Debug, Clone)]
@@ -161,6 +192,7 @@ pub struct AnswerModel {
 pub struct CreateUserRequest {
     pub email: String,
     pub password_hash: String,
+    pub workspace_id: Option<String>,
 }
 
 pub trait SurveyCrud {

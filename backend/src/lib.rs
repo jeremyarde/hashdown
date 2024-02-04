@@ -30,6 +30,9 @@ impl NanoId {
     pub fn from(pre: &str) -> NanoId {
         return NanoId(format!("{}_{}", pre, nanoid_gen(NANOID_LEN)));
     }
+    pub fn from_len(length: usize) -> NanoId {
+        return NanoId(nanoid_gen(length));
+    }
 }
 
 impl ToString for NanoId {

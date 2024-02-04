@@ -16,7 +16,7 @@ use markdownparser::nanoid_gen;
 use serde_json::{json, Value};
 use tracing::log::info;
 
-use crate::constants::SESSION_ID_KEY;
+use crate::constants::{LOGIN_EMAIL_SENDER, SESSION_ID_KEY};
 use crate::db::sessions::Session;
 use crate::db::{database::CreateUserRequest, users::UserCrud};
 use crate::mware::ctext::SessionContext;
@@ -32,7 +32,10 @@ pub async fn signup(
 ) -> Result<(HeaderMap, Json<Value>), ServerError> {
     info!("->> signup");
 
-    state.db.get_user_by_email(payload.email.clone()).await?;
+    match state.db.get_user_by_email(payload.email.clone()).await {
+        Ok(_) => return Err(ServerError::LoginFail), // user already exists
+        Err(_) => {}
+    };
 
     let argon2 = argon2::Argon2::default();
     let salt = SaltString::generate(OsRng);
@@ -41,17 +44,29 @@ pub async fn signup(
         .unwrap();
 
     // let mut transactions = state.db.pool.begin().await.unwrap();
+    // need to create a workspace if request does not have oneshot
+    state.db.create_workspace()
 
     let user = state
         .db
         .create_user(CreateUserRequest {
             email: payload.email.clone(),
             password_hash: hash.to_string(),
+            workspace_id: None,
         })
         .await?;
 
     // Don't create a session for signing up - we need to verify email first
     // let transaction_result = transactions.commit().await;
+
+    state.mail.send(
+        &payload.email,
+        LOGIN_EMAIL_SENDER,
+        format!(
+            "Welcome to hashdown!\n\n Please click on this link to confirm your email: {}",
+            user.confirmation_token
+        ),
+    );
 
     let email = user.email.clone();
     let session = state.db.create_session(user).await?;
@@ -93,12 +108,9 @@ pub async fn delete(
 pub async fn logout(
     state: State<ServerState>,
     // headers: HeaderMap,
-    Extension(ctx): Extension<Option<SessionContext>>,
+    Extension(ctx): Extension<SessionContext>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> logout");
-    let Some(ctx) = ctx else {
-        return Err(ServerError::AuthFailCtxNotInRequest);
-    };
 
     state.db.delete_session(&ctx.session.session_id).await?;
 

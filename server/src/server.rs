@@ -31,11 +31,7 @@ pub struct ServerApplication {
 
 impl ServerApplication {
     pub async fn get_router() -> Router {
-        let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
-        let db_url = ConnectionDetails(uri);
-        let db = Database::new(db_url)
-            .await
-            .expect("Error connecting to database");
+        let db = Database::new().await.expect("Error connecting to database");
         let state = ServerState {
             db,
             mail: Mailer::new(),
