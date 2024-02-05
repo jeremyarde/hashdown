@@ -9,16 +9,16 @@ create table mdp.workspaces (
 
 CREATE table mdp.users (
     id SERIAL,
-    user_id TEXT not null unique,
-    workspace_id text not null,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     modified_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE,
     email_status TEXT NOT NULL default 'unverified',
+    user_id TEXT not null unique,
+    workspace_id text not null,
     email_confirmed_at TIMESTAMP with time zone,
-    confirmation_token TEXT NOT NULL,
+    confirmation_token TEXT,
     confirmation_token_expire_at TIMESTAMP WITH TIME ZONE,
     role TEXT,
 

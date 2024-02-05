@@ -151,7 +151,7 @@ pub struct UserModel {
     pub user_id: String,
     pub workspace_id: Option<String>,
     pub email_confirmed_at: Option<DateTime<Utc>>,
-    pub confirmation_token: String,
+    pub confirmation_token: Option<String>,
     pub confirmation_token_expire_at: Option<DateTime<Utc>>,
     pub role: Option<String>,
 }
@@ -177,7 +177,7 @@ impl UserModel {
             deleted_at: None,
             workspace_id,
             email_confirmed_at: None,
-            confirmation_token: NanoId::from_len(24).to_string(),
+            confirmation_token: Some(NanoId::from_len(24).to_string()),
             confirmation_token_expire_at: Some(chrono::Utc::now().add(Duration::days(1))),
             role: None,
         }

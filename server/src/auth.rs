@@ -72,7 +72,7 @@ pub async fn confirm(
 }
 
 fn verify_confirmation_token(token: &String, user: &UserModel) -> bool {
-    if !user.confirmation_token.eq(token) {
+    if !user.confirmation_token.clone().unwrap().eq(token) {
         info!("Confirmation token does not match");
         return false;
     }
@@ -124,7 +124,9 @@ pub async fn signup(
         EmailIdentity::new("Hashdown - Email confirmation", LOGIN_EMAIL_SENDER),
         format!(
             "Welcome to hashdown!\n\n Please click on this link to confirm your email: {}/{}?t={}",
-            state.config.frontend_url, "signup/confirm", user.confirmation_token
+            state.config.frontend_url,
+            "signup/confirm",
+            user.confirmation_token.clone().unwrap()
         )
         .as_str(),
         "Email confirmation",

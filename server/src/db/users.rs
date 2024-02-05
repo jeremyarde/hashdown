@@ -99,7 +99,8 @@ impl UserCrud for Database {
             modified_at = $2,
             email_confirmed_at = $3
             
-            where mdp.users.user_id = $4 and mdp.users.workspace_id = $5;
+            where mdp.users.user_id = $4 and mdp.users.workspace_id = $5
+            returning *;
             ",
         )
         .bind("verified") //email status
@@ -143,22 +144,6 @@ mod tests {
             password_hash: "fakepwhash".to_string(),
             workspace_id: Some("ws_test".to_string()),
         };
-
-        // let user = UserModel {
-        //     id: todo!(),
-        //     email: todo!(),
-        //     password_hash: todo!(),
-        //     created_at: todo!(),
-        //     modified_at: todo!(),
-        //     deleted_at: todo!(),
-        //     email_status: todo!(),
-        //     user_id: todo!(),
-        //     workspace_id: todo!(),
-        //     email_confirmed_at: todo!(),
-        //     confirmation_token: todo!(),
-        //     confirmation_token_expire_at: todo!(),
-        //     role: todo!(),
-        // };
 
         let db = Database::new().await.unwrap();
         let user = db.create_user(create_user_request).await.unwrap();
