@@ -18,7 +18,7 @@ use chrono::{Duration, Utc};
 use markdownparser::nanoid_gen;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use tracing::log::info;
+use tracing::{debug, log::info};
 
 use crate::db::{database::CreateUserRequest, users::UserCrud};
 use crate::db::{database::UserModel, sessions::Session};
@@ -43,7 +43,7 @@ pub struct EmailConfirmationToken {
 pub async fn confirm(
     State(state): State<ServerState>,
     Query(query): Query<EmailConfirmationToken>,
-    Extension(ctx): Extension<SessionContext>,
+    // Extension(ctx): Extension<SessionContext>,
 ) -> Result<Json<Value>, ServerError> {
     info!("->> confirm");
 
@@ -56,28 +56,33 @@ pub async fn confirm(
     */
 
     // is this unneccesary? session probably already gets the user
-    let mut user = state.db.get_user_by_email(ctx.session.user_id).await?;
+    let mut user = state
+        .db
+        .get_user_by_confirmation_code(query.t.clone())
+        .await?;
 
-    match verify_confirmation_token(query.t, &user) {
+    match verify_confirmation_token(&query.t, &user) {
         true => {}
         false => return Err(ServerError::LoginFail),
     }
 
-    user = state.db.verify_user(&mut user).await?;
+    user = state.db.verify_user(user).await?;
 
     return Ok(Json(json!({"user_id": user.user_id})));
 }
 
-fn verify_confirmation_token(token: String, user: &UserModel) -> bool {
-    if !user.confirmation_token.eq(&token) {
+fn verify_confirmation_token(token: &String, user: &UserModel) -> bool {
+    if !user.confirmation_token.eq(token) {
+        info!("Confirmation token does not match");
         return false;
     }
-
-    if user.confirmation_token_expire_at > Utc::now() {
-        return false;
+    if user.confirmation_token_expire_at.is_some()
+        && user.confirmation_token_expire_at.unwrap() > Utc::now()
+    {
+        info!("Confirmation token has not expired");
+        return true;
     }
-
-    return true;
+    return false;
 }
 
 #[axum::debug_handler]
@@ -118,8 +123,8 @@ pub async fn signup(
         EmailIdentity::new("John Doe", &payload.email),
         EmailIdentity::new("Hashdown - Email confirmation", LOGIN_EMAIL_SENDER),
         format!(
-            "Welcome to hashdown!\n\n Please click on this link to confirm your email: {}{}{}",
-            state.config.frontend_url, "/signup/confirm", user.confirmation_token
+            "Welcome to hashdown!\n\n Please click on this link to confirm your email: {}/{}?t={}",
+            state.config.frontend_url, "signup/confirm", user.confirmation_token
         )
         .as_str(),
         "Email confirmation",
@@ -128,10 +133,12 @@ pub async fn signup(
     let email = user.email.clone();
     let session = state.db.create_session(user).await?;
 
-    // let _ = jar.add(Cookie::new("session_id", session.session_id.clone()));
     let headers = create_session_headers(&session);
 
-    Ok((headers, Json(json!({"email": email}))))
+    Ok((
+        headers,
+        Json(json!({"email": email, "session_id": session.session_id})),
+    ))
 }
 
 #[axum::debug_handler]
@@ -206,10 +213,7 @@ pub async fn login(
 
     // TODO: create success body
     let username = payload.email.clone();
-
     let session = state.db.create_session(user).await?;
-
-    // let _ = jar.add(Cookie::new(SESSION_ID_KEY, session.session_id.clone()));
 
     let headers = create_session_headers(&session);
 
@@ -285,34 +289,6 @@ pub async fn validate_session_middleware(
 ) -> anyhow::Result<Response, ServerError> {
     info!("--> validate_session_middleware");
 
-    // let session_cookie = jar.get(SESSION_ID_KEY);
-    // info!("session cookie? {:?}", session_cookie);
-
-    // let session_header = request
-    //     .headers()
-    //     .get(SESSION_ID_KEY)
-    //     .and_then(|header| header.to_str().ok());
-
-    // if session_header.is_some() {
-    //     match state
-    //         .db
-    //         .get_session(session_header.unwrap().to_owned())
-    //         .await
-    //     {
-    //         Ok(x) => {
-    //             request.headers_mut().insert(
-    //                 SESSION_ID_KEY,
-    //                 HeaderValue::from_str(&x.session_id.clone())
-    //                     .expect("Session Id is not available"),
-    //             );
-    //             request.extensions_mut().insert(x);
-    //             info!(" --> validate_session_middleware - found active session");
-    //             return Ok(next.run(request).await);
-    //         }
-    //         Err(_) => return Err(ServerError::AuthFailNoTokenCookie),
-    //     }
-    // }
-
     // other version
     info!("->> Validating session");
 
@@ -323,7 +299,8 @@ pub async fn validate_session_middleware(
     {
         Some(x) => {
             info!("Session header: {x:?}");
-            if x == "" {
+
+            if x.eq("") {
                 x
             } else {
                 return Err(ServerError::AuthFailNoSession);

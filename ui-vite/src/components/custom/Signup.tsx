@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { SESSION_TOKEN_KEY } from "../../lib/constants";
 import { FormEvent, useContext, useState } from "react";
-import { getBaseUrl } from "../../lib/utils";
+import { getBaseUrl, handleResponse } from "../../lib/utils";
 // import { GlobalState, GlobalStateContext } from "./main";
 
 /**
@@ -29,6 +29,7 @@ export function Signup() {
                 },
                 body: payload,
             });
+            handleResponse(response)
 
             if (response.status === 200) {
                 const result = await response.json();
@@ -74,6 +75,11 @@ export function Signup() {
                         </div>
                     </div>
                 </div >
+            }
+            {loggedIn &&
+                <div className="pt-10">
+                    Please check your email and click the confirmation link to proceed
+                </div>
             }
         </>
     )

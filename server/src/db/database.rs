@@ -152,7 +152,7 @@ pub struct UserModel {
     pub workspace_id: Option<String>,
     pub email_confirmed_at: Option<DateTime<Utc>>,
     pub confirmation_token: String,
-    pub confirmation_token_expire_at: DateTime<Utc>,
+    pub confirmation_token_expire_at: Option<DateTime<Utc>>,
     pub role: Option<String>,
 }
 
@@ -178,7 +178,7 @@ impl UserModel {
             workspace_id,
             email_confirmed_at: None,
             confirmation_token: NanoId::from_len(24).to_string(),
-            confirmation_token_expire_at: chrono::Utc::now().add(Duration::days(1)),
+            confirmation_token_expire_at: Some(chrono::Utc::now().add(Duration::days(1))),
             role: None,
         }
     }
@@ -337,7 +337,7 @@ impl Database {
 
     pub async fn get_session(&self, session_id: String) -> anyhow::Result<Session, ServerError> {
         let curr_session: Session = sqlx::query_as::<_, Session>(
-            r#"select * from mdp.sessions sessions where sessions.session_id = $1"#,
+            r#"select * from mdp.sessions where mdp.sessions.session_id = $1"#,
         )
         .bind(session_id)
         .fetch_one(&self.pool)
@@ -422,5 +422,22 @@ impl Database {
         .map_err(|err| ServerError::Database(format!("Could not delete user: {}", err)))?;
 
         Ok(user_id.to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Database;
+
+    #[tokio::test]
+    async fn test_get_session() {
+        let db = Database::new().await.unwrap();
+
+        let session = db
+            .get_session("ut46xsy1wm6v91qcf9ew4ijzcdgbq14z".to_string())
+            .await
+            .unwrap();
+
+        println!("session: {:?}", session);
     }
 }

@@ -13,7 +13,11 @@ use super::database::CreateUserRequest;
 pub trait UserCrud {
     async fn create_user(&self, request: CreateUserRequest) -> Result<UserModel, ServerError>;
     async fn get_user_by_email(&self, email: String) -> Result<UserModel, ServerError>;
-    async fn verify_user(&self, new_user: &mut UserModel) -> Result<UserModel, ServerError>;
+    async fn get_user_by_confirmation_code(
+        &self,
+        confirmation_token: String,
+    ) -> Result<UserModel, ServerError>;
+    async fn verify_user(&self, new_user: UserModel) -> Result<UserModel, ServerError>;
 }
 
 impl UserCrud for Database {
@@ -65,24 +69,42 @@ impl UserCrud for Database {
         Ok(res)
     }
 
-    async fn verify_user(&self, user: &mut UserModel) -> Result<UserModel, ServerError> {
+    async fn get_user_by_confirmation_code(
+        &self,
+        confirmation_token: String,
+    ) -> Result<UserModel, ServerError> {
+        info!("Search for user with email confirm code: {confirmation_token:?}");
+
+        let res: UserModel =
+            sqlx::query_as(r#"select * from mdp.users where confirmation_token = $1"#)
+                .bind(confirmation_token)
+                .fetch_one(&self.pool)
+                .await
+                .map_err(|err| {
+                    ServerError::Database(format!(
+                        "Could not find user with confirmation_token: {err}"
+                    ))
+                })?;
+
+        info!("Found user");
+        Ok(res)
+    }
+
+    async fn verify_user(&self, user: UserModel) -> Result<UserModel, ServerError> {
         let user: UserModel = sqlx::query_as(
-            "update mdp.users users set 
+            "update mdp.users set 
             email_status = $1,
-            confirmation_token = $2,
-            confirmation_token_expire_at = $3,
-            modified_at = $4,
-            email_confirmed_at = $5,
+            confirmation_token = NULL,
+            confirmation_token_expire_at = NULL,
+            modified_at = $2,
+            email_confirmed_at = $3
             
-            where users.user_id = $6 and users.workspace_id = $7
-            returning *
+            where mdp.users.user_id = $4 and mdp.users.workspace_id = $5;
             ",
         )
-        .bind("verified")
-        .bind("")
-        .bind("")
-        .bind(Utc::now())
-        .bind(Utc::now())
+        .bind("verified") //email status
+        .bind(Utc::now()) //mod
+        .bind(Utc::now()) //confirmed
         .bind(&user.user_id)
         .bind(&user.workspace_id)
         .fetch_one(&self.pool)
@@ -96,7 +118,7 @@ impl UserCrud for Database {
 #[cfg(test)]
 mod tests {
     use crate::db::{
-        database::{CreateUserRequest, Database},
+        database::{CreateUserRequest, Database, UserModel},
         users::UserCrud,
     };
 
@@ -112,5 +134,38 @@ mod tests {
         let user = db.create_user(create_user_request).await.unwrap();
 
         println!("success: {user:?}")
+    }
+
+    #[tokio::test]
+    async fn test_verify_user() {
+        let create_user_request = CreateUserRequest {
+            email: "test@jeremyarde.com".to_string(),
+            password_hash: "fakepwhash".to_string(),
+            workspace_id: Some("ws_test".to_string()),
+        };
+
+        // let user = UserModel {
+        //     id: todo!(),
+        //     email: todo!(),
+        //     password_hash: todo!(),
+        //     created_at: todo!(),
+        //     modified_at: todo!(),
+        //     deleted_at: todo!(),
+        //     email_status: todo!(),
+        //     user_id: todo!(),
+        //     workspace_id: todo!(),
+        //     email_confirmed_at: todo!(),
+        //     confirmation_token: todo!(),
+        //     confirmation_token_expire_at: todo!(),
+        //     role: todo!(),
+        // };
+
+        let db = Database::new().await.unwrap();
+        let user = db.create_user(create_user_request).await.unwrap();
+
+        let updated_user = db.verify_user(user.clone()).await.unwrap();
+
+        println!("User: {user:#?}");
+        println!("Updated User: {updated_user:#?}");
     }
 }

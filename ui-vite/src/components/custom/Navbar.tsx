@@ -64,11 +64,13 @@ export function Navbar() {
                 <div className="flex flex-row items-center">
                     {!getSessionToken() && isDev() && (
                         <>
-                            <div className="border-solid border" style={{ borderRadius: `${outerRadius}px`, padding: `${distance}px`, backgroundColor: 'black' }}>
+                            <div className="border-solid border flex" style={{ borderRadius: `${outerRadius}px`, padding: `${distance}px`, backgroundColor: 'black' }}>
                                 <div className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
                                     <Link className="p-1" style={{ color: 'white' }} to="/login">Login</Link>
                                 </div>
-                            </div>
+                                <div className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
+                                    <Link className="p-1" style={{ color: 'white' }} to="/signup">Signup</Link>
+                                </div>                            </div>
                         </>
                     )}
                     {getSessionToken() && (
