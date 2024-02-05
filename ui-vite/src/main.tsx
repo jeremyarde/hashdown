@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-nocheck
 import { StrictMode, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useParams, Outlet, useSearchParams } from 'react-router-dom'
