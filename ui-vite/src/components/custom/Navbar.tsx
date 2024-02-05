@@ -62,7 +62,7 @@ export function Navbar() {
                     </div>
                 }
                 <div className="flex flex-row items-center">
-                    {!getSessionToken() && isDev() && (
+                    {!getSessionToken() && (
                         <>
                             <div className="border-solid border flex" style={{ borderRadius: `${outerRadius}px`, padding: `${distance}px`, backgroundColor: 'black' }}>
                                 <div className=" hover:bg-blue p-1 pl-3 pr-3" style={{ borderRadius: `${outerRadius}px` }}>
