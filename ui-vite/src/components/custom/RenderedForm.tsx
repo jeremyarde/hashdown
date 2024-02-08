@@ -106,11 +106,12 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
         }
     }
 
+
     return (
         <>
             <div className="flex w-full h-full items-center justify-center"
                 style={{
-                    height: mode === 'prod' ? '100vh' : ''
+                    height: window.location.href.endsWith('/editor') ? '' : '100vh'
                 }}>
                 {parsingError ? (
                     <div style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>

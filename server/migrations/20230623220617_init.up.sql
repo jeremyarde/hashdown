@@ -22,10 +22,19 @@ CREATE table mdp.users (
     confirmation_token_expire_at TIMESTAMP WITH TIME ZONE,
     role TEXT,
 
+    -- stripe related stuff
+    stripe_id TEXT unique,
+
     primary key (workspace_id, user_id),
     foreign key (workspace_id) references mdp.workspaces(workspace_id)
     -- unique (workspace_id, email)
 );
+
+create table mdp.stripe_events (
+    id serial,
+    event_id text not null,
+    attributes JSON,
+)
 
 CREATE table mdp.surveys (
     id SERIAL,
@@ -70,6 +79,21 @@ create table mdp.sessions (
     primary key (workspace_id, id),
     foreign key (workspace_id) references mdp.workspaces(workspace_id),
     foreign key(user_id) references mdp.users(user_id) on delete cascade
+);
+
+/* Useful to capture current analytics associated with usage of the api */
+create table mdp.usage ();
+/* Used to store information about API keys that users have created to allow  */
+create table mdp.api_keys ();
+create table mdp.limits ();
+/* https://chat.openai.com/c/43c833bf-c2a2-4306-9d38-968cba5168cf*/
+create table mdp.subscriptions (
+    id serial,
+    subscription_id text not null unique,
+    user_id text not null unique,
+    subscription_plan_id text not null,
+    created_at text not null,
+    updated_at text not null,
 );
 
 /* useful for frontend to show # responses on listsurvey screen */

@@ -14,6 +14,7 @@ mod constants;
 mod db;
 mod mail;
 mod mware;
+mod payments;
 mod server;
 // mod survey;
 
@@ -61,6 +62,11 @@ async fn main() -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use crate::constants::LOGIN_EMAIL_SENDER;
+    use dotenvy::dotenv;
+    use serde::Serialize;
+    use serde_json::Value;
+    use serde_urlencoded::Serializer;
+    use std::collections::HashMap;
     //     use std::borrow::BorrowMut;
 
     //     use axum::{body::Body, http::Request, Router};
@@ -364,5 +370,207 @@ mod tests {
             Ok(_) => println!("Email sent successfully!"),
             Err(e) => panic!("Could not send email: {e:?}"),
         }
+    }
+
+    #[derive(Serialize)]
+    struct StripeCustomer {
+        name: String,
+        email: String,
+    }
+    #[tokio::test]
+    async fn test_stripe() {
+        let secret_key = dotenvy::var("TEST_STRIPE_SECRETKEY").unwrap();
+
+        // Construct the request body parameters
+        // let mut params = HashMap::new();
+        let params = [
+            (
+                "success_url",
+                "https://tricky-boats-wink.loca.lt/v1/payment/success",
+            ),
+            ("line_items[0][price]", "price_1OhNiBH1WJxpjVSWWX1WWKXq"),
+            ("line_items[0][quantity]", "1"),
+            ("mode", "subscription"),
+        ];
+
+        let encoded = serde_urlencoded::to_string(params).unwrap();
+
+        // Construct the reqwest client
+        let client = reqwest::Client::new();
+
+        // Make the POST request to the Stripe API
+        let response = client
+            .post("https://api.stripe.com/v1/checkout/sessions")
+            .header(
+                reqwest::header::AUTHORIZATION,
+                format!("Bearer {}", secret_key),
+            )
+            .header(
+                reqwest::header::CONTENT_TYPE,
+                "application/x-www-form-urlencoded",
+            )
+            .body(encoded)
+            .send()
+            .await
+            .unwrap();
+
+        // Check if the request was successful
+        if response.status().is_success() {
+            let json: Value = response.json().await.unwrap();
+
+            println!("Response: {:#?}", json);
+        } else {
+            // If not successful, print the error status code and message
+            println!(
+                "Error: {} - {}",
+                response.status(),
+                response.text().await.unwrap()
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_stripe_customer_create() {
+        let secret_key = dotenvy::var("TEST_STRIPE_SECRETKEY").unwrap();
+
+        // curl https://api.stripe.com/v1/customers \
+        // -u "sk_test_51Hsx1SH1WJxpjVSWJXVaItV1vKonbcvxROMr1uluUz80z31f0vUzKN9xxG6HUd7r3pmcl9t5rwubgPeDm7y6vWql007HSWYOYx:" \
+        // -d name="Jenny Rosen" \
+        // --data-urlencode email="jennyrosen@example.com"
+        // let params = [
+        //     ("name", "price_1OhNiBH1WJxpjVSWWX1WWKXq"),
+        //     ("line_items[0][quantity]", "1"),
+        //     ("mode", "subscription"),
+        // ];
+
+        let newcust = StripeCustomer {
+            name: "Jenny Ross".to_string(),
+            email: "test@jeremyarde.com".to_string(),
+        };
+
+        let encoded = serde_urlencoded::to_string(newcust).unwrap();
+
+        // Construct the reqwest client
+        let client = reqwest::Client::new();
+
+        let response = client
+            .post("https://api.stripe.com/v1/customers")
+            .header(
+                reqwest::header::AUTHORIZATION,
+                format!("Bearer {}", secret_key),
+            )
+            .header(
+                reqwest::header::CONTENT_TYPE,
+                "application/x-www-form-urlencoded",
+            )
+            .body(encoded)
+            .send()
+            .await
+            .unwrap();
+
+        let json: Value = response.json().await.unwrap();
+
+        println!("Response: {:#?}", json);
+
+        // Object {
+        //     "address": Null,
+        //     "balance": Number(0),
+        //     "created": Number(1707365872),
+        //     "currency": Null,
+        //     "default_currency": Null,
+        //     "default_source": Null,
+        //     "delinquent": Bool(false),
+        //     "description": Null,
+        //     "discount": Null,
+        //     "email": String("test@jeremyarde.com"),
+        //     "id": String("cus_PWRxPIJ5odGVnQ"),
+        //     "invoice_prefix": String("A754E100"),
+        //     "invoice_settings": Object {
+        //         "custom_fields": Null,
+        //         "default_payment_method": Null,
+        //         "footer": Null,
+        //         "rendering_options": Null,
+        //     },
+        //     "livemode": Bool(false),
+        //     "metadata": Object {},
+        //     "name": String("Jenny Ross"),
+        //     "next_invoice_sequence": Number(1),
+        //     "object": String("customer"),
+        //     "phone": Null,
+        //     "preferred_locales": Array [],
+        //     "shipping": Null,
+        //     "tax_exempt": String("none"),
+        //     "test_clock": Null,
+        // }
+    }
+
+    #[tokio::test]
+    async fn test_stripe_subscription_create() {
+        let secret_key = dotenvy::var("TEST_STRIPE_SECRETKEY").unwrap();
+
+        // curl https://api.stripe.com/v1/products \
+        // -u "sk_test_51Hsx1SH1WJxpjVSWJXVaItV1vKonbcvxROMr1uluUz80z31f0vUzKN9xxG6HUd7r3pmcl9t5rwubgPeDm7y6vWql007HSWYOYx:" \
+        // -d name="Basic Dashboard" \
+        // -d "default_price_data[unit_amount]"=1000 \
+        // -d "default_price_data[currency]"=usd \
+        // -d "default_price_data[recurring][interval]"=month \
+        // -d "expand[]"=default_price
+        struct StripeProduct {
+            name: String,
+            unit_amount: usize,
+            currency: String,
+            interval: String,
+            // default_price: String,
+        }
+
+        impl StripeProduct {
+            fn serialize(&self) -> String {
+                let params = [
+                    ("name", self.name.clone()),
+                    (
+                        "default_price_data[unit_amount]",
+                        self.unit_amount.to_string(),
+                    ),
+                    ("default_price_data[currency]", self.currency.to_string()),
+                    (
+                        "default_price_data[recurring][interval]",
+                        self.interval.clone(),
+                    ),
+                    ("expand[]", "default_price".to_string()),
+                ];
+
+                let encoded = serde_urlencoded::to_string(params).unwrap();
+                return encoded;
+            }
+        }
+
+        let newproduct = StripeProduct {
+            name: "hashdown".to_string(),
+            unit_amount: 5900,
+            currency: "usd".to_string(),
+            interval: "monthly".to_string(),
+        };
+
+        // Construct the reqwest client
+        let client = reqwest::Client::new();
+
+        let response = client
+            .post("https://api.stripe.com/v1/products")
+            .header(
+                reqwest::header::AUTHORIZATION,
+                format!("Bearer {}", secret_key),
+            )
+            .header(
+                reqwest::header::CONTENT_TYPE,
+                "application/x-www-form-urlencoded",
+            )
+            .body(newproduct.serialize())
+            .send()
+            .await
+            .unwrap();
+
+        let json: Value = response.json().await.unwrap();
+
+        println!("Response: {:#?}", json);
     }
 }

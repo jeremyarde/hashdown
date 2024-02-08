@@ -26,6 +26,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "cmdk": "^0.2.0",
+    "localtunnel": "^2.0.2",
     "lucide-react": "^0.263.0",
     "markdownparser": "file:../backend/pkg",
     "react": "^18.2.0",
