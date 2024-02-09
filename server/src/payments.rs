@@ -51,7 +51,29 @@ pub async fn echo(payload: Json<Value>) {
         info!("Untracked event");
         return;
     }
+
+    match event_enum {
+        StripeEvent::CheckoutSessionCompleted | StripeEvent::InvoicePaymentSuccess => {
+            handle_subscription_success();
+        }
+        StripeEvent::CheckoutSessionExpired => todo!(),
+        StripeEvent::StripeCheckoutSessionAsyncPaymentSucceeded => todo!(),
+        StripeEvent::CustomerSourceExpiring => todo!(),
+        StripeEvent::CustomerSubscriptionDeleted => todo!(),
+        StripeEvent::CustomerSubscriptionUpdated => todo!(),
+        StripeEvent::RadarEarlyFraudWarningCreated => todo!(),
+        StripeEvent::InvoicePaymentActionRequired => todo!(),
+        StripeEvent::CustomerSubscriptionTrialWillEnd => todo!(),
+        StripeEvent::InvoicePaymentFailed => todo!(),
+        StripeEvent::UntrackedEvent => todo!(),
+        StripeEvent::SetupIntentSuccess => todo!(),
+        StripeEvent::PaymentIntentSuccess => todo!(),
+        StripeEvent::ChargeDisputeCreated => todo!(),
+        _ => {}
+    }
 }
+
+fn handle_subscription_success() {}
 
 // checkout.session.completed
 // stripe.checkout.session.async_payment_succeeded

@@ -32,8 +32,10 @@ CREATE table mdp.users (
 
 create table mdp.stripe_events (
     id serial,
-    event_id text not null,
+    stripe_event_id text not null,
     attributes JSON,
+    event_type Text not null,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 )
 
 CREATE table mdp.surveys (

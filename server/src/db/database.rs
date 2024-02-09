@@ -9,39 +9,15 @@ use chrono::{DateTime, Duration, Utc};
 use hyper::Server;
 use lettre::transport::smtp::commands::Data;
 use markdownparser::{nanoid_gen, NanoId};
-// use ormlite::{postgres::PgPool, Model};
+
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::{
     postgres::{PgPoolOptions, PgQueryResult},
     FromRow, PgPool,
 };
-
-// use models::CreateAnswersModel;
-// use chrono::Local;
-// use sqlx::{
-//     postgres::PgConnectOptions,
-//     sqlite::{SqliteConnectOptions, SqliteJournalMode},
-//     ConnectOptions, FromRow, PgPool, Row, SqliteConnection, SqlitePool,
-// };
 use tracing::{info, instrument};
 use tracing_subscriber::fmt::format;
-
-// mod models;
-// use models::{CreateAnswersModel, CreateSurveyRequest, SurveyModel};
-
-// #[derive(Clone, Debug, Serialize, Deserialize)]
-// pub struct SurveyModel {
-//     pub id: i32,
-//     pub plaintext: String,
-//     pub user_id: String,
-//     // pub created_at: String,
-//     // pub modified_at: String,
-//     // pub questions: Option<Vec<Question>>,
-//     pub version: String,
-//     pub parse_version: String,
-//     pub metadata: Metadata,
-// }
 
 use crate::{mware::ctext::SessionContext, survey_responses::SubmitResponseRequest, ServerError};
 
