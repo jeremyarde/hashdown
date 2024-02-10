@@ -18,7 +18,7 @@ pub struct StripeEvent {
 }
 
 pub trait StripeCrud {
-    async fn log_event(&self, request: Value) -> Result<bool, ServerError>;
+    async fn log_event(&self, request: Value) -> Result<StripeEvent, ServerError>;
     // async fn create_user(&self, request: CreateUserRequest) -> Result<UserModel, ServerError>;
     // async fn get_user_by_email(&self, email: String) -> Result<UserModel, ServerError>;
     // async fn get_user_by_confirmation_code(
@@ -29,7 +29,7 @@ pub trait StripeCrud {
 }
 
 impl StripeCrud for Database {
-    async fn log_event(&self, request: Value) -> Result<bool, ServerError> {
+    async fn log_event(&self, request: Value) -> Result<StripeEvent, ServerError> {
         println!("->> log_event");
 
         let _time = chrono::Utc::now();

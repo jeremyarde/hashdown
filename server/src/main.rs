@@ -12,6 +12,7 @@ mod auth;
 mod config;
 mod constants;
 mod db;
+mod email_validator;
 mod mail;
 mod mware;
 mod payments;

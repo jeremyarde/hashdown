@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use form::{formvalue_to_survey, parse_markdown_text, Block};
 use wasm_bindgen::prelude::*;
 
@@ -35,9 +37,9 @@ impl NanoId {
     }
 }
 
-impl ToString for NanoId {
-    fn to_string(&self) -> String {
-        return self.0.to_string();
+impl Display for NanoId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

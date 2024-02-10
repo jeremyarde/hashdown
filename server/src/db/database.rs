@@ -1,5 +1,5 @@
 use std::{
-    fmt::{self},
+    fmt::{self, Display},
     ops::Add,
 };
 
@@ -13,8 +13,8 @@ use markdownparser::{nanoid_gen, NanoId};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::{
-    postgres::{PgPoolOptions, PgQueryResult},
-    FromRow, PgPool,
+    postgres::{PgPoolOptions, PgQueryResult, PgTypeInfo},
+    Decode, Encode, FromRow, PgPool, Postgres, Type,
 };
 use tracing::{info, instrument};
 use tracing_subscriber::fmt::format;
@@ -58,7 +58,7 @@ impl Settings {
 }
 
 struct UpdateSurveyRequest {
-    id: NanoId,
+    id: NanoIdModel,
 }
 
 // would be nice to do...
@@ -115,16 +115,42 @@ pub struct Answer {
     pub answers: Vec<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::Type)]
+pub struct Email {
+    email: String,
+}
+
+impl Email {
+    fn new(email: String) -> Email {
+        return Email { email };
+    }
+}
+
+// impl Display for Email {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(f, "{}", self.email)
+//     }
+// }
+
+#[derive(sqlx::Type, Debug, Deserialize, Serialize, Clone)]
+pub struct NanoIdModel(String);
+
+// impl Type<Postgres> for NanoIdModel {
+//     fn type_info() -> PgTypeInfo {
+//         PgTypeInfo::String
+//     }
+// }
+
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
 pub struct UserModel {
     pub id: Option<i32>,
-    pub email: String,
+    pub email: Email,
     pub password_hash: String,
     pub created_at: DateTime<Utc>,
     pub modified_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
     pub email_status: Option<String>,
-    pub user_id: String,
+    pub user_id: NanoIdModel,
     pub workspace_id: Option<String>,
     pub email_confirmed_at: Option<DateTime<Utc>>,
     pub confirmation_token: Option<String>,
@@ -144,12 +170,12 @@ impl UserModel {
 
         UserModel {
             id: None,
-            email: email,
+            email: Email::new(email),
             password_hash: password_hash,
             created_at: chrono::Utc::now(),
             modified_at: chrono::Utc::now(),
             email_status: Some(String::from("unverified")),
-            user_id: NanoId::from("usr").to_string(),
+            user_id: NanoIdModel(NanoId::from("usr").to_string()),
             deleted_at: None,
             workspace_id,
             email_confirmed_at: None,

@@ -28,7 +28,7 @@ impl UserCrud for Database {
         debug!("debug: {:?}", new_user);
         let _time = chrono::Utc::now();
         let user = sqlx::query_as::<_, UserModel>(
-            "insert into mdp.users (
+            r#"insert into mdp.users (
                     user_id, 
                     password_hash, 
                     email, 
@@ -37,7 +37,7 @@ impl UserCrud for Database {
                     workspace_id,
                     confirmation_token,
                     confirmation_token_expire_at
-                ) values ($1, $2, $3, $4, $5, $6, $7, $8) returning *",
+                ) values ($1, $2, $3, $4, $5, $6, $7, $8) returning *"#,
         )
         .bind(new_user.user_id)
         .bind(new_user.password_hash)

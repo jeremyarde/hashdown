@@ -124,7 +124,7 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
             SurveyPart::Checkbox {
                 options,
                 question,
-                id: NanoId::from("qes").to_string(),
+                id: NanoId::from("qes"),
             }
         }
         FormValue::Radio { properties } => {
@@ -155,7 +155,7 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
             SurveyPart::Radio {
                 options,
                 question,
-                id: NanoId::from("qes").to_string(),
+                id: NanoId::from("qes"),
             }
         }
         FormValue::TextInput { properties } => {
@@ -171,7 +171,7 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
             SurveyPart::TextInput {
                 question,
                 default,
-                id: NanoId::from("qes").to_string(),
+                id: NanoId::from("qes"),
             }
         }
         FormValue::Dropdown { properties } => {
@@ -197,7 +197,7 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
             SurveyPart::Dropdown {
                 question,
                 options,
-                id: NanoId::from("qes").to_string(),
+                id: NanoId::from("qes"),
             }
         }
         FormValue::Submit { properties } => {
@@ -227,7 +227,7 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
             SurveyPart::Textarea {
                 question,
                 default,
-                id: NanoId::from("qes").to_string(),
+                id: NanoId::from("qes"),
             }
         }
         // FormValue::DefaultValue { text } => todo!(), // _ => SurveyPart::Nothing,
@@ -261,27 +261,27 @@ pub enum SurveyPart {
         title: String,
     },
     Radio {
-        id: String,
+        id: NanoId,
         question: String,
         options: Vec<String>,
     },
     Checkbox {
-        id: String,
+        id: NanoId,
         question: String,
         options: Vec<CheckboxItem>,
     },
     Dropdown {
-        id: String,
+        id: NanoId,
         question: String,
         options: Vec<String>,
     },
     TextInput {
-        id: String,
+        id: NanoId,
         question: String,
         default: String,
     },
     Textarea {
-        id: String,
+        id: NanoId,
         question: String,
         default: String,
     },
