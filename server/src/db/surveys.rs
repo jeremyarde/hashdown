@@ -73,7 +73,7 @@ pub async fn create_survey(
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> create_survey");
     info!("Creating new survey for user={:?}", ctx.session.user_id);
-
+    
     let survey = SurveyModel::new(payload, &ctx.session);
 
     let insert_result: SurveyModel = state

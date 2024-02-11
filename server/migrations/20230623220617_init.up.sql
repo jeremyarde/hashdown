@@ -1,14 +1,17 @@
+-- Your SQL goes here
 -- Add migration script here
 create schema if not exists mdp;
 
 create table mdp.workspaces (
-    id serial primary key,
+    -- id serial primary key,
     workspace_id text not null unique,
-    name VARCHAR(255) NOT NULL
+    name VARCHAR(255) NOT NULL,
+
+    primary key (workspace_id)
 );
 
 CREATE table mdp.users (
-    id SERIAL,
+    -- id serial,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -31,15 +34,19 @@ CREATE table mdp.users (
 );
 
 create table mdp.stripe_events (
-    id serial,
+    -- id serial primary key,
     stripe_event_id text not null,
+    from_stripe_event_id text not null,
     attributes JSON,
     event_type Text not null,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-)
+    workspace_id text not null,
+
+    primary key (workspace_id, stripe_event_id)
+);
 
 CREATE table mdp.surveys (
-    id SERIAL,
+    -- id serial,
     survey_id TEXT not null unique,
     workspace_id text not null,
     user_id text not null,
@@ -51,52 +58,52 @@ CREATE table mdp.surveys (
     parse_version TEXT,
     blocks JSON not null,
 
-    primary key (workspace_id, id),
+    primary key (workspace_id, survey_id),
     foreign key (workspace_id) references mdp.workspaces(workspace_id),
     foreign key(user_id) references mdp.users(user_id)
 );
 
 CREATE table mdp.responses (
-    id SERIAL,
+    -- id serial,
     response_id TEXT not null unique,
     workspace_id text not null,
     submitted_at TIMESTAMP WITH TIME ZONE,
     answers JSON,
     survey_id TEXT NOT NULL,
 
-    primary key (workspace_id, id),
+    primary key (workspace_id, response_id),
     foreign key (workspace_id) references mdp.workspaces(workspace_id),
     foreign key(survey_id) references mdp.surveys(survey_id)
 );
 
 
 create table mdp.sessions (
-    id serial,
-    workspace_id text not null,
+    -- id serial,
     session_id TEXT not null unique,
+    workspace_id text not null,
     user_id TEXT NOT NULl unique,
     active_period_expires_at TIMESTAMP with time ZONE DEFAULT CURRENT_TIMESTAMP not null,
     idle_period_expires_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP not null,
 
-    primary key (workspace_id, id),
+    primary key (workspace_id, session_id),
     foreign key (workspace_id) references mdp.workspaces(workspace_id),
     foreign key(user_id) references mdp.users(user_id) on delete cascade
 );
 
 /* Useful to capture current analytics associated with usage of the api */
-create table mdp.usage ();
-/* Used to store information about API keys that users have created to allow  */
-create table mdp.api_keys ();
-create table mdp.limits ();
-/* https://chat.openai.com/c/43c833bf-c2a2-4306-9d38-968cba5168cf*/
-create table mdp.subscriptions (
-    id serial,
-    subscription_id text not null unique,
-    user_id text not null unique,
-    subscription_plan_id text not null,
-    created_at text not null,
-    updated_at text not null,
-);
+-- create table mdp.usage ();
+-- /* Used to store information about API keys that users have created to allow  */
+-- create table mdp.api_keys ();
+-- create table mdp.limits ();
+-- /* https://chat.openai.com/c/43c833bf-c2a2-4306-9d38-968cba5168cf*/
+-- create table mdp.subscriptions (
+--     id serial,
+--     subscription_id text not null unique,
+--     user_id text not null unique,
+--     subscription_plan_id text not null,
+--     created_at text not null,
+--     updated_at text not null,
+-- );
 
 /* useful for frontend to show # responses on listsurvey screen */
 create materialized view
@@ -169,6 +176,3 @@ Submit: Put me on waitlist',
     '[{"id":"4cxmez99swdf","index":0,"block_type":"Title","properties":{"type":"Title","title":"Get emailed when hashdown is available"}},{"id":"4wgpbx5nqiav","index":0,"block_type":"TextInput","properties":{"type":"TextInput","default":"","question":"Email"}},{"id":"93241ezrlet1","index":0,"block_type":"Textarea","properties":{"type":"Textarea","default":"","question":"What do you want to use Hashdown for?"}},{"id":"svjimprwun33","index":0,"block_type":"Submit","properties":{"type":"Submit","default":"Submit","button":"Put me on waitlist"}},{"id":"3gvtzvmsz1ip","index":0,"block_type":"Empty","properties":{"type":"Nothing"}}]',
     'ws_default'
 );
-
-
--- create materializedVIEW for # of responses to a survey
