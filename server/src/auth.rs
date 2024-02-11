@@ -1,8 +1,10 @@
+use std::ops::Add;
+
 use argon2::{PasswordHash, PasswordHasher};
 
 use axum::{
     extract::{Path, Query},
-    http::{HeaderMap, HeaderValue},
+    http::{header::SET_COOKIE, HeaderMap, HeaderValue},
 };
 
 use argon2::password_hash::rand_core::OsRng;
@@ -14,10 +16,13 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use axum::{Extension, Json};
-use chrono::{Duration, Utc};
+use axum_extra::extract::cookie::Cookie;
+use chrono::{format::OffsetFormat, offset, Days, Duration, Utc};
 use markdownparser::nanoid_gen;
+use sea_orm::prelude::DateTimeUtc;
 use serde::Deserialize;
 use serde_json::{json, Value};
+use sqlx::types::time::OffsetDateTime;
 use tracing::{debug, log::info};
 
 use crate::db::{database::CreateUserRequest, users::UserCrud};
@@ -219,15 +224,6 @@ pub async fn login(
 
     let headers = create_session_headers(&session);
 
-    // let offset =
-    //     OffsetDateTime::from_unix_timestamp(session.active_period_expires_at.timestamp()).unwrap();
-
-    // let session_cookie = Cookie::build("session_id", session.session_id.clone())
-    //     .http_only(true)
-    //     // .expires(offset)
-    //     .finish();
-    // let cookies = jar.add(session_cookie);
-
     Ok((
         // cookies,
         headers,
@@ -247,33 +243,22 @@ async fn generate_magic_link(_state: &ServerState, _ctext: SessionContext) -> St
 
 pub fn create_session_headers(session: &Session) -> HeaderMap {
     let mut headers = HeaderMap::new();
-    // headers.insert(
-    //     SET_COOKIE,
-    //     HeaderValue::from_str(format!("{}={}", SESSION_ID_KEY, &session.session_id).as_str())
-    //         .unwrap(),
-    // );
-    // let session_cookie = Cookie::build("session_id", session.session_id.clone())
-    //     // .domain("http://localhost:8080")
-    //     .path("/")
-    //     .http_only(true)
-    //     .secure(true)
-    //     .finish();
-
-    // let session_key = session_cookie.name().to_owned();
-    // let session_value = session_cookie.to_string();
+    let session_cookie = Cookie::build("session_id", session.session_id.clone())
+        // .domain("http://localhost:8080")
+        .path("/")
+        .http_only(true)
+        .secure(true)
+        .expires(OffsetDateTime::now_utc().add(Duration::days(1).to_std().unwrap()))
+        .finish();
 
     headers.insert(
         SESSION_ID_KEY,
         HeaderValue::from_str(&session.session_id).unwrap(),
     );
-    // headers.insert(
-    //     SET_COOKIE,
-    //     HeaderValue::from_str(&format!(
-    //         "session_id={}; HttpOnly; Secure; Path=/",
-    //         session.session_id
-    //     ))
-    //     .unwrap(),
-    // );
+    headers.insert(
+        SET_COOKIE,
+        HeaderValue::from_str(&session_cookie.to_string()).unwrap(),
+    );
 
     info!("Session_id: {headers:?}");
 
