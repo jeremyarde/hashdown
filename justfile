@@ -54,4 +54,4 @@ buildfe:
     cd ui-vite && npm run build
 
 sea:
-    cd server && sea-orm-cli generate entity -s mdp
+    cd server && sea-orm-cli generate entity -s mdp -o ../entity/src/entities
