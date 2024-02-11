@@ -18,15 +18,16 @@ use axum::{
 use axum::{Extension, Json};
 use axum_extra::extract::cookie::Cookie;
 use chrono::{format::OffsetFormat, offset, Days, Duration, Utc};
+use entity::sessions::Column;
 use markdownparser::nanoid_gen;
-use sea_orm::prelude::DateTimeUtc;
+use sea_orm::{prelude::DateTimeUtc, ActiveModelTrait, ModelTrait};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use sqlx::types::time::OffsetDateTime;
 use tracing::{debug, log::info};
 
+use crate::db::database::{MdpActiveSession, MdpSession, UserModel};
 use crate::db::{database::CreateUserRequest, users::UserCrud};
-use crate::db::{database::UserModel, sessions::Session};
 use crate::mware::ctext::SessionContext;
 use crate::routes::LoginPayload;
 use crate::ServerError;
@@ -144,7 +145,7 @@ pub async fn signup(
 
     Ok((
         headers,
-        Json(json!({"email": email, "session_id": session.session_id})),
+        Json(json!({"email": email, "session_id": session.0.session_id.unwrap().to_string()})),
     ))
 }
 
@@ -227,7 +228,7 @@ pub async fn login(
     Ok((
         // cookies,
         headers,
-        Json(json!({"email": username, "session_id": session.session_id})),
+        Json(json!({"email": username, "session_id": session.0.session_id.unwrap().to_string()})),
     ))
 }
 
@@ -241,7 +242,7 @@ async fn generate_magic_link(_state: &ServerState, _ctext: SessionContext) -> St
     magic_link
 }
 
-pub fn create_session_headers(session: &Session) -> HeaderMap {
+pub fn create_session_headers(session: &MdpActiveSession) -> HeaderMap {
     let mut headers = HeaderMap::new();
     let session_cookie = Cookie::build("session_id", session.session_id.clone())
         // .domain("http://localhost:8080")
@@ -303,16 +304,17 @@ pub async fn validate_session_middleware(
 
     // get session from database using existing Session
     let curr_session = state.db.get_session(session_id.to_string()).await?;
-
-    if Utc::now() > curr_session.idle_period_expires_at {
+    let active_session = curr_session.0;
+    if Utc::now() > active_session.idle_period_expires_at {
         return Err(ServerError::LoginFail);
     }
 
-    info!("Current session: {:?}", curr_session);
-    if Utc::now() > curr_session.active_period_expires_at {
+    info!("Current session: {:?}", active_session);
+    if Utc::now() > active_session.active_period_expires_at {
         info!("session not active anymore?");
         let new_active_expires = Utc::now() + Duration::days(1);
         let new_idle_expires = Utc::now() + Duration::days(2);
+
         // let updated_session = state
         //     .db
         //     .update_session(Session {
