@@ -7,7 +7,7 @@ use sqlx::{self, FromRow};
 
 use chrono::{self, Utc};
 
-use crate::{Database, ServerError};
+use crate::{MdpDatabase, ServerError};
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
 pub struct StripeEvent {
@@ -28,7 +28,7 @@ pub trait StripeCrud {
     // async fn verify_user(&self, new_user: UserModel) -> Result<UserModel, ServerError>;
 }
 
-impl StripeCrud for Database {
+impl StripeCrud for MdpDatabase {
     async fn log_event(&self, request: Value) -> Result<StripeEvent, ServerError> {
         println!("->> log_event");
 

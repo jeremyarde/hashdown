@@ -52,3 +52,6 @@ buildwasm:
     
 buildfe:
     cd ui-vite && npm run build
+
+sea:
+    cd server && sea-orm-cli generate entity -s mdp

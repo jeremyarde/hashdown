@@ -19,7 +19,7 @@ mod payments;
 mod server;
 // mod survey;
 
-use db::database::Database;
+use db::database::MdpDatabase;
 
 mod error;
 // mod mail;
@@ -30,7 +30,7 @@ pub use self::error::ServerError;
 
 #[derive(Debug, Clone)]
 pub struct ServerState {
-    db: Database,
+    db: MdpDatabase,
     mail: Mailer,
     config: EnvConfig,
 }

@@ -1,6 +1,6 @@
 use axum::Router;
 use chrono::{DateTime, Utc};
-use db::database::Database;
+use db::database::MdpDatabase;
 
 // use hyper::Server;
 // use hyper::Server;
@@ -31,7 +31,9 @@ pub struct ServerApplication {
 
 impl ServerApplication {
     pub async fn get_router() -> Router {
-        let db = Database::new().await.expect("Error connecting to database");
+        let db = MdpDatabase::new()
+            .await
+            .expect("Error connecting to database");
         let state = ServerState {
             db,
             mail: Mailer::new(),

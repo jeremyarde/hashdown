@@ -4,7 +4,7 @@ use sqlx;
 
 use chrono::{self, Utc};
 
-use crate::{Database, ServerError};
+use crate::{MdpDatabase, ServerError};
 
 use crate::db::database::UserModel;
 
@@ -20,7 +20,7 @@ pub trait UserCrud {
     async fn verify_user(&self, new_user: UserModel) -> Result<UserModel, ServerError>;
 }
 
-impl UserCrud for Database {
+impl UserCrud for MdpDatabase {
     async fn create_user(&self, request: CreateUserRequest) -> Result<UserModel, ServerError> {
         println!("->> create_user");
         let new_user = UserModel::from(request.email, request.password_hash, request.workspace_id);
@@ -119,7 +119,7 @@ impl UserCrud for Database {
 #[cfg(test)]
 mod tests {
     use crate::db::{
-        database::{CreateUserRequest, Database, UserModel},
+        database::{CreateUserRequest, MdpDatabase, UserModel},
         users::UserCrud,
     };
 
@@ -131,7 +131,7 @@ mod tests {
             workspace_id: Some("ws_test".to_string()),
         };
 
-        let db = Database::new().await.unwrap();
+        let db = MdpDatabase::new().await.unwrap();
         let user = db.create_user(create_user_request).await.unwrap();
 
         println!("success: {user:?}")
@@ -145,7 +145,7 @@ mod tests {
             workspace_id: Some("ws_test".to_string()),
         };
 
-        let db = Database::new().await.unwrap();
+        let db = MdpDatabase::new().await.unwrap();
         let user = db.create_user(create_user_request).await.unwrap();
 
         let updated_user = db.verify_user(user.clone()).await.unwrap();

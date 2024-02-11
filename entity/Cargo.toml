@@ -1,0 +1,7 @@
+[package]
+edition = "2021"
+name = "entity"
+version = "0.1.0"
+
+[dependencies]
+sea-orm = {version = "0.12"}

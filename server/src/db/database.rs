@@ -10,6 +10,7 @@ use hyper::Server;
 use lettre::transport::smtp::commands::Data;
 use markdownparser::{nanoid_gen, NanoId};
 
+use sea_orm::{Database, DatabaseConnection};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::{
@@ -26,10 +27,12 @@ use super::{
     surveys::{CreateSurveyRequest, SurveyModel},
 };
 
+use migration::{Migrator, MigratorTrait};
+
 // mod models;
 
 #[derive(Debug, Clone)]
-pub struct Database {
+pub struct MdpDatabase {
     // data: Arc<RwLock<TodoModel>>,
     // pub pool: SqlitePool,
     pub pool: PgPool,
@@ -37,6 +40,7 @@ pub struct Database {
     // pub pool: SqlitePool,
     // options: Option<DatabaseOptions>,
     pub settings: Settings,
+    pub sea_pool: DatabaseConnection,
 }
 
 #[derive()]
@@ -67,7 +71,7 @@ struct UpdateSurveyRequest {
 //     myvalue: String
 // }
 
-impl Database {
+impl MdpDatabase {
     pub async fn new() -> anyhow::Result<Self> {
         let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
         let db_url = ConnectionDetails(uri);
@@ -87,10 +91,16 @@ impl Database {
         // let settings = sqlx::query_as::<_, Settings>("select * from settings")
         //     .fetch_one(&mut pool)
         //     .await?;
+        let db: DatabaseConnection =
+            Database::connect("protocol://username:password@host/database").await?;
 
-        Ok(Database {
+        // let connection = sea_orm::Database::connect(&database_url).await?;
+        Migrator::up(&db, None).await?;
+
+        Ok(MdpDatabase {
             pool,
             settings: Settings::default(),
+            sea_pool: db,
         })
     }
 }
@@ -213,7 +223,7 @@ pub trait SurveyCrud {
     ) -> anyhow::Result<SurveyModel>;
 }
 
-impl SurveyCrud for Database {
+impl SurveyCrud for MdpDatabase {
     async fn get_survey(
         &self,
         survey_id: &String,
@@ -279,7 +289,7 @@ pub struct WorkspaceModel {
     pub name: String,
 }
 
-impl Database {
+impl MdpDatabase {
     pub async fn create_workspace(&self) -> Result<WorkspaceModel, ServerError> {
         let workspace_id = NanoId::from("ws").to_string();
         let name = "";
@@ -429,11 +439,11 @@ impl Database {
 
 #[cfg(test)]
 mod tests {
-    use super::Database;
+    use super::MdpDatabase;
 
     #[tokio::test]
     async fn test_get_session() {
-        let db = Database::new().await.unwrap();
+        let db = MdpDatabase::new().await.unwrap();
 
         let session = db
             .get_session("ut46xsy1wm6v91qcf9ew4ijzcdgbq14z".to_string())

@@ -1,7 +1,9 @@
 [workspace]
 members = [
-  "backend", # "ui", 
+  "backend",
+  "entity", # "ui", 
   "server", # "db",  # "ui",
+  "migration",
 ]
 
 resolver = "2"
