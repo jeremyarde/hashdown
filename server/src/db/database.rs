@@ -292,8 +292,8 @@ pub struct WorkspaceModel {
     pub name: String,
 }
 
-pub struct MdpSession(Model);
-pub struct MdpActiveSession(ActiveModel);
+pub struct MdpSession(pub Model);
+pub struct MdpActiveSession(pub ActiveModel);
 
 impl MdpDatabase {
     pub async fn create_workspace(&self) -> Result<WorkspaceModel, ServerError> {
@@ -408,21 +408,21 @@ impl MdpDatabase {
         return Ok(MdpActiveSession(new_session));
     }
 
-    pub async fn update_session(
-        &self,
-        session: MdpActiveSession,
-    ) -> anyhow::Result<Session, ServerError> {
-        // let curr_session = sqlx::query_as::<_, Session>(
-        //     r#"update mdp.sessions set active_period_expires_at = $1, idle_period_expires_at = $2 where mdp.sessions.session_id = $3 and mdp.sessions.user_id = $4 and mdp.sessions.workspace_id = $5 returning *"#
-        // ).bind(session.active_period_expires_at)
-        // .bind(session.idle_period_expires_at)
-        // .bind(session.session_id)
-        // .bind(session.user_id)
-        // .bind(session.workspace_id)
-        // .fetch_one(&self.pool).await.unwrap();
+    // pub async fn update_session(
+    //     &self,
+    //     session: MdpActiveSession,
+    // ) -> anyhow::Result<Session, ServerError> {
+    //     // let curr_session = sqlx::query_as::<_, Session>(
+    //     //     r#"update mdp.sessions set active_period_expires_at = $1, idle_period_expires_at = $2 where mdp.sessions.session_id = $3 and mdp.sessions.user_id = $4 and mdp.sessions.workspace_id = $5 returning *"#
+    //     // ).bind(session.active_period_expires_at)
+    //     // .bind(session.idle_period_expires_at)
+    //     // .bind(session.session_id)
+    //     // .bind(session.user_id)
+    //     // .bind(session.workspace_id)
+    //     // .fetch_one(&self.pool).await.unwrap();
 
-        Ok(curr_session)
-    }
+    //     Ok(curr_session)
+    // }
 
     pub async fn delete_session(
         &self,
