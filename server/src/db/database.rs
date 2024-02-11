@@ -293,6 +293,8 @@ pub struct WorkspaceModel {
 }
 
 pub struct MdpSession(pub Model);
+
+#[derive(Clone)]
 pub struct MdpActiveSession(pub ActiveModel);
 
 impl MdpDatabase {
@@ -353,7 +355,10 @@ impl MdpDatabase {
         Ok(answers)
     }
 
-    pub async fn get_session(&self, session_id: String) -> anyhow::Result<MdpSession, ServerError> {
+    pub async fn get_session(
+        &self,
+        session_id: String,
+    ) -> anyhow::Result<MdpActiveSession, ServerError> {
         // let curr_session: Session = sqlx::query_as::<_, Session>(
         //     r#"select * from mdp.sessions where mdp.sessions.session_id = $1"#,
         // )
@@ -368,7 +373,7 @@ impl MdpDatabase {
             .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
 
         if let Some(session) = curr_session {
-            return Ok(MdpSession(session));
+            return Ok(MdpActiveSession(session.into()));
         } else {
             return Err(ServerError::Database(format!("Did not find session")));
         };

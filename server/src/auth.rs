@@ -17,10 +17,10 @@ use axum::{
 };
 use axum::{Extension, Json};
 use axum_extra::extract::cookie::Cookie;
-use chrono::{format::OffsetFormat, offset, Days, Duration, Utc};
+use chrono::{format::OffsetFormat, offset, Days, Duration, FixedOffset, Utc};
 use entity::sessions::Column;
 use markdownparser::nanoid_gen;
-use sea_orm::{prelude::DateTimeUtc, ActiveModelTrait, ModelTrait};
+use sea_orm::{prelude::DateTimeUtc, ActiveModelTrait, ModelTrait, Set};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use sqlx::types::time::OffsetDateTime;
@@ -304,17 +304,25 @@ pub async fn validate_session_middleware(
 
     // get session from database using existing Session
     let curr_session = state.db.get_session(session_id.to_string()).await?;
-    let active_session = curr_session.0;
-    if Utc::now() > active_session.idle_period_expires_at {
+    let mut active_session = curr_session.0;
+    if &Utc::now() > active_session.idle_period_expires_at.as_ref() {
         return Err(ServerError::LoginFail);
     }
 
     info!("Current session: {:?}", active_session);
-    if Utc::now() > active_session.active_period_expires_at {
+    if &Utc::now() > active_session.active_period_expires_at.as_ref() {
         info!("session not active anymore?");
+
         let new_active_expires = Utc::now() + Duration::days(1);
         let new_idle_expires = Utc::now() + Duration::days(2);
 
+        active_session.active_period_expires_at = Set(new_active_expires.into());
+        active_session.idle_period_expires_at = Set(new_idle_expires.into());
+
+        let updated_session = active_session
+            .update(&state.db.sea_pool)
+            .await
+            .map_err(|err| ServerError::Database(format!("Error with db: {err}")))?;
         // let updated_session = state
         //     .db
         //     .update_session(Session {
@@ -326,18 +334,16 @@ pub async fn validate_session_middleware(
         //         workspace_id: curr_session.workspace_id,
         //     })
         //     .await?;
-        request.extensions_mut().insert(updated_session.clone());
-        request.extensions_mut().insert(SessionContext {
-            user_id: updated_session.user_id.to_string(),
-            session: updated_session,
-        });
+        // request.extensions_mut().insert(updated_session.clone());
+        // request.extensions_mut().insert(SessionContext {
+        //     user_id: updated_session.user_id.to_string(),
+        //     session: updated_session,
+        // });
+        request.extensions_mut().insert(updated_session);
     } else {
         // remove this later
         info!("Session still active, not updating");
-        request.extensions_mut().insert(SessionContext {
-            user_id: curr_session.user_id.to_string(),
-            session: curr_session,
-        });
+        request.extensions_mut().insert(active_session);
         info!("Added ctext to request data");
     }
 
