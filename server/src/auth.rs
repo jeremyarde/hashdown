@@ -326,8 +326,8 @@ pub async fn validate_session_middleware(
     info!("Current session: {:?}", curr_session);
     if Utc::now() > curr_session.active_period_expires_at {
         info!("session not active anymore?");
-        let new_active_expires = Utc::now() + Duration::hours(1);
-        let new_idle_expires = Utc::now() + Duration::hours(2);
+        let new_active_expires = Utc::now() + Duration::days(1);
+        let new_idle_expires = Utc::now() + Duration::days(2);
         let updated_session = state
             .db
             .update_session(Session {

@@ -1,3 +1,4 @@
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use tracing::{debug, info};
 
 use sqlx;
@@ -9,6 +10,8 @@ use crate::{MdpDatabase, ServerError};
 use crate::db::database::UserModel;
 
 use super::database::CreateUserRequest;
+
+use entity::users::{self, Entity as User};
 
 pub trait UserCrud {
     async fn create_user(&self, request: CreateUserRequest) -> Result<UserModel, ServerError>;
@@ -56,6 +59,14 @@ impl UserCrud for MdpDatabase {
 
     async fn get_user_by_email(&self, email: String) -> Result<UserModel, ServerError> {
         info!("Search for user with email: {email:?}");
+
+        let user = User::find()
+            .filter(users::Column::Email.eq(email.clone()))
+            .one(&self.sea_pool)
+            .await
+            .map_err(|err| {
+                ServerError::Database(format!("Could not find user with email. Error: {err}"))
+            })?;
 
         let res: UserModel = sqlx::query_as(r#"select * from mdp.users where email = $1"#)
             .bind(email)

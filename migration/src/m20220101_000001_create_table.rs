@@ -7,41 +7,25 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         // Replace the sample below with your own migration scripts
-        todo!();
+        let db = manager.get_connection();
 
-        manager
-            .create_table(
-                Table::create()
-                    .table(Post::Table)
-                    .if_not_exists()
-                    .col(
-                        ColumnDef::new(Post::Id)
-                            .integer()
-                            .not_null()
-                            .auto_increment()
-                            .primary_key(),
-                    )
-                    .col(ColumnDef::new(Post::Title).string().not_null())
-                    .col(ColumnDef::new(Post::Text).string().not_null())
-                    .to_owned(),
-            )
-            .await
+        // Use `execute_unprepared` if the SQL statement doesn't have value bindings
+        db.execute_unprepared(include_str!(
+            "../../server/migrations/20230623220617_init.up.sql"
+        ))
+        .await?;
+
+        Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         // Replace the sample below with your own migration scripts
-        todo!();
+        let db = manager.get_connection();
 
-        manager
-            .drop_table(Table::drop().table(Post::Table).to_owned())
-            .await
+        // Use `execute_unprepared` if the SQL statement doesn't have value bindings
+        db.execute_unprepared("drop schema if exists mdp cascade;")
+            .await?;
+
+        Ok(())
     }
-}
-
-#[derive(DeriveIden)]
-enum Post {
-    Table,
-    Id,
-    Title,
-    Text,
 }

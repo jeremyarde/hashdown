@@ -74,7 +74,7 @@ struct UpdateSurveyRequest {
 impl MdpDatabase {
     pub async fn new() -> anyhow::Result<Self> {
         let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
-        let db_url = ConnectionDetails(uri);
+        let db_url = ConnectionDetails(uri.clone());
         // println!("{:?}", std::env::current_dir()); //Ok("/Users/jarde/Documents/code/markdownparser/server")
         // let database_url = dotenvy::var("DATABASE_URL")?;
         let database_url = db_url.0;
@@ -91,8 +91,7 @@ impl MdpDatabase {
         // let settings = sqlx::query_as::<_, Settings>("select * from settings")
         //     .fetch_one(&mut pool)
         //     .await?;
-        let db: DatabaseConnection =
-            Database::connect("protocol://username:password@host/database").await?;
+        let db: DatabaseConnection = Database::connect(uri).await?;
 
         // let connection = sea_orm::Database::connect(&database_url).await?;
         Migrator::up(&db, None).await?;
