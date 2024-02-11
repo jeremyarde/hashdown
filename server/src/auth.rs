@@ -18,15 +18,17 @@ use axum::{
 use axum::{Extension, Json};
 use axum_extra::extract::cookie::Cookie;
 use chrono::{format::OffsetFormat, offset, Days, Duration, FixedOffset, Utc};
-use entity::sessions::Column;
+use entity::{sessions::Column, users};
 use markdownparser::nanoid_gen;
-use sea_orm::{prelude::DateTimeUtc, ActiveModelTrait, ModelTrait, Set};
+use sea_orm::{
+    prelude::DateTimeUtc, ActiveModelTrait, ColumnTrait, EntityTrait, ModelTrait, QueryFilter, Set,
+};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use sqlx::types::time::OffsetDateTime;
 use tracing::{debug, log::info};
 
-use crate::db::database::{MdpActiveSession, MdpSession, UserModel};
+use crate::db::database::{MdpActiveSession, MdpSession, MdpUser, UserModel};
 use crate::db::{database::CreateUserRequest, users::UserCrud};
 use crate::mware::ctext::SessionContext;
 use crate::routes::LoginPayload;
@@ -188,6 +190,7 @@ pub async fn logout(
 
     Ok(Json(json!("logout success")))
 }
+use entity::users::Entity as User;
 
 #[axum::debug_handler]
 pub async fn login(
@@ -208,7 +211,23 @@ pub async fn login(
     }
 
     // look for user in database
-    let user = state.db.get_user_by_email(payload.email.clone()).await?;
+    let mut user = User::find()
+        .filter(users::Column::Email.eq(payload.email))
+        .one(&state.db.sea_pool)
+        .await
+        .map_err(|err| ServerError::Database("Error".to_string()))?;
+
+    // user = if user.is_none() {
+    //     return Err(ServerError::Database("User not found".to_string()));
+    // } else {
+    //     return user.unwrap();
+    // };
+    let Some(user) = user else {
+        return Err(ServerError::Database("User not found".to_string()));
+    };
+    // .unwrap_or(return Err(ServerError::Database("Could not find user".to_string())));
+
+    // let user = state.db.get_user_by_email(payload.email.clone()).await?;
 
     // check if password matches
     let argon2 = argon2::Argon2::default();
@@ -221,7 +240,7 @@ pub async fn login(
 
     // TODO: create success body
     let username = payload.email.clone();
-    let session = state.db.create_session(user).await?;
+    let session = state.db.create_session(MdpUser(user)).await?;
 
     let headers = create_session_headers(&session);
 
