@@ -10,7 +10,9 @@ use hyper::Server;
 use lettre::transport::smtp::commands::Data;
 use markdownparser::{nanoid_gen, NanoId};
 
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, Database, DatabaseConnection, EntityTrait, QueryFilter, Set,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::{
@@ -23,9 +25,11 @@ use tracing_subscriber::fmt::format;
 use crate::{mware::ctext::SessionContext, survey_responses::SubmitResponseRequest, ServerError};
 
 use super::{
-    sessions::Session,
+    // sessions::Session,
     surveys::{CreateSurveyRequest, SurveyModel},
 };
+
+use entity::sessions::{self, ActiveModel, Entity as Session, Model};
 
 use migration::{Migrator, MigratorTrait};
 
@@ -159,8 +163,8 @@ pub struct UserModel {
     pub modified_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
     pub email_status: Option<String>,
-    pub user_id: NanoIdModel,
-    pub workspace_id: Option<String>,
+    pub user_id: NanoId,
+    pub workspace_id: String,
     pub email_confirmed_at: Option<DateTime<Utc>>,
     pub confirmation_token: Option<String>,
     pub confirmation_token_expire_at: Option<DateTime<Utc>>,
@@ -288,6 +292,9 @@ pub struct WorkspaceModel {
     pub name: String,
 }
 
+pub struct MdpSession(Model);
+pub struct MdpActiveSession(ActiveModel);
+
 impl MdpDatabase {
     pub async fn create_workspace(&self) -> Result<WorkspaceModel, ServerError> {
         let workspace_id = NanoId::from("ws").to_string();
@@ -346,47 +353,73 @@ impl MdpDatabase {
         Ok(answers)
     }
 
-    pub async fn get_session(&self, session_id: String) -> anyhow::Result<Session, ServerError> {
-        let curr_session: Session = sqlx::query_as::<_, Session>(
-            r#"select * from mdp.sessions where mdp.sessions.session_id = $1"#,
-        )
-        .bind(session_id)
-        .fetch_one(&self.pool)
-        .await
-        .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
+    pub async fn get_session(&self, session_id: String) -> anyhow::Result<MdpSession, ServerError> {
+        // let curr_session: Session = sqlx::query_as::<_, Session>(
+        //     r#"select * from mdp.sessions where mdp.sessions.session_id = $1"#,
+        // )
+        // .bind(session_id)
+        // .fetch_one(&self.pool)
+        // .await
+        // .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
+        let curr_session = Session::find()
+            .filter(sessions::Column::SessionId.eq(session_id))
+            .one(&self.sea_pool)
+            .await
+            .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
 
-        Ok(curr_session)
+        if let Some(session) = curr_session {
+            return Ok(MdpSession(session));
+        } else {
+            return Err(ServerError::Database(format!("Did not find session")));
+        };
     }
 
-    pub async fn create_session(&self, user: UserModel) -> anyhow::Result<Session, ServerError> {
+    pub async fn create_session(
+        &self,
+        user: UserModel,
+    ) -> anyhow::Result<MdpActiveSession, ServerError> {
         let session_id = nanoid_gen(32);
 
-        let new_active_expires = Utc::now() + Duration::hours(1);
-        let new_idle_expires = Utc::now() + Duration::hours(2);
+        let new_active_expires = DateTime::fixed_offset(&Utc::now().add(Duration::days(1)));
+        let new_idle_expires = DateTime::fixed_offset(&Utc::now().add(Duration::days(2)));
 
-        let new_session: Session = sqlx::query_as(r#"
-            insert into mdp.sessions (session_id, user_id, active_period_expires_at, idle_period_expires_at, workspace_id) 
-            values ($1, $2, $3, $4, $5)
-            ON conflict (user_id) do update 
-            set session_id = $1, active_period_expires_at = $3, idle_period_expires_at = $4
-            where sessions.user_id = $2 returning *"#)
-            .bind(session_id).bind(user.user_id)
-            .bind(new_active_expires).bind( new_idle_expires)
-            .bind( user.workspace_id)
-        .fetch_one(&self.pool).await.map_err(|err| ServerError::Database(err.to_string()))?;
+        // let new_session: Session = sqlx::query_as(r#"
+        //     insert into mdp.sessions (session_id, user_id, active_period_expires_at, idle_period_expires_at, workspace_id)
+        //     values ($1, $2, $3, $4, $5)
+        //     ON conflict (user_id) do update
+        //     set session_id = $1, active_period_expires_at = $3, idle_period_expires_at = $4
+        //     where sessions.user_id = $2 returning *"#)
+        //     .bind(session_id).bind(user.user_id)
+        //     .bind(new_active_expires).bind( new_idle_expires)
+        //     .bind( user.workspace_id)
+        // .fetch_one(&self.pool).await.map_err(|err| ServerError::Database(err.to_string()))?;
+        let new_session = sessions::ActiveModel {
+            workspace_id: Set(user.workspace_id),
+            session_id: Set(NanoId::from("sen").to_string()),
+            user_id: Set(user.user_id.to_string()),
+            active_period_expires_at: Set(new_active_expires),
+            idle_period_expires_at: Set(new_idle_expires),
+            ..Default::default()
+        }
+        .save(&self.sea_pool)
+        .await
+        .map_err(|err| ServerError::Database(format!("Could not create session. Error: {err}")))?;
 
-        Ok(new_session)
+        return Ok(MdpActiveSession(new_session));
     }
 
-    pub async fn update_session(&self, session: Session) -> anyhow::Result<Session, ServerError> {
-        let curr_session = sqlx::query_as::<_, Session>(
-            r#"update mdp.sessions set active_period_expires_at = $1, idle_period_expires_at = $2 where mdp.sessions.session_id = $3 and mdp.sessions.user_id = $4 and mdp.sessions.workspace_id = $5 returning *"#
-        ).bind(session.active_period_expires_at)
-        .bind(session.idle_period_expires_at)
-        .bind(session.session_id)
-        .bind(session.user_id)
-        .bind(session.workspace_id)
-        .fetch_one(&self.pool).await.unwrap();
+    pub async fn update_session(
+        &self,
+        session: MdpActiveSession,
+    ) -> anyhow::Result<Session, ServerError> {
+        // let curr_session = sqlx::query_as::<_, Session>(
+        //     r#"update mdp.sessions set active_period_expires_at = $1, idle_period_expires_at = $2 where mdp.sessions.session_id = $3 and mdp.sessions.user_id = $4 and mdp.sessions.workspace_id = $5 returning *"#
+        // ).bind(session.active_period_expires_at)
+        // .bind(session.idle_period_expires_at)
+        // .bind(session.session_id)
+        // .bind(session.user_id)
+        // .bind(session.workspace_id)
+        // .fetch_one(&self.pool).await.unwrap();
 
         Ok(curr_session)
     }
