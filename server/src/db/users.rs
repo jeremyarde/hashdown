@@ -1,4 +1,4 @@
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter};
 use tracing::{debug, info};
 
 use sqlx;
@@ -13,46 +13,63 @@ use super::database::CreateUserRequest;
 
 use entity::users::{self, Entity as User};
 
-pub trait UserCrud {
-    async fn create_user(&self, request: CreateUserRequest) -> Result<UserModel, ServerError>;
-    async fn get_user_by_email(&self, email: String) -> Result<UserModel, ServerError>;
-    async fn get_user_by_confirmation_code(
-        &self,
-        confirmation_token: String,
-    ) -> Result<UserModel, ServerError>;
-    async fn verify_user(&self, new_user: UserModel) -> Result<UserModel, ServerError>;
+trait UsersTrait {
+    fn new(req: CreateUserRequest) -> users::ActiveModel;
 }
 
-impl UserCrud for MdpDatabase {
-    async fn create_user(&self, request: CreateUserRequest) -> Result<UserModel, ServerError> {
+impl UsersTrait for users::ActiveModel {
+    fn new(req: CreateUserRequest) -> users::ActiveModel {
+        return users::ActiveModel {
+            ..Default::default()
+        };
+    }
+}
+
+// pub trait UserCrud {
+//     async fn create_user(&self, request: CreateUserRequest) -> Result<UserModel, ServerError>;
+//     async fn get_user_by_email(&self, email: String) -> Result<UserModel, ServerError>;
+//     async fn get_user_by_confirmation_code(
+//         &self,
+//         confirmation_token: String,
+//     ) -> Result<UserModel, ServerError>;
+//     async fn verify_user(&self, new_user: UserModel) -> Result<UserModel, ServerError>;
+// }
+
+impl MdpDatabase {
+    async fn create_user(&self, request: CreateUserRequest) -> Result<User, ServerError> {
         println!("->> create_user");
         let new_user = UserModel::from(request.email, request.password_hash, request.workspace_id);
 
         debug!("debug: {:?}", new_user);
         let _time = chrono::Utc::now();
-        let user = sqlx::query_as::<_, UserModel>(
-            r#"insert into mdp.users (
-                    user_id, 
-                    password_hash, 
-                    email, 
-                    created_at, 
-                    modified_at,
-                    workspace_id,
-                    confirmation_token,
-                    confirmation_token_expire_at
-                ) values ($1, $2, $3, $4, $5, $6, $7, $8) returning *"#,
-        )
-        .bind(new_user.user_id)
-        .bind(new_user.password_hash)
-        .bind(new_user.email)
-        .bind(new_user.created_at)
-        .bind(new_user.modified_at)
-        .bind(new_user.workspace_id)
-        .bind(new_user.confirmation_token)
-        .bind(new_user.confirmation_token_expire_at)
-        .fetch_one(&self.pool)
-        .await
-        .map_err(|err| ServerError::Database(format!("Could not create user: {err}")))?;
+
+        let user = users::ActiveModel::new(request)
+            .save(&self.sea_pool)
+            .await
+            .map_err(|err| ServerError::Database(format!("Could not create user: {err}")))?;
+        // let user = sqlx::query_as::<_, UserModel>(
+        //     r#"insert into mdp.users (
+        //             user_id,
+        //             password_hash,
+        //             email,
+        //             created_at,
+        //             modified_at,
+        //             workspace_id,
+        //             confirmation_token,
+        //             confirmation_token_expire_at
+        //         ) values ($1, $2, $3, $4, $5, $6, $7, $8) returning *"#,
+        // )
+        // .bind(new_user.user_id)
+        // .bind(new_user.password_hash)
+        // .bind(new_user.email)
+        // .bind(new_user.created_at)
+        // .bind(new_user.modified_at)
+        // .bind(new_user.workspace_id)
+        // .bind(new_user.confirmation_token)
+        // .bind(new_user.confirmation_token_expire_at)
+        // .fetch_one(&self.pool)
+        // .await
+        // .map_err(|err| ServerError::Database(format!("Could not create user: {err}")))?;
 
         Ok(user)
     }

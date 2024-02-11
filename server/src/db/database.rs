@@ -19,8 +19,7 @@ use sqlx::{
     postgres::{PgPoolOptions, PgQueryResult, PgTypeInfo},
     Decode, Encode, FromRow, PgPool, Postgres, Type,
 };
-use tracing::{info, instrument};
-use tracing_subscriber::fmt::format;
+use tracing::info;
 
 use crate::{mware::ctext::SessionContext, survey_responses::SubmitResponseRequest, ServerError};
 
@@ -29,7 +28,10 @@ use super::{
     surveys::{CreateSurveyRequest, SurveyModel},
 };
 
-use entity::sessions::{self, ActiveModel, Entity as Session, Model};
+use entity::{
+    sessions::{self, ActiveModel, Entity as Session, Model as SessionModel},
+    users::{Entity as User, Model as UserModel},
+};
 
 use migration::{Migrator, MigratorTrait};
 
@@ -154,50 +156,50 @@ pub struct NanoIdModel(String);
 //     }
 // }
 
-#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
-pub struct UserModel {
-    pub id: Option<i32>,
-    pub email: Email,
-    pub password_hash: String,
-    pub created_at: DateTime<Utc>,
-    pub modified_at: DateTime<Utc>,
-    pub deleted_at: Option<DateTime<Utc>>,
-    pub email_status: Option<String>,
-    pub user_id: NanoId,
-    pub workspace_id: String,
-    pub email_confirmed_at: Option<DateTime<Utc>>,
-    pub confirmation_token: Option<String>,
-    pub confirmation_token_expire_at: Option<DateTime<Utc>>,
-    pub role: Option<String>,
-}
+// #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
+// pub struct UserModel {
+//     pub id: Option<i32>,
+//     pub email: Email,
+//     pub password_hash: String,
+//     pub created_at: DateTime<Utc>,
+//     pub modified_at: DateTime<Utc>,
+//     pub deleted_at: Option<DateTime<Utc>>,
+//     pub email_status: Option<String>,
+//     pub user_id: NanoId,
+//     pub workspace_id: String,
+//     pub email_confirmed_at: Option<DateTime<Utc>>,
+//     pub confirmation_token: Option<String>,
+//     pub confirmation_token_expire_at: Option<DateTime<Utc>>,
+//     pub role: Option<String>,
+// }
 
-impl UserModel {
-    pub fn from(
-        email: String,
-        password_hash: String,
-        mut workspace_id: Option<String>,
-    ) -> UserModel {
-        if workspace_id.is_none() {
-            workspace_id = Some(NanoId::from("ws").to_string());
-        }
+// impl UserModel {
+//     pub fn from(
+//         email: String,
+//         password_hash: String,
+//         mut workspace_id: Option<String>,
+//     ) -> UserModel {
+//         if workspace_id.is_none() {
+//             workspace_id = Some(NanoId::from("ws").to_string());
+//         }
 
-        UserModel {
-            id: None,
-            email: Email::new(email),
-            password_hash: password_hash,
-            created_at: chrono::Utc::now(),
-            modified_at: chrono::Utc::now(),
-            email_status: Some(String::from("unverified")),
-            user_id: NanoIdModel(NanoId::from("usr").to_string()),
-            deleted_at: None,
-            workspace_id,
-            email_confirmed_at: None,
-            confirmation_token: Some(NanoId::from_len(24).to_string()),
-            confirmation_token_expire_at: Some(chrono::Utc::now().add(Duration::days(1))),
-            role: None,
-        }
-    }
-}
+//         UserModel {
+//             id: None,
+//             email: Email::new(email),
+//             password_hash: password_hash,
+//             created_at: chrono::Utc::now(),
+//             modified_at: chrono::Utc::now(),
+//             email_status: Some(String::from("unverified")),
+//             user_id: NanoIdModel(NanoId::from("usr").to_string()),
+//             deleted_at: None,
+//             workspace_id,
+//             email_confirmed_at: None,
+//             confirmation_token: Some(NanoId::from_len(24).to_string()),
+//             confirmation_token_expire_at: Some(chrono::Utc::now().add(Duration::days(1))),
+//             role: None,
+//         }
+//     }
+// }
 
 #[derive(Deserialize, Serialize, FromRow, Debug, Clone)]
 pub struct AnswerModel {
@@ -292,7 +294,9 @@ pub struct WorkspaceModel {
     pub name: String,
 }
 
-pub struct MdpSession(pub Model);
+pub struct MdpSession(pub SessionModel);
+
+pub struct MdpUser(pub UserModel);
 
 #[derive(Clone)]
 pub struct MdpActiveSession(pub ActiveModel);
@@ -381,7 +385,7 @@ impl MdpDatabase {
 
     pub async fn create_session(
         &self,
-        user: UserModel,
+        user: MdpUser,
     ) -> anyhow::Result<MdpActiveSession, ServerError> {
         let session_id = nanoid_gen(32);
 
@@ -399,9 +403,9 @@ impl MdpDatabase {
         //     .bind( user.workspace_id)
         // .fetch_one(&self.pool).await.map_err(|err| ServerError::Database(err.to_string()))?;
         let new_session = sessions::ActiveModel {
-            workspace_id: Set(user.workspace_id),
+            workspace_id: Set(user.0.workspace_id),
             session_id: Set(NanoId::from("sen").to_string()),
-            user_id: Set(user.user_id.to_string()),
+            user_id: Set(user.0.user_id.to_string()),
             active_period_expires_at: Set(new_active_expires),
             idle_period_expires_at: Set(new_idle_expires),
             ..Default::default()
