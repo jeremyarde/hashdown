@@ -10,6 +10,7 @@ argon2 = "0.5.0"
 async-trait = "0.1.68"
 axum = {version = "0.7.2", features = ["json", "macros", "multipart"]}
 # jsonwebtoken = "8.3.0"
+entity = {path = "../entity"}
 markdownparser = {path = "../backend"}
 migration = {path = "../migration"}
 mime = "0.3.16"

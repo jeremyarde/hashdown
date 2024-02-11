@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::FromRow;
@@ -18,8 +20,8 @@ impl Session {
             id: 0,
             user_id: String::from(""),
             session_id: String::from(""),
-            active_period_expires_at: chrono::Utc::now(),
-            idle_period_expires_at: chrono::Utc::now(),
+            active_period_expires_at: chrono::Utc::now().add(chrono::Days::new(1)),
+            idle_period_expires_at: chrono::Utc::now().add(chrono::Days::new(1)),
             workspace_id: String::from(""),
         }
     }

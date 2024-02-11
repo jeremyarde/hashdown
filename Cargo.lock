@@ -2000,6 +2000,7 @@ dependencies = [
  "axum-extra",
  "chrono",
  "dotenvy",
+ "entity",
  "hyper 0.14.28",
  "lettre",
  "markdownparser",
