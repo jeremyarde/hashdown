@@ -313,17 +313,17 @@ pub async fn validate_session_middleware(
         info!("session not active anymore?");
         let new_active_expires = Utc::now() + Duration::days(1);
         let new_idle_expires = Utc::now() + Duration::days(2);
-        let updated_session = state
-            .db
-            .update_session(Session {
-                id: 0,
-                session_id: curr_session.session_id,
-                active_period_expires_at: new_active_expires,
-                idle_period_expires_at: new_idle_expires,
-                user_id: curr_session.user_id,
-                workspace_id: curr_session.workspace_id,
-            })
-            .await?;
+        // let updated_session = state
+        //     .db
+        //     .update_session(Session {
+        //         id: 0,
+        //         session_id: curr_session.session_id,
+        //         active_period_expires_at: new_active_expires,
+        //         idle_period_expires_at: new_idle_expires,
+        //         user_id: curr_session.user_id,
+        //         workspace_id: curr_session.workspace_id,
+        //     })
+        //     .await?;
         request.extensions_mut().insert(updated_session.clone());
         request.extensions_mut().insert(SessionContext {
             user_id: updated_session.user_id.to_string(),
