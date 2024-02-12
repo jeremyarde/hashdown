@@ -11,7 +11,6 @@ use serde_with::skip_serializing_none;
 use tracing::info;
 use uuid::Uuid;
 
-use crate::db::sessions::Session;
 use crate::{error::ClientError, mware::ctext::SessionContext, ServerError};
 
 #[skip_serializing_none]

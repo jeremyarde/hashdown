@@ -5,7 +5,7 @@ use axum::{extract::FromRequestParts, http::request::Parts};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-use crate::{db::sessions::Session, ServerError};
+use crate::{db::database::MdpSession, ServerError};
 
 pub const AUTH_TOKEN: &str = "x-auth-token";
 use super::super::error::Result;
@@ -192,7 +192,7 @@ pub struct JwtResult {
 #[derive(Clone, Debug)]
 pub struct SessionContext {
     pub user_id: String,
-    pub session: Session,
+    pub session: MdpSession,
     // parse cookies in here?
 }
 
@@ -201,7 +201,7 @@ impl SessionContext {
     //     &self.user_id
     // }
 
-    pub fn new(user_id: String, session: Session) -> Self {
+    pub fn new(user_id: String, session: MdpSession) -> Self {
         SessionContext { user_id, session }
     }
 }

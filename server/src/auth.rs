@@ -32,7 +32,7 @@ use sqlx::types::time::OffsetDateTime;
 use tracing::{debug, log::info};
 
 use crate::db::database::CreateUserRequest;
-use crate::db::database::{MdpActiveSession, MdpSession, MdpUser};
+use crate::db::database::{MdpSession, MdpSession, MdpUser};
 use crate::mware::ctext::SessionContext;
 use crate::routes::LoginPayload;
 use crate::ServerError;
@@ -83,12 +83,12 @@ pub async fn confirm(
 }
 
 fn verify_confirmation_token(token: &String, user: &MdpUser) -> bool {
-    if !user.confirmation_token.clone().unwrap().eq(token) {
+    if !user.0.confirmation_token.clone().unwrap().eq(token) {
         info!("Confirmation token does not match");
         return false;
     }
-    if user.confirmation_token_expire_at.is_some()
-        && user.confirmation_token_expire_at.unwrap() > Utc::now()
+    if user.0.confirmation_token_expire_at.is_some()
+        && user.0.confirmation_token_expire_at.unwrap() > Utc::now()
     {
         info!("Confirmation token has not expired");
         return true;
@@ -173,10 +173,10 @@ pub async fn delete(
     //     return Err(ServerError::AuthFailNoTokenCookie);
     // };
     // must be signed in to delete yourself
-    state.db.delete_session(&ctx.session.session_id).await?;
+    state.db.delete_session(&ctx.session.0.session_id).await?;
     state
         .db
-        .delete_user(&ctx.session.session_id, &ctx.session.workspace_id)
+        .delete_user(&ctx.session.0.session_id, &ctx.session.0.workspace_id)
         .await?;
     Ok(Json(json!("delete successful")))
 }
@@ -189,7 +189,7 @@ pub async fn logout(
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> logout");
 
-    state.db.delete_session(&ctx.session.session_id).await?;
+    state.db.delete_session(&ctx.session.0.session_id).await?;
 
     Ok(Json(json!("logout success")))
 }
@@ -265,9 +265,9 @@ async fn generate_magic_link(_state: &ServerState, _ctext: SessionContext) -> St
     magic_link
 }
 
-pub fn create_session_headers(session: &MdpActiveSession) -> HeaderMap {
+pub fn create_session_headers(session: &MdpSession) -> HeaderMap {
     let mut headers = HeaderMap::new();
-    let session_cookie = Cookie::build("session_id", session.session_id.clone())
+    let session_cookie = Cookie::build("session_id", session.0.session_id.clone())
         // .domain("http://localhost:8080")
         .path("/")
         .http_only(true)
@@ -277,7 +277,7 @@ pub fn create_session_headers(session: &MdpActiveSession) -> HeaderMap {
 
     headers.insert(
         SESSION_ID_KEY,
-        HeaderValue::from_str(&session.session_id).unwrap(),
+        HeaderValue::from_str(&session.0.session_id).unwrap(),
     );
     headers.insert(
         SET_COOKIE,
