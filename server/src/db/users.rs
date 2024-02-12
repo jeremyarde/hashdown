@@ -1,13 +1,17 @@
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter};
+use markdownparser::NanoId;
+use sea_orm::{
+    ActiveModelBehavior, ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
+    QueryFilter, Set, TryIntoModel,
+};
 use tracing::{debug, info};
 
 use sqlx;
 
-use chrono::{self, Utc};
+use chrono::{self, DateTime, Utc};
 
 use crate::{MdpDatabase, ServerError};
 
-use crate::db::database::UserModel;
+use crate::db::database::MdpUser;
 
 use super::database::CreateUserRequest;
 
@@ -35,18 +39,36 @@ impl UsersTrait for users::ActiveModel {
 //     async fn verify_user(&self, new_user: UserModel) -> Result<UserModel, ServerError>;
 // }
 
+use entity::workspaces::{self, Entity as Workspace};
 impl MdpDatabase {
-    async fn create_user(&self, request: CreateUserRequest) -> Result<User, ServerError> {
+    pub async fn create_user(&self, request: CreateUserRequest) -> Result<MdpUser, ServerError> {
         println!("->> create_user");
-        let new_user = UserModel::from(request.email, request.password_hash, request.workspace_id);
+        let mut ws_id: String;
+        if request.workspace_id.is_none() {
+            let new_workspace = workspaces::ActiveModel {
+                workspace_id: Set(NanoId::from("ws").to_string()),
+                name: Set(String::from("default")),
+                ..Default::default()
+            }
+            .save(&self.sea_pool)
+            .await
+            .map_err(|err| ServerError::Database("Failed".to_string()))?
+            .workspace_id;
 
-        debug!("debug: {:?}", new_user);
-        let _time = chrono::Utc::now();
+            ws_id = new_workspace.as_ref().clone();
+        } else {
+            ws_id = request.workspace_id.unwrap();
+        }
 
-        let user = users::ActiveModel::new(request)
+        let new_user = MdpUser::from(&request.email, &request.password_hash, ws_id.as_str());
+        new_user
+            .0
+            .clone()
+            .into_active_model()
             .save(&self.sea_pool)
             .await
             .map_err(|err| ServerError::Database(format!("Could not create user: {err}")))?;
+
         // let user = sqlx::query_as::<_, UserModel>(
         //     r#"insert into mdp.users (
         //             user_id,
@@ -71,10 +93,10 @@ impl MdpDatabase {
         // .await
         // .map_err(|err| ServerError::Database(format!("Could not create user: {err}")))?;
 
-        Ok(user)
+        Ok(new_user)
     }
 
-    async fn get_user_by_email(&self, email: String) -> Result<UserModel, ServerError> {
+    pub async fn get_user_by_email(&self, email: String) -> Result<MdpUser, ServerError> {
         info!("Search for user with email: {email:?}");
 
         let user = User::find()
@@ -85,71 +107,93 @@ impl MdpDatabase {
                 ServerError::Database(format!("Could not find user with email. Error: {err}"))
             })?;
 
-        let res: UserModel = sqlx::query_as(r#"select * from mdp.users where email = $1"#)
-            .bind(email)
-            .fetch_one(&self.pool)
-            .await
-            .map_err(|err| {
-                ServerError::Database(format!("Could not find user with email: {err}"))
-            })?;
+        // let res: UserModel = sqlx::query_as(r#"select * from mdp.users where email = $1"#)
+        //     .bind(email)
+        //     .fetch_one(&self.pool)
+        //     .await
+        //     .map_err(|err| {
+        //         ServerError::Database(format!("Could not find user with email: {err}"))
+        //     })?;
 
         info!("Found user");
-        Ok(res)
+        Ok(MdpUser(user.unwrap()))
     }
 
-    async fn get_user_by_confirmation_code(
+    pub async fn get_user_by_confirmation_code(
         &self,
         confirmation_token: String,
-    ) -> Result<UserModel, ServerError> {
+    ) -> Result<MdpUser, ServerError> {
         info!("Search for user with email confirm code: {confirmation_token:?}");
 
-        let res: UserModel =
-            sqlx::query_as(r#"select * from mdp.users where confirmation_token = $1"#)
-                .bind(confirmation_token)
-                .fetch_one(&self.pool)
-                .await
-                .map_err(|err| {
-                    ServerError::Database(format!(
-                        "Could not find user with confirmation_token: {err}"
-                    ))
-                })?;
-
-        info!("Found user");
-        Ok(res)
+        let user = User::find()
+            .filter(users::Column::ConfirmationToken.eq(confirmation_token.clone()))
+            .one(&self.sea_pool)
+            .await
+            .map_err(|err| {
+                ServerError::Database(format!("Could not find user with email. Error: {err}"))
+            })?;
+        // let res: UserModel =
+        //     sqlx::query_as(r#"select * from mdp.users where confirmation_token = $1"#)
+        //         .bind(confirmation_token)
+        //         .fetch_one(&self.pool)
+        //         .await
+        //         .map_err(|err| {
+        //             ServerError::Database(format!(
+        //                 "Could not find user with confirmation_token: {err}"
+        //             ))
+        //         })?;
+        if let Some(x) = user {
+            return Ok(MdpUser(x));
+        } else {
+            return Err(ServerError::Database("Could not find user".to_string()));
+        }
+        // info!("Found user");
+        // Ok(res)
     }
 
-    async fn verify_user(&self, user: UserModel) -> Result<UserModel, ServerError> {
-        let user: UserModel = sqlx::query_as(
-            "update mdp.users set 
-            email_status = $1,
-            confirmation_token = NULL,
-            confirmation_token_expire_at = NULL,
-            modified_at = $2,
-            email_confirmed_at = $3
-            
-            where mdp.users.user_id = $4 and mdp.users.workspace_id = $5
-            returning *;
-            ",
-        )
-        .bind("verified") //email status
-        .bind(Utc::now()) //mod
-        .bind(Utc::now()) //confirmed
-        .bind(&user.user_id)
-        .bind(&user.workspace_id)
-        .fetch_one(&self.pool)
-        .await
-        .map_err(|err| ServerError::Database(format!("Could not update User: {err:?}")))?;
+    pub async fn verify_user(&self, user: MdpUser) -> Result<MdpUser, ServerError> {
+        let mut active = user.0.into_active_model();
+        active.email_status = Set("verified".to_string());
+        active.modified_at = Set(Utc::now().fixed_offset());
+        active.email_confirmed_at = Set(Some(Utc::now().fixed_offset()));
 
-        return Ok(user);
+        let res = active
+            .update(&self.sea_pool)
+            .await
+            .map_err(|err| ServerError::Database(format!("Could not update User: {err:?}")))?;
+
+        //         pear.name = Set("Sweet pear".to_owned());
+
+        // // SQL: `UPDATE "fruit" SET "name" = 'Sweet pear' WHERE "id" = 28`
+        // let pear: fruit::Model = pear.update(db).await?;
+        // let user: UserModel = sqlx::query_as(
+        //     "update mdp.users set
+        //     email_status = $1,
+        //     confirmation_token = NULL,
+        //     confirmation_token_expire_at = NULL,
+        //     modified_at = $2,
+        //     email_confirmed_at = $3
+
+        //     where mdp.users.user_id = $4 and mdp.users.workspace_id = $5
+        //     returning *;
+        //     ",
+        // )
+        // .bind("verified") //email status
+        // .bind(Utc::now()) //mod
+        // .bind(Utc::now()) //confirmed
+        // .bind(&user.user_id)
+        // .bind(&user.workspace_id)
+        // .fetch_one(&self.pool)
+        // .await
+        // .map_err(|err| ServerError::Database(format!("Could not update User: {err:?}")))?;
+
+        return Ok(MdpUser(res));
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::db::{
-        database::{CreateUserRequest, MdpDatabase, UserModel},
-        users::UserCrud,
-    };
+    use crate::db::database::{CreateUserRequest, MdpDatabase};
 
     #[tokio::test]
     async fn test_create_user() {

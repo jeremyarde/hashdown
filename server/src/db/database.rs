@@ -30,7 +30,7 @@ use super::{
 
 use entity::{
     sessions::{self, ActiveModel, Entity as Session, Model as SessionModel},
-    users::{Entity as User, Model as UserModel},
+    users::{ActiveModel as UserActiveModel, Entity as User, Model as UserModel},
 };
 
 use migration::{Migrator, MigratorTrait};
@@ -297,6 +297,30 @@ pub struct WorkspaceModel {
 pub struct MdpSession(pub SessionModel);
 
 pub struct MdpUser(pub UserModel);
+
+impl MdpUser {
+    pub fn from(email: &str, password_hash: &str, workspace_id: &str) -> MdpUser {
+        if workspace_id.is_none() {
+            workspace_id = Some(NanoId::from("ws"));
+        }
+
+        UserModel {
+            id: None,
+            email: Email::new(email.clone().to_string()),
+            password_hash: password_hash.clone().to_string(),
+            created_at: chrono::Utc::now(),
+            modified_at: chrono::Utc::now(),
+            email_status: Some(String::from("unverified")),
+            user_id: NanoIdModel(NanoId::from("usr").to_string()),
+            deleted_at: None,
+            workspace_id: workspace_id.to_string(),
+            email_confirmed_at: None,
+            confirmation_token: Some(NanoId::from_len(24).to_string()),
+            confirmation_token_expire_at: Some(chrono::Utc::now().add(Duration::days(1))),
+            role: None,
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct MdpActiveSession(pub ActiveModel);
