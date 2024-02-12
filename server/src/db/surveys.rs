@@ -6,7 +6,7 @@ use sqlx::FromRow;
 
 use crate::{db::database::SurveyCrud, routes::ListSurveyResponse, server::Metadata};
 
-use super::{database::MdpActiveSession, sessions::Session};
+use super::{database::MdpSession, sessions::Session};
 
 use axum::{
     extract::{self, Path, State},
@@ -68,7 +68,7 @@ impl SurveyModel {
 pub async fn create_survey(
     headers: HeaderMap,
     State(state): State<ServerState>,
-    Extension(ctx): Extension<MdpActiveSession>,
+    Extension(ctx): Extension<MdpSession>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> create_survey");

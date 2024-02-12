@@ -12,6 +12,7 @@ use markdownparser::{nanoid_gen, NanoId};
 
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, Database, DatabaseConnection, EntityTrait, QueryFilter, Set,
+    TryIntoModel,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -30,7 +31,7 @@ use super::{
 
 use entity::{
     sessions::{self, ActiveModel, Entity as Session, Model as SessionModel},
-    users::{ActiveModel as UserActiveModel, Entity as User, Model as UserModel},
+    users::{self, ActiveModel as UserActiveModel, Entity as User, Model as UserModel},
 };
 
 use migration::{Migrator, MigratorTrait};
@@ -248,7 +249,7 @@ impl SurveyCrud for MdpDatabase {
                 "select * from mdp.surveys where mdp.surveys.user_id = $1 and mdp.surveys.workspace_id = $2",
             )
             .bind(ctx.user_id.clone())
-            .bind(ctx.session.workspace_id.clone())
+            .bind(ctx.session.0.workspace_id.clone())
             .fetch_all(&self.pool)
             .await
             .map_err(|err| ServerError::Database(err.to_string()))
@@ -294,36 +295,51 @@ pub struct WorkspaceModel {
     pub name: String,
 }
 
+#[derive(Debug, Clone)]
 pub struct MdpSession(pub SessionModel);
 
 pub struct MdpUser(pub UserModel);
 
 impl MdpUser {
     pub fn from(email: &str, password_hash: &str, workspace_id: &str) -> MdpUser {
-        if workspace_id.is_none() {
-            workspace_id = Some(NanoId::from("ws"));
-        }
+        let user = users::ActiveModel {
+            email: Set(Email::new(email.clone().to_string()).email),
+            password_hash: Set(password_hash.clone().to_string()),
+            created_at: Set(chrono::Utc::now().fixed_offset()),
+            modified_at: Set(chrono::Utc::now().fixed_offset()),
+            email_status: Set(String::from("unverified")),
+            user_id: Set(NanoId::from("usr").to_string()),
+            workspace_id: Set(workspace_id.to_string()),
+            confirmation_token: Set(Some(NanoId::from_len(24).to_string())),
+            confirmation_token_expire_at: Set(Some(
+                chrono::Utc::now().fixed_offset().add(Duration::days(1)),
+            )),
+            role: Set(None),
+            ..Default::default()
+        };
 
-        UserModel {
-            id: None,
-            email: Email::new(email.clone().to_string()),
-            password_hash: password_hash.clone().to_string(),
-            created_at: chrono::Utc::now(),
-            modified_at: chrono::Utc::now(),
-            email_status: Some(String::from("unverified")),
-            user_id: NanoIdModel(NanoId::from("usr").to_string()),
-            deleted_at: None,
-            workspace_id: workspace_id.to_string(),
-            email_confirmed_at: None,
-            confirmation_token: Some(NanoId::from_len(24).to_string()),
-            confirmation_token_expire_at: Some(chrono::Utc::now().add(Duration::days(1))),
-            role: None,
-        }
+        return MdpUser(user.try_into_model().unwrap());
+
+        // UserModel {
+        //     id: None,
+        //     email: Email::new(email.clone().to_string()),
+        //     password_hash: password_hash.clone().to_string(),
+        //     created_at: chrono::Utc::now(),
+        //     modified_at: chrono::Utc::now(),
+        //     email_status: Some(String::from("unverified")),
+        //     user_id: NanoIdModel(NanoId::from("usr").to_string()),
+        //     deleted_at: None,
+        //     workspace_id: workspace_id.to_string(),
+        //     email_confirmed_at: None,
+        //     confirmation_token: Some(NanoId::from_len(24).to_string()),
+        //     confirmation_token_expire_at: Some(chrono::Utc::now().add(Duration::days(1))),
+        //     role: None,
+        // }
     }
 }
 
-#[derive(Clone)]
-pub struct MdpActiveSession(pub ActiveModel);
+// #[derive(Clone)]
+// pub struct MdpSession(pub ActiveModel);
 
 impl MdpDatabase {
     pub async fn create_workspace(&self) -> Result<WorkspaceModel, ServerError> {
@@ -383,10 +399,7 @@ impl MdpDatabase {
         Ok(answers)
     }
 
-    pub async fn get_session(
-        &self,
-        session_id: String,
-    ) -> anyhow::Result<MdpActiveSession, ServerError> {
+    pub async fn get_session(&self, session_id: String) -> anyhow::Result<MdpSession, ServerError> {
         // let curr_session: Session = sqlx::query_as::<_, Session>(
         //     r#"select * from mdp.sessions where mdp.sessions.session_id = $1"#,
         // )
@@ -401,16 +414,13 @@ impl MdpDatabase {
             .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
 
         if let Some(session) = curr_session {
-            return Ok(MdpActiveSession(session.into()));
+            return Ok(MdpSession(session.into()));
         } else {
             return Err(ServerError::Database(format!("Did not find session")));
         };
     }
 
-    pub async fn create_session(
-        &self,
-        user: MdpUser,
-    ) -> anyhow::Result<MdpActiveSession, ServerError> {
+    pub async fn create_session(&self, user: MdpUser) -> anyhow::Result<MdpSession, ServerError> {
         let session_id = nanoid_gen(32);
 
         let new_active_expires = DateTime::fixed_offset(&Utc::now().add(Duration::days(1)));
@@ -438,12 +448,12 @@ impl MdpDatabase {
         .await
         .map_err(|err| ServerError::Database(format!("Could not create session. Error: {err}")))?;
 
-        return Ok(MdpActiveSession(new_session));
+        return Ok(MdpSession(new_session.try_into_model().unwrap()));
     }
 
     // pub async fn update_session(
     //     &self,
-    //     session: MdpActiveSession,
+    //     session: MdpSession,
     // ) -> anyhow::Result<Session, ServerError> {
     //     // let curr_session = sqlx::query_as::<_, Session>(
     //     //     r#"update mdp.sessions set active_period_expires_at = $1, idle_period_expires_at = $2 where mdp.sessions.session_id = $3 and mdp.sessions.user_id = $4 and mdp.sessions.workspace_id = $5 returning *"#
