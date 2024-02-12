@@ -24,7 +24,8 @@ use entity::{
 };
 use markdownparser::nanoid_gen;
 use sea_orm::{
-    prelude::DateTimeUtc, ActiveModelTrait, ColumnTrait, EntityTrait, ModelTrait, QueryFilter, Set,
+    prelude::DateTimeUtc, ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
+    QueryFilter, Set,
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -32,7 +33,7 @@ use sqlx::types::time::OffsetDateTime;
 use tracing::{debug, log::info};
 
 use crate::db::database::CreateUserRequest;
-use crate::db::database::{MdpSession, MdpSession, MdpUser};
+use crate::db::database::{MdpSession, MdpUser};
 use crate::mware::ctext::SessionContext;
 use crate::routes::LoginPayload;
 use crate::ServerError;
@@ -150,7 +151,7 @@ pub async fn signup(
 
     Ok((
         headers,
-        Json(json!({"email": email, "session_id": session.0.session_id.unwrap().to_string()})),
+        Json(json!({"email": email, "session_id": session.0.session_id.to_string()})),
     ))
 }
 
@@ -251,7 +252,7 @@ pub async fn login(
     Ok((
         // cookies,
         headers,
-        Json(json!({"email": username, "session_id": session.0.session_id.unwrap().to_string()})),
+        Json(json!({"email": username, "session_id": session.0.session_id.to_string()})),
     ))
 }
 
@@ -327,20 +328,20 @@ pub async fn validate_session_middleware(
 
     // get session from database using existing Session
     let curr_session = state.db.get_session(session_id.to_string()).await?;
-    let mut active_session = curr_session.0;
-    if &Utc::now() > active_session.idle_period_expires_at.as_ref() {
+    let mut active_session = curr_session.0.into_active_model();
+    if &Utc::now().fixed_offset() > active_session.idle_period_expires_at.as_ref() {
         return Err(ServerError::LoginFail);
     }
 
     info!("Current session: {:?}", active_session);
-    if &Utc::now() > active_session.active_period_expires_at.as_ref() {
+    if &Utc::now().fixed_offset() > active_session.active_period_expires_at.as_ref() {
         info!("session not active anymore?");
 
-        let new_active_expires = Utc::now() + Duration::days(1);
-        let new_idle_expires = Utc::now() + Duration::days(2);
+        let new_active_expires = Utc::now().fixed_offset() + Duration::days(1);
+        let new_idle_expires = Utc::now().fixed_offset() + Duration::days(2);
 
-        active_session.active_period_expires_at = Set(new_active_expires.into());
-        active_session.idle_period_expires_at = Set(new_idle_expires.into());
+        active_session.active_period_expires_at = Set(new_active_expires);
+        active_session.idle_period_expires_at = Set(new_idle_expires);
 
         let updated_session = active_session
             .update(&state.db.sea_pool)

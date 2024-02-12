@@ -49,7 +49,7 @@ pub async fn list_response(
     // json version
     let responses: Vec<AnswerModel> = state
         .db
-        .list_responses(&response_query.survey_id, &ctx.session.workspace_id)
+        .list_responses(&response_query.survey_id, &ctx.session.0.workspace_id)
         .await
         .expect("Could not get responses from db");
 
