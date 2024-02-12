@@ -298,6 +298,7 @@ pub struct WorkspaceModel {
 #[derive(Debug, Clone)]
 pub struct MdpSession(pub SessionModel);
 
+#[derive(Debug, Clone)]
 pub struct MdpUser(pub UserModel);
 
 impl MdpUser {

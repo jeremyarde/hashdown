@@ -6,7 +6,7 @@ use sqlx::FromRow;
 
 use crate::{db::database::SurveyCrud, routes::ListSurveyResponse, server::Metadata};
 
-use super::{database::MdpSession, sessions::Session};
+use super::database::MdpSession;
 
 use axum::{
     extract::{self, Path, State},
@@ -40,7 +40,7 @@ pub struct SurveyModel {
     // pub parsed_json: Option<Value>,
 }
 impl SurveyModel {
-    pub(crate) fn new(payload: CreateSurveyRequest, session: &Session) -> SurveyModel {
+    pub(crate) fn new(payload: CreateSurveyRequest, session: &MdpSession) -> SurveyModel {
         // let parsed_survey =
         //     (payload.plaintext.clone()).expect("Could not parse the survey");
         // let survey = markdown_to_form_wasm_v2(payload.plaintext);
@@ -50,7 +50,7 @@ impl SurveyModel {
             id: 0,
             survey_id: nanoid_gen(12),
             plaintext: payload.plaintext.clone(),
-            user_id: session.user_id.to_owned(),
+            user_id: session.0.user_id.to_owned(),
             created_at: metadata.created_at,
             modified_at: metadata.modified_at,
             // version: Some(survey),
@@ -58,7 +58,7 @@ impl SurveyModel {
             name: Some("name - todo".to_string()),
             version: Some("version - todo".to_string()),
             blocks: json!(&survey.blocks),
-            workspace_id: session.workspace_id.clone(),
+            workspace_id: session.0.workspace_id.clone(),
         }
     }
 }
@@ -74,11 +74,11 @@ pub async fn create_survey(
     info!("->> create_survey");
     info!("Creating new survey for user={:?}", ctx.0.user_id);
 
-    let survey = SurveyModel::new(payload, &ctx.0);
+    let survey = SurveyModel::new(payload, &ctx);
 
     let insert_result: SurveyModel = state
         .db
-        .create_survey(survey, &ctx.session.workspace_id)
+        .create_survey(survey, &ctx.0.workspace_id)
         .await
         .map_err(|x| ServerError::Database(format!("Could not create new survey: {x}").to_string()))
         .unwrap();
