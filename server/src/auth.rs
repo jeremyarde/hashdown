@@ -18,7 +18,10 @@ use axum::{
 use axum::{Extension, Json};
 use axum_extra::extract::cookie::Cookie;
 use chrono::{format::OffsetFormat, offset, Days, Duration, FixedOffset, Utc};
-use entity::{sessions::Column, users};
+use entity::{
+    sessions::Column,
+    users::{self, Model},
+};
 use markdownparser::nanoid_gen;
 use sea_orm::{
     prelude::DateTimeUtc, ActiveModelTrait, ColumnTrait, EntityTrait, ModelTrait, QueryFilter, Set,
@@ -28,8 +31,8 @@ use serde_json::{json, Value};
 use sqlx::types::time::OffsetDateTime;
 use tracing::{debug, log::info};
 
-use crate::db::database::{MdpActiveSession, MdpSession, MdpUser, UserModel};
-use crate::db::{database::CreateUserRequest, users::UserCrud};
+use crate::db::database::CreateUserRequest;
+use crate::db::database::{MdpActiveSession, MdpSession, MdpUser};
 use crate::mware::ctext::SessionContext;
 use crate::routes::LoginPayload;
 use crate::ServerError;
@@ -76,10 +79,10 @@ pub async fn confirm(
 
     user = state.db.verify_user(user).await?;
 
-    return Ok(Json(json!({"user_id": user.user_id})));
+    return Ok(Json(json!({"user_id": user.0.user_id})));
 }
 
-fn verify_confirmation_token(token: &String, user: &UserModel) -> bool {
+fn verify_confirmation_token(token: &String, user: &MdpUser) -> bool {
     if !user.confirmation_token.clone().unwrap().eq(token) {
         info!("Confirmation token does not match");
         return false;
@@ -134,13 +137,13 @@ pub async fn signup(
             "Welcome to hashdown!\n\n Please click on this link to confirm your email: {}/{}?t={}",
             state.config.frontend_url,
             "signup/confirm",
-            user.confirmation_token.clone().unwrap()
+            user.0.confirmation_token.clone().unwrap()
         )
         .as_str(),
         "Email confirmation",
     );
 
-    let email = user.email.clone();
+    let email = user.0.email.clone();
     let session = state.db.create_session(user).await?;
 
     let headers = create_session_headers(&session);
@@ -190,6 +193,7 @@ pub async fn logout(
 
     Ok(Json(json!("logout success")))
 }
+use entity::sessions::Entity as Session;
 use entity::users::Entity as User;
 
 #[axum::debug_handler]
@@ -212,7 +216,7 @@ pub async fn login(
 
     // look for user in database
     let mut user = User::find()
-        .filter(users::Column::Email.eq(payload.email))
+        .filter(users::Column::Email.eq(payload.email.clone()))
         .one(&state.db.sea_pool)
         .await
         .map_err(|err| ServerError::Database("Error".to_string()))?;
