@@ -11,8 +11,8 @@ use lettre::transport::smtp::commands::Data;
 use markdownparser::{nanoid_gen, NanoId};
 
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, Database, DatabaseConnection, EntityTrait, QueryFilter, Set,
-    TryIntoModel,
+    ActiveModelTrait, ColumnTrait, Database, DatabaseConnection, EntityTrait, IntoActiveModel,
+    QueryFilter, Set, TryIntoModel,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -232,11 +232,11 @@ pub struct CreateUserRequest {
 use entity::surveys::Entity as Survey;
 use entity::surveys::Model as SurveyModel;
 
-#[derive(Debug, Clone, Serialize)]
-pub struct MdpSurvey(SurveyModel);
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MdpSurvey(pub SurveyModel);
 
 impl MdpSurvey {
-    fn get_inner(&self) -> &SurveyModel {
+    pub fn inner(&self) -> &SurveyModel {
         return &self.0;
     }
 }
@@ -278,26 +278,16 @@ impl MdpDatabase {
 
     pub async fn create_survey(
         &self,
-        survey: SurveyModel,
+        survey: MdpSurvey,
         workspace_id: &str,
     ) -> anyhow::Result<MdpSurvey> {
         // let parsed_survey = parse_markdown_v3(payload.plaintext.clone())?;
-        let survey = entity::surveys::ActiveModel {
-            survey_id: todo!(),
-            workspace_id: todo!(),
-            user_id: todo!(),
-            name: todo!(),
-            created_at: todo!(),
-            modified_at: todo!(),
-            plaintext: todo!(),
-            version: todo!(),
-            parse_version: todo!(),
-            blocks: todo!(),
-            ..Default::default()
-        }
-        .save(&self.sea_pool)
-        .await
-        .map_err(|err| ServerError::Database(format!("Error in database: {err}")))?;
+        let survey = survey
+            .0
+            .into_active_model()
+            .save(&self.sea_pool)
+            .await
+            .map_err(|err| ServerError::Database(format!("Error in database: {err}")))?;
 
         // let res: SurveyModel = sqlx::query_as(
         //     r#"insert into mdp.surveys (

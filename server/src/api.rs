@@ -11,10 +11,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::{debug, info};
 
-use crate::{
-    db::database::{AnswerModel, SurveyCrud},
-    ServerError,
-};
+use crate::{db::database::AnswerModel, ServerError};
 
 #[tracing::instrument]
 #[axum::debug_handler]
