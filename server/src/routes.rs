@@ -14,10 +14,14 @@ use tracing::info;
 use crate::{
     api::{list_survey, submit_response},
     auth::{self, validate_session_middleware},
-    db::surveys::{create_survey, get_survey, submit_survey, SurveyModel},
+    db::{
+        database::MdpSurvey,
+        surveys::{create_survey, get_survey, submit_survey},
+    },
     error::main_response_mapper,
+    survey_responses,
     webhook::{self, echo},
-    survey_responses, ServerError, ServerState,
+    ServerError, ServerState,
 };
 
 #[derive(Serialize)]
@@ -27,7 +31,7 @@ struct CreateSurvey {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ListSurveyResponse {
-    pub surveys: Vec<SurveyModel>,
+    pub surveys: Vec<MdpSurvey>,
 }
 
 #[derive(Deserialize, Debug, Serialize)]

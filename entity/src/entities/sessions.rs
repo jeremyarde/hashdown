@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(schema_name = "mdp", table_name = "sessions")]
 pub struct Model {
+    pub id: i32,
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text", unique)]
     pub session_id: String,
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]

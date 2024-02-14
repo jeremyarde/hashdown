@@ -1,12 +1,13 @@
 use chrono::{DateTime, Utc};
+use entity::surveys::Model as SurveyModel;
 use markdownparser::{nanoid_gen, ParsedSurvey};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::FromRow;
 
-use crate::{db::database::SurveyCrud, routes::ListSurveyResponse, server::Metadata};
+use crate::{routes::ListSurveyResponse, server::Metadata};
 
-use super::database::MdpSession;
+use super::database::{MdpSession, MdpSurvey};
 
 use axum::{
     extract::{self, Path, State},
@@ -23,43 +24,44 @@ use crate::{
     mware::ctext::SessionContext, survey_responses::SubmitResponseRequest, ServerError, ServerState,
 };
 
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
-pub struct SurveyModel {
-    pub id: i32,
-    pub name: Option<String>,
-    pub survey_id: String,
-    pub user_id: String,
-    pub created_at: DateTime<Utc>,
-    pub modified_at: DateTime<Utc>,
-    pub plaintext: String,
-    // pub questions: Option<Vec<Question>>,
-    pub version: Option<String>,
-    pub parse_version: Option<String>,
-    pub blocks: Value,
-    pub workspace_id: String,
-    // pub parsed_json: Option<Value>,
-}
-impl SurveyModel {
-    pub(crate) fn new(payload: CreateSurveyRequest, session: &MdpSession) -> SurveyModel {
+// #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
+// pub struct SurveyModel {
+//     pub id: i32,
+//     pub name: Option<String>,
+//     pub survey_id: String,
+//     pub user_id: String,
+//     pub created_at: DateTime<Utc>,
+//     pub modified_at: DateTime<Utc>,
+//     pub plaintext: String,
+//     // pub questions: Option<Vec<Question>>,
+//     pub version: Option<String>,
+//     pub parse_version: Option<String>,
+//     pub blocks: Value,
+//     pub workspace_id: String,
+//     // pub parsed_json: Option<Value>,
+// }
+impl MdpSurvey {
+    pub(crate) fn new(payload: CreateSurveyRequest, session: &MdpSession) -> MdpSurvey {
         // let parsed_survey =
         //     (payload.plaintext.clone()).expect("Could not parse the survey");
         // let survey = markdown_to_form_wasm_v2(payload.plaintext);
         let survey = ParsedSurvey::from(payload.plaintext.clone()).unwrap();
         let metadata = Metadata::new();
-        SurveyModel {
+
+        MdpSurvey(SurveyModel {
             id: 0,
             survey_id: nanoid_gen(12),
             plaintext: payload.plaintext.clone(),
             user_id: session.0.user_id.to_owned(),
-            created_at: metadata.created_at,
-            modified_at: metadata.modified_at,
+            created_at: metadata.created_at.into(),
+            modified_at: metadata.modified_at.into(),
             // version: Some(survey),
             parse_version: Some(survey.parse_version.clone()),
             name: Some("name - todo".to_string()),
             version: Some("version - todo".to_string()),
             blocks: json!(&survey.blocks),
             workspace_id: session.0.workspace_id.clone(),
-        }
+        })
     }
 }
 
@@ -74,9 +76,9 @@ pub async fn create_survey(
     info!("->> create_survey");
     info!("Creating new survey for user={:?}", ctx.0.user_id);
 
-    let survey = SurveyModel::new(payload, &ctx);
+    let survey = MdpSurvey::new(payload, &ctx);
 
-    let insert_result: SurveyModel = state
+    let insert_result = state
         .db
         .create_survey(survey, &ctx.0.workspace_id)
         .await

@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(schema_name = "mdp", table_name = "stripe_events")]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
+    pub id: i32,
+    #[sea_orm(primary_key, auto_increment = false, column_type = "Text", unique)]
     pub stripe_event_id: String,
     #[sea_orm(column_type = "Text")]
     pub from_stripe_event_id: String,

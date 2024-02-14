@@ -6,9 +6,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(schema_name = "mdp", table_name = "surveys")]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = false, column_type = "Text", unique)]
-    pub survey_id: String,
+    pub id: i32,
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
+    pub survey_id: String,
+    #[sea_orm(column_type = "Text")]
     pub workspace_id: String,
     #[sea_orm(column_type = "Text")]
     pub user_id: String,

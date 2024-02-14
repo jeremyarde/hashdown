@@ -9,10 +9,7 @@ use serde_json::{json, Value};
 use tracing::{debug, info};
 
 use crate::{
-    db::{
-        database::{AnswerModel, SurveyCrud},
-        surveys::SurveyModel,
-    },
+    db::database::{AnswerModel, MdpSurvey},
     mware::ctext::SessionContext,
     ServerError, ServerState,
 };
@@ -60,6 +57,7 @@ pub async fn list_response(
         .expect("Could not find survey");
 
     let block_ids = survey
+        .inner()
         .blocks
         .as_array()
         .map(|blocks| println!("jere/ {:?}", blocks));
@@ -73,8 +71,8 @@ pub async fn list_response(
 // #[derive(Debug)]
 // struct BlockIdName(String, String);
 
-fn get_block_details(survey: SurveyModel) -> () {
-    let block_ids = survey.blocks.as_array().map(|blocks| {
+fn get_block_details(survey: MdpSurvey) -> () {
+    let block_ids = survey.inner().blocks.as_array().map(|blocks| {
         // println!("jere/ {:#?}", blocks);
         blocks.into_iter().map(|block| block.as_object())
     });
@@ -83,7 +81,7 @@ fn get_block_details(survey: SurveyModel) -> () {
     return ();
 }
 
-fn combine_survey_with_response(survey: SurveyModel, response: Value) -> Value {
+fn combine_survey_with_response(survey: MdpSurvey, response: Value) -> Value {
     //     let block_ids: Vec<BlockIdName> = survey.blocks.as_array().map(|blocks| {
     //         println!("jere/ {:#?}", blocks);
     //         blocks.iter().map(|block| {
@@ -100,9 +98,11 @@ fn combine_survey_with_response(survey: SurveyModel, response: Value) -> Value {
 #[cfg(test)]
 mod tests {
     use chrono::{DateTime, Utc};
+    use entity::surveys;
+    use sea_orm::{Set, TryIntoModel};
     use serde_json::json;
 
-    use crate::db::surveys::SurveyModel;
+    // use crate::db::surveys::SurveyModel;
 
     use super::{combine_survey_with_response, get_block_details};
 
@@ -163,21 +163,23 @@ mod tests {
           }
         ]);
 
-        let survey: SurveyModel = SurveyModel {
-            id: 0,
-            name: Some(String::new()),
-            survey_id: String::new(),
-            user_id: String::new(),
-            created_at: Utc::now(),
-            modified_at: Utc::now(),
-            plaintext: String::new(),
-            version: Some(String::new()),
-            parse_version: Some(String::new()),
-            blocks: answers,
-            workspace_id: String::new(),
+        let survey = surveys::ActiveModel {
+            id: Set(0),
+            name: Set(Some(String::new())),
+            survey_id: Set(String::new()),
+            user_id: Set(String::new()),
+            created_at: Set(Utc::now().into()),
+            modified_at: Set(Utc::now().into()),
+            plaintext: Set(String::new()),
+            version: Set(Some(String::new())),
+            parse_version: Set(Some(String::new())),
+            blocks: Set(answers),
+            workspace_id: Set(String::new()),
         };
 
         // combine_survey_with_response(survey, response);
-        get_block_details(survey);
+        get_block_details(crate::db::database::MdpSurvey(
+            survey.try_into_model().unwrap(),
+        ));
     }
 }
