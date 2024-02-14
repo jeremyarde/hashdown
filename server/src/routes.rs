@@ -16,7 +16,7 @@ use crate::{
     auth::{self, validate_session_middleware},
     db::surveys::{create_survey, get_survey, submit_survey, SurveyModel},
     error::main_response_mapper,
-    payments::{self, echo},
+    webhook::{self, echo},
     survey_responses, ServerError, ServerState,
 };
 
@@ -58,7 +58,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         .route("/v1/auth/logout", get(auth::logout))
         .route("/v1/auth/confirm", get(auth::confirm))
         // .route("/v1/payment/success", post(payments::echo))
-        .route("/v1/webhook", post(payments::echo))
+        .route("/v1/webhook", post(webhook::echo))
         .route("/v1/surveys/:id", get(get_survey).post(submit_survey));
 
     let auth_routes = Router::new()

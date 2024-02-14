@@ -11,7 +11,6 @@ create table mdp.workspaces (
 );
 
 CREATE table mdp.users (
-    -- id serial,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,

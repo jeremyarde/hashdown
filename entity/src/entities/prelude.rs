@@ -2,6 +2,7 @@
 
 pub use super::responses::Entity as Responses;
 pub use super::sessions::Entity as Sessions;
+pub use super::stripe_events::Entity as StripeEvents;
 pub use super::surveys::Entity as Surveys;
 pub use super::users::Entity as Users;
 pub use super::workspaces::Entity as Workspaces;

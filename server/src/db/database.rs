@@ -26,11 +26,12 @@ use crate::{mware::ctext::SessionContext, survey_responses::SubmitResponseReques
 
 use super::{
     // sessions::Session,
-    surveys::{CreateSurveyRequest, SurveyModel},
+    surveys::CreateSurveyRequest,
 };
 
 use entity::{
     sessions::{self, ActiveModel, Entity as Session, Model as SessionModel},
+    surveys,
     users::{self, ActiveModel as UserActiveModel, Entity as User, Model as UserModel},
 };
 
@@ -218,73 +219,107 @@ pub struct CreateUserRequest {
     pub workspace_id: Option<String>,
 }
 
-pub trait SurveyCrud {
-    // async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel>;
-    async fn list_survey(&self, ctx: SessionContext) -> anyhow::Result<Vec<SurveyModel>>;
-    async fn get_survey(&self, survey_id: &String) -> anyhow::Result<SurveyModel>;
-    async fn create_survey(
-        &self,
-        survey: SurveyModel,
-        workspace_id: &str,
-    ) -> anyhow::Result<SurveyModel>;
+// pub trait SurveyCrud {
+//     // async fn create_user(&self, request: CreateUserRequest) -> anyhow::Result<UserModel>;
+//     async fn list_survey(&self, ctx: SessionContext) -> anyhow::Result<Vec<SurveyModel>>;
+//     async fn get_survey(&self, survey_id: &String) -> anyhow::Result<SurveyModel>;
+//     async fn create_survey(
+//         &self,
+//         survey: SurveyModel,
+//         workspace_id: &str,
+//     ) -> anyhow::Result<SurveyModel>;
+// }
+use entity::surveys::Entity as Survey;
+use entity::surveys::Model as SurveyModel;
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MdpSurvey(SurveyModel);
+
+impl MdpSurvey {
+    fn get_inner(&self) -> &SurveyModel {
+        return &self.0;
+    }
 }
 
-impl SurveyCrud for MdpDatabase {
-    async fn get_survey(
+impl MdpDatabase {
+    pub async fn get_survey(
         &self,
         survey_id: &String,
         // workspace_id: &str,
-    ) -> anyhow::Result<SurveyModel> {
-        let result = sqlx::query_as::<_, SurveyModel>(
-            "select * from mdp.surveys where surveys.survey_id = $1",
-        )
-        .bind(survey_id)
-        .fetch_one(&self.pool)
-        .await?;
-        Ok(result)
-    }
+    ) -> Result<MdpSurvey, ServerError> {
+        // let result = sqlx::query_as::<_, SurveyModel>(
+        //     "select * from mdp.surveys where surveys.survey_id = $1",
+        // )
+        // .bind(survey_id)
+        // .fetch_one(&self.pool)
+        // .await?;
 
-    async fn list_survey(&self, ctx: SessionContext) -> anyhow::Result<Vec<SurveyModel>> {
-        let result = sqlx::query_as::<_, SurveyModel>(
-                "select * from mdp.surveys where mdp.surveys.user_id = $1 and mdp.surveys.workspace_id = $2",
-            )
-            .bind(ctx.user_id.clone())
-            .bind(ctx.session.0.workspace_id.clone())
-            .fetch_all(&self.pool)
+        let result = Survey::find()
+            .filter(surveys::Column::SurveyId.eq(survey_id))
+            .one(&self.sea_pool)
             .await
-            .map_err(|err| ServerError::Database(err.to_string()))
-            .unwrap();
+            .map_err(|err| ServerError::Database(err.to_string()))?;
 
-        Ok(result)
+        Ok(MdpSurvey(result.unwrap()))
     }
 
-    async fn create_survey(
+    pub async fn list_survey(&self, ctx: SessionContext) -> Result<Vec<MdpSurvey>, ServerError> {
+        let all_surveys = entity::surveys::Entity::find()
+            .filter(entity::surveys::Column::UserId.eq(ctx.session.0.user_id))
+            .all(&self.sea_pool)
+            .await
+            .map_err(|err| ServerError::Database(err.to_string()))?
+            .iter()
+            .map(|sur| MdpSurvey(sur.clone()))
+            .collect();
+
+        Ok(all_surveys)
+    }
+
+    pub async fn create_survey(
         &self,
         survey: SurveyModel,
         workspace_id: &str,
-    ) -> anyhow::Result<SurveyModel> {
+    ) -> anyhow::Result<MdpSurvey> {
         // let parsed_survey = parse_markdown_v3(payload.plaintext.clone())?;
-        let res: SurveyModel = sqlx::query_as(
-            r#"insert into mdp.surveys (
-                    name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version, blocks, workspace_id
-                ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *"#)
-            .bind(survey.name)
-            .bind(survey.survey_id)
-            .bind(survey.user_id)
-            .bind(Utc::now())
-            .bind(Utc::now())
-            .bind(survey.plaintext)
-            .bind(survey.version)
-            .bind(survey.parse_version)
-            .bind(survey.blocks)
-            .bind(workspace_id)
-        .fetch_one(&self.pool)
+        let survey = entity::surveys::ActiveModel {
+            survey_id: todo!(),
+            workspace_id: todo!(),
+            user_id: todo!(),
+            name: todo!(),
+            created_at: todo!(),
+            modified_at: todo!(),
+            plaintext: todo!(),
+            version: todo!(),
+            parse_version: todo!(),
+            blocks: todo!(),
+            ..Default::default()
+        }
+        .save(&self.sea_pool)
         .await
-        .expect("Should insert a survey");
+        .map_err(|err| ServerError::Database(format!("Error in database: {err}")))?;
+
+        // let res: SurveyModel = sqlx::query_as(
+        //     r#"insert into mdp.surveys (
+        //             name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version, blocks, workspace_id
+        //         ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *"#)
+        //     .bind(survey.name)
+        //     .bind(survey.survey_id)
+        //     .bind(survey.user_id)
+        //     .bind(Utc::now())
+        //     .bind(Utc::now())
+        //     .bind(survey.plaintext)
+        //     .bind(survey.version)
+        //     .bind(survey.parse_version)
+        //     .bind(survey.blocks)
+        //     .bind(workspace_id)
+        // .fetch_one(&self.pool)
+        // .await
+        // .expect("Should insert a survey");
 
         info!("Successfully created a new survey");
 
-        Ok(res)
+        Ok(MdpSurvey(survey.try_into_model().unwrap()))
     }
 }
 

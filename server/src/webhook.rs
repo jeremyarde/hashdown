@@ -1,6 +1,10 @@
-use axum::Json;
+use axum::{extract::State, Json};
+use hyper::Server;
+use sea_orm::{ActiveModelTrait, EntityTrait, IntoActiveModel, QueryFilter};
 use serde_json::Value;
 use tracing::{debug, info};
+
+use crate::ServerState;
 
 #[derive(PartialEq, PartialOrd)]
 enum StripeEvent {
@@ -22,7 +26,7 @@ enum StripeEvent {
 }
 
 #[axum::debug_handler]
-pub async fn echo(payload: Json<Value>) {
+pub async fn echo(State(state): State<ServerState>, payload: Json<Value>) {
     info!("->> payments/echo");
     info!("payload: {:#?}", payload);
     debug!("hit payload endpoint");
@@ -54,7 +58,7 @@ pub async fn echo(payload: Json<Value>) {
 
     match event_enum {
         StripeEvent::CheckoutSessionCompleted | StripeEvent::InvoicePaymentSuccess => {
-            handle_subscription_success();
+            handle_subscription_success(state, &payload);
         }
         StripeEvent::CheckoutSessionExpired => todo!(),
         StripeEvent::StripeCheckoutSessionAsyncPaymentSucceeded => todo!(),
@@ -73,7 +77,21 @@ pub async fn echo(payload: Json<Value>) {
     }
 }
 
-fn handle_subscription_success() {}
+use entity::users::Entity as User;
+
+async fn handle_subscription_success(state: ServerState, payload: &Value) {
+    info!("handling stripe subscription for stripe id: {payload}");
+    // let mut user = User::find_by_id((stripe_id))
+    //     .filter(entity::users::Column::StripeId.eq(stripe_id))
+    //     .one(&state.db.sea_pool)
+    //     .await
+    //     .unwrap();
+
+    // let active_user = user.unwrap().into_active_model();
+
+    // active_user.role = Set("basic");
+    // active_user.update(&state.db.sea_pool).await.unwrap();
+}
 
 // checkout.session.completed
 // stripe.checkout.session.async_payment_succeeded

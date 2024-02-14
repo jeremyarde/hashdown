@@ -4,6 +4,7 @@ pub mod prelude;
 
 pub mod responses;
 pub mod sessions;
+pub mod stripe_events;
 pub mod surveys;
 pub mod users;
 pub mod workspaces;
