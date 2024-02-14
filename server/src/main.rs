@@ -15,7 +15,7 @@ mod db;
 mod email_validator;
 mod mail;
 mod mware;
-mod payments;
+mod webhook;
 mod server;
 // mod survey;
 

@@ -33,11 +33,10 @@ pub async fn list_survey(
         .map_err(|err| ServerError::Database(err.to_string()))
         .unwrap();
 
-    let resp = ListSurveyResponse {
-        surveys: res.to_vec(),
-    };
+    // let resp = ListSurveyResponse { surveys: *res };
+    let json = json!({"surveys": res});
 
-    Ok(Json(json!(resp)))
+    Ok(Json(json))
 }
 
 #[tracing::instrument]
