@@ -37,3 +37,5 @@ sqlx migrate run
   - [ ] email links for logging in?
   - [ ] verifying users with email
 - [ ] data models for everything
+
+http://localhost:8080/v1/webhook

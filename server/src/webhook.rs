@@ -25,13 +25,8 @@ enum StripeEvent {
     ChargeDisputeCreated,
 }
 
-#[axum::debug_handler]
-pub async fn echo(State(state): State<ServerState>, payload: Json<Value>) {
-    info!("->> payments/echo");
-    info!("payload: {:#?}", payload);
-    debug!("hit payload endpoint");
-
-    let event_enum = match &payload.get("type").unwrap().to_string().as_str() {
+fn map_stripe_event_to_enum(event: &str) -> StripeEvent {
+    return match &event {
         &"checkout.session.completed" => StripeEvent::CheckoutSessionCompleted,
         &"stripe.checkout.session.async_payment_succeeded" => {
             StripeEvent::StripeCheckoutSessionAsyncPaymentSucceeded
@@ -50,6 +45,14 @@ pub async fn echo(State(state): State<ServerState>, payload: Json<Value>) {
         &"charge.dispute.created" => StripeEvent::ChargeDisputeCreated,
         _ => StripeEvent::UntrackedEvent,
     };
+}
+
+#[axum::debug_handler]
+pub async fn echo(State(state): State<ServerState>, payload: Json<Value>) {
+    info!("->> payments/echo");
+    debug!("payload: {:#?}", payload);
+
+    let event_enum = map_stripe_event_to_enum(payload.get("type").unwrap().as_str().unwrap());
 
     if event_enum == StripeEvent::UntrackedEvent {
         info!("Untracked event");
@@ -58,7 +61,7 @@ pub async fn echo(State(state): State<ServerState>, payload: Json<Value>) {
 
     match event_enum {
         StripeEvent::CheckoutSessionCompleted | StripeEvent::InvoicePaymentSuccess => {
-            handle_subscription_success(state, &payload);
+            handle_subscription_success(state, &payload).await;
         }
         StripeEvent::CheckoutSessionExpired => todo!(),
         StripeEvent::StripeCheckoutSessionAsyncPaymentSucceeded => todo!(),
@@ -73,14 +76,18 @@ pub async fn echo(State(state): State<ServerState>, payload: Json<Value>) {
         StripeEvent::SetupIntentSuccess => todo!(),
         StripeEvent::PaymentIntentSuccess => todo!(),
         StripeEvent::ChargeDisputeCreated => todo!(),
-        _ => {}
+        _ => {
+            info!("Untracked event");
+        }
     }
 }
 
 use entity::users::Entity as User;
 
 async fn handle_subscription_success(state: ServerState, payload: &Value) {
-    info!("handling stripe subscription for stripe id: {payload}");
+    let stripe_obj = payload.as_object().unwrap();
+    let stripe_id = stripe_obj.get("id").unwrap().as_str().unwrap();
+    info!("handling stripe subscription for stripe id: {stripe_id}");
     // let mut user = User::find_by_id((stripe_id))
     //     .filter(entity::users::Column::StripeId.eq(stripe_id))
     //     .one(&state.db.sea_pool)
