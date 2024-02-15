@@ -124,7 +124,7 @@ pub async fn signup(
         .create_user(CreateUserRequest {
             email: payload.email.clone(),
             password_hash: hash.to_string(),
-            workspace_id: Some(workspace.workspace_id),
+            workspace_id: Some(workspace.0.workspace_id),
         })
         .await?;
 
