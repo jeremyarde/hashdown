@@ -33,6 +33,7 @@ use entity::{
     sessions::{self, ActiveModel, Entity as Session, Model as SessionModel},
     surveys,
     users::{self, ActiveModel as UserActiveModel, Entity as User, Model as UserModel},
+    workspaces,
 };
 
 use migration::{Migrator, MigratorTrait};
@@ -90,15 +91,9 @@ impl MdpDatabase {
             .max_connections(1)
             .connect(&database_url)
             .await?;
-        // let pool = PgPool::connect(&database_url).await?;
 
-        // info!("Running migrations");
-        // sqlx::migrate!().run(&pool).await?;
         info!("Finished running migrations");
 
-        // let settings = sqlx::query_as::<_, Settings>("select * from settings")
-        //     .fetch_one(&mut pool)
-        //     .await?;
         let db: DatabaseConnection = Database::connect(uri).await?;
 
         // let connection = sea_orm::Database::connect(&database_url).await?;
@@ -313,13 +308,6 @@ impl MdpDatabase {
     }
 }
 
-#[derive(Deserialize, Serialize, FromRow, Debug, Clone)]
-pub struct WorkspaceModel {
-    pub id: i32,
-    pub workspace_id: String,
-    pub name: String,
-}
-
 #[derive(Debug, Clone)]
 pub struct MdpSession(pub SessionModel);
 
@@ -367,45 +355,80 @@ impl MdpUser {
 // #[derive(Clone)]
 // pub struct MdpSession(pub ActiveModel);
 
+use entity::workspaces::Model as WorkspaceModel;
+pub struct MdpWorkspace(pub WorkspaceModel);
+
+use entity::responses::Model as ResponseModel;
+pub struct MdpResponse(pub ResponseModel);
+
 impl MdpDatabase {
-    pub async fn create_workspace(&self) -> Result<WorkspaceModel, ServerError> {
+    pub async fn create_workspace(&self) -> Result<MdpWorkspace, ServerError> {
         let workspace_id = NanoId::from("ws").to_string();
-        let name = "";
+        let name = "".to_string();
         info!("Creating workspace with workspace_id={workspace_id}");
 
-        let workspace: WorkspaceModel = sqlx::query_as(
-            "insert into mdp.workspaces (workspace_id, name) values ($1, $2) returning *",
-        )
-        .bind(workspace_id)
-        .bind(name)
-        .fetch_one(&self.pool)
+        let workspace = workspaces::ActiveModel {
+            workspace_id: Set(workspace_id),
+            name: Set(name),
+        }
+        .save(&self.sea_pool)
         .await
         .map_err(|err| ServerError::Database(format!("Could not create workspace: {err:?}")))?;
 
         info!("Workspace created");
 
-        return Ok(workspace);
+        return Ok(MdpWorkspace(workspace.try_into_model().unwrap()));
     }
 
-    pub async fn create_answer(&self, answer: SubmitResponseRequest) -> Result<Value, ServerError> {
+    pub async fn create_answer(
+        &self,
+        answer: SubmitResponseRequest,
+    ) -> Result<MdpResponse, ServerError> {
         info!("Creating answers in database");
 
-        let workspace_id: (String,) =
-            sqlx::query_as("select workspace_id from mdp.surveys where mdp.surveys.survey_id = $1")
-                .bind(answer.survey_id.clone())
-                .fetch_one(&self.pool)
-                .await
-                .map_err(|ex| ServerError::Database(format!("Could not create answer: {ex}")))?;
-        let res: AnswerModel = sqlx::query_as(
-            r#"insert into mdp.responses (response_id, submitted_at, survey_id, answers, workspace_id) values ($1, $2, $3, $4, $5) returning *"#)
-            .bind(NanoId::from("res").to_string())
-            .bind(Utc::now())
-            .bind(answer.survey_id).bind(answer.answers)
-            .bind(workspace_id.0)
-            .fetch_one(&self.pool).await
-            .map_err(|ex| ServerError::Database(format!("Could not create answer: {ex}")))?;
+        // workspaces::Entity::find().filter(surveys::Column::Id.eq(v))
 
-        Ok(json!(res))
+        // is this required???
+        // let workspace_id: (String,) =
+        //     sqlx::query_as("select workspace_id from mdp.surveys where mdp.surveys.survey_id = $1")
+        //         .bind(answer.survey_id.clone())
+        //         .fetch_one(&self.pool)
+        //         .await
+        //         .map_err(|ex| ServerError::Database(format!("Could not create answer: {ex}")))?;
+
+        // make sure survey exists
+        let survey = entity::surveys::Entity::find()
+            .filter(surveys::Column::Id.eq(answer.survey_id.clone()))
+            .one(&self.sea_pool)
+            .await
+            .map_err(|ex| ServerError::Database(format!("Could not find survey: {ex}")))?;
+
+        if survey.is_none() {
+            return Err(ServerError::Database(format!("Could not find survey")));
+        }
+
+        let answer = entity::responses::ActiveModel {
+            response_id: Set(NanoId::from("ans").to_string()),
+            workspace_id: Set(survey.unwrap().workspace_id),
+            submitted_at: Set(Some(Utc::now().fixed_offset())),
+            answers: Set(Some(answer.answers)),
+            survey_id: Set(answer.survey_id),
+            ..Default::default()
+        }
+        .insert(&self.sea_pool)
+        .await
+        .map_err(|ex| ServerError::Database(format!("Could not create answer: {ex}")))?;
+
+        // let res: AnswerModel = sqlx::query_as(
+        //     r#"insert into mdp.responses (response_id, submitted_at, survey_id, answers, workspace_id) values ($1, $2, $3, $4, $5) returning *"#)
+        //     .bind(NanoId::from("res").to_string())
+        //     .bind(Utc::now())
+        //     .bind(answer.survey_id).bind(answer.answers)
+        //     .bind(workspace_id.0)
+        //     .fetch_one(&self.pool).await
+        //     .map_err(|ex| ServerError::Database(format!("Could not create answer: {ex}")))?;
+
+        Ok(MdpResponse(answer))
     }
 
     pub async fn list_responses(
