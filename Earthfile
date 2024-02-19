@@ -15,7 +15,7 @@ install:
 source:
   FROM +install
   COPY --keep-ts Cargo.toml Cargo.lock ./
-  COPY --keep-ts --dir server backend ./
+  COPY --keep-ts --dir server backend entity migration ./
 
 # lint runs cargo clippy on the source code
 lint:
