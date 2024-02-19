@@ -109,9 +109,9 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
 
     return (
         <>
-            <div className="flex w-full h-full items-center justify-center"
+            <div className="flex items-center justify-center"
                 style={{
-                    height: window.location.href.endsWith('/editor') ? '' : '100vh'
+                    height: window.location.href.endsWith('/editor') ? '' : ''
                 }}>
                 {parsingError ? (
                     <div style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>
@@ -121,16 +121,10 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
                     </div >
                 ) : ''}
                 {showEndScreen ? <EndScreen></EndScreen> :
-
-
                     <div className="align-middle" style={{
                         width: '1000px',
                         maxWidth: '48rem',
                         minWidth: '12rem',
-                        // height: mode === 'prod' ? '100vh' : '100vh',
-                        // height: '100vh'
-                        // justifyContent: 'center',
-                        // alignSelf: 'center'
                     }}>
                         <form
                             onKeyUp={evt => {
