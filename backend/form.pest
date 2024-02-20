@@ -9,7 +9,9 @@ block     = _{
 //   | dropdown
   | submit
   | comment
+  | error_block
 }
+error_block = { (!NEWLINE ~ ANY)+ ~ NEWLINE }
 
 textarea =  { ^"textarea:" ~ SPACE? ~ question_with_default? }
 checkbox =  {
@@ -29,6 +31,7 @@ comment  = _{ "//" ~ (!"\n" ~ ANY)* }
 text_input            =  {
     ^"text:" ~ SPACE? ~ question_with_default ~ SPACE?
 }
+
 question_with_default = _{
     (default_value ~ SPACE? ~ question_text)
   | (question_text ~ SPACE? ~ default_value)
@@ -44,3 +47,4 @@ unchecked             =  { "[ ]" }
 
 // Helpers
 SPACE = _{ " " }
+
