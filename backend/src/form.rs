@@ -3,6 +3,7 @@ use pest::{iterators::Pair, Parser};
 use pest_derive::Parser;
 use serde::{Deserialize, Serialize};
 
+use serde_json::{json, Value};
 use tracing::info;
 
 use crate::{nanoid_gen, NanoId, ParsedSurvey, Question, NANOID_LEN};
@@ -71,7 +72,7 @@ pub fn parse_markdown_text(
             },
             Rule::error_block => {
                 FormValue::Error {
-                    properties: pair.as_span().as_str().to_string(),
+                    properties: json!(pair.as_str()),
                 }
             }
             Rule::comment
@@ -243,7 +244,7 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
         FormValue::CheckedStatus { value: _ } => SurveyPart::Nothing,
         FormValue::DefaultValue { text } => SurveyPart::Nothing,
         FormValue::Error { properties } => SurveyPart::ErrorBlock {
-            text: properties.clone(),
+            text: json!(properties),
         }, // FormValue::DefaultValue { text } => todo!(), // _ => SurveyPart::Nothing,
            // _ => SurveyPart::Nothing,
     }
@@ -305,7 +306,7 @@ pub enum SurveyPart {
         default: String,
     },
     ErrorBlock {
-        text: String,
+        text: Value,
     },
 }
 
@@ -435,7 +436,7 @@ pub enum FormValue {
     CheckedStatus { value: bool },
     DefaultValue { text: String },
     Checkbox { properties: Vec<FormValue> },
-    Error { properties: String },
+    Error { properties: Value },
 }
 
 #[cfg(test)]
