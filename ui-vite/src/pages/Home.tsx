@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { EditorPage, SampleForms } from './EditorPage.tsx';
 import { HeroSection } from './HeroSection.tsx';
 import { exampleText } from '../main.tsx';
+import { Link } from 'react-router-dom';
 
 export function Home() {
     const [editorContent, setEditorContent] = useState(exampleText);
@@ -10,13 +11,8 @@ export function Home() {
         <>
             <HeroSection></HeroSection>
             <div className='flex flex-row pt-8 items-center pb-16 p-5 justify-center'>
-                <a href='/editor' className='outline outline-1 p-6 text-2xl rounded w-1/3 bg-green'>Try it now</a>
-                <a href='/waitlist' className='outline outline-1 p-6 text-2xl rounded w-1/3 bg-purple'>Join the waitlist</a>
-                {/* <h4
-                    style={{ fontSize: '4rem' }}
-                    className='p-6 w-2/3 rounded pt-10'>
-                    Try it below
-                </h4> */}
+                <Link className="outline outline-1 p-6 text-2xl rounded w-1/3 bg-purple" style={{ color: 'white' }} to="/editor">Try it now</Link>
+                <Link className="outline outline-1 p-6 text-2xl rounded w-1/3 bg-green" style={{ color: 'white' }} to="/waitlist">Join the waitlist</Link>
                 <hr></hr>
             </div>
             <div className="p-16">
