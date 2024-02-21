@@ -69,10 +69,14 @@ pub fn parse_markdown_text(
             Rule::listitem_check => FormValue::CheckListItem {
                 properties: pair.into_inner().map(parse_value).collect(),
             },
+            Rule::error_block => FormValue::Error {
+                properties: pair.to_string(),
+            },
             Rule::comment
             | Rule::SPACE
             | Rule::emptyline
             | Rule::form
+            | Rule::error
             | Rule::block
             | Rule::default_value
             | Rule::question_with_default => FormValue::Nothing,
@@ -230,8 +234,16 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                 id: NanoId::from("qes"),
             }
         }
-        // FormValue::DefaultValue { text } => todo!(), // _ => SurveyPart::Nothing,
-        _ => SurveyPart::Nothing,
+        FormValue::Nothing => SurveyPart::Nothing,
+        FormValue::ListItem { properties } => SurveyPart::Nothing,
+        FormValue::CheckListItem { properties } => SurveyPart::Nothing,
+        FormValue::QuestionText { text } => SurveyPart::Nothing,
+        FormValue::CheckedStatus { value: _ } => SurveyPart::Nothing,
+        FormValue::DefaultValue { text } => SurveyPart::Nothing,
+        FormValue::Error { properties } => SurveyPart::ErrorBlock {
+            text: properties.clone(),
+        }, // FormValue::DefaultValue { text } => todo!(), // _ => SurveyPart::Nothing,
+           // _ => SurveyPart::Nothing,
     }
 }
 
@@ -290,6 +302,9 @@ pub enum SurveyPart {
         button: String,
         default: String,
     },
+    ErrorBlock {
+        text: String,
+    },
 }
 
 impl SurveyPart {
@@ -326,6 +341,7 @@ impl SurveyPart {
                 button: _,
                 default: _,
             } => BlockType::Submit,
+            SurveyPart::ErrorBlock { text } => BlockType::ErrorBlock,
         }
     }
 }
@@ -369,6 +385,7 @@ pub enum BlockType {
     Empty,
     Textarea,
     Submit,
+    ErrorBlock,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -416,6 +433,7 @@ pub enum FormValue {
     CheckedStatus { value: bool },
     DefaultValue { text: String },
     Checkbox { properties: Vec<FormValue> },
+    Error { properties: String },
 }
 
 #[cfg(test)]
