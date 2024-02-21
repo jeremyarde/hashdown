@@ -11,15 +11,15 @@ use lettre::transport::smtp::commands::Data;
 use markdownparser::{nanoid_gen, NanoId};
 
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, Database, DatabaseConnection, EntityTrait, IntoActiveModel,
-    QueryFilter, Set, TryIntoModel,
+    ActiveModelTrait, ColumnTrait, Database, DatabaseConnection, EntityTrait, FromQueryResult,
+    IntoActiveModel, QueryFilter, Set, TryIntoModel,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use sqlx::{
-    postgres::{PgPoolOptions, PgQueryResult, PgTypeInfo},
-    Decode, Encode, FromRow, PgPool, Postgres, Type,
-};
+// use sqlx::{
+//     postgres::{PgPoolOptions, PgQueryResult, PgTypeInfo},
+//     Decode, Encode, FromRow, PgPool, Postgres, Type,
+// };
 use tracing::info;
 
 use crate::{mware::ctext::SessionContext, survey_responses::SubmitResponseRequest, ServerError};
@@ -44,7 +44,7 @@ use migration::{Migrator, MigratorTrait};
 pub struct MdpDatabase {
     // data: Arc<RwLock<TodoModel>>,
     // pub pool: SqlitePool,
-    pub pool: PgPool,
+    // pub pool: PgPool,
     // pool: SqliteConnection,
     // pub pool: SqlitePool,
     // options: Option<DatabaseOptions>,
@@ -87,10 +87,10 @@ impl MdpDatabase {
         // println!("{:?}", std::env::current_dir()); //Ok("/Users/jarde/Documents/code/markdownparser/server")
         // let database_url = dotenvy::var("DATABASE_URL")?;
         let database_url = db_url.0;
-        let pool = PgPoolOptions::new()
-            .max_connections(1)
-            .connect(&database_url)
-            .await?;
+        // let pool = PgPoolOptions::new()
+        //     .max_connections(1)
+        //     .connect(&database_url)
+        //     .await?;
 
         info!("Finished running migrations");
 
@@ -100,7 +100,7 @@ impl MdpDatabase {
         Migrator::up(&db, None).await?;
 
         Ok(MdpDatabase {
-            pool,
+            // pool,
             settings: Settings::default(),
             sea_pool: db,
         })
@@ -198,7 +198,7 @@ pub struct NanoIdModel(String);
 //     }
 // }
 
-#[derive(Deserialize, Serialize, FromRow, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct AnswerModel {
     id: i32,
     response_id: String,
@@ -435,17 +435,24 @@ impl MdpDatabase {
         &self,
         survey_id: &str,
         workspace_id: &str,
-    ) -> anyhow::Result<Vec<AnswerModel>, ServerError> {
+    ) -> anyhow::Result<Vec<entity::responses::Model>, ServerError> {
         info!("Listing responses for survey");
 
-        let answers: Vec<AnswerModel> = sqlx::query_as(
-            r#"select * from mdp.responses where mdp.responses.survey_id = $1 and mdp.responses.workspace_id = $2"#)
-            .bind(survey_id).bind(workspace_id)
-        .fetch_all(&self.pool)
-        .await
-        .map_err(|_err| ServerError::Database("Did not find responses".to_string()))?;
+        let responses = entity::responses::Entity::find()
+            .filter(entity::responses::Column::SurveyId.eq(survey_id))
+            .filter(entity::responses::Column::WorkspaceId.eq(workspace_id))
+            .all(&self.sea_pool)
+            .await
+            .map_err(|_err| ServerError::Database("Did not find responses".to_string()))?;
 
-        Ok(answers)
+        // let answers: Vec<AnswerModel> = sqlx::query_as(
+        //     r#"select * from mdp.responses where mdp.responses.survey_id = $1 and mdp.responses.workspace_id = $2"#)
+        //     .bind(survey_id).bind(workspace_id)
+        // .fetch_all(&self.pool)
+        // .await
+        // .map_err(|_err| ServerError::Database("Did not find responses".to_string()))?;
+
+        Ok(responses)
     }
 
     pub async fn get_session(&self, session_id: String) -> anyhow::Result<MdpSession, ServerError> {
@@ -518,46 +525,41 @@ impl MdpDatabase {
 
     pub async fn delete_session(
         &self,
-        session_id: &str,
-        // workspace_id: &str,
+        session: &SessionModel,
     ) -> anyhow::Result<bool, ServerError> {
-        let result: PgQueryResult =
-            sqlx::query(r#"delete from mdp.sessions where mdp.sessions.session_id = $1"#)
-                .bind(session_id)
-                .execute(&self.pool)
-                .await
-                .map_err(|err| {
-                    ServerError::Database(format!(
-                        "Could not delete session {}: {}",
-                        session_id, err
-                    ))
-                })?;
+        // let result: PgQueryResult =
+        //     sqlx::query(r#"delete from mdp.sessions where mdp.sessions.session_id = $1"#)
+        //         .bind(session_id)
+        //         .execute(&self.pool)
+        //         .await
+        //         .map_err(|err| {
+        //             ServerError::Database(format!(
+        //                 "Could not delete session {}: {}",
+        //                 session_id, err
+        //             ))
+        //         })?;
 
-        if result.rows_affected() == 1 {
+        let result = entity::sessions::Entity::delete_by_id((
+            session.session_id.to_string(),
+            session.workspace_id.to_string(),
+        ))
+        .exec(&self.sea_pool)
+        .await
+        .map_err(|err| {
+            ServerError::Database(format!(
+                "Could not delete session {}: {}",
+                session.session_id, err
+            ))
+        })?;
+
+        if result.rows_affected == 1 {
             Ok(true)
         } else {
             return Err(ServerError::Database(format!(
                 "Session does not exist: {}",
-                session_id
+                session.session_id,
             )));
         }
-    }
-
-    pub async fn delete_user(
-        &self,
-        user_id: &str,
-        workspace_id: &str,
-    ) -> anyhow::Result<String, ServerError> {
-        let _: () = sqlx::query_as(
-            "delete from mdp.users where users.user_id = $1 and mdp.users.workspace_id = $2",
-        )
-        .bind(user_id)
-        .bind(workspace_id)
-        .fetch_one(&self.pool)
-        .await
-        .map_err(|err| ServerError::Database(format!("Could not delete user: {}", err)))?;
-
-        Ok(user_id.to_string())
     }
 }
 

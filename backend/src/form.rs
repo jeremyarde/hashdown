@@ -447,4 +447,16 @@ mod tests {
         println!("{:#?}", serialized);
         println!("JSON version\n{:#}", json!(serialized));
     }
+
+    #[test]
+    fn test_parse_with_error() {
+        let res = parse_markdown_text(include_str!("../formexample-error.md"));
+        // // let res = do_thing();
+        println!("{:#?}", &res);
+
+        let serialized = formvalue_to_survey(res.unwrap());
+        // let serialized = json!(res.unwrap());
+        println!("{:#?}", serialized);
+        println!("JSON version\n{:#}", json!(serialized));
+    }
 }
