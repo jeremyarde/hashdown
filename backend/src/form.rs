@@ -69,14 +69,16 @@ pub fn parse_markdown_text(
             Rule::listitem_check => FormValue::CheckListItem {
                 properties: pair.into_inner().map(parse_value).collect(),
             },
-            Rule::error_block => FormValue::Error {
-                properties: pair.to_string(),
-            },
+            Rule::error_block => {
+                FormValue::Error {
+                    properties: pair.as_span().as_str().to_string(),
+                }
+            }
             Rule::comment
             | Rule::SPACE
             | Rule::emptyline
             | Rule::form
-            | Rule::error
+            // | Rule::error
             | Rule::block
             | Rule::default_value
             | Rule::question_with_default => FormValue::Nothing,

@@ -16,7 +16,7 @@ submit: submit`);
     let sampleSurvey = markdown_to_form_wasm_v2(heroContent);
 
     return (
-        <div className='flex-col flex'>
+        <div className='flex-col flex p-6'>
             <div className='p-6 pb-24'>
                 <h1 className='flex top-10 text-center justify-center text-4xl pt-4' style={{ fontWeight: '700', color: 'black' }}>
                     The fastest way to create and share surveys.
@@ -25,7 +25,7 @@ submit: submit`);
                 </h1>
                 <p className='text-xl' style={{ color: 'forestgreen' }}>Hashdown is the easiest text based form maker</p>
             </div>
-            <div className='flex flex-row'>
+            <div className='flex flex-row p-6'>
                 <p
                     style={{ whiteSpace: 'pre-wrap' }}
                     className='p-6 text-2xl flex-1 w-1/2 flex-wrap self-center'

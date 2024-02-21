@@ -6,18 +6,15 @@ block     = _{
   | textarea
   | checkbox
   | radio
-//   | dropdown
   | submit
   | comment
   | error_block
 }
 
-error = _{ (!NEWLINE ~ ANY)+ ~ NEWLINE+ }
-error_block = { error+ }
-
+error_block = { (!NEWLINE ~ ANY)+ }
 textarea =  { ^"textarea:" ~ SPACE? ~ question_with_default? }
 checkbox =  {
-    "checkbox:" ~ SPACE? ~ question_text? ~ NEWLINE ~ listitem_check+
+    ^"checkbox:" ~ SPACE? ~ question_text? ~ NEWLINE ~ listitem_check+
 }
 radio    =  {
     ^"radio:" ~ SPACE? ~ question_text ~ NEWLINE ~ listitem+
