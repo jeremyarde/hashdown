@@ -24,15 +24,6 @@ function takeObject(idx) {
     return ret;
 }
 
-function addHeapObject(obj) {
-    if (heap_next === heap.length) heap.push(heap.length + 1);
-    const idx = heap_next;
-    heap_next = heap[idx];
-
-    heap[idx] = obj;
-    return idx;
-}
-
 const lTextDecoder = typeof TextDecoder === 'undefined' ? (0, module.require)('util').TextDecoder : TextDecoder;
 
 let cachedTextDecoder = new lTextDecoder('utf-8', { ignoreBOM: true, fatal: true });
@@ -51,6 +42,15 @@ function getUint8Memory0() {
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return cachedTextDecoder.decode(getUint8Memory0().subarray(ptr, ptr + len));
+}
+
+function addHeapObject(obj) {
+    if (heap_next === heap.length) heap.push(heap.length + 1);
+    const idx = heap_next;
+    heap_next = heap[idx];
+
+    heap[idx] = obj;
+    return idx;
 }
 
 function debugString(val) {
@@ -206,6 +206,16 @@ export function __wbindgen_object_drop_ref(arg0) {
     takeObject(arg0);
 };
 
+export function __wbindgen_error_new(arg0, arg1) {
+    const ret = new Error(getStringFromWasm0(arg0, arg1));
+    return addHeapObject(ret);
+};
+
+export function __wbindgen_is_string(arg0) {
+    const ret = typeof(getObject(arg0)) === 'string';
+    return ret;
+};
+
 export function __wbindgen_is_object(arg0) {
     const val = getObject(arg0);
     const ret = typeof(val) === 'object' && val !== null;
@@ -213,6 +223,11 @@ export function __wbindgen_is_object(arg0) {
 };
 
 export function __wbindgen_number_new(arg0) {
+    const ret = arg0;
+    return addHeapObject(ret);
+};
+
+export function __wbindgen_bigint_from_i64(arg0) {
     const ret = arg0;
     return addHeapObject(ret);
 };
@@ -236,11 +251,6 @@ export function __wbg_set_20cbc34131e76824(arg0, arg1, arg2) {
     getObject(arg0)[takeObject(arg1)] = takeObject(arg2);
 };
 
-export function __wbindgen_error_new(arg0, arg1) {
-    const ret = new Error(getStringFromWasm0(arg0, arg1));
-    return addHeapObject(ret);
-};
-
 export function __wbg_crypto_d05b68a3572bb8ca(arg0) {
     const ret = getObject(arg0).crypto;
     return addHeapObject(ret);
@@ -259,11 +269,6 @@ export function __wbg_versions_c1cb42213cedf0f5(arg0) {
 export function __wbg_node_43b1089f407e4ec2(arg0) {
     const ret = getObject(arg0).node;
     return addHeapObject(ret);
-};
-
-export function __wbindgen_is_string(arg0) {
-    const ret = typeof(getObject(arg0)) === 'string';
-    return ret;
 };
 
 export function __wbg_msCrypto_10fc94afee92bd76(arg0) {
@@ -296,6 +301,11 @@ export function __wbg_new_34c624469fb1d4fd() {
 
 export function __wbg_newnoargs_5859b6d41c6fe9f7(arg0, arg1) {
     const ret = new Function(getStringFromWasm0(arg0, arg1));
+    return addHeapObject(ret);
+};
+
+export function __wbg_new_ad4df4628315a892() {
+    const ret = new Map();
     return addHeapObject(ret);
 };
 
@@ -342,6 +352,11 @@ export function __wbg_call_f6a2bc58c19c53c6() { return handleError(function (arg
     const ret = getObject(arg0).call(getObject(arg1), getObject(arg2));
     return addHeapObject(ret);
 }, arguments) };
+
+export function __wbg_set_83e83bc2428e50ab(arg0, arg1, arg2) {
+    const ret = getObject(arg0).set(getObject(arg1), getObject(arg2));
+    return addHeapObject(ret);
+};
 
 export function __wbg_buffer_5d1b598a01b41a42(arg0) {
     const ret = getObject(arg0).buffer;

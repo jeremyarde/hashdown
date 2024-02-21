@@ -187,6 +187,12 @@ export function RenderedForm({ survey, mode, showSubmissionData = false }: Rende
                                                 </div>
                                             )
                                             break;
+                                        case "ErrorBlock":
+                                            blockHtml = (
+                                                <div>
+                                                    {ErrorBlock(block)}
+                                                </div>
+                                            )
                                     }
 
                                     return (
@@ -318,7 +324,6 @@ function TextareaComponent(block, setStateFn, handleEvent) {
 }
 
 function Dropdown(block, handleEvent) {
-    console.log('dropdown block', block)
     if (!block.properties) {
         return (<>not available</>)
     }
@@ -335,6 +340,17 @@ function Dropdown(block, handleEvent) {
                 </ul>
             </Dropdown>
         </>
+    )
+}
+
+function ErrorBlock(block) {
+    return (
+        <div className="flex-row flex">
+            <label>{"Issue with line:"}</label>
+            <div className="bg-yellow">
+                {block.properties.text}
+            </div>
+        </div>
     )
 }
 
