@@ -28,7 +28,6 @@ export function useGetSurvey(surveyId: string | undefined): { survey: Survey | u
                     "Content-Type": "application/json",
                     "session_id": getSessionToken()
                 },
-                // credentials: 'include',
             });
             console.log(`response from API: ${JSON.stringify(response)}`)
             handleResponse(response);
