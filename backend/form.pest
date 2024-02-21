@@ -9,10 +9,12 @@ block     = _{
 //   | dropdown
   | submit
   | comment
-  | error_block
+  | error
 }
 error_block = { (!NEWLINE ~ ANY)+ ~ NEWLINE }
 
+
+error = { (!NEWLINE ~ ANY)+ }
 textarea =  { ^"textarea:" ~ SPACE? ~ question_with_default? }
 checkbox =  {
     "checkbox:" ~ SPACE? ~ question_text? ~ NEWLINE ~ listitem_check+

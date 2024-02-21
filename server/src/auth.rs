@@ -155,32 +155,35 @@ pub async fn signup(
     ))
 }
 
-#[axum::debug_handler]
-pub async fn delete(
-    state: State<ServerState>,
-    // jar: CookieJar,
-    // headers: HeaderMap,
-    // payload: Json<LoginPayload>,
-    Extension(ctx): Extension<Option<SessionContext>>,
-) -> Result<Json<Value>, ServerError> {
-    info!("->> delete user");
+// #[axum::debug_handler]
+// pub async fn delete(
+//     state: State<ServerState>,
+//     // jar: CookieJar,
+//     // headers: HeaderMap,
+//     // payload: Json<LoginPayload>,
+//     Extension(ctx): Extension<Option<SessionContext>>,
+// ) -> Result<Json<Value>, ServerError> {
+//     info!("->> delete user");
 
-    let Some(ctx) = ctx else {
-        return Err(ServerError::AuthFailCtxNotInRequest);
-    };
-    // let session_header = if let Some(x) = headers.get(SESSION_ID_KEY) {
-    //     x.to_owned().to_str().unwrap().to_string()
-    // } else {
-    //     return Err(ServerError::AuthFailNoTokenCookie);
-    // };
-    // must be signed in to delete yourself
-    state.db.delete_session(&ctx.session.0.session_id).await?;
-    state
-        .db
-        .delete_user(&ctx.session.0.session_id, &ctx.session.0.workspace_id)
-        .await?;
-    Ok(Json(json!("delete successful")))
-}
+//     let Some(ctx) = ctx else {
+//         return Err(ServerError::AuthFailCtxNotInRequest);
+//     };
+//     // let session_header = if let Some(x) = headers.get(SESSION_ID_KEY) {
+//     //     x.to_owned().to_str().unwrap().to_string()
+//     // } else {
+//     //     return Err(ServerError::AuthFailNoTokenCookie);
+//     // };
+//     // must be signed in to delete yourself
+//     state
+//         .db
+//         .delete_session(&ctx.session.0.session_id, &ctx.session.0.workspace_id)
+//         .await?;
+//     state
+//         .db
+//         .delete_user(&ctx.session.0.session_id, &ctx.session.0.workspace_id)
+//         .await?;
+//     Ok(Json(json!("delete successful")))
+// }
 
 #[axum::debug_handler]
 pub async fn logout(
@@ -190,7 +193,7 @@ pub async fn logout(
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> logout");
 
-    state.db.delete_session(&ctx.session.0.session_id).await?;
+    state.db.delete_session(&ctx.session.0).await?;
 
     Ok(Json(json!("logout success")))
 }

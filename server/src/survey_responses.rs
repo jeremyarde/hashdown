@@ -4,6 +4,7 @@ use axum::{
     Extension, Json,
 };
 
+use entity::responses::Model;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::{debug, info};
@@ -44,7 +45,7 @@ pub async fn list_response(
     debug!("    ->> survey: {:#?}", response_query);
 
     // json version
-    let responses: Vec<AnswerModel> = state
+    let responses: Vec<Model> = state
         .db
         .list_responses(&response_query.survey_id, &ctx.session.0.workspace_id)
         .await
