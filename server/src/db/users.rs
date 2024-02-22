@@ -29,16 +29,6 @@ impl UsersTrait for users::ActiveModel {
     }
 }
 
-// pub trait UserCrud {
-//     async fn create_user(&self, request: CreateUserRequest) -> Result<UserModel, ServerError>;
-//     async fn get_user_by_email(&self, email: String) -> Result<UserModel, ServerError>;
-//     async fn get_user_by_confirmation_code(
-//         &self,
-//         confirmation_token: String,
-//     ) -> Result<UserModel, ServerError>;
-//     async fn verify_user(&self, new_user: UserModel) -> Result<UserModel, ServerError>;
-// }
-
 use entity::workspaces::{self, Entity as Workspace};
 impl MdpDatabase {
     pub async fn create_user(&self, request: CreateUserRequest) -> Result<MdpUser, ServerError> {
@@ -96,7 +86,7 @@ impl MdpDatabase {
         Ok(new_user)
     }
 
-    pub async fn get_user_by_email(&self, email: String) -> Result<MdpUser, ServerError> {
+    pub async fn get_user_by_email(&self, email: String) -> Result<Option<MdpUser>, ServerError> {
         info!("Search for user with email: {email:?}");
 
         let user = User::find()
@@ -115,8 +105,10 @@ impl MdpDatabase {
         //         ServerError::Database(format!("Could not find user with email: {err}"))
         //     })?;
 
-        info!("Found user");
-        Ok(MdpUser(user.unwrap()))
+        match user {
+            Some(x) => return Ok(Some(MdpUser(x))),
+            None => return Ok(None),
+        }
     }
 
     pub async fn get_user_by_confirmation_code(

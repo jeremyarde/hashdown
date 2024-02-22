@@ -2,7 +2,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { ChangeEvent, FormEvent, useContext, useState } from "react";
-import { Navigate, redirect } from "react-router-dom";
+import { Link, Navigate, redirect } from "react-router-dom";
 import { getBaseUrl, handleResponse, setSessionToken } from "../../lib/utils";
 import { useLogin } from "../../hooks/useLogin";
 
@@ -176,9 +176,9 @@ export function Login() {
                                     Login
                                 </Button>
                                 <div className="text-center p-1">{"No account? "}
-                                    <a className="underline" href="/signup">
+                                    <Link className="underline" to="/signup">
                                         Signup here
-                                    </a>
+                                    </Link>
                                 </div>
                             </form>
                         </div>
