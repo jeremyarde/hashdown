@@ -127,7 +127,7 @@ pub async fn signup(
     let user = state
         .db
         .create_user(CreateUserRequest {
-            name: "fake".to_string(),
+            name: payload.name.clone(),
             email: payload.email.clone(),
             password_hash: hash.to_string(),
             workspace_id: Some(workspace.0.workspace_id),
@@ -137,8 +137,9 @@ pub async fn signup(
     // Don't create a session for signing up - we need to verify email first
     // let transaction_result = transactions.commit().await;
 
+    info!("Sending confirmation email");
     state.mail.send(
-        EmailIdentity::new("John Doe", &payload.email),
+        EmailIdentity::new(&user.0.name, &payload.email),
         EmailIdentity::new("Hashdown - Email confirmation", LOGIN_EMAIL_SENDER),
         format!(
             "Welcome to hashdown!\n\n Please click on this link to confirm your email: {}/{}?t={}",
@@ -150,6 +151,7 @@ pub async fn signup(
         "Email confirmation",
     );
 
+    // TODO: turn this section off, should get new session once they confirm email
     let email = user.0.email.clone();
     let session = state.db.create_session(user).await?;
 

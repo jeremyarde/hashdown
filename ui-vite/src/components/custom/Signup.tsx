@@ -61,7 +61,7 @@ export function Signup() {
                         < div className="space-y-4 text-left" >
                             <form onSubmit={onSubmit}>
                                 <Label className="" htmlFor="name" >Name</Label>
-                                <Input id="name" placeholder="John Doe" required type="text" onChange={e => setName(e.target.value)} />
+                                <Input id="name" placeholder="" required type="text" onChange={e => setName(e.target.value)} />
                                 <Label className="" htmlFor="email" > Email </Label>
                                 <Input id="email" placeholder="m@example.com" required type="email" onChange={e => setUsername(e.target.value)} />
                                 <Label className="" htmlFor="password" > Password </Label>
