@@ -4,6 +4,7 @@ create schema if not exists mdp;
 
 create table mdp.workspaces (
     -- id serial primary key,
+    -- id serial,
     workspace_id text not null unique,
     name VARCHAR(255) NOT NULL,
 
@@ -11,7 +12,7 @@ create table mdp.workspaces (
 );
 
 CREATE table mdp.users (
-    id serial,
+    -- id serial,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -29,12 +30,14 @@ CREATE table mdp.users (
     stripe_id TEXT unique,
 
     -- primary key (user_id),
+    -- primary key (workspace_id, id),
     primary key (workspace_id, user_id),
+    -- foreign key (workspace_id) references mdp.workspaces(id)
     foreign key (workspace_id) references mdp.workspaces(workspace_id)
 );
 
 create table mdp.stripe_events (
-    id serial,
+    -- id serial,
     stripe_event_id text not null unique,
     from_stripe_event_id text not null,
     attributes JSON,
@@ -43,11 +46,14 @@ create table mdp.stripe_events (
     workspace_id text not null,
 
     -- primary key (stripe_event_id)
-    primary key (workspace_id, stripe_event_id)
+    primary key (workspace_id, stripe_event_id),
+    -- foreign key (workspace_id) references mdp.workspaces(id)
+    foreign key (workspace_id) references mdp.workspaces(workspace_id)
+
 );
 
 CREATE table mdp.surveys (
-    id serial,
+    -- id serial,
     survey_id TEXT not null unique,
     workspace_id text not null,
     user_id text not null,
@@ -59,14 +65,15 @@ CREATE table mdp.surveys (
     parse_version TEXT,
     blocks JSON not null,
 
-    primary key (survey_id),
-    -- primary key (workspace_id, survey_id),
+    -- primary key (workspace_id, id),
+    primary key (workspace_id, survey_id),
+    -- foreign key (workspace_id) references mdp.workspaces(id),
     foreign key (workspace_id) references mdp.workspaces(workspace_id),
     foreign key(user_id) references mdp.users(user_id)
 );
 
 CREATE table mdp.responses (
-    id serial,
+    -- id serial,
     response_id TEXT not null unique,
     workspace_id text not null,
     submitted_at TIMESTAMP WITH TIME ZONE,
@@ -74,14 +81,15 @@ CREATE table mdp.responses (
     survey_id TEXT NOT NULL,
 
     -- primary key (response_id),
+    -- primary key (workspace_id, id),
     primary key (workspace_id, response_id),
     foreign key (workspace_id) references mdp.workspaces(workspace_id),
-    foreign key(survey_id) references mdp.surveys(survey_id)
+    foreign key (survey_id) references mdp.surveys(survey_id)
 );
 
 
 create table mdp.sessions (
-    id serial,
+    -- id serial,
     session_id TEXT not null unique,
     workspace_id text not null,
     user_id TEXT NOT NULL unique,
@@ -89,7 +97,9 @@ create table mdp.sessions (
     idle_period_expires_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP not null,
 
     -- primary key (session_id),
+    -- primary key (workspace_id, id),
     primary key (workspace_id, session_id),
+    -- foreign key (workspace_id) references mdp.workspaces(id),
     foreign key (workspace_id) references mdp.workspaces(workspace_id),
     foreign key(user_id) references mdp.users(user_id) on delete cascade
 );

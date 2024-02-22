@@ -33,6 +33,7 @@ use entity::workspaces::{self, Entity as Workspace};
 impl MdpDatabase {
     pub async fn create_user(&self, request: CreateUserRequest) -> Result<MdpUser, ServerError> {
         println!("->> create_user");
+
         let mut ws_id: String;
         if request.workspace_id.is_none() {
             let new_workspace = workspaces::ActiveModel {
@@ -40,12 +41,12 @@ impl MdpDatabase {
                 name: Set(String::from("default")),
                 ..Default::default()
             }
-            .save(&self.sea_pool)
+            .insert(&self.sea_pool)
             .await
             .map_err(|err| ServerError::Database("Failed".to_string()))?
             .workspace_id;
 
-            ws_id = new_workspace.as_ref().clone();
+            ws_id = new_workspace.clone();
         } else {
             ws_id = request.workspace_id.unwrap();
         }
@@ -58,30 +59,6 @@ impl MdpDatabase {
             .save(&self.sea_pool)
             .await
             .map_err(|err| ServerError::Database(format!("Could not create user: {err}")))?;
-
-        // let user = sqlx::query_as::<_, UserModel>(
-        //     r#"insert into mdp.users (
-        //             user_id,
-        //             password_hash,
-        //             email,
-        //             created_at,
-        //             modified_at,
-        //             workspace_id,
-        //             confirmation_token,
-        //             confirmation_token_expire_at
-        //         ) values ($1, $2, $3, $4, $5, $6, $7, $8) returning *"#,
-        // )
-        // .bind(new_user.user_id)
-        // .bind(new_user.password_hash)
-        // .bind(new_user.email)
-        // .bind(new_user.created_at)
-        // .bind(new_user.modified_at)
-        // .bind(new_user.workspace_id)
-        // .bind(new_user.confirmation_token)
-        // .bind(new_user.confirmation_token_expire_at)
-        // .fetch_one(&self.pool)
-        // .await
-        // .map_err(|err| ServerError::Database(format!("Could not create user: {err}")))?;
 
         Ok(new_user)
     }
@@ -97,13 +74,7 @@ impl MdpDatabase {
                 ServerError::Database(format!("Could not find user with email. Error: {err}"))
             })?;
 
-        // let res: UserModel = sqlx::query_as(r#"select * from mdp.users where email = $1"#)
-        //     .bind(email)
-        //     .fetch_one(&self.pool)
-        //     .await
-        //     .map_err(|err| {
-        //         ServerError::Database(format!("Could not find user with email: {err}"))
-        //     })?;
+        debug!("user: {:#?}", user);
 
         match user {
             Some(x) => return Ok(Some(MdpUser(x))),

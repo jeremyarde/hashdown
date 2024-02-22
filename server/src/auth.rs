@@ -111,11 +111,7 @@ pub async fn signup(
                 Some(_) => return Err(ServerError::LoginFail), // user already exists
             }
         }
-        Err(_) => {
-            return Err(ServerError::Database(
-                "Could not find user with email".to_string(),
-            ))
-        }
+        Err(x) => return Err(x),
     };
 
     let argon2 = argon2::Argon2::default();

@@ -165,7 +165,7 @@ mod tests {
         ]);
 
         let survey = surveys::ActiveModel {
-            id: Set(0),
+            // id: Set(0),
             name: Set(Some(String::new())),
             survey_id: Set(String::new()),
             user_id: Set(String::new()),
