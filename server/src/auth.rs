@@ -105,8 +105,17 @@ pub async fn signup(
     info!("->> signup");
 
     match state.db.get_user_by_email(payload.email.clone()).await {
-        Ok(_) => return Err(ServerError::LoginFail), // user already exists
-        Err(_) => {}
+        Ok(user) => {
+            match user {
+                None => {}
+                Some(_) => return Err(ServerError::LoginFail), // user already exists
+            }
+        }
+        Err(_) => {
+            return Err(ServerError::Database(
+                "Could not find user with email".to_string(),
+            ))
+        }
     };
 
     let argon2 = argon2::Argon2::default();

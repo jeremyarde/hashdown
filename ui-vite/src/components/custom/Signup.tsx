@@ -4,6 +4,7 @@ import { Label } from "../ui/label";
 import { SESSION_TOKEN_KEY } from "../../lib/constants";
 import { FormEvent, useContext, useState } from "react";
 import { getBaseUrl, handleResponse } from "../../lib/utils";
+import { Link } from "react-router-dom";
 // import { GlobalState, GlobalStateContext } from "./main";
 
 /**
@@ -67,9 +68,9 @@ export function Signup() {
                                     Signup
                                 </Button>
                                 <div className="text-center p-1">{"Already have an account? "}
-                                    <a className="underline" href="/login">
+                                    <Link className="underline" to="/login">
                                         Login here
-                                    </a>
+                                    </Link>
                                 </div>
                             </form>
                         </div>
