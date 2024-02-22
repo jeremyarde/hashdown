@@ -13,6 +13,7 @@ import { Link } from "react-router-dom";
 */
 
 export function Signup() {
+    const [name, setName] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loggedIn, setLoggedIn] = useState(false);
@@ -21,7 +22,7 @@ export function Signup() {
 
     const onSubmit = async (event: FormEvent) => {
         event.preventDefault();
-        const payload = JSON.stringify({ email: username, password });
+        const payload = JSON.stringify({ name: name, email: username, password });
         try {
             const response = await fetch(`${getBaseUrl()}/auth/signup`, {
                 method: "POST",
@@ -59,6 +60,8 @@ export function Signup() {
                         </h1>
                         < div className="space-y-4 text-left" >
                             <form onSubmit={onSubmit}>
+                                <Label className="" htmlFor="name" >Name</Label>
+                                <Input id="name" placeholder="John Doe" required type="text" onChange={e => setName(e.target.value)} />
                                 <Label className="" htmlFor="email" > Email </Label>
                                 <Input id="email" placeholder="m@example.com" required type="email" onChange={e => setUsername(e.target.value)} />
                                 <Label className="" htmlFor="password" > Password </Label>

@@ -9,6 +9,7 @@ use sqlx;
 
 use chrono::{self, DateTime, Utc};
 
+use crate::db::stripe;
 use crate::{MdpDatabase, ServerError};
 
 use crate::db::database::MdpUser;
@@ -51,14 +52,37 @@ impl MdpDatabase {
             ws_id = request.workspace_id.unwrap();
         }
 
-        let new_user = MdpUser::from(&request.email, &request.password_hash, ws_id.as_str());
-        new_user
+        let new_user = MdpUser::from(
+            &request.name,
+            &request.email,
+            &request.password_hash,
+            ws_id.as_str(),
+        );
+        let user = new_user
             .0
             .clone()
             .into_active_model()
-            .save(&self.sea_pool)
+            .insert(&self.sea_pool)
             .await
             .map_err(|err| ServerError::Database(format!("Could not create user: {err}")))?;
+
+        let stripe_customer = &self
+            .create_customer(user.name.as_ref(), user.email.as_ref())
+            .await?;
+
+        let mut active_user = user.into_active_model();
+
+        active_user.stripe_id = Set(Some(
+            stripe_customer
+                .get("id")
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_string(),
+        ));
+        active_user.update(&self.sea_pool).await.map_err(|err| {
+            ServerError::Database(format!("Failed to update user with stripe_id: {}", err))
+        })?;
 
         Ok(new_user)
     }
@@ -161,6 +185,7 @@ mod tests {
     #[tokio::test]
     async fn test_create_user() {
         let create_user_request = CreateUserRequest {
+            name: "fake".to_string(),
             email: "test@jeremyarde.com".to_string(),
             password_hash: "fakepwhash".to_string(),
             workspace_id: Some("ws_test".to_string()),
@@ -175,6 +200,7 @@ mod tests {
     #[tokio::test]
     async fn test_verify_user() {
         let create_user_request = CreateUserRequest {
+            name: "fake".to_string(),
             email: "test@jeremyarde.com".to_string(),
             password_hash: "fakepwhash".to_string(),
             workspace_id: Some("ws_test".to_string()),

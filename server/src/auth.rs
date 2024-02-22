@@ -127,6 +127,7 @@ pub async fn signup(
     let user = state
         .db
         .create_user(CreateUserRequest {
+            name: "fake".to_string(),
             email: payload.email.clone(),
             password_hash: hash.to_string(),
             workspace_id: Some(workspace.0.workspace_id),

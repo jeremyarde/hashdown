@@ -21,6 +21,9 @@ pub enum ServerError {
     // Model/DB errors
     Database(String),
     RequestParams(String),
+
+    // Third party errors
+    Stripe(String),
 }
 
 impl core::fmt::Display for ServerError {

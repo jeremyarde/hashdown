@@ -480,4 +480,15 @@ mod tests {
         println!("{:#?}", serialized);
         println!("JSON version\n{:#}", json!(serialized));
     }
+
+    fn create_survey() {
+        let res = parse_markdown_text(
+            r#"# Get emailed when hashdown is available
+        Text: Email
+        textarea: What do you want to use Hashdown for?
+        Submit: Put me on waitlist"#,
+        );
+
+        
+    }
 }
