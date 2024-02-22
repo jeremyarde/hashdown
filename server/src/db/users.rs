@@ -84,6 +84,8 @@ impl MdpDatabase {
             ServerError::Database(format!("Failed to update user with stripe_id: {}", err))
         })?;
 
+        info!("Created new user: {:?}", new_user.0.email);
+
         Ok(new_user)
     }
 
