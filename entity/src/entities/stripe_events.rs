@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(schema_name = "mdp", table_name = "stripe_events")]
 pub struct Model {
-    pub id: i32,
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text", unique)]
     pub stripe_event_id: String,
     #[sea_orm(column_type = "Text")]
@@ -20,6 +19,21 @@ pub struct Model {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::workspaces::Entity",
+        from = "Column::WorkspaceId",
+        to = "super::workspaces::Column::WorkspaceId",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Workspaces,
+}
+
+impl Related<super::workspaces::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Workspaces.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}

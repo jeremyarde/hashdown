@@ -53,8 +53,8 @@ buildwasm:
 buildfe:
     cd ui-vite && npm run build
 
-sea:
-    cd server && sea-orm-cli generate entity --with-serde both -s mdp -o ../entity/src/entities\
-
 seamigrate:
     sea-orm-cli migrate refresh
+    
+sea:
+    cd server && sea-orm-cli generate entity --with-serde both -s mdp -o ../entity/src/entities\

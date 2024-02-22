@@ -11,8 +11,8 @@ use lettre::transport::smtp::commands::Data;
 use markdownparser::{nanoid_gen, NanoId};
 
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, Database, DatabaseConnection, EntityTrait, FromQueryResult,
-    IntoActiveModel, QueryFilter, Set, TryIntoModel,
+    ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, Database, DatabaseConnection, EntityTrait,
+    FromQueryResult, IntoActiveModel, QueryFilter, Set, TryIntoModel,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -317,8 +317,8 @@ pub struct MdpUser(pub UserModel);
 impl MdpUser {
     pub fn from(email: &str, password_hash: &str, workspace_id: &str) -> MdpUser {
         let user = users::ActiveModel {
-            email: Set(Email::new(email.clone().to_string()).email),
-            password_hash: Set(password_hash.clone().to_string()),
+            email: Set(Email::new(email.to_string()).email),
+            password_hash: Set(password_hash.to_string()),
             created_at: Set(chrono::Utc::now().fixed_offset()),
             modified_at: Set(chrono::Utc::now().fixed_offset()),
             email_status: Set(String::from("unverified")),
@@ -365,13 +365,14 @@ impl MdpDatabase {
     pub async fn create_workspace(&self) -> Result<MdpWorkspace, ServerError> {
         let workspace_id = NanoId::from("ws").to_string();
         let name = "".to_string();
-        info!("Creating workspace with workspace_id={workspace_id}");
+        info!("Creating new workspace with workspace_id={workspace_id}");
 
         let workspace = workspaces::ActiveModel {
             workspace_id: Set(workspace_id),
             name: Set(name),
+            ..Default::default()
         }
-        .save(&self.sea_pool)
+        .insert(&self.sea_pool)
         .await
         .map_err(|err| ServerError::Database(format!("Could not create workspace: {err:?}")))?;
 
@@ -386,19 +387,9 @@ impl MdpDatabase {
     ) -> Result<MdpResponse, ServerError> {
         info!("Creating answers in database");
 
-        // workspaces::Entity::find().filter(surveys::Column::Id.eq(v))
-
-        // is this required???
-        // let workspace_id: (String,) =
-        //     sqlx::query_as("select workspace_id from mdp.surveys where mdp.surveys.survey_id = $1")
-        //         .bind(answer.survey_id.clone())
-        //         .fetch_one(&self.pool)
-        //         .await
-        //         .map_err(|ex| ServerError::Database(format!("Could not create answer: {ex}")))?;
-
         // make sure survey exists
         let survey = entity::surveys::Entity::find()
-            .filter(surveys::Column::Id.eq(answer.survey_id.clone()))
+            .filter(surveys::Column::SurveyId.eq(answer.survey_id.clone()))
             .one(&self.sea_pool)
             .await
             .map_err(|ex| ServerError::Database(format!("Could not find survey: {ex}")))?;

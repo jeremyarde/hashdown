@@ -49,7 +49,7 @@ impl MdpSurvey {
         let metadata = Metadata::new();
 
         MdpSurvey(SurveyModel {
-            id: 0,
+            // id: 0,
             survey_id: nanoid_gen(12),
             plaintext: payload.plaintext.clone(),
             user_id: session.0.user_id.to_owned(),
