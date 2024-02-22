@@ -209,6 +209,7 @@ pub struct AnswerModel {
 }
 
 pub struct CreateUserRequest {
+    pub name: String,
     pub email: String,
     pub password_hash: String,
     pub workspace_id: Option<String>,
@@ -315,7 +316,7 @@ pub struct MdpSession(pub SessionModel);
 pub struct MdpUser(pub UserModel);
 
 impl MdpUser {
-    pub fn from(email: &str, password_hash: &str, workspace_id: &str) -> MdpUser {
+    pub fn from(name: &str, email: &str, password_hash: &str, workspace_id: &str) -> MdpUser {
         let user = users::ActiveModel {
             email: Set(Email::new(email.to_string()).email),
             password_hash: Set(password_hash.to_string()),
@@ -328,7 +329,11 @@ impl MdpUser {
             confirmation_token_expire_at: Set(Some(
                 chrono::Utc::now().fixed_offset().add(Duration::days(1)),
             )),
+            deleted_at: Set(None),
             role: Set(None),
+            email_confirmed_at: Set(None),
+            stripe_id: Set(None),
+            name: Set(name.to_string()),
             ..Default::default()
         };
 

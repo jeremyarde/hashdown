@@ -13,6 +13,7 @@ create table mdp.workspaces (
 
 CREATE table mdp.users (
     -- id serial,
+    name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -143,8 +144,9 @@ INSERT INTO mdp.workspaces (
 
 
 INSERT INTO mdp.users (
-    user_id, email, password_hash, created_at, modified_at, email_status, workspace_id, confirmation_token
+    name, user_id, email, password_hash, created_at, modified_at, email_status, workspace_id, confirmation_token
 ) VALUES (
+    'test1',
     'usr_default', 
     'test@test.com', 
     '$argon2id$v=19$m=19456,t=2,p=1$JaOOu6OXcVP+B9IUlHX34Q$JGxXSdEtM90s58YlwkIDXn9WfoJTpueOvJrhBlKNF9c', 
@@ -154,6 +156,7 @@ INSERT INTO mdp.users (
     'ws_default',
     'cfm_fake'
 ), (
+    'test2',
     'usr_default2',
     '5jlyqrjzu@mozmail.com',
     '$argon2id$v=19$m=19456,t=2,p=1$ZHAvB4m5UYIZRAteJcLMrQ$l4Lj1wzIBrJ0yK4VyuS5+fMHGXeZyVsIYLuZ9J2UDMA',
