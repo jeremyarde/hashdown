@@ -22,5 +22,6 @@ export function Home() {
                     setEditorContent={setEditorContent}
                 />
             </div>
-        </>);
+        </>
+    );
 }
