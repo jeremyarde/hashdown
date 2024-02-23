@@ -96,9 +96,7 @@ impl MdpDatabase {
             .filter(users::Column::Email.eq(email.clone()))
             .one(&self.pool)
             .await
-            .map_err(|err| {
-                ServerError::Database(format!("Error in database: {err}"))
-            })?;
+            .map_err(|err| ServerError::Database(format!("Error in database: {err}")))?;
 
         debug!("user: {:#?}", user);
 
@@ -138,6 +136,7 @@ impl MdpDatabase {
         active.email_status = Set("verified".to_string());
         active.modified_at = Set(current_time);
         active.email_confirmed_at = Set(Some(current_time));
+        active.confirmation_token = Set(None);
 
         let res = active
             .update(&self.pool)
