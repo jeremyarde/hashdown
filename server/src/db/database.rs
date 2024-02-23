@@ -423,7 +423,7 @@ impl MdpDatabase {
     }
 
     pub async fn create_session(&self, user: MdpUser) -> anyhow::Result<MdpSession, ServerError> {
-        let session_id = nanoid_gen(32);
+        // let session_id = nanoid_gen(32);
 
         let new_active_expires = DateTime::fixed_offset(&Utc::now().add(Duration::days(1)));
         let new_idle_expires = DateTime::fixed_offset(&Utc::now().add(Duration::days(2)));
@@ -436,7 +436,7 @@ impl MdpDatabase {
             idle_period_expires_at: Set(new_idle_expires),
             ..Default::default()
         }
-        .save(&self.pool)
+        .insert(&self.pool)
         .await
         .map_err(|err| ServerError::Database(format!("Could not create session. Error: {err}")))?;
 
