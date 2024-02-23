@@ -42,7 +42,7 @@ impl MdpDatabase {
                 name: Set(String::from("default")),
                 ..Default::default()
             }
-            .insert(&self.sea_pool)
+            .insert(&self.pool)
             .await
             .map_err(|err| ServerError::Database("Failed".to_string()))?
             .workspace_id;
@@ -62,7 +62,7 @@ impl MdpDatabase {
             .0
             .clone()
             .into_active_model()
-            .insert(&self.sea_pool)
+            .insert(&self.pool)
             .await
             .map_err(|err| ServerError::Database(format!("Could not create user: {err}")))?;
 
@@ -80,11 +80,11 @@ impl MdpDatabase {
                 .unwrap()
                 .to_string(),
         ));
-        active_user.update(&self.sea_pool).await.map_err(|err| {
+        active_user.update(&self.pool).await.map_err(|err| {
             ServerError::Database(format!("Failed to update user with stripe_id: {}", err))
         })?;
 
-        info!("Created new user: {:?}", new_user.0.email);
+        info!("Created new user: {:?}", new_user.inner().email);
 
         Ok(new_user)
     }
@@ -94,7 +94,7 @@ impl MdpDatabase {
 
         let user = User::find()
             .filter(users::Column::Email.eq(email.clone()))
-            .one(&self.sea_pool)
+            .one(&self.pool)
             .await
             .map_err(|err| {
                 ServerError::Database(format!("Could not find user with email. Error: {err}"))
@@ -116,7 +116,7 @@ impl MdpDatabase {
 
         let user = User::find()
             .filter(users::Column::ConfirmationToken.eq(confirmation_token.clone()))
-            .one(&self.sea_pool)
+            .one(&self.pool)
             .await
             .map_err(|err| {
                 ServerError::Database(format!("Could not find user with email. Error: {err}"))
@@ -141,40 +141,17 @@ impl MdpDatabase {
     }
 
     pub async fn verify_user(&self, user: MdpUser) -> Result<MdpUser, ServerError> {
-        let mut active = user.0.into_active_model();
+        let mut active = user.inner().clone().into_active_model();
+
+        let current_time = Utc::now().fixed_offset();
         active.email_status = Set("verified".to_string());
-        active.modified_at = Set(Utc::now().fixed_offset());
-        active.email_confirmed_at = Set(Some(Utc::now().fixed_offset()));
+        active.modified_at = Set(current_time);
+        active.email_confirmed_at = Set(Some(current_time));
 
         let res = active
-            .update(&self.sea_pool)
+            .update(&self.pool)
             .await
             .map_err(|err| ServerError::Database(format!("Could not update User: {err:?}")))?;
-
-        //         pear.name = Set("Sweet pear".to_owned());
-
-        // // SQL: `UPDATE "fruit" SET "name" = 'Sweet pear' WHERE "id" = 28`
-        // let pear: fruit::Model = pear.update(db).await?;
-        // let user: UserModel = sqlx::query_as(
-        //     "update mdp.users set
-        //     email_status = $1,
-        //     confirmation_token = NULL,
-        //     confirmation_token_expire_at = NULL,
-        //     modified_at = $2,
-        //     email_confirmed_at = $3
-
-        //     where mdp.users.user_id = $4 and mdp.users.workspace_id = $5
-        //     returning *;
-        //     ",
-        // )
-        // .bind("verified") //email status
-        // .bind(Utc::now()) //mod
-        // .bind(Utc::now()) //confirmed
-        // .bind(&user.user_id)
-        // .bind(&user.workspace_id)
-        // .fetch_one(&self.pool)
-        // .await
-        // .map_err(|err| ServerError::Database(format!("Could not update User: {err:?}")))?;
 
         return Ok(MdpUser(res));
     }

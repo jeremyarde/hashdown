@@ -49,6 +49,15 @@ jobs:
         run: earthly --version
       - name: Run build and push
         run: earthly --push +docker
+
+  cd:
+    name: +cd
+    runs-on: ubuntu-latest
+    env:
+      FORCE_COLOR: 1
+    steps:
+      - name: Send request to trigger deploy
+        run: curl https://api.render.com/deploy/srv-cm37666n7f5s73bm0cj0?key=E2VXoYhg5CM
   # cd:
   #   name: +cd
   #   runs-on: ubuntu-latest
