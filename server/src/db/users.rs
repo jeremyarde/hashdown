@@ -121,16 +121,7 @@ impl MdpDatabase {
             .map_err(|err| {
                 ServerError::Database(format!("Could not find user with email. Error: {err}"))
             })?;
-        // let res: UserModel =
-        //     sqlx::query_as(r#"select * from mdp.users where confirmation_token = $1"#)
-        //         .bind(confirmation_token)
-        //         .fetch_one(&self.pool)
-        //         .await
-        //         .map_err(|err| {
-        //             ServerError::Database(format!(
-        //                 "Could not find user with confirmation_token: {err}"
-        //             ))
-        //         })?;
+
         if let Some(x) = user {
             return Ok(MdpUser(x));
         } else {

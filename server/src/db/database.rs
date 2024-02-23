@@ -235,13 +235,6 @@ impl MdpDatabase {
         survey_id: &String,
         // workspace_id: &str,
     ) -> Result<MdpSurvey, ServerError> {
-        // let result = sqlx::query_as::<_, SurveyModel>(
-        //     "select * from mdp.surveys where surveys.survey_id = $1",
-        // )
-        // .bind(survey_id)
-        // .fetch_one(&self.pool)
-        // .await?;
-
         let result = Survey::find()
             .filter(surveys::Column::SurveyId.eq(survey_id))
             .one(&self.pool)
@@ -276,24 +269,6 @@ impl MdpDatabase {
             .save(&self.pool)
             .await
             .map_err(|err| ServerError::Database(format!("Error in database: {err}")))?;
-
-        // let res: SurveyModel = sqlx::query_as(
-        //     r#"insert into mdp.surveys (
-        //             name, survey_id, user_id, created_at, modified_at, plaintext, version, parse_version, blocks, workspace_id
-        //         ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *"#)
-        //     .bind(survey.name)
-        //     .bind(survey.survey_id)
-        //     .bind(survey.user_id)
-        //     .bind(Utc::now())
-        //     .bind(Utc::now())
-        //     .bind(survey.plaintext)
-        //     .bind(survey.version)
-        //     .bind(survey.parse_version)
-        //     .bind(survey.blocks)
-        //     .bind(workspace_id)
-        // .fetch_one(&self.pool)
-        // .await
-        // .expect("Should insert a survey");
 
         info!("Successfully created a new survey");
 
@@ -413,15 +388,6 @@ impl MdpDatabase {
         .await
         .map_err(|ex| ServerError::Database(format!("Could not create answer: {ex}")))?;
 
-        // let res: AnswerModel = sqlx::query_as(
-        //     r#"insert into mdp.responses (response_id, submitted_at, survey_id, answers, workspace_id) values ($1, $2, $3, $4, $5) returning *"#)
-        //     .bind(NanoId::from("res").to_string())
-        //     .bind(Utc::now())
-        //     .bind(answer.survey_id).bind(answer.answers)
-        //     .bind(workspace_id.0)
-        //     .fetch_one(&self.pool).await
-        //     .map_err(|ex| ServerError::Database(format!("Could not create answer: {ex}")))?;
-
         Ok(MdpResponse(answer))
     }
 
@@ -439,24 +405,10 @@ impl MdpDatabase {
             .await
             .map_err(|_err| ServerError::Database("Did not find responses".to_string()))?;
 
-        // let answers: Vec<AnswerModel> = sqlx::query_as(
-        //     r#"select * from mdp.responses where mdp.responses.survey_id = $1 and mdp.responses.workspace_id = $2"#)
-        //     .bind(survey_id).bind(workspace_id)
-        // .fetch_all(&self.pool)
-        // .await
-        // .map_err(|_err| ServerError::Database("Did not find responses".to_string()))?;
-
         Ok(responses)
     }
 
     pub async fn get_session(&self, session_id: String) -> anyhow::Result<MdpSession, ServerError> {
-        // let curr_session: Session = sqlx::query_as::<_, Session>(
-        //     r#"select * from mdp.sessions where mdp.sessions.session_id = $1"#,
-        // )
-        // .bind(session_id)
-        // .fetch_one(&self.pool)
-        // .await
-        // .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
         let curr_session = Session::find()
             .filter(sessions::Column::SessionId.eq(session_id))
             .one(&self.pool)
@@ -476,16 +428,6 @@ impl MdpDatabase {
         let new_active_expires = DateTime::fixed_offset(&Utc::now().add(Duration::days(1)));
         let new_idle_expires = DateTime::fixed_offset(&Utc::now().add(Duration::days(2)));
 
-        // let new_session: Session = sqlx::query_as(r#"
-        //     insert into mdp.sessions (session_id, user_id, active_period_expires_at, idle_period_expires_at, workspace_id)
-        //     values ($1, $2, $3, $4, $5)
-        //     ON conflict (user_id) do update
-        //     set session_id = $1, active_period_expires_at = $3, idle_period_expires_at = $4
-        //     where sessions.user_id = $2 returning *"#)
-        //     .bind(session_id).bind(user.user_id)
-        //     .bind(new_active_expires).bind( new_idle_expires)
-        //     .bind( user.workspace_id)
-        // .fetch_one(&self.pool).await.map_err(|err| ServerError::Database(err.to_string()))?;
         let new_session = sessions::ActiveModel {
             workspace_id: Set(user.inner().workspace_id.clone()),
             session_id: Set(NanoId::from("sen").to_string()),
@@ -501,38 +443,10 @@ impl MdpDatabase {
         return Ok(MdpSession(new_session.try_into_model().unwrap()));
     }
 
-    // pub async fn update_session(
-    //     &self,
-    //     session: MdpSession,
-    // ) -> anyhow::Result<Session, ServerError> {
-    //     // let curr_session = sqlx::query_as::<_, Session>(
-    //     //     r#"update mdp.sessions set active_period_expires_at = $1, idle_period_expires_at = $2 where mdp.sessions.session_id = $3 and mdp.sessions.user_id = $4 and mdp.sessions.workspace_id = $5 returning *"#
-    //     // ).bind(session.active_period_expires_at)
-    //     // .bind(session.idle_period_expires_at)
-    //     // .bind(session.session_id)
-    //     // .bind(session.user_id)
-    //     // .bind(session.workspace_id)
-    //     // .fetch_one(&self.pool).await.unwrap();
-
-    //     Ok(curr_session)
-    // }
-
     pub async fn delete_session(
         &self,
         session: &SessionModel,
     ) -> anyhow::Result<bool, ServerError> {
-        // let result: PgQueryResult =
-        //     sqlx::query(r#"delete from mdp.sessions where mdp.sessions.session_id = $1"#)
-        //         .bind(session_id)
-        //         .execute(&self.pool)
-        //         .await
-        //         .map_err(|err| {
-        //             ServerError::Database(format!(
-        //                 "Could not delete session {}: {}",
-        //                 session_id, err
-        //             ))
-        //         })?;
-
         let result = entity::sessions::Entity::delete_by_id((
             session.session_id.to_string(),
             session.workspace_id.to_string(),
