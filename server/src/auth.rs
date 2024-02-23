@@ -101,7 +101,8 @@ fn verify_confirmation_token(token: &String, user: &MdpUser) -> bool {
 pub async fn signup(
     state: State<ServerState>,
     payload: Json<LoginPayload>,
-) -> Result<(HeaderMap, Json<Value>), ServerError> {
+) -> Result<Json<Value>, ServerError> {
+    // ) -> Result<(HeaderMap, Json<Value>), ServerError> {
     info!("->> signup");
 
     match state.db.get_user_by_email(payload.email.clone()).await {
@@ -153,14 +154,15 @@ pub async fn signup(
 
     // TODO: turn this section off, should get new session once they confirm email
     let email = user.0.email.clone();
-    let session = state.db.create_session(user).await?;
+    // let session = state.db.create_session(user).await?;
 
-    let headers = create_session_headers(&session);
+    // let headers = create_session_headers(&session);
 
-    Ok((
-        headers,
-        Json(json!({"email": email, "session_id": session.0.session_id.to_string()})),
-    ))
+    Ok(
+        // headers,
+        // Json(json!({"email": email, "session_id": session.0.session_id.to_string()})),
+        Json(json!({"email": email})),
+    )
 }
 
 // #[axum::debug_handler]
