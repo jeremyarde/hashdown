@@ -128,12 +128,9 @@ export function ConfirmEmail() {
         return
       }
       const data = await response.json();
-      // setSessionToken(response);
-      // setIsPending(false);
-      // setResult(data);
       setError('');
+      return redirect("/editor");
     } catch (error) {
-      // setIsPending(false);
       setError(`Could not fetch data: ${error}`);
     }
   };
@@ -144,7 +141,7 @@ export function ConfirmEmail() {
 
   return (
     <>
-      <div>Confirmed your email, redirecting shortly...</div>
+      <div>Confirming your email...</div>
     </>
   )
 }
