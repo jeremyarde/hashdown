@@ -97,7 +97,7 @@ impl MdpDatabase {
             .one(&self.pool)
             .await
             .map_err(|err| {
-                ServerError::Database(format!("Could not find user with email. Error: {err}"))
+                ServerError::Database(format!("Error in database: {err}"))
             })?;
 
         debug!("user: {:#?}", user);

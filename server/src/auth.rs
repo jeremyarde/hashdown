@@ -25,7 +25,7 @@ use entity::{
 use markdownparser::nanoid_gen;
 use sea_orm::{
     prelude::DateTimeUtc, ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
-    QueryFilter, Set,
+    QueryFilter, Set, TransactionTrait,
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -56,7 +56,7 @@ pub async fn confirm(
     State(state): State<ServerState>,
     Query(query): Query<EmailConfirmationToken>,
     // Extension(ctx): Extension<SessionContext>,
-) -> Result<Json<Value>, ServerError> {
+) -> Result<(HeaderMap, Json<Value>), ServerError> {
     info!("->> confirm");
 
     /*
@@ -64,10 +64,14 @@ pub async fn confirm(
     1. get confirm token from url
     2. check expiration of token, maybe 24h?
     3. mark email as verified
-    4.
     */
 
-    // is this unneccesary? session probably already gets the user
+    // state.db.pool.transaction(callback)
+    let txn =
+        state.db.pool.begin().await.map_err(|err| {
+            ServerError::Database(format!("Could not start transaction: {}", err))
+        })?;
+
     let mut user = state
         .db
         .get_user_by_confirmation_code(query.t.clone())
@@ -80,7 +84,28 @@ pub async fn confirm(
 
     user = state.db.verify_user(user).await?;
 
-    return Ok(Json(json!({"user_id": user.inner().user_id})));
+    // create session (header and payload)
+    let session = match state
+        .db
+        .create_session(user)
+        .await
+        .map_err(|err| ServerError::Database("Could not create session".to_string()))
+    {
+        Ok(x) => x,
+        Err(_) => return Err(ServerError::LoginFail),
+    };
+
+    txn.commit()
+        .await
+        .map_err(|err| ServerError::Database(format!("Could not start transaction: {}", err)))?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "session_id",
+        HeaderValue::from_str(session.0.session_id.as_str()).unwrap(),
+    );
+
+    return Ok((headers, Json(json!({"user_id": session.0.user_id}))));
 }
 
 fn verify_confirmation_token(token: &String, user: &MdpUser) -> bool {
@@ -105,12 +130,13 @@ pub async fn signup(
     info!("->> signup");
 
     match state.db.get_user_by_email(payload.email.clone()).await {
-        Ok(user) => {
-            match user {
-                None => {}
-                Some(_) => return Err(ServerError::LoginFail), // user already exists
+        Ok(user) => match user {
+            None => {}
+            Some(_) => {
+                info!("Email already exists");
+                return Err(ServerError::LoginFail);
             }
-        }
+        },
         Err(x) => return Err(x),
     };
 
