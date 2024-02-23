@@ -80,16 +80,16 @@ pub async fn confirm(
 
     user = state.db.verify_user(user).await?;
 
-    return Ok(Json(json!({"user_id": user.0.user_id})));
+    return Ok(Json(json!({"user_id": user.inner().user_id})));
 }
 
 fn verify_confirmation_token(token: &String, user: &MdpUser) -> bool {
-    if !user.0.confirmation_token.clone().unwrap().eq(token) {
+    if !user.inner().confirmation_token.clone().unwrap().eq(token) {
         info!("Confirmation token does not match");
         return false;
     }
-    if user.0.confirmation_token_expire_at.is_some()
-        && user.0.confirmation_token_expire_at.unwrap() > Utc::now()
+    if user.inner().confirmation_token_expire_at.is_some()
+        && user.inner().confirmation_token_expire_at.unwrap() > Utc::now()
     {
         info!("Confirmation token has not expired");
         return true;
@@ -102,7 +102,6 @@ pub async fn signup(
     state: State<ServerState>,
     payload: Json<LoginPayload>,
 ) -> Result<Json<Value>, ServerError> {
-    // ) -> Result<(HeaderMap, Json<Value>), ServerError> {
     info!("->> signup");
 
     match state.db.get_user_by_email(payload.email.clone()).await {
@@ -140,20 +139,20 @@ pub async fn signup(
 
     info!("Sending confirmation email");
     state.mail.send(
-        EmailIdentity::new(&user.0.name, &payload.email),
+        EmailIdentity::new(&user.inner().name, &payload.email),
         EmailIdentity::new("Hashdown - Email confirmation", LOGIN_EMAIL_SENDER),
         format!(
             "Welcome to hashdown!\n\n Please click on this link to confirm your email: {}/{}?t={}",
             state.config.frontend_url,
             "signup/confirm",
-            user.0.confirmation_token.clone().unwrap()
+            user.inner().confirmation_token.clone().unwrap()
         )
         .as_str(),
         "Email confirmation",
     );
 
     // TODO: turn this section off, should get new session once they confirm email
-    let email = user.0.email.clone();
+    let email = user.inner().email.clone();
     // let session = state.db.create_session(user).await?;
 
     // let headers = create_session_headers(&session);
@@ -164,36 +163,6 @@ pub async fn signup(
         Json(json!({"email": email})),
     )
 }
-
-// #[axum::debug_handler]
-// pub async fn delete(
-//     state: State<ServerState>,
-//     // jar: CookieJar,
-//     // headers: HeaderMap,
-//     // payload: Json<LoginPayload>,
-//     Extension(ctx): Extension<Option<SessionContext>>,
-// ) -> Result<Json<Value>, ServerError> {
-//     info!("->> delete user");
-
-//     let Some(ctx) = ctx else {
-//         return Err(ServerError::AuthFailCtxNotInRequest);
-//     };
-//     // let session_header = if let Some(x) = headers.get(SESSION_ID_KEY) {
-//     //     x.to_owned().to_str().unwrap().to_string()
-//     // } else {
-//     //     return Err(ServerError::AuthFailNoTokenCookie);
-//     // };
-//     // must be signed in to delete yourself
-//     state
-//         .db
-//         .delete_session(&ctx.session.0.session_id, &ctx.session.0.workspace_id)
-//         .await?;
-//     state
-//         .db
-//         .delete_user(&ctx.session.0.session_id, &ctx.session.0.workspace_id)
-//         .await?;
-//     Ok(Json(json!("delete successful")))
-// }
 
 #[axum::debug_handler]
 pub async fn logout(
@@ -231,7 +200,7 @@ pub async fn login(
     // look for user in database
     let mut user = User::find()
         .filter(users::Column::Email.eq(payload.email.clone()))
-        .one(&state.db.sea_pool)
+        .one(&state.db.pool)
         .await
         .map_err(|err| ServerError::Database("Error".to_string()))?;
 
@@ -357,7 +326,7 @@ pub async fn validate_session_middleware(
         active_session.idle_period_expires_at = Set(new_idle_expires);
 
         let updated_session = active_session
-            .update(&state.db.sea_pool)
+            .update(&state.db.pool)
             .await
             .map_err(|err| ServerError::Database(format!("Error with db: {err}")))?;
         // let updated_session = state

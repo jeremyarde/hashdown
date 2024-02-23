@@ -49,7 +49,7 @@ pub struct MdpDatabase {
     // pub pool: SqlitePool,
     // options: Option<DatabaseOptions>,
     pub settings: Settings,
-    pub sea_pool: DatabaseConnection,
+    pub pool: DatabaseConnection,
 }
 
 #[derive()]
@@ -83,26 +83,18 @@ struct UpdateSurveyRequest {
 impl MdpDatabase {
     pub async fn new() -> anyhow::Result<Self> {
         let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
-        let db_url = ConnectionDetails(uri.clone());
-        // println!("{:?}", std::env::current_dir()); //Ok("/Users/jarde/Documents/code/markdownparser/server")
-        // let database_url = dotenvy::var("DATABASE_URL")?;
-        let database_url = db_url.0;
-        // let pool = PgPoolOptions::new()
-        //     .max_connections(1)
-        //     .connect(&database_url)
-        //     .await?;
+        // let db_url = ConnectionDetails(uri.clone());
 
         info!("Finished running migrations");
 
         let db: DatabaseConnection = Database::connect(uri).await?;
 
-        // let connection = sea_orm::Database::connect(&database_url).await?;
         Migrator::up(&db, None).await?;
 
         Ok(MdpDatabase {
             // pool,
             settings: Settings::default(),
-            sea_pool: db,
+            pool: db,
         })
     }
 }
@@ -252,7 +244,7 @@ impl MdpDatabase {
 
         let result = Survey::find()
             .filter(surveys::Column::SurveyId.eq(survey_id))
-            .one(&self.sea_pool)
+            .one(&self.pool)
             .await
             .map_err(|err| ServerError::Database(err.to_string()))?;
 
@@ -262,7 +254,7 @@ impl MdpDatabase {
     pub async fn list_survey(&self, ctx: SessionContext) -> Result<Vec<MdpSurvey>, ServerError> {
         let all_surveys = entity::surveys::Entity::find()
             .filter(entity::surveys::Column::UserId.eq(ctx.session.0.user_id))
-            .all(&self.sea_pool)
+            .all(&self.pool)
             .await
             .map_err(|err| ServerError::Database(err.to_string()))?
             .iter()
@@ -281,7 +273,7 @@ impl MdpDatabase {
         let survey = survey
             .0
             .into_active_model()
-            .save(&self.sea_pool)
+            .save(&self.pool)
             .await
             .map_err(|err| ServerError::Database(format!("Error in database: {err}")))?;
 
@@ -314,6 +306,12 @@ pub struct MdpSession(pub SessionModel);
 
 #[derive(Debug, Clone)]
 pub struct MdpUser(pub UserModel);
+
+impl MdpUser {
+    pub fn inner(&self) -> &UserModel {
+        return &self.0;
+    }
+}
 
 impl MdpUser {
     pub fn from(name: &str, email: &str, password_hash: &str, workspace_id: &str) -> MdpUser {
@@ -377,7 +375,7 @@ impl MdpDatabase {
             name: Set(name),
             ..Default::default()
         }
-        .insert(&self.sea_pool)
+        .insert(&self.pool)
         .await
         .map_err(|err| ServerError::Database(format!("Could not create workspace: {err:?}")))?;
 
@@ -395,7 +393,7 @@ impl MdpDatabase {
         // make sure survey exists
         let survey = entity::surveys::Entity::find()
             .filter(surveys::Column::SurveyId.eq(answer.survey_id.clone()))
-            .one(&self.sea_pool)
+            .one(&self.pool)
             .await
             .map_err(|ex| ServerError::Database(format!("Could not find survey: {ex}")))?;
 
@@ -411,7 +409,7 @@ impl MdpDatabase {
             survey_id: Set(answer.survey_id),
             ..Default::default()
         }
-        .insert(&self.sea_pool)
+        .insert(&self.pool)
         .await
         .map_err(|ex| ServerError::Database(format!("Could not create answer: {ex}")))?;
 
@@ -437,7 +435,7 @@ impl MdpDatabase {
         let responses = entity::responses::Entity::find()
             .filter(entity::responses::Column::SurveyId.eq(survey_id))
             .filter(entity::responses::Column::WorkspaceId.eq(workspace_id))
-            .all(&self.sea_pool)
+            .all(&self.pool)
             .await
             .map_err(|_err| ServerError::Database("Did not find responses".to_string()))?;
 
@@ -461,7 +459,7 @@ impl MdpDatabase {
         // .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
         let curr_session = Session::find()
             .filter(sessions::Column::SessionId.eq(session_id))
-            .one(&self.sea_pool)
+            .one(&self.pool)
             .await
             .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
 
@@ -489,14 +487,14 @@ impl MdpDatabase {
         //     .bind( user.workspace_id)
         // .fetch_one(&self.pool).await.map_err(|err| ServerError::Database(err.to_string()))?;
         let new_session = sessions::ActiveModel {
-            workspace_id: Set(user.0.workspace_id),
+            workspace_id: Set(user.inner().workspace_id.clone()),
             session_id: Set(NanoId::from("sen").to_string()),
-            user_id: Set(user.0.user_id.to_string()),
+            user_id: Set(user.inner().user_id.to_string()),
             active_period_expires_at: Set(new_active_expires),
             idle_period_expires_at: Set(new_idle_expires),
             ..Default::default()
         }
-        .save(&self.sea_pool)
+        .save(&self.pool)
         .await
         .map_err(|err| ServerError::Database(format!("Could not create session. Error: {err}")))?;
 
@@ -539,7 +537,7 @@ impl MdpDatabase {
             session.session_id.to_string(),
             session.workspace_id.to_string(),
         ))
-        .exec(&self.sea_pool)
+        .exec(&self.pool)
         .await
         .map_err(|err| {
             ServerError::Database(format!(

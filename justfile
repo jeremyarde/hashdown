@@ -39,7 +39,7 @@ migratef:
     cd server && source .env && sqlx migrate revert && sqlx migrate run
 
 migrateprodf:
-    cd server && source .prod.env && sqlx migrate revert --database-url $DATABASE_URL && sqlx migrate run --database-url $DATABASE_URL
+    # cd server && source .prod.env && sqlx migrate revert --database-url $DATABASE_URL && sqlx migrate run --database-url $DATABASE_URL
 
 prepare:
     cd server && cargo sqlx prepare
@@ -55,6 +55,6 @@ buildfe:
 
 seamigrate:
     sea-orm-cli migrate refresh
-    
+
 sea:
     cd server && sea-orm-cli generate entity --with-serde both -s mdp -o ../entity/src/entities\
