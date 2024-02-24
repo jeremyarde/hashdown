@@ -18,6 +18,7 @@ import TestPage from './pages/TestPage.tsx'
 import { Home } from './pages/Home.tsx'
 import { Waitlist } from './components/custom/Waitlist.tsx'
 import { STAGE } from './lib/constants.ts'
+import { EditorTest } from './pages/EditorTest.tsx'
 
 
 export const exampleText = `# User Registration Form
@@ -162,6 +163,7 @@ function App() {
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/dev' element={<Crud />} />
             <Route path='/test' element={<TestPage />} />
+            <Route path='/editor_test' element={<EditorTest />} />
             <Route path='/signup/confirm' element={<ConfirmEmail />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Route>

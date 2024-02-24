@@ -96,7 +96,7 @@ create table mdp.sessions (
     user_id TEXT NOT NULL unique,
     active_period_expires_at TIMESTAMP with time ZONE DEFAULT CURRENT_TIMESTAMP not null,
     idle_period_expires_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP not null,
-
+    current_state TEXT default 'ACTIVE' not null,
     -- primary key (session_id),
     -- primary key (workspace_id, id),
     primary key (workspace_id, session_id),

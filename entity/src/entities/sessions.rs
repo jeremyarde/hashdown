@@ -14,6 +14,8 @@ pub struct Model {
     pub user_id: String,
     pub active_period_expires_at: DateTimeWithTimeZone,
     pub idle_period_expires_at: DateTimeWithTimeZone,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub current_state: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

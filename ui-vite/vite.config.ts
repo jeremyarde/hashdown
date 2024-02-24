@@ -11,7 +11,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  appType: 'spa',
+  appType: 'mpa',
   build: {
     target: 'esnext'
   }
