@@ -70,20 +70,21 @@ impl MdpSurvey {
 pub async fn create_survey(
     headers: HeaderMap,
     State(state): State<ServerState>,
-    Extension(ctx): Extension<MdpSession>,
+    Extension(ctx): Extension<SessionContext>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> create_survey");
-    info!("Creating new survey for user={:?}", ctx.0.user_id);
+    info!("Creating new survey for user={:?}", ctx.user_id);
 
-    let survey = MdpSurvey::new(payload, &ctx);
+    let survey = MdpSurvey::new(payload, &ctx.session);
 
     let insert_result = state
         .db
-        .create_survey(survey, &ctx.0.workspace_id)
+        .create_survey(survey, &ctx.session.0.workspace_id)
         .await
-        .map_err(|x| ServerError::Database(format!("Could not create new survey: {x}").to_string()))
-        .unwrap();
+        .map_err(|x| {
+            ServerError::Database(format!("Could not create new survey: {x}").to_string())
+        })?;
 
     info!("     ->> Inserted survey");
 
@@ -95,8 +96,7 @@ pub async fn create_survey(
 pub async fn submit_survey(
     State(state): State<ServerState>,
     Path(survey_id): Path<String>,
-    // Extension(ctx): Extension<Option<Ctext>>,
-    Json(payload): extract::Json<SubmitResponseRequest>, // for urlencoded
+    Json(payload): extract::Json<SubmitResponseRequest>,
 ) -> Result<Json<Value>, ServerError> {
     info!("->> submit_survey");
     debug!("    ->> survey: {:#?}", payload);

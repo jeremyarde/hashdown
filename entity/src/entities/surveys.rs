@@ -60,10 +60,7 @@ impl Related<super::users::Entity> for Entity {
 
 impl Related<super::workspaces::Entity> for Entity {
     fn to() -> RelationDef {
-        super::responses::Relation::Workspaces.def()
-    }
-    fn via() -> Option<RelationDef> {
-        Some(super::responses::Relation::Surveys.def().rev())
+        Relation::Workspaces.def()
     }
 }
 

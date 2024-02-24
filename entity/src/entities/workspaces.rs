@@ -45,19 +45,13 @@ impl Related<super::stripe_events::Entity> for Entity {
 
 impl Related<super::surveys::Entity> for Entity {
     fn to() -> RelationDef {
-        super::responses::Relation::Surveys.def()
-    }
-    fn via() -> Option<RelationDef> {
-        Some(super::responses::Relation::Workspaces.def().rev())
+        Relation::Surveys.def()
     }
 }
 
 impl Related<super::users::Entity> for Entity {
     fn to() -> RelationDef {
-        super::sessions::Relation::Users.def()
-    }
-    fn via() -> Option<RelationDef> {
-        Some(super::sessions::Relation::Workspaces.def().rev())
+        Relation::Users.def()
     }
 }
 
