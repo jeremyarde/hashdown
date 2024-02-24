@@ -25,7 +25,7 @@ use entity::{
 use markdownparser::nanoid_gen;
 use sea_orm::{
     prelude::DateTimeUtc, ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
-    QueryFilter, Set, TransactionTrait,
+    QueryFilter, Set, TransactionTrait, TryIntoModel,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -258,23 +258,22 @@ pub async fn login(
     let session = state.db.get_session_by_userid(usermodel.clone()).await?;
     match session {
         Some(x) => {
-            let headers = create_session_headers(&x);
-            return Ok((
-                // cookies,
-                headers,
-                Json(json!({"email": username, "session_id": x.0.session_id.to_string()})),
-            ));
+            info!("Found active session, deleting it");
+            // delete old session
+            x.0.delete(&state.db.pool)
+                .await
+                .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
         }
-        None => {
-            let session = state.db.create_session(usermodel).await?;
-            let headers = create_session_headers(&session);
-            Ok((
-                // cookies,
-                headers,
-                Json(json!({"email": username, "session_id": session.0.session_id.to_string()})),
-            ))
-        }
+        None => {}
     }
+
+    let session = state.db.create_session(usermodel).await?;
+    let headers = create_session_headers(&session);
+    return Ok((
+        // cookies,
+        headers,
+        Json(json!({"email": username, "session_id": session.0.session_id.to_string()})),
+    ));
 }
 
 async fn generate_magic_link(_state: &ServerState, _ctext: SessionContext) -> String {
@@ -333,10 +332,10 @@ pub async fn validate_session_middleware(
         Some(x) => {
             info!("Session header: {x:?}");
 
-            if x.eq("") {
-                x
-            } else {
+            if x.is_empty() {
                 return Err(ServerError::AuthFailNoSession);
+            } else {
+                x
             }
         }
         None => {
@@ -368,27 +367,16 @@ pub async fn validate_session_middleware(
             .update(&state.db.pool)
             .await
             .map_err(|err| ServerError::Database(format!("Error with db: {err}")))?;
-        // let updated_session = state
-        //     .db
-        //     .update_session(Session {
-        //         id: 0,
-        //         session_id: curr_session.session_id,
-        //         active_period_expires_at: new_active_expires,
-        //         idle_period_expires_at: new_idle_expires,
-        //         user_id: curr_session.user_id,
-        //         workspace_id: curr_session.workspace_id,
-        //     })
-        //     .await?;
-        // request.extensions_mut().insert(updated_session.clone());
-        // request.extensions_mut().insert(SessionContext {
-        //     user_id: updated_session.user_id.to_string(),
-        //     session: updated_session,
-        // });
-        request.extensions_mut().insert(updated_session);
+
+        let sessionctx =
+            SessionContext::new(updated_session.user_id.clone(), MdpSession(updated_session));
+        request.extensions_mut().insert(sessionctx);
     } else {
         // remove this later
         info!("Session still active, not updating");
-        request.extensions_mut().insert(active_session);
+        let model = active_session.try_into_model().unwrap();
+        let sessionctx = SessionContext::new(model.user_id.clone(), MdpSession(model));
+        request.extensions_mut().insert(sessionctx);
         info!("Added ctext to request data");
     }
 

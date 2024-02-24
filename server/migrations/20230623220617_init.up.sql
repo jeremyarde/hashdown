@@ -93,7 +93,7 @@ create table mdp.sessions (
     -- id serial,
     session_id TEXT not null unique,
     workspace_id text not null,
-    user_id TEXT NOT NULL unique,
+    user_id TEXT NOT NULL,
     active_period_expires_at TIMESTAMP with time ZONE DEFAULT CURRENT_TIMESTAMP not null,
     idle_period_expires_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP not null,
     current_state TEXT default 'ACTIVE' not null,
@@ -101,8 +101,8 @@ create table mdp.sessions (
     -- primary key (workspace_id, id),
     primary key (workspace_id, session_id),
     -- foreign key (workspace_id) references mdp.workspaces(id),
-    foreign key (workspace_id) references mdp.workspaces(workspace_id),
-    foreign key(user_id) references mdp.users(user_id) on delete cascade
+    foreign key (workspace_id) references mdp.workspaces(workspace_id)
+    -- foreign key(user_id) references mdp.users(user_id) on delete cascade
 );
 
 /* Useful to capture current analytics associated with usage of the api */

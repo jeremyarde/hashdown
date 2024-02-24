@@ -10,24 +10,16 @@ pub struct Model {
     pub session_id: String,
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub workspace_id: String,
-    #[sea_orm(column_type = "Text", unique)]
+    #[sea_orm(column_type = "Text")]
     pub user_id: String,
     pub active_period_expires_at: DateTimeWithTimeZone,
     pub idle_period_expires_at: DateTimeWithTimeZone,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub current_state: Option<String>,
+    #[sea_orm(column_type = "Text")]
+    pub current_state: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::users::Entity",
-        from = "(Column::UserId, Column::UserId, Column::UserId)",
-        to = "(super::users::Column::UserId, super::users::Column::UserId, super::users::Column::UserId)",
-        on_update = "NoAction",
-        on_delete = "Cascade"
-    )]
-    Users,
     #[sea_orm(
         belongs_to = "super::workspaces::Entity",
         from = "(Column::WorkspaceId, Column::WorkspaceId, Column::WorkspaceId)",
@@ -36,12 +28,6 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Workspaces,
-}
-
-impl Related<super::users::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Users.def()
-    }
 }
 
 impl Related<super::workspaces::Entity> for Entity {

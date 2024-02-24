@@ -16,7 +16,7 @@ export function handleResponse(apiResponse: Response) {
       window.sessionStorage.setItem(SESSION_TOKEN_KEY, '');
       break;
     default:
-      window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
+      // window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
       break;
   }
   return apiResponse;

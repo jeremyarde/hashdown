@@ -269,9 +269,9 @@ impl MdpDatabase {
         let survey = survey
             .0
             .into_active_model()
-            .save(&self.pool)
+            .insert(&self.pool)
             .await
-            .map_err(|err| ServerError::Database(format!("Error in database: {err}")))?;
+            .map_err(|err| ServerError::Database(err.to_string()))?;
 
         info!("Successfully created a new survey");
 
@@ -437,11 +437,12 @@ impl MdpDatabase {
             user_id: Set(user.inner().user_id.to_string()),
             active_period_expires_at: Set(new_active_expires),
             idle_period_expires_at: Set(new_idle_expires),
+            current_state: Set(SessionState::ACTIVE.to_string()),
             ..Default::default()
         }
-        .save(&self.pool)
+        .insert(&self.pool)
         .await
-        .map_err(|err| ServerError::Database(format!("Could not create session. Error: {err}")))?;
+        .map_err(|err| ServerError::Database(err.to_string()))?;
 
         return Ok(MdpSession(new_session.try_into_model().unwrap()));
     }
@@ -470,7 +471,7 @@ impl MdpDatabase {
         session: &SessionModel,
     ) -> anyhow::Result<bool, ServerError> {
         let mut active_session = session.clone().into_active_model();
-        active_session.current_state = Set(Some(SessionState::DELETED.to_string()));
+        active_session.current_state = Set(SessionState::DELETED.to_string());
 
         let results = active_session
             .save(&self.pool)
