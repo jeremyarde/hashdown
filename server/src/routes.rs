@@ -36,7 +36,7 @@ pub struct ListSurveyResponse {
 
 #[derive(Deserialize, Debug, Serialize)]
 pub struct LoginPayload {
-    pub name: String,
+    // pub name: String,
     pub email: String,
     pub password: String,
 }

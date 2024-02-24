@@ -27,7 +27,7 @@ use sea_orm::{
     prelude::DateTimeUtc, ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
     QueryFilter, Set, TransactionTrait,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::types::time::OffsetDateTime;
 use tracing::{debug, log::info};
@@ -122,10 +122,17 @@ fn verify_confirmation_token(token: &String, user: &MdpUser) -> bool {
     return false;
 }
 
+#[derive(Deserialize, Debug, Serialize)]
+pub struct SignupPayload {
+    pub name: String,
+    pub email: String,
+    pub password: String,
+}
+
 #[axum::debug_handler]
 pub async fn signup(
     state: State<ServerState>,
-    payload: Json<LoginPayload>,
+    payload: Json<SignupPayload>,
 ) -> Result<Json<Value>, ServerError> {
     info!("->> signup");
 
@@ -230,17 +237,9 @@ pub async fn login(
         .await
         .map_err(|err| ServerError::Database("Error".to_string()))?;
 
-    // user = if user.is_none() {
-    //     return Err(ServerError::Database("User not found".to_string()));
-    // } else {
-    //     return user.unwrap();
-    // };
     let Some(user) = user else {
         return Err(ServerError::Database("User not found".to_string()));
     };
-    // .unwrap_or(return Err(ServerError::Database("Could not find user".to_string())));
-
-    // let user = state.db.get_user_by_email(payload.email.clone()).await?;
 
     // check if password matches
     let argon2 = argon2::Argon2::default();
@@ -253,15 +252,29 @@ pub async fn login(
 
     // TODO: create success body
     let username = payload.email.clone();
-    let session = state.db.create_session(MdpUser(user)).await?;
+    let usermodel = MdpUser(user);
 
-    let headers = create_session_headers(&session);
-
-    Ok((
-        // cookies,
-        headers,
-        Json(json!({"email": username, "session_id": session.0.session_id.to_string()})),
-    ))
+    // look for active session for userid
+    let session = state.db.get_session_by_userid(usermodel.clone()).await?;
+    match session {
+        Some(x) => {
+            let headers = create_session_headers(&x);
+            return Ok((
+                // cookies,
+                headers,
+                Json(json!({"email": username, "session_id": x.0.session_id.to_string()})),
+            ));
+        }
+        None => {
+            let session = state.db.create_session(usermodel).await?;
+            let headers = create_session_headers(&session);
+            Ok((
+                // cookies,
+                headers,
+                Json(json!({"email": username, "session_id": session.0.session_id.to_string()})),
+            ))
+        }
+    }
 }
 
 async fn generate_magic_link(_state: &ServerState, _ctext: SessionContext) -> String {

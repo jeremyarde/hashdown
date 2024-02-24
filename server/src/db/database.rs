@@ -22,7 +22,10 @@ use serde_json::{json, Value};
 // };
 use tracing::info;
 
-use crate::{mware::ctext::SessionContext, survey_responses::SubmitResponseRequest, ServerError};
+use crate::{
+    constants::SessionState, mware::ctext::SessionContext, survey_responses::SubmitResponseRequest,
+    ServerError,
+};
 
 use super::{
     // sessions::Session,
@@ -436,38 +439,45 @@ impl MdpDatabase {
             idle_period_expires_at: Set(new_idle_expires),
             ..Default::default()
         }
-        .insert(&self.pool)
+        .save(&self.pool)
         .await
         .map_err(|err| ServerError::Database(format!("Could not create session. Error: {err}")))?;
 
         return Ok(MdpSession(new_session.try_into_model().unwrap()));
     }
 
+    pub async fn get_session_by_userid(
+        &self,
+        user: MdpUser,
+    ) -> anyhow::Result<Option<MdpSession>, ServerError> {
+        let session = sessions::Entity::find_by_id((
+            user.inner().workspace_id.clone(),
+            user.inner().user_id.clone(),
+        ))
+        .filter(sessions::Column::CurrentState.eq(SessionState::ACTIVE.to_string()))
+        .one(&self.pool)
+        .await
+        .map_err(|err| ServerError::Database(format!("Database error: {err}")))?;
+
+        match session {
+            Some(x) => Ok(Some(MdpSession(x))),
+            None => Ok(None),
+        }
+    }
+
     pub async fn delete_session(
         &self,
         session: &SessionModel,
     ) -> anyhow::Result<bool, ServerError> {
-        let result = entity::sessions::Entity::delete_by_id((
-            session.session_id.to_string(),
-            session.workspace_id.to_string(),
-        ))
-        .exec(&self.pool)
-        .await
-        .map_err(|err| {
-            ServerError::Database(format!(
-                "Could not delete session {}: {}",
-                session.session_id, err
-            ))
-        })?;
+        let mut active_session = session.clone().into_active_model();
+        active_session.current_state = Set(Some(SessionState::DELETED.to_string()));
 
-        if result.rows_affected == 1 {
-            Ok(true)
-        } else {
-            return Err(ServerError::Database(format!(
-                "Session does not exist: {}",
-                session.session_id,
-            )));
-        }
+        let results = active_session
+            .save(&self.pool)
+            .await
+            .map_err(|err| ServerError::Database(format!("Database issue: {}", err)))?;
+
+        Ok(true)
     }
 }
 
