@@ -38,4 +38,7 @@ sqlx migrate run
   - [ ] verifying users with email
 - [ ] data models for everything
 
-http://localhost:8080/v1/webhook
+
+stripe listen --forward-to http://localhost:8080/v1/webhook
+
+

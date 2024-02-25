@@ -308,7 +308,6 @@ impl MdpUser {
             deleted_at: Set(None),
             role: Set(None),
             email_confirmed_at: Set(None),
-            stripe_id: Set(None),
             name: Set(name.to_string()),
             ..Default::default()
         };
