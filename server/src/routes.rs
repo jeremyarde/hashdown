@@ -1,14 +1,17 @@
 use axum::{
     http::Method,
-    middleware::{self},
-    response::Response,
+    middleware,
+    response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use tower_http::cors::CorsLayer;
+use tower_http::{
+    cors::CorsLayer,
+    services::{ServeDir, ServeFile},
+};
 use tracing::info;
 
 use crate::{
@@ -49,6 +52,11 @@ trait ApiRoutes {
     fn hello();
 }
 
+#[axum::debug_handler]
+async fn serve_folder() -> Response {
+    return Response::new("<div>Hi from my folder funciton</div>".into());
+}
+
 pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
     // let rate_limit = ServiceBuilder::new()
     //     .layer(BufferLayer::new(1024))
@@ -73,6 +81,17 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
             state.clone(),
             validate_session_middleware,
         ));
+
+    // This does work
+    // let static_routes = Router::new()
+    //     .nest_service(
+    //         "/",
+    //         ServeDir::new("/Users/jarde/Documents/code/markdownparser/ui-vite/dist"),
+    //     )
+    //     .nest_service(
+    //         "/assets",
+    //         ServeDir::new("/Users/jarde/Documents/code/markdownparser/ui-vite/dist/assets"),
+    //     );
 
     let mut origins = vec![];
     info!("Starting app in stage={:?}", &state.config.stage);
@@ -121,6 +140,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
 
     let all = public_routes
         .merge(auth_routes)
+        // .merge(static_routes)
         .layer(middleware::map_response(main_response_mapper))
         .with_state(state.clone())
         .layer(corslayer);

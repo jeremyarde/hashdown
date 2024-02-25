@@ -347,7 +347,12 @@ pub async fn validate_session_middleware(
     info!("Using session_id: {session_id:?}");
 
     // get session from database using existing Session
-    let curr_session = state.db.get_session(session_id.to_string()).await?;
+    let curr_session = state
+        .db
+        .get_session(session_id.to_string())
+        .await
+        .map_err(|err| ServerError::AuthFailNoSession)?;
+
     let mut active_session = curr_session.0.into_active_model();
     if &Utc::now().fixed_offset() > active_session.idle_period_expires_at.as_ref() {
         return Err(ServerError::LoginFail);
