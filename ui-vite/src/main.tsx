@@ -147,7 +147,7 @@ export function ConfirmEmail() {
   )
 }
 
-function App() {
+export function App() {
   const [formtext, setFormtext] = useState(exampleText);
 
   return (
