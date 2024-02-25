@@ -28,7 +28,10 @@ pub struct Model {
     #[sea_orm(column_type = "Text", nullable)]
     pub role: Option<String>,
     #[sea_orm(column_type = "Text", nullable, unique)]
-    pub stripe_id: Option<String>,
+    pub stripe_customer_id: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub stripe_subscription_id: Option<String>,
+    pub stripe_subscription_modified_at: Option<DateTimeWithTimeZone>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

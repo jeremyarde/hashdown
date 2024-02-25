@@ -9,8 +9,8 @@ use sqlx;
 
 use chrono::{self, DateTime, Utc};
 
-use crate::db::stripe;
-use crate::{MdpDatabase, ServerError};
+// use crate::db::stripe;
+use crate::{stripe, MdpDatabase, ServerError};
 
 use crate::db::database::MdpUser;
 
@@ -66,13 +66,12 @@ impl MdpDatabase {
             .await
             .map_err(|err| ServerError::Database(format!("Could not create user: {err}")))?;
 
-        let stripe_customer = &self
-            .create_customer(user.name.as_ref(), user.email.as_ref())
-            .await?;
+        let stripe_customer =
+            stripe::create_customer(user.name.as_ref(), user.email.as_ref()).await?;
 
         let mut active_user = user.into_active_model();
 
-        active_user.stripe_id = Set(Some(
+        active_user.stripe_customer_id = Set(Some(
             stripe_customer
                 .get("id")
                 .unwrap()

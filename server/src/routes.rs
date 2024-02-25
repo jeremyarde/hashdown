@@ -48,10 +48,6 @@ pub async fn hello() -> Response {
     Response::new("Hi!".into())
 }
 
-trait ApiRoutes {
-    fn hello();
-}
-
 #[axum::debug_handler]
 async fn serve_folder() -> Response {
     return Response::new("<div>Hi from my folder funciton</div>".into());
@@ -63,7 +59,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
     //     .layer(RateLimitLayer::new(5, Duration::from_secs(1)));
 
     let public_routes = Router::new()
-        .route("/v1/hello", get(hello))
+        // .route("/v1/hello", get(hello))
         .route("/v1/auth/login", post(auth::login))
         .route("/v1/auth/signup", post(auth::signup))
         // .route("/v1/auth/remove", post(auth::delete))

@@ -1,10 +1,12 @@
-use axum::{extract::State, Json};
+use std::collections::HashMap;
+
+use axum::{extract::State, http::Response, Json};
 use hyper::Server;
-use sea_orm::{ActiveModelTrait, EntityTrait, IntoActiveModel, QueryFilter};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
 use serde_json::Value;
 use tracing::{debug, info};
 
-use crate::ServerState;
+use crate::{ServerError, ServerState};
 
 #[derive(PartialEq, PartialOrd)]
 enum StripeEvent {
@@ -25,64 +27,92 @@ enum StripeEvent {
     ChargeDisputeCreated,
 }
 
-fn map_stripe_event_to_enum(event: &str) -> StripeEvent {
-    return match &event {
-        &"checkout.session.completed" => StripeEvent::CheckoutSessionCompleted,
-        &"stripe.checkout.session.async_payment_succeeded" => {
-            StripeEvent::StripeCheckoutSessionAsyncPaymentSucceeded
-        }
-        &"checkout.session.expired" => StripeEvent::CheckoutSessionExpired,
-        &"customer.source.expiring" => StripeEvent::CustomerSourceExpiring,
-        &"customer.subscription.deleted" => StripeEvent::CustomerSubscriptionDeleted,
-        &"customer.subscription.updated" => StripeEvent::CustomerSubscriptionUpdated,
-        &"radar.early_fraud_warning.created" => StripeEvent::RadarEarlyFraudWarningCreated,
-        &"invoice.payment_action_required" => StripeEvent::InvoicePaymentActionRequired,
-        &"customer.subscription.trial_will_end" => StripeEvent::CustomerSubscriptionTrialWillEnd,
-        &"invoice.payment_failed" => StripeEvent::InvoicePaymentFailed,
-        &"invoice.paid" => StripeEvent::InvoicePaymentSuccess,
-        &"setup_intent.succeeded" => StripeEvent::SetupIntentSuccess,
-        &"payment_intent.succeeded" => StripeEvent::PaymentIntentSuccess,
-        &"charge.dispute.created" => StripeEvent::ChargeDisputeCreated,
-        _ => StripeEvent::UntrackedEvent,
-    };
-}
+// what should I do in response to a stripe event
+enum StripeAction {}
+
+// fn map_stripe_event_to_enum(event: &str) -> StripeEvent {
+//     return match &event {
+//         &"checkout.session.completed" => StripeEvent::CheckoutSessionCompleted,
+//         &"stripe.checkout.session.async_payment_succeeded" => {
+//             StripeEvent::StripeCheckoutSessionAsyncPaymentSucceeded
+//         }
+//         &"checkout.session.expired" => StripeEvent::CheckoutSessionExpired,
+//         &"customer.source.expiring" => StripeEvent::CustomerSourceExpiring,
+//         &"customer.subscription.deleted" => StripeEvent::CustomerSubscriptionDeleted,
+//         &"customer.subscription.updated" => StripeEvent::CustomerSubscriptionUpdated,
+//         &"radar.early_fraud_warning.created" => StripeEvent::RadarEarlyFraudWarningCreated,
+//         &"invoice.payment_action_required" => StripeEvent::InvoicePaymentActionRequired,
+//         &"customer.subscription.trial_will_end" => StripeEvent::CustomerSubscriptionTrialWillEnd,
+//         &"invoice.payment_failed" => StripeEvent::InvoicePaymentFailed,
+//         &"invoice.paid" => StripeEvent::InvoicePaymentSuccess,
+//         &"setup_intent.succeeded" => StripeEvent::SetupIntentSuccess,
+//         &"payment_intent.succeeded" => StripeEvent::PaymentIntentSuccess,
+//         &"charge.dispute.created" => StripeEvent::ChargeDisputeCreated,
+//         _ => StripeEvent::UntrackedEvent,
+//     };
+// }
+
+use entity::users::Entity as User;
 
 #[axum::debug_handler]
 pub async fn echo(State(state): State<ServerState>, payload: Json<Value>) {
     info!("->> payments/echo");
-    debug!("payload: {:#?}", payload);
+    info!("payload: {:#?}", payload);
+    let event_type = payload["type"].as_str().unwrap();
+    let stripe_customer = payload["data"]["object"]["customer"].as_str().unwrap();
 
-    let event_enum = map_stripe_event_to_enum(payload.get("type").unwrap().as_str().unwrap());
+    // let event_enum = map_stripe_event_to_enum(payload.get("type").unwrap().as_str().unwrap());
 
-    if event_enum == StripeEvent::UntrackedEvent {
-        info!("Untracked event");
-        return;
+    match event_type {
+        "stripe.checkout.session.async_payment_succeeded" => {}
+        "checkout.session.completed" => {}
+        "checkout.session.expired" => {}
+        "customer.source.expiring" => {}
+        "customer.subscription.deleted" => {}
+        "customer.subscription.updated" => {}
+        "customer.subscription.created" => {
+            let user = User::find()
+                .filter(entity::users::Column::StripeCustomerId.eq(stripe_customer))
+                .one(&state.db.pool)
+                .await
+                .map_err(|err| ServerError::Database(err.to_string()))
+                .unwrap()
+                .unwrap()
+                .into_active_model();
+        }
+        "radar.early_fraud_warning.created" => {}
+        "invoice.payment_action_required" => {}
+        "customer.subscription.trial_will_end" => {}
+        "invoice.payment_failed" => {}
+        "invoice.paid" => {}
+        "setup_intent.succeeded" => {}
+        "payment_intent.succeeded" => {}
+        "charge.dispute.created" => {}
+        _ => {}
     }
 
-    match event_enum {
-        StripeEvent::CheckoutSessionCompleted | StripeEvent::InvoicePaymentSuccess => {
-            handle_subscription_success(state, &payload).await;
-        }
-        StripeEvent::CheckoutSessionExpired => todo!(),
-        StripeEvent::StripeCheckoutSessionAsyncPaymentSucceeded => todo!(),
-        StripeEvent::CustomerSourceExpiring => todo!(),
-        StripeEvent::CustomerSubscriptionDeleted => todo!(),
-        StripeEvent::CustomerSubscriptionUpdated => todo!(),
-        StripeEvent::RadarEarlyFraudWarningCreated => todo!(),
-        StripeEvent::InvoicePaymentActionRequired => todo!(),
-        StripeEvent::CustomerSubscriptionTrialWillEnd => todo!(),
-        StripeEvent::InvoicePaymentFailed => todo!(),
-        StripeEvent::UntrackedEvent => todo!(),
-        StripeEvent::SetupIntentSuccess => todo!(),
-        StripeEvent::PaymentIntentSuccess => todo!(),
-        StripeEvent::ChargeDisputeCreated => todo!(),
-        _ => {
-            info!("Untracked event");
-        }
-    }
+    // match event_enum {
+    //     StripeEvent::CheckoutSessionCompleted | StripeEvent::InvoicePaymentSuccess => {
+    //         handle_subscription_success(state, &payload).await;
+    //     }
+    //     StripeEvent::CheckoutSessionExpired => todo!(),
+    //     StripeEvent::StripeCheckoutSessionAsyncPaymentSucceeded => todo!(),
+    //     StripeEvent::CustomerSourceExpiring => todo!(),
+    //     StripeEvent::CustomerSubscriptionDeleted => todo!(),
+    //     StripeEvent::CustomerSubscriptionUpdated => todo!(),
+    //     StripeEvent::RadarEarlyFraudWarningCreated => todo!(),
+    //     StripeEvent::InvoicePaymentActionRequired => todo!(),
+    //     StripeEvent::CustomerSubscriptionTrialWillEnd => todo!(),
+    //     StripeEvent::InvoicePaymentFailed => todo!(),
+    //     StripeEvent::UntrackedEvent => todo!(),
+    //     StripeEvent::SetupIntentSuccess => todo!(),
+    //     StripeEvent::PaymentIntentSuccess => todo!(),
+    //     StripeEvent::ChargeDisputeCreated => todo!(),
+    //     _ => {
+    //         info!("Untracked event");
+    //     }
+    // }
 }
-
-use entity::users::Entity as User;
 
 async fn handle_subscription_success(state: ServerState, payload: &Value) {
     let stripe_obj = payload.as_object().unwrap();

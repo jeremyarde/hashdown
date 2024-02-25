@@ -28,7 +28,10 @@ CREATE table mdp.users (
     role TEXT,
 
     -- stripe related stuff
-    stripe_id TEXT unique,
+    stripe_customer_id TEXT unique,
+    stripe_subscription_id TEXT,
+    stripe_subscription_modified_at TIMESTAMP WITH TIME ZONE,
+    -- stripe_subscription_id
 
     -- primary key (user_id),
     -- primary key (workspace_id, id),
