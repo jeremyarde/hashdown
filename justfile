@@ -41,9 +41,6 @@ migratef:
 migrateprodf:
     # cd server && source .prod.env && sqlx migrate revert --database-url $DATABASE_URL && sqlx migrate run --database-url $DATABASE_URL
 
-prepare:
-    cd server && cargo sqlx prepare
-
 gentypes:
     supabase gen types typescript --project-id vbvounbggaxtaofatdyg > ui-vite/src/types/supabase.ts
 

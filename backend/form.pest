@@ -6,15 +6,16 @@ block     = _{
   | textarea
   | checkbox
   | radio
-  | submit
   | comment
+  | submit
   | error_block
 }
 
 error_block = { (!NEWLINE ~ ANY)+ }
+
 textarea =  { ^"textarea:" ~ SPACE? ~ question_with_default? }
 checkbox =  {
-    ^"checkbox:" ~ SPACE? ~ question_text? ~ NEWLINE ~ listitem_check+
+    ^"checkbox:" ~ SPACE? ~ question_text? ~ NEWLINE ~ (listitem_check | listitem)+
 }
 radio    =  {
     ^"radio:" ~ SPACE? ~ question_text ~ NEWLINE ~ listitem+
@@ -23,11 +24,11 @@ dropdown =  {
     ^"dropdown:" ~ SPACE? ~ question_text ~ NEWLINE ~ listitem+
 }
 submit   =  {
-    ^"submit:" ~ question_with_default ~ NEWLINE?
+    ^"submit:" ~ SPACE? ~ question_with_default ~ SPACE? ~ NEWLINE?
 }
 comment  = _{ "//" ~ (!"\n" ~ ANY)* }
 
-text_input            =  {
+text_input = {
     ^"text:" ~ SPACE? ~ question_with_default ~ SPACE?
 }
 
@@ -46,4 +47,3 @@ unchecked             =  { "[ ]" }
 
 // Helpers
 SPACE = _{ " " }
-
