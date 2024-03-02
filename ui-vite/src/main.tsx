@@ -163,7 +163,7 @@ export function App() {
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/dev' element={<Crud />} />
             <Route path='/test' element={<TestPage />} />
-            <Route path='/editor_test' element={<EditorTest />} />
+            <Route path="/testEditor" element={<EditorPage mode={'test'} editorContent={formtext} setEditorContent={setFormtext} />} />
             <Route path='/signup/confirm' element={<ConfirmEmail />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Route>

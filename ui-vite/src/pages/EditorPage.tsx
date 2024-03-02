@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
 import { getBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
 import { redirect } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export type EditorProps = {
     mode: "test" | "prod"
@@ -70,6 +71,17 @@ checkbox: I don't want to receive...
 
 submit: Submit`;
 
+
+const markdownRules = `
+Forms need 
+1. Title
+  - Titles use the "# My title"
+2. Questions
+  - Questions can be one of:
+radio, checkbox, text, textarea
+3. Submit button
+`;
+
 let tabTemplates = [
     {
         tabname: 'User signup',
@@ -130,7 +142,8 @@ export function SampleForms({ setEditorContent }: { setEditorContent: React.Disp
 
     return (
         <>
-            <div className='flex w-full pb-6'>
+
+            <div className='flex w-full'>
                 {tabTemplates.map((template: TabContent, i) => {
                     return (
                         <>
@@ -139,6 +152,7 @@ export function SampleForms({ setEditorContent }: { setEditorContent: React.Disp
                     )
                 })}
             </div >
+
         </>
     );
 }
@@ -146,6 +160,8 @@ export function SampleForms({ setEditorContent }: { setEditorContent: React.Disp
 export function EditorPage({ mode = "test", editorContent, setEditorContent }: EditorProps) {
     const { toast } = useToast()
     const [survey, setSurvey] = useState(markdown_to_form_wasm_v2(editorContent));
+    const [hidden, setHidden] = useState(false);
+    const [rules, setRules] = useState(false);
 
     useEffect(() => {
         const newSurvey = markdown_to_form_wasm_v2(editorContent);
@@ -184,9 +200,35 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
 
     return (
         <>
+            <div className="flex text-center">
+                {hidden && (
+                    <>
+                        <SampleForms setEditorContent={setEditorContent}></SampleForms>
+                    </>
+                )}
+                {rules && (
+                    <>
+                        <div>
+                            <pre className="text-left pl-4">
+                                {markdownRules}
+                            </pre>
+                        </div>
+                    </>
+                )}
+
+            </div >
+            <div className="p-3"></div>
             <div className="flex w-full h-full flex-wrap md:flex-row flex-col">
-                <div className="md:w-1/2 w-full flex flex-col flex-1">
-                    <h2 className="text-2xl font-bold">Enter Form Content</h2>
+                <div className="md:w-1/2 w-full flex flex-col flex-1 p-2">
+                    {/* Toolbar*/}
+                    <div className="w-full flex flex-row">
+                        <Button className=" bg-yellow border border-solid" onClick={() => hidden ? setRules(false) : setRules(true)}>
+                            {hidden ? "hide rules" : "show rules"}
+                        </Button>
+                        <Button className=" bg-yellow border border-solid" onClick={() => hidden ? setHidden(false) : setHidden(true)}>
+                            {hidden ? "hide examples" : "show examples"}
+                        </Button>
+                    </div>
                     <textarea
                         className="w-full p-2 border border-solid rounded-xl"
                         style={{ height: '65vh' }}
@@ -199,7 +241,7 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
                     </div>
                 </div>
                 <div className="p-2 align-middle"></div>
-                <div className="md:w-1/2 w-full flex flex-col flex-1">
+                <div className="md:w-1/2 w-full flex flex-col flex-1 p-2">
                     <h2 className="text-2xl font-bold">Preview</h2>
                     <RenderedForm survey={survey} mode={mode} showSubmissionData={true}></RenderedForm>
                 </div>
