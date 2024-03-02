@@ -73,6 +73,8 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         .route("/v1/auth/logout", get(auth::logout))
         .route("/v1/surveys", post(create_survey).get(list_survey))
         .route("/v1/responses", get(survey_responses::list_response))
+        // stripe related
+        .route("/create-checkout-session", post(stripe::checkout_session))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             validate_session_middleware,

@@ -7,6 +7,7 @@ import { Textarea } from "../ui/textarea";
 import { getBaseUrl } from "../../lib/utils";
 import { useNavigate } from 'react-router-dom';
 import { RenderedFormProps } from "@/lib/constants";
+import { Text } from "lucide-react";
 
 type SurveyEvent = {
     question_id: string;
@@ -345,9 +346,9 @@ function Dropdown(block, handleEvent) {
 
 function ErrorBlock(block) {
     return (
-        <div className="flex-row flex">
-            <label>{"Issue with line:"}</label>
-            <div className="bg-yellow">
+        <div className="flex-col flex border rounded-s bg-yellow">
+            <label className="underline">{"Problem with this line:"}</label>
+            <div className="">
                 {block.properties.text}
             </div>
         </div>

@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
 use axum::{extract::State, http::Response, Json};
+use chrono::{DateTime, Utc};
 use hyper::Server;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, Set};
 use serde_json::Value;
 use tracing::{debug, info};
 
@@ -59,7 +60,6 @@ pub async fn echo(State(state): State<ServerState>, payload: Json<Value>) {
     info!("->> payments/echo");
     info!("payload: {:#?}", payload);
     let event_type = payload["type"].as_str().unwrap();
-    let stripe_customer = payload["data"]["object"]["customer"].as_str().unwrap();
 
     // let event_enum = map_stripe_event_to_enum(payload.get("type").unwrap().as_str().unwrap());
 
@@ -68,10 +68,9 @@ pub async fn echo(State(state): State<ServerState>, payload: Json<Value>) {
         "checkout.session.completed" => {}
         "checkout.session.expired" => {}
         "customer.source.expiring" => {}
-        "customer.subscription.deleted" => {}
-        "customer.subscription.updated" => {}
-        "customer.subscription.created" => {
-            let user = User::find()
+        "customer.subscription.deleted" => {
+            let stripe_customer = payload["data"]["object"]["customer"].as_str().unwrap();
+            let mut user = User::find()
                 .filter(entity::users::Column::StripeCustomerId.eq(stripe_customer))
                 .one(&state.db.pool)
                 .await
@@ -79,7 +78,16 @@ pub async fn echo(State(state): State<ServerState>, payload: Json<Value>) {
                 .unwrap()
                 .unwrap()
                 .into_active_model();
+
+            user.stripe_subscription_id = Set(None);
+            user.stripe_subscription_modified_at = Set(Some(Utc::now().fixed_offset()));
+            let res = user
+                .save(&state.db.pool)
+                .await
+                .map_err(|err| ServerError::Database(err.to_string()));
         }
+        "customer.subscription.updated" => {}
+        "customer.subscription.created" => {}
         "radar.early_fraud_warning.created" => {}
         "invoice.payment_action_required" => {}
         "customer.subscription.trial_will_end" => {}

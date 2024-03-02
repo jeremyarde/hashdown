@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { StrictMode, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate, useParams, Outlet, useSearchParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams, Outlet, useSearchParams, redirect } from 'react-router-dom'
 import './index.css'
 import { Login } from './components/custom/Login.tsx'
 import { Navbar } from './components/custom/Navbar.tsx'
@@ -19,6 +18,7 @@ import { Home } from './pages/Home.tsx'
 import { Waitlist } from './components/custom/Waitlist.tsx'
 import { STAGE } from './lib/constants.ts'
 import { EditorTest } from './pages/EditorTest.tsx'
+import StripePage from './pages/StripePage.tsx'
 
 
 export const exampleText = `# User Registration Form
@@ -109,7 +109,7 @@ export function ConfirmEmail() {
 
   const confirmEmail = async () => {
     try {
-      const response = await fetch(`${getBaseUrl()}/auth/confirm?` + new URLSearchParams({ t: params.get('t') }),
+      const response = await fetch(`${getBaseUrl()}/auth/confirm?` + new URLSearchParams({ t: params.get('t') || '' }),
         {
           method: "GET",
           headers: {
@@ -170,6 +170,7 @@ export function App() {
           <Route path='/surveys/:surveyId' element={<RenderedSurvey />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/checkout" element={<StripePage />}></Route>
         </Routes>
       </BrowserRouter>
     </>
