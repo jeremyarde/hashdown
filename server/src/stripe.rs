@@ -1,3 +1,4 @@
+use axum::{extract::State, response::Redirect, Extension, Json};
 use hyper::Server;
 use sea_orm::TryIntoModel;
 use serde::{Deserialize, Serialize};
@@ -8,7 +9,12 @@ use sqlx::{self, FromRow};
 
 use chrono::{self, Utc};
 
-use crate::{MdpDatabase, ServerError};
+use crate::{mware::ctext::SessionContext, MdpDatabase, ServerError, ServerState};
+
+struct StripeProducts {
+    price: String,
+    quantity: i32,
+}
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
 pub struct StripeEvent {
@@ -27,6 +33,16 @@ struct StripeCustomer {
 use entity::stripe_events::Model as StripeEventModel;
 
 pub struct MdpStripeEvent(pub StripeEventModel);
+
+#[tracing::instrument]
+#[axum::debug_handler]
+pub async fn list_survey(
+    state: State<ServerState>,
+    Extension(ctx): Extension<SessionContext>,
+    payload: Json<Value>,
+) -> anyhow::Result<Redirect, ServerError> {
+    return Ok(Redirect::to(&state.config.frontend_url));
+}
 
 async fn log_event(request: Value) -> Result<MdpStripeEvent, ServerError> {
     println!("->> log_event");

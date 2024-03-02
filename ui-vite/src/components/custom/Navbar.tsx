@@ -31,6 +31,10 @@ export function Navbar() {
         { route: "/editor", display: "Editor" },
     ]
 
+    if (isFeatureEnabled(FEATURES.CHECKOUT)) {
+        middleTabs.push({ route: "/checkout", display: "Checkout" })
+    }
+
     if (testTabs) {
         middleTabs.push({ route: "/dev", display: "dev" })
         middleTabs.push({ route: "/test", display: "test" })

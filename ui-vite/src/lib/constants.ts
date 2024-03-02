@@ -15,10 +15,11 @@ export enum FEATURES {
     WAITLIST,
     LOGIN,
     TESTTABS,
+    CHECKOUT
 };
 
 export const EnabledFeatures: { [stage: string]: FEATURES[] } = {
-    [STAGE.DEV]: [FEATURES.LOGIN, FEATURES.TESTTABS],
+    [STAGE.DEV]: [FEATURES.LOGIN, FEATURES.TESTTABS, FEATURES.CHECKOUT],
     [STAGE.PROD]: [FEATURES.LOGIN]
 };
 
