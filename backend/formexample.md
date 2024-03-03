@@ -9,6 +9,7 @@ Textarea: This is nice [Enter your comments here]
 checkbox: subscribe?
 - [x] Subscribe to newsletter
 - [ ] second value here
+- third option
 
 radio: my radio
 - radio button

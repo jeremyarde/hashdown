@@ -16,8 +16,7 @@ import { Crud } from './components/Crud.tsx'
 import TestPage from './pages/TestPage.tsx'
 import { Home } from './pages/Home.tsx'
 import { Waitlist } from './components/custom/Waitlist.tsx'
-import { STAGE } from './lib/constants.ts'
-import { EditorTest } from './pages/EditorTest.tsx'
+import { MARKDOWN_RULES, STAGE } from './lib/constants.ts'
 import StripePage from './pages/StripePage.tsx'
 
 
@@ -163,7 +162,7 @@ export function App() {
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/dev' element={<Crud />} />
             <Route path='/test' element={<TestPage />} />
-            <Route path="/testEditor" element={<EditorPage mode={'test'} editorContent={formtext} setEditorContent={setFormtext} />} />
+            <Route path="/testEditor" element={<EditorPage mode={'test'} editorContent={MARKDOWN_RULES} setEditorContent={setFormtext} />} />
             <Route path='/signup/confirm' element={<ConfirmEmail />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Route>
