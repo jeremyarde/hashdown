@@ -309,7 +309,9 @@ impl MdpUser {
             role: Set(None),
             email_confirmed_at: Set(None),
             name: Set(name.to_string()),
-            ..Default::default()
+            stripe_customer_id: todo!(),
+            stripe_subscription_id: todo!(),
+            stripe_subscription_modified_at: todo!(),
         };
 
         return MdpUser(user.try_into_model().unwrap());
