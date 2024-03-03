@@ -122,6 +122,17 @@ fn form_value_to_survey_part(pair: &FormValue) -> SurveyPart {
                             id: nanoid_gen(NANOID_LEN),
                         }
                     }
+                    FormValue::ListItem { properties } => {
+                        let optiontext = match properties.get(0).unwrap() {
+                            FormValue::QuestionText { text } => text.clone(),
+                            _ => unreachable!(),
+                        };
+                        CheckboxItem {
+                            checked: false,
+                            text: optiontext,
+                            id: nanoid_gen(NANOID_LEN),
+                        }
+                    }
                     _ => {
                         unreachable!()
                     }
@@ -488,7 +499,5 @@ mod tests {
         textarea: What do you want to use Hashdown for?
         Submit: Put me on waitlist"#,
         );
-
-        
     }
 }

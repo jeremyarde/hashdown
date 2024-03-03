@@ -25,6 +25,26 @@ export const EnabledFeatures: { [stage: string]: FEATURES[] } = {
 
 export const SESSION_TOKEN_KEY = 'session_id';
 
+export const MARKDOWN_RULES = `# Titles have a '#' at the start
+
+Different questions start with the type of question, a colon ":" and then the question text. The choices for the question are written in the list format under the quesiton. For example:
+
+radio: This is a radio button question
+- this is the first radio button
+- second radio button
+
+checkbox: This is a checkbox. Multiple options can be selected.
+- [ ] this starts with "unchecked" default
+- [x] this starts out as "checked"
+- option three will also be unchecked
+
+textarea: This is for longer paragraphs of text
+
+text: This is for single lines of text. Like a username, email, etc
+
+submit: This button sends the response. What you type here will be on the button
+`;
+
 // export interface Survey {
 //     survey_id: string;
 //     created_at: string;

@@ -72,16 +72,6 @@ checkbox: I don't want to receive...
 submit: Submit`;
 
 
-const markdownRules = `
-Forms need 
-1. Title
-  - Titles use the "# My title"
-2. Questions
-  - Questions can be one of:
-radio, checkbox, text, textarea
-3. Submit button
-`;
-
 let tabTemplates = [
     {
         tabname: 'User signup',
