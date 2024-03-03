@@ -1,4 +1,9 @@
-use axum::{extract::State, response::Redirect, Extension, Json};
+use axum::{
+    extract::State,
+    http::Response,
+    response::{IntoResponse, Redirect},
+    Extension, Json,
+};
 use hyper::Server;
 use sea_orm::TryIntoModel;
 use serde::{Deserialize, Serialize};
@@ -33,6 +38,16 @@ struct StripeCustomer {
 use entity::stripe_events::Model as StripeEventModel;
 
 pub struct MdpStripeEvent(pub StripeEventModel);
+
+#[tracing::instrument]
+#[axum::debug_handler]
+pub async fn checkout_session(
+    state: State<ServerState>,
+    Extension(ctx): Extension<SessionContext>,
+    payload: Json<Value>,
+) -> Result<String, ServerError> {
+    return Ok(String::from("done"));
+}
 
 #[tracing::instrument]
 #[axum::debug_handler]
