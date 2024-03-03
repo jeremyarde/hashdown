@@ -4,7 +4,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
 import { getBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
 import { redirect } from "react-router-dom";
+import { clsx } from 'clsx';
+
 import { Button } from "@/components/ui/button";
+import { MARKDOWN_RULES } from "@/lib/constants";
 
 export type EditorProps = {
     mode: "test" | "prod"
@@ -190,35 +193,9 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
 
     return (
         <>
-            <div className="flex text-center">
-                {hidden && (
-                    <>
-                        <SampleForms setEditorContent={setEditorContent}></SampleForms>
-                    </>
-                )}
-                {rules && (
-                    <>
-                        <div>
-                            <pre className="text-left pl-4">
-                                {markdownRules}
-                            </pre>
-                        </div>
-                    </>
-                )}
 
-            </div >
-            <div className="p-3"></div>
             <div className="flex w-full h-full flex-wrap md:flex-row flex-col">
                 <div className="md:w-1/2 w-full flex flex-col flex-1 p-2">
-                    {/* Toolbar*/}
-                    <div className="w-full flex flex-row">
-                        <Button className=" bg-yellow border border-solid" onClick={() => hidden ? setRules(false) : setRules(true)}>
-                            {hidden ? "hide rules" : "show rules"}
-                        </Button>
-                        <Button className=" bg-yellow border border-solid" onClick={() => hidden ? setHidden(false) : setHidden(true)}>
-                            {hidden ? "hide examples" : "show examples"}
-                        </Button>
-                    </div>
                     <textarea
                         className="w-full p-2 border border-solid rounded-xl"
                         style={{ height: '65vh' }}
@@ -226,16 +203,63 @@ export function EditorPage({ mode = "test", editorContent, setEditorContent }: E
                         value={editorContent}
                         onChange={evt => setEditorContent(evt.target.value)} />
                     <div className="pb-2">
-                        <button className="p-2 h-full w-full border border-solid" onClick={submitSurvey}>Save Survey</button>
-                        {/* <button className="bg-green-200 border w-full p-1 flex-1" onClick={submitSurvey}>Publish</button> */}
+
+                        <button disabled={!survey.validation[0]}
+                            className={clsx("p-2 h-full w-full border border-solid", survey.validation[0] ? "bg-green" : "bg-gray opacity-50")}
+                            onClick={submitSurvey}>Save Survey
+                        </button>
                     </div>
+                    <div>
+                        <ul>
+                            {survey.validation[1].map((error: string) =>
+                                <li className="bg-yellow">{error}</li>
+                            )}
+                        </ul>
+                    </div>
+                    {/* <div>
+                        {survey.validation[0] === true ?
+                            <div className="bg-green">Valid</div> :
+                            <>
+                                <div className="bg-red-600">Not valid</div>
+                                {survey.validation[1].map((error: string) =>
+                                    <div>{error}</div>
+                                )}
+                            </>
+                        }
+                    </div> */}
+                    {/* Toolbar*/}
+                    <div className="w-full flex flex-row">
+                        <Button className=" bg-yellow border border-solid" onClick={() => rules ? setRules(false) : setRules(true)}>
+                            {rules ? "hide rules" : "show rules"}
+                        </Button>
+                        <Button className=" bg-yellow border border-solid" onClick={() => hidden ? setHidden(false) : setHidden(true)}>
+                            {hidden ? "hide examples" : "show examples"}
+                        </Button>
+                    </div>
+                    <div className="flex text-center">
+                        {hidden && (
+                            <>
+                                <SampleForms setEditorContent={setEditorContent}></SampleForms>
+                            </>
+                        )}
+                        {rules && (
+                            <>
+                                <div>
+                                    <pre className="text-left pl-4">
+                                        {MARKDOWN_RULES}
+                                    </pre>
+                                </div>
+                            </>
+                        )}
+                    </div >
+                    <div className="p-3"></div>
                 </div>
-                <div className="p-2 align-middle"></div>
+                <div className="p-1 align-middle"></div>
                 <div className="md:w-1/2 w-full flex flex-col flex-1 p-2">
                     <h2 className="text-2xl font-bold">Preview</h2>
                     <RenderedForm survey={survey} mode={mode} showSubmissionData={true}></RenderedForm>
                 </div>
-            </div>
+            </div >
         </>
     );
 }
