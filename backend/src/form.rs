@@ -388,7 +388,7 @@ fn formvalue_to_block(formvalue: &FormValue, index: usize) -> Block {
 //     created_at: DateTime<Utc>,
 // }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub enum BlockType {
     Title,
     Radio,
@@ -413,6 +413,12 @@ pub struct Block {
     // parent: NanoId,
 }
 
+impl Block {
+    pub fn get_type(&self) -> &BlockType {
+        return &self.block_type;
+    }
+}
+
 pub fn formvalue_to_survey(formvalues: Vec<FormValue>) -> ParsedSurvey {
     let mut survey = ParsedSurvey {
         id: nanoid_gen(NANOID_LEN),
@@ -421,11 +427,20 @@ pub fn formvalue_to_survey(formvalues: Vec<FormValue>) -> ParsedSurvey {
         questions: vec![],
         parse_version: "2".to_string(),
         blocks: vec![],
+        validation: (false, vec!["No questions found".to_string()]),
     };
 
     for (i, formvalue) in formvalues.iter().enumerate() {
-        survey.blocks.push(formvalue_to_block(&formvalue, i));
+        let block = formvalue_to_block(&formvalue, i);
+        match block.get_type() {
+            BlockType::Empty => {}
+            _ => {
+                survey.blocks.push(block);
+            }
+        }
     }
+    survey.validate_form();
+
     survey
 }
 
@@ -458,7 +473,7 @@ mod tests {
 
     #[test]
     fn test_parse_minimal() {
-        let res = parse_markdown_text(include_str!("../formexample-minimal.md"));
+        let res = parse_markdown_text(include_str!("../test_forms/formexample-minimal.md"));
         // // let res = do_thing();
         println!("{:?}", &res);
 
@@ -470,7 +485,7 @@ mod tests {
 
     #[test]
     fn test_parse_all() {
-        let res = parse_markdown_text(include_str!("../formexample.md"));
+        let res = parse_markdown_text(include_str!("../test_forms/formexample.md"));
         // // let res = do_thing();
         println!("{:#?}", &res);
 
@@ -482,7 +497,7 @@ mod tests {
 
     #[test]
     fn test_parse_with_error() {
-        let res = parse_markdown_text(include_str!("../formexample-error.md"));
+        let res = parse_markdown_text(include_str!("../test_forms/formexample-error.md"));
         // // let res = do_thing();
         println!("{:#?}", &res);
 
@@ -490,6 +505,20 @@ mod tests {
         // let serialized = json!(res.unwrap());
         println!("{:#?}", serialized);
         println!("JSON version\n{:#}", json!(serialized));
+    }
+
+    #[test]
+    fn test_parse_with_validation_error() {
+        let res = parse_markdown_text(include_str!("../test_forms/formexample-validation-fail.md"));
+        // // let res = do_thing();
+        println!("{:#?}", &res);
+
+        let serialized = formvalue_to_survey(res.unwrap());
+        // let serialized = json!(res.unwrap());
+        println!("{:#?}", serialized);
+        println!("JSON version\n{:#}", json!(serialized));
+
+        assert_eq!(serialized.validation.0, false);
     }
 
     fn create_survey() {

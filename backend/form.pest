@@ -1,8 +1,9 @@
-form      = _{ SOI ~ header ~ (block | emptyline)* ~ EOI }
+form      = _{ SOI ~ (block | emptyline)* ~ EOI }
 emptyline = _{ NEWLINE }
 header    =  { "# " ~ question_text }
 block     = _{
-    text_input
+    header
+  | text_input
   | textarea
   | checkbox
   | radio

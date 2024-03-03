@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use form::{formvalue_to_survey, parse_markdown_text, Block};
+use form::{formvalue_to_survey, parse_markdown_text, Block, BlockType};
 use wasm_bindgen::prelude::*;
 
 use derive_builder::Builder;
@@ -190,6 +190,7 @@ pub struct ParsedSurvey {
     pub questions: Vec<Question>,
     pub blocks: Vec<Block>,
     pub parse_version: String,
+    pub validation: (bool, Vec<String>),
 }
 
 impl ParsedSurvey {
@@ -203,6 +204,44 @@ impl ParsedSurvey {
             // This is a parsing issue, return something helpful to the user
             Err(err) => Err(err.into()),
         }
+    }
+
+    pub fn validate_form(&mut self) {
+        let mut validation_errors = vec![];
+
+        if self.blocks.len() == 0 {
+            self.validation = (false, vec!["No questions found".to_string()]);
+            return;
+        }
+
+        if self
+            .blocks
+            .first()
+            .expect("should have a title")
+            .get_type()
+            .ne(&BlockType::Title)
+        {
+            validation_errors.push("Missing Title at beginning".to_string());
+        }
+
+        if self
+            .blocks
+            .last()
+            .expect("should have a submit button")
+            .get_type()
+            .ne(&BlockType::Submit)
+        {
+            validation_errors.push("Missing Submit button at end".to_string());
+        }
+
+        self.validation = (
+            if validation_errors.len() == 0 {
+                true
+            } else {
+                false
+            },
+            validation_errors,
+        );
     }
 
     // fn from_details(id: &str, title: &str, plaintext: &str, questions: Vec<Question>) -> Self {
@@ -224,6 +263,7 @@ impl ParsedSurvey {
             parse_version: "".to_string(),
             id: "fakeid".to_string(),
             blocks: vec![],
+            validation: (false, vec!["No questions found".to_string()]),
         }
     }
 }
@@ -240,7 +280,7 @@ mod tests {
 
     #[test]
     fn test_wasm_parsed_markdown() {
-        let input = include_str!("../formexample-minimal.md");
+        let input = include_str!("../test_forms/formexample-minimal.md");
         let results = ParsedSurvey::from(input.to_string());
         dbg!(results);
     }

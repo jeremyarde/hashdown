@@ -27,6 +27,7 @@ export const SESSION_TOKEN_KEY = 'session_id';
 
 export const MARKDOWN_RULES = `# Titles have a '#' at the start
 
+If there is an issue parsing your form, you will see an error like this.
 Different questions start with the type of question, a colon ":" and then the question text. The choices for the question are written in the list format under the quesiton. For example:
 
 radio: This is a radio button question
