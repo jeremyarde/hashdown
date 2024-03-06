@@ -352,7 +352,6 @@ impl MdpDatabase {
         let workspace = workspaces::ActiveModel {
             workspace_id: Set(workspace_id),
             name: Set(name),
-            ..Default::default()
         }
         .insert(&self.pool)
         .await
@@ -386,7 +385,6 @@ impl MdpDatabase {
             submitted_at: Set(Some(Utc::now().fixed_offset())),
             answers: Set(Some(answer.answers)),
             survey_id: Set(answer.survey_id),
-            ..Default::default()
         }
         .insert(&self.pool)
         .await
@@ -439,7 +437,6 @@ impl MdpDatabase {
             active_period_expires_at: Set(new_active_expires),
             idle_period_expires_at: Set(new_idle_expires),
             current_state: Set(SessionState::ACTIVE.to_string()),
-            ..Default::default()
         }
         .insert(&self.pool)
         .await
