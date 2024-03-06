@@ -79,11 +79,9 @@ async fn log_event(request: Value) -> Result<MdpStripeEvent, ServerError> {
 
     // Ok(stripeevent)
     Ok(MdpStripeEvent(
-        entity::stripe_events::ActiveModel {
-            ..Default::default()
-        }
-        .try_into_model()
-        .unwrap(),
+        entity::stripe_events::ActiveModel {}
+            .try_into_model()
+            .unwrap(),
     ))
 }
 

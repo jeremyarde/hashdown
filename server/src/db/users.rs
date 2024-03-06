@@ -24,9 +24,7 @@ trait UsersTrait {
 
 impl UsersTrait for users::ActiveModel {
     fn new(req: CreateUserRequest) -> users::ActiveModel {
-        return users::ActiveModel {
-            ..Default::default()
-        };
+        return users::ActiveModel {};
     }
 }
 
@@ -40,7 +38,6 @@ impl MdpDatabase {
             let new_workspace = workspaces::ActiveModel {
                 workspace_id: Set(NanoId::from("ws").to_string()),
                 name: Set(String::from("default")),
-                ..Default::default()
             }
             .insert(&self.pool)
             .await
