@@ -122,7 +122,7 @@ pub struct Answer {
     pub answers: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Email {
     email: String,
 }
