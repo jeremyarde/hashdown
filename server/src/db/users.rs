@@ -18,15 +18,32 @@ use super::database::CreateUserRequest;
 
 use entity::users::{self, Entity as User};
 
-trait UsersTrait {
-    fn new(req: CreateUserRequest) -> users::ActiveModel;
-}
+// trait UsersTrait {
+//     fn new(req: CreateUserRequest) -> users::ActiveModel;
+// }
 
-impl UsersTrait for users::ActiveModel {
-    fn new(req: CreateUserRequest) -> users::ActiveModel {
-        return users::ActiveModel {};
-    }
-}
+// impl UsersTrait for users::ActiveModel {
+//     fn new(req: CreateUserRequest) -> users::ActiveModel {
+//         return users::ActiveModel {
+//             name: todo!(),
+//             email: todo!(),
+//             password_hash: todo!(),
+//             created_at: todo!(),
+//             modified_at: todo!(),
+//             deleted_at: todo!(),
+//             email_status: todo!(),
+//             user_id: todo!(),
+//             workspace_id: todo!(),
+//             email_confirmed_at: todo!(),
+//             confirmation_token: todo!(),
+//             confirmation_token_expire_at: todo!(),
+//             role: todo!(),
+//             stripe_customer_id: todo!(),
+//             stripe_subscription_id: todo!(),
+//             stripe_subscription_modified_at: todo!(),
+//         };
+//     }
+// }
 
 use entity::workspaces::{self, Entity as Workspace};
 impl MdpDatabase {

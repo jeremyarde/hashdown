@@ -5,7 +5,8 @@ use axum::{
     Extension, Json,
 };
 use hyper::Server;
-use sea_orm::TryIntoModel;
+use markdownparser::NanoId;
+use sea_orm::{ActiveModelBehavior, TryIntoModel};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::{debug, info};
@@ -59,31 +60,38 @@ pub async fn list_survey(
     return Ok(Redirect::to(&state.config.frontend_url));
 }
 
-async fn log_event(request: Value) -> Result<MdpStripeEvent, ServerError> {
-    println!("->> log_event");
+// async fn log_event(request: Value) -> Result<MdpStripeEvent, ServerError> {
+//     println!("->> log_event");
 
-    let _time = chrono::Utc::now();
-    // let stripeevent = sqlx::query_as::<_, StripeEvent>(
-    //     "insert into mdp.stripe_events (
-    //             stripe_event_id,
-    //             attributes,
-    //             event_type
-    //         ) values ($1, $2, $3) returning *",
-    // )
-    // .bind(request.get("id"))
-    // .bind(json!({"test": "test event attribute"}))
-    // .bind(request.get("type"))
-    // .fetch_one(&self.pool)
-    // .await
-    // .map_err(|err| ServerError::Database(format!("Could not create log_event: {err}")))?;
+//     let _time = chrono::Utc::now();
+//     // let stripeevent = sqlx::query_as::<_, StripeEvent>(
+//     //     "insert into mdp.stripe_events (
+//     //             stripe_event_id,
+//     //             attributes,
+//     //             event_type
+//     //         ) values ($1, $2, $3) returning *",
+//     // )
+//     // .bind(request.get("id"))
+//     // .bind(json!({"test": "test event attribute"}))
+//     // .bind(request.get("type"))
+//     // .fetch_one(&self.pool)
+//     // .await
+//     // .map_err(|err| ServerError::Database(format!("Could not create log_event: {err}")))?;
 
-    // Ok(stripeevent)
-    Ok(MdpStripeEvent(
-        entity::stripe_events::ActiveModel {}
-            .try_into_model()
-            .unwrap(),
-    ))
-}
+//     // Ok(stripeevent)
+//     Ok(MdpStripeEvent(
+//         entity::stripe_events::ActiveModel {
+//             stripe_event_id: NanoId::new().to_string(),
+//             from_stripe_event_id: request.get("id"),
+//             attributes: request,
+//             event_type: todo!(),
+//             created_at: todo!(),
+//             workspace_id: todo!(),
+//         }
+//         .try_into_model()
+//         .unwrap(),
+//     ))
+// }
 
 pub async fn create_customer(name: &str, email: &str) -> Result<Value, ServerError> {
     let secret_key = dotenvy::var("TEST_STRIPE_SECRETKEY").unwrap();
