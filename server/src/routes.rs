@@ -67,6 +67,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         .route("/v1/auth/confirm", get(auth::confirm))
         // .route("/v1/payment/success", post(payments::echo))
         .route("/v1/webhook", post(webhook::echo))
+        .route("/v1/health", get(ping))
         .route("/v1/surveys/:id", get(get_survey).post(submit_survey));
 
     let auth_routes = Router::new()
