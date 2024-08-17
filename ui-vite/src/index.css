@@ -149,6 +149,16 @@ input:checked+.slider:before {
 }
 
 
+.button {
+  filter: drop-shadow(3px 3px 0px #000);
+  background: #ff5e5bff;
+}
+
+
+.button-hover {
+  transition: transform 0.3s ease; /* Smooth transition */
+  transform: scale(1.1); /* Scale up on hover */
+}
 
 /* https://coolors.co/3a405a-f9dec9-99b2dd-e9afa3-685044
 /* CSS HEX */
@@ -168,3 +178,21 @@ input:checked+.slider:before {
 --melon: hsla(10, 61%, 78%, 1);
 --umber: hsla(20, 21%, 34%, 1); 
 */
+
+
+/* SECOND PALETTE */
+/* CSS HEX */
+/* --bittersweet: #ff5e5bff;
+--timberwolf: #d8d8d8ff;
+--ivory: #ffffeaff;
+--robin-egg-blue: #00cecbff;
+--maize: #ffed66ff;
+
+/* CSS HSL */
+/*
+--bittersweet: hsla(1, 100%, 68%, 1);
+--timberwolf: hsla(0, 0%, 85%, 1);
+--ivory: hsla(60, 100%, 96%, 1);
+--robin-egg-blue: hsla(179, 100%, 40%, 1);
+--maize: hsla(53, 100%, 70%, 1);
+*/ 
