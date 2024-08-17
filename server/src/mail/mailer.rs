@@ -1,4 +1,3 @@
-use chrono::format;
 use lettre::{message::header::ContentType, Message, SmtpTransport, Transport};
 
 #[derive(Clone)]

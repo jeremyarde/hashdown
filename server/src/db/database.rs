@@ -1,21 +1,15 @@
-use std::{
-    fmt::{self, Display},
-    ops::Add,
-};
+use std::ops::Add;
 
-use anyhow::{self, Error};
+use anyhow::{self};
 
 use chrono::{DateTime, Duration, Utc};
-use hyper::Server;
-use lettre::transport::smtp::commands::Data;
-use markdownparser::{nanoid_gen, NanoId};
+use markdownparser::NanoId;
 
 use sea_orm::{
-    ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, Database, DatabaseConnection, EntityTrait,
-    FromQueryResult, IntoActiveModel, QueryFilter, Set, TryIntoModel,
+    ActiveModelTrait, ColumnTrait, Database, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, Set, TryIntoModel,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::Value;
 // use sqlx::{
 //     postgres::{PgPoolOptions, PgQueryResult, PgTypeInfo},
 //     Decode, Encode, FromRow, PgPool, Postgres, Type,
@@ -27,15 +21,11 @@ use crate::{
     ServerError,
 };
 
-use super::{
-    // sessions::Session,
-    surveys::CreateSurveyRequest,
-};
 
 use entity::{
-    sessions::{self, ActiveModel, Entity as Session, Model as SessionModel},
+    sessions::{self, Entity as Session, Model as SessionModel},
     surveys,
-    users::{self, ActiveModel as UserActiveModel, Entity as User, Model as UserModel},
+    users::{self, Model as UserModel},
     workspaces,
 };
 

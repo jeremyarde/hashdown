@@ -1,13 +1,12 @@
 use markdownparser::NanoId;
 use sea_orm::{
     ActiveModelBehavior, ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
-    QueryFilter, Set, TryIntoModel,
+    QueryFilter, Set,
 };
 use tracing::{debug, info};
 
-use sqlx;
 
-use chrono::{self, DateTime, Utc};
+use chrono::{self, Utc};
 
 // use crate::db::stripe;
 use crate::{stripe, MdpDatabase, ServerError};
@@ -45,12 +44,12 @@ use entity::users::{self, Entity as User};
 //     }
 // }
 
-use entity::workspaces::{self, Entity as Workspace};
+use entity::workspaces::{self};
 impl MdpDatabase {
     pub async fn create_user(&self, request: CreateUserRequest) -> Result<MdpUser, ServerError> {
         println!("->> create_user");
 
-        let mut ws_id: String;
+        let ws_id: String;
         if request.workspace_id.is_none() {
             let new_workspace = workspaces::ActiveModel {
                 workspace_id: Set(NanoId::from("ws").to_string()),
