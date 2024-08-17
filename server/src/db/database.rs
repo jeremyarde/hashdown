@@ -119,7 +119,7 @@ pub struct Email {
 
 impl Email {
     fn new(email: String) -> Email {
-        return Email { email };
+        Email { email }
     }
 }
 
@@ -218,7 +218,7 @@ pub struct MdpSurvey(pub SurveyModel);
 
 impl MdpSurvey {
     pub fn inner(&self) -> &SurveyModel {
-        return &self.0;
+        &self.0
     }
 }
 
@@ -277,7 +277,7 @@ pub struct MdpUser(pub UserModel);
 
 impl MdpUser {
     pub fn inner(&self) -> &UserModel {
-        return &self.0;
+        &self.0
     }
 }
 
@@ -304,7 +304,7 @@ impl MdpUser {
             stripe_subscription_modified_at: Set(None),
         };
 
-        return MdpUser(user.try_into_model().unwrap());
+        MdpUser(user.try_into_model().unwrap())
 
         // UserModel {
         //     id: None,
@@ -349,7 +349,7 @@ impl MdpDatabase {
 
         info!("Workspace created");
 
-        return Ok(MdpWorkspace(workspace.try_into_model().unwrap()));
+        Ok(MdpWorkspace(workspace.try_into_model().unwrap()))
     }
 
     pub async fn create_answer(
@@ -366,7 +366,7 @@ impl MdpDatabase {
             .map_err(|ex| ServerError::Database(format!("Could not find survey: {ex}")))?;
 
         if survey.is_none() {
-            return Err(ServerError::Database(format!("Could not find survey")));
+            return Err(ServerError::Database("Could not find survey".to_string()));
         }
 
         let answer = entity::responses::ActiveModel {
@@ -408,10 +408,10 @@ impl MdpDatabase {
             .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
 
         if let Some(session) = curr_session {
-            return Ok(MdpSession(session.into()));
+            Ok(MdpSession(session))
         } else {
-            return Err(ServerError::Database(format!("Did not find session")));
-        };
+            Err(ServerError::Database("Did not find session".to_string()))
+        }
     }
 
     pub async fn create_session(&self, user: MdpUser) -> anyhow::Result<MdpSession, ServerError> {
@@ -432,7 +432,7 @@ impl MdpDatabase {
         .await
         .map_err(|err| ServerError::Database(err.to_string()))?;
 
-        return Ok(MdpSession(new_session.try_into_model().unwrap()));
+        Ok(MdpSession(new_session.try_into_model().unwrap()))
     }
 
     pub async fn get_session_by_userid(

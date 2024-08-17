@@ -20,14 +20,14 @@ pub struct EmailIdentity {
 }
 impl EmailIdentity {
     fn to_string(&self) -> String {
-        return format!("{} <{}>", self.display_name, self.email_address);
+        format!("{} <{}>", self.display_name, self.email_address)
     }
 
     pub fn new(display_name: &str, email_address: &str) -> EmailIdentity {
-        return EmailIdentity {
+        EmailIdentity {
             display_name: display_name.to_string(),
             email_address: email_address.to_string(),
-        };
+        }
     }
 }
 

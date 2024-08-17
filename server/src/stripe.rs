@@ -9,7 +9,6 @@ use serde_json::Value;
 
 use sqlx::{self, FromRow};
 
-use chrono::{self};
 
 use crate::{mware::ctext::SessionContext, ServerError, ServerState};
 
@@ -149,7 +148,7 @@ pub async fn create_customer(name: &str, email: &str) -> Result<Value, ServerErr
     //     "test_clock": Null,
     // }
 
-    return Ok(json);
+    Ok(json)
 }
 
 #[cfg(test)]

@@ -71,14 +71,14 @@ pub async fn list_response(
 // #[derive(Debug)]
 // struct BlockIdName(String, String);
 
-fn get_block_details(survey: MdpSurvey) -> () {
+fn get_block_details(survey: MdpSurvey) {
     let block_ids = survey.inner().blocks.as_array().map(|blocks| {
         // println!("jere/ {:#?}", blocks);
-        blocks.into_iter().map(|block| block.as_object())
+        blocks.iter().map(|block| block.as_object())
     });
     println!("jere/ {:#?}", block_ids);
     // return block_ids;
-    return ();
+    
 }
 
 fn combine_survey_with_response(survey: MdpSurvey, response: Value) -> Value {
@@ -92,7 +92,7 @@ fn combine_survey_with_response(survey: MdpSurvey, response: Value) -> Value {
     //         })
     //     });
     //     println!("jere/ blocks: {:#?}", block_ids);
-    return json!({"test": "another"});
+    json!({"test": "another"})
 }
 
 #[cfg(test)]
