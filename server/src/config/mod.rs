@@ -27,10 +27,10 @@ impl EnvConfig {
             Stage::from(dotenvy::var("STAGE").expect("Stage environment variable should be set."));
         let frontend_url = Self::get_frontend_url(&stage);
 
-        return EnvConfig {
+        EnvConfig {
             stage,
             frontend_url,
-        };
+        }
     }
 
     pub fn get_frontend_url(stage: &Stage) -> String {

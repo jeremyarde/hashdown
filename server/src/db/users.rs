@@ -113,8 +113,8 @@ impl MdpDatabase {
         debug!("user: {:#?}", user);
 
         match user {
-            Some(x) => return Ok(Some(MdpUser(x))),
-            None => return Ok(None),
+            Some(x) => Ok(Some(MdpUser(x))),
+            None => Ok(None),
         }
     }
 
@@ -133,9 +133,9 @@ impl MdpDatabase {
             })?;
 
         if let Some(x) = user {
-            return Ok(MdpUser(x));
+            Ok(MdpUser(x))
         } else {
-            return Err(ServerError::Database("Could not find user".to_string()));
+            Err(ServerError::Database("Could not find user".to_string()))
         }
         // info!("Found user");
         // Ok(res)
@@ -155,7 +155,7 @@ impl MdpDatabase {
             .await
             .map_err(|err| ServerError::Database(format!("Could not update User: {err:?}")))?;
 
-        return Ok(MdpUser(res));
+        Ok(MdpUser(res))
     }
 }
 

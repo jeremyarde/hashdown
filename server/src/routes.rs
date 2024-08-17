@@ -47,7 +47,7 @@ pub async fn hello() -> Response {
 
 #[axum::debug_handler]
 async fn serve_folder() -> Response {
-    return Response::new("<div>Hi from my folder funciton</div>".into());
+    Response::new("<div>Hi from my folder funciton</div>".into())
 }
 
 pub fn get_router(state: ServerState) -> anyhow::Result<Router> {

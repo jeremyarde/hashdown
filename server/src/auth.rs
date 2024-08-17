@@ -102,7 +102,7 @@ pub async fn confirm(
         HeaderValue::from_str(session.0.session_id.as_str()).unwrap(),
     );
 
-    return Ok((headers, Json(json!({"user_id": session.0.user_id}))));
+    Ok((headers, Json(json!({"user_id": session.0.user_id}))))
 }
 
 fn verify_confirmation_token(token: &String, user: &MdpUser) -> bool {
@@ -116,7 +116,7 @@ fn verify_confirmation_token(token: &String, user: &MdpUser) -> bool {
         info!("Confirmation token has not expired");
         return true;
     }
-    return false;
+    false
 }
 
 #[derive(Deserialize, Debug, Serialize)]
@@ -252,24 +252,21 @@ pub async fn login(
 
     // look for active session for userid
     let session = state.db.get_session_by_userid(usermodel.clone()).await?;
-    match session {
-        Some(x) => {
-            info!("Found active session, deleting it");
-            // delete old session
-            x.0.delete(&state.db.pool)
-                .await
-                .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
-        }
-        None => {}
+    if let Some(x) = session {
+        info!("Found active session, deleting it");
+        // delete old session
+        x.0.delete(&state.db.pool)
+            .await
+            .map_err(|err| ServerError::Database(format!("Did not find session: {err}")))?;
     }
 
     let session = state.db.create_session(usermodel).await?;
     let headers = create_session_headers(&session);
-    return Ok((
+    Ok((
         // cookies,
         headers,
         Json(json!({"email": username, "session_id": session.0.session_id.to_string()})),
-    ));
+    ))
 }
 
 async fn generate_magic_link(_state: &ServerState, _ctext: SessionContext) -> String {
