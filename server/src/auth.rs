@@ -3,7 +3,7 @@ use std::ops::Add;
 use argon2::{PasswordHash, PasswordHasher};
 
 use axum::{
-    extract::{Path, Query},
+    extract::Query,
     http::{header::SET_COOKIE, HeaderMap, HeaderValue},
 };
 
@@ -17,20 +17,17 @@ use axum::{
 };
 use axum::{Extension, Json};
 use axum_extra::extract::cookie::Cookie;
-use chrono::{format::OffsetFormat, offset, Days, Duration, FixedOffset, Utc};
-use entity::{
-    sessions::Column,
-    users::{self, Model},
-};
+use chrono::{Duration, Utc};
+use entity::users::{self};
 use markdownparser::nanoid_gen;
 use sea_orm::{
-    prelude::DateTimeUtc, ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
+    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
     QueryFilter, Set, TransactionTrait, TryIntoModel,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::types::time::OffsetDateTime;
-use tracing::{debug, log::info};
+use tracing::log::info;
 
 use crate::db::database::CreateUserRequest;
 use crate::db::database::{MdpSession, MdpUser};
@@ -209,7 +206,6 @@ pub async fn logout(
 
     Ok(Json(json!("logout success")))
 }
-use entity::sessions::Entity as Session;
 use entity::users::Entity as User;
 
 #[axum::debug_handler]
@@ -231,7 +227,7 @@ pub async fn login(
     }
 
     // look for user in database
-    let mut user = User::find()
+    let user = User::find()
         .filter(users::Column::Email.eq(payload.email.clone()))
         .one(&state.db.pool)
         .await

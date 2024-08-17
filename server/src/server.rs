@@ -4,10 +4,8 @@ use db::database::MdpDatabase;
 
 // use hyper::Server;
 // use hyper::Server;
-use markdownparser::{nanoid_gen, ParsedSurvey, Survey};
+use markdownparser::{nanoid_gen, Survey};
 
-use serde_json::{json, Value};
-use sqlx::FromRow;
 use tokio::task::JoinHandle;
 
 // use tower_sessions::PostgresStore;
@@ -15,7 +13,7 @@ use tracing::log::info;
 
 use crate::{
     config::EnvConfig,
-    db::{self, database::ConnectionDetails},
+    db::{self},
     mail::mailer::Mailer,
     routes::get_router,
     ServerState,

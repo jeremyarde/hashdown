@@ -1,17 +1,16 @@
 use axum::{extract::State, Extension, Json};
 
 use crate::{
-    mware::ctext::SessionContext, routes::ListSurveyResponse,
+    mware::ctext::SessionContext,
     survey_responses::SubmitResponseRequest, ServerState,
 };
 
-use axum::extract::{self, Query};
+use axum::extract::{self};
 
-use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::{debug, info};
 
-use crate::{db::database::AnswerModel, ServerError};
+use crate::ServerError;
 
 #[tracing::instrument]
 #[axum::debug_handler]

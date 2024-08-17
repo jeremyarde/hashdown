@@ -1,17 +1,14 @@
 use axum::{
     http::Method,
     middleware,
-    response::{IntoResponse, Response},
+    response::Response,
     routing::{get, post},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use tower_http::{
-    cors::CorsLayer,
-    services::{ServeDir, ServeFile},
-};
+use tower_http::cors::CorsLayer;
 use tracing::info;
 
 use crate::{
@@ -23,7 +20,7 @@ use crate::{
     },
     error::main_response_mapper,
     stripe, survey_responses,
-    webhook::{self, echo},
+    webhook::{self},
     ServerError, ServerState,
 };
 

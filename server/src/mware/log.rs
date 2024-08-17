@@ -3,12 +3,10 @@ use std::time::UNIX_EPOCH;
 
 use axum::http::Method;
 use axum::http::Uri;
-use axum::Extension;
 use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
 use serde_with::skip_serializing_none;
-use tracing::info;
 use uuid::Uuid;
 
 use crate::{error::ClientError, mware::ctext::SessionContext, ServerError};

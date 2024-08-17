@@ -1,6 +1,5 @@
-use argon2::password_hash::rand_core::block;
 use axum::{
-    extract::{self, Query, State},
+    extract::{Query, State},
     Extension, Json,
 };
 
@@ -10,7 +9,7 @@ use serde_json::{json, Value};
 use tracing::{debug, info};
 
 use crate::{
-    db::database::{AnswerModel, MdpSurvey},
+    db::database::MdpSurvey,
     mware::ctext::SessionContext,
     ServerError, ServerState,
 };
