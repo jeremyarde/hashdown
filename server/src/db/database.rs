@@ -6,10 +6,12 @@ use chrono::{DateTime, Duration, Utc};
 use markdownparser::NanoId;
 
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, Database, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, Set, TryIntoModel,
+    ActiveModelTrait, ColumnTrait, Database, DatabaseConnection, EntityTrait, IntoActiveModel,
+    QueryFilter, Set, TryIntoModel,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use sqlx::database;
 // use sqlx::{
 //     postgres::{PgPoolOptions, PgQueryResult, PgTypeInfo},
 //     Decode, Encode, FromRow, PgPool, Postgres, Type,
@@ -20,7 +22,6 @@ use crate::{
     constants::SessionState, mware::ctext::SessionContext, survey_responses::SubmitResponseRequest,
     ServerError,
 };
-
 
 use entity::{
     sessions::{self, Entity as Session, Model as SessionModel},
@@ -74,13 +75,13 @@ struct UpdateSurveyRequest {
 // }
 
 impl MdpDatabase {
-    pub async fn new() -> anyhow::Result<Self> {
-        let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
+    pub async fn new(database_url: String) -> anyhow::Result<Self> {
+        // let uri = dotenvy::var("DATABASE_URL").expect("Could not get connection string from env");
         // let db_url = ConnectionDetails(uri.clone());
 
         info!("Finished running migrations");
 
-        let db: DatabaseConnection = Database::connect(uri).await?;
+        let db: DatabaseConnection = Database::connect(database_url).await?;
 
         Migrator::up(&db, None).await?;
 
@@ -302,6 +303,7 @@ impl MdpUser {
             stripe_customer_id: Set(None),
             stripe_subscription_id: Set(None),
             stripe_subscription_modified_at: Set(None),
+            stripe_subscription_price_id: Set(None),
         };
 
         MdpUser(user.try_into_model().unwrap())
@@ -472,11 +474,14 @@ impl MdpDatabase {
 
 #[cfg(test)]
 mod tests {
+    use sqlx::database;
+
     use super::MdpDatabase;
 
     #[tokio::test]
     async fn test_get_session() {
-        let db = MdpDatabase::new().await.unwrap();
+        let database_url = dotenvy::var("DATABASE_URL").expect("Database url not set");
+        let db = MdpDatabase::new(database_url).await.unwrap();
 
         let session = db
             .get_session("ut46xsy1wm6v91qcf9ew4ijzcdgbq14z".to_string())

@@ -25,12 +25,14 @@ CREATE table mdp.users (
     email_confirmed_at TIMESTAMP with time zone,
     confirmation_token TEXT,
     confirmation_token_expire_at TIMESTAMP WITH TIME ZONE,
+
     role TEXT,
 
     -- stripe related stuff
     stripe_customer_id TEXT unique,
     stripe_subscription_id TEXT,
     stripe_subscription_modified_at TIMESTAMP WITH TIME ZONE,
+    stripe_subscription_price_id TEXT,
     -- stripe_subscription_id
 
     -- primary key (user_id),

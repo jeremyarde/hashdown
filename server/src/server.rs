@@ -12,7 +12,7 @@ use tokio::task::JoinHandle;
 use tracing::log::info;
 
 use crate::{
-    config::EnvConfig,
+    config::{self, EnvConfig},
     db::{self},
     mail::mailer::Mailer,
     routes::get_router,
@@ -28,20 +28,20 @@ pub struct ServerApplication {
 }
 
 impl ServerApplication {
-    pub async fn get_router() -> Router {
-        let db = MdpDatabase::new()
+    pub async fn get_router(config: &EnvConfig) -> Router {
+        let db = MdpDatabase::new(config.database_url.clone())
             .await
             .expect("Error connecting to database");
         let state = ServerState {
             db,
-            mail: Mailer::new(),
-            config: EnvConfig::new(),
+            mail: Mailer::new(config.smtp_username.clone(), config.smtp_password.clone()),
+            config: config.to_owned(),
         };
 
         get_router(state).unwrap()
     }
 
-    pub async fn new() -> ServerApplication {
+    pub async fn new(config: EnvConfig) -> ServerApplication {
         info!("Spinning up the server.");
 
         // const V1: &str = "v1";
@@ -54,7 +54,7 @@ impl ServerApplication {
         //     )
         //     .with(tracing_subscriber::fmt::layer());
 
-        let app = ServerApplication::get_router().await;
+        let app = ServerApplication::get_router(&config).await;
 
         // let app = configure_app().await;
         let addr =

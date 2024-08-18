@@ -2,6 +2,7 @@ import { FEATURES, SESSION_TOKEN_KEY, STAGE } from "../../lib/constants";
 import { Link, useNavigate } from "react-router-dom";
 import { Toaster } from "../ui/toaster";
 import {
+  getBaseUrl,
   getSessionToken,
   getStage,
   isDev,
@@ -81,6 +82,38 @@ export function Navbar() {
           </div>
         )}
         <div className="flex flex-row items-center">
+          <div
+            className="p-1 pl-3 pr-3"
+            style={{ borderRadius: `${outerRadius}px` }}
+          >
+            <div
+              className="flex border border-solid"
+              style={{
+                borderRadius: `${outerRadius}px`,
+                padding: `${distance}px`,
+                backgroundColor: "#ffed66ff",
+              }}
+            >
+              <div
+                className="p-1 pl-3 pr-3"
+                style={{ borderRadius: `${outerRadius}px` }}
+              >
+                <Link className="p-1" style={{ color: "black" }} to="/pricing">
+                  Pricing
+                </Link>
+                <div className="p-1" style={{ color: "black" }}>
+                  <form
+                    action={`${getBaseUrl()}/create-checkout-session`}
+                    method="POST"
+                  >
+                    <button className="w-full rounded-md bg-pink" type="submit">
+                      Checkout
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
           {!getSessionToken() && (
             <>
               <div

@@ -32,7 +32,7 @@ impl EmailIdentity {
 }
 
 impl Mailer {
-    pub fn new() -> Self {
+    pub fn new(smpt_username: String, smpt_password: String) -> Self {
         use lettre::transport::smtp::authentication::Credentials;
 
         let from_email: &str = "Test FROM <test@jeremyarde.com>";
@@ -49,8 +49,10 @@ impl Mailer {
         //     .unwrap();
 
         let creds = Credentials::new(
-            dotenvy::var("SMTP_USERNAME").expect("smtp username should be set"),
-            dotenvy::var("SMTP_PASSWORD").expect("smtp password should be set"),
+            // dotenvy::var("SMTP_USERNAME").expect("smtp username should be set"),
+            // dotenvy::var("SMTP_PASSWORD").expect("smtp password should be set"),
+            smpt_username,
+            smpt_password,
         );
 
         // Open a remote connection to gmail
@@ -83,13 +85,18 @@ impl Mailer {
 
 #[cfg(test)]
 mod tests {
+    use lettre::transport::smtp;
+
     use crate::constants::LOGIN_EMAIL_SENDER;
 
     use super::Mailer;
 
     #[test]
     fn test_email_send() {
-        let mailer = Mailer::new();
+        let smtp_username = dotenvy::var("SMTP_USERNAME").expect("SMTP username not set");
+        let smtp_password = dotenvy::var("SMTP_PASSWORD").expect("SMTP password not set");
+
+        let mailer = Mailer::new(smtp_username, smtp_password);
         mailer.send(
             super::EmailIdentity::new("test", "test@jeremyarde.com"),
             super::EmailIdentity::new("Email confirmation", LOGIN_EMAIL_SENDER),

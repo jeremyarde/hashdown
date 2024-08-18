@@ -7,124 +7,150 @@ import { getBaseUrl, handleResponse, setSessionToken } from "../../lib/utils";
 import { useLogin } from "../../hooks/useLogin";
 
 /**
-* v0 by Vercel.
-* @see https://v0.dev/t/XNlTLb7
-*/
+ * v0 by Vercel.
+ * @see https://v0.dev/t/XNlTLb7
+ */
 
 enum ComponentState {
-    Loading,
-    Error,
-    Idle,
+  Loading,
+  Error,
+  Idle,
 }
 
 export function Login() {
-    const [email, setemail] = useState('');
-    const [password, setPassword] = useState('');
-    // const { result, isPending, error } = useLogin(undefined, undefined);
-    // const { result, isPending, error } = {};
+  const [email, setemail] = useState("");
+  const [password, setPassword] = useState("");
+  // const { result, isPending, error } = useLogin(undefined, undefined);
+  // const { result, isPending, error } = {};
 
-    const [result, setResult] = useState('');
-    const [isPending, setIsPending] = useState(false);
-    const [error, setError] = useState('');
+  const [result, setResult] = useState("");
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState("");
 
-    const [disabled, setDisabled] = useState(false);
-    // const [loggedIn, setLoggedIn] = useState(false);
-    // const [loginError, setLoginError] = useState('');
-    // const [isLoading, setIsLoading] = useState(false);
-    // const [componentState, setComponentState] = useState(ComponentState.Idle);
+  const [disabled, setDisabled] = useState(false);
+  // const [loggedIn, setLoggedIn] = useState(false);
+  // const [loginError, setLoginError] = useState('');
+  // const [isLoading, setIsLoading] = useState(false);
+  // const [componentState, setComponentState] = useState(ComponentState.Idle);
 
-    // Reset the login button when the user has updated either of the fields
-    const resetState = (event: ChangeEvent) => {
-        if (!isPending) {
-            setDisabled(false);
-        }
-    };
+  // Reset the login button when the user has updated either of the fields
+  const resetState = (event: ChangeEvent) => {
+    if (!isPending) {
+      setDisabled(false);
+    }
+  };
 
-    const sendLogin = async (evt: any) => {
-        evt.preventDefault();
-        // useLogin(email, password)
-        if (!email && !password) {
-            return;
-        }
-
-        setIsPending(true);
-        try {
-            const response = await fetch(`${getBaseUrl()}/auth/login`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    // "session_id": getSessionToken()
-                },
-                body: JSON.stringify({ email: email, password })
-            });
-            console.log(`response from API: ${JSON.stringify(response)}`)
-            handleResponse(response);
-
-            if (response.status === 401) {
-                setError('Not authorized');
-                return
-            }
-            if (response.status === 400) {
-                setError('Could not find account');
-                return
-            }
-            const data = await response.json();
-            setSessionToken(response);
-            setIsPending(false);
-            setResult(data);
-            setError('');
-        } catch (error) {
-            setIsPending(false);
-            setError(`Could not fetch data: ${error}`);
-        }
+  const sendLogin = async (evt: any) => {
+    evt.preventDefault();
+    // useLogin(email, password)
+    if (!email && !password) {
+      return;
     }
 
-    return (
-        <>
-            {result && <Navigate to={"/editor"} />}
-            {!result &&
-                <div className="min-h-screen flex items-center justify-center w-240" >
-                    <div className="max-w-sm rounded-lg shadow-lg bg-white p-6 space-y-6 border border-gray-200 dark:border-gray-700" >
-                        <h1 className="text-3xl font-bold space-y-2" >
-                            Login
-                        </h1>
-                        <div className="space-y-4 text-left" >
-                            <form onSubmit={sendLogin}>
-                                <Label className="" htmlFor="email" > Email </Label>
-                                <Input id="email" placeholder="m@example.com" required type="email" onChange={e => { setemail(e.target.value); resetState(e) }}
-                                    className="invalid:border-pink-500 invalid:text-pink-600" />
-                                <Label className="" htmlFor="password" > Password </Label>
-                                <Input id="password" required type="password" onChange={e => { setPassword(e.target.value);; resetState(e) }} />
-                                <div className="p-4">
-                                    {isPending &&
-                                        <div className="bg-gray-200 w-full flex justify-center items-center">
-                                            <div className="flex  w-full items-center justify-center bg-gray-200">
-                                                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 animate-spin">
-                                                    <div className="h-9 w-9 rounded-full bg-gray-600"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                    {error && (
-                                        <div>
-                                            <div>Problem logging in: {error}</div>
-                                            {/* {error} */}
-                                        </div>
-                                    )}
-                                </div>
-                                <Button disabled={disabled} className="border shadow-md p-2 w-full hover:bg-slate-400 hover:bg-green disabled:opacity-50" type="submit" >
-                                    Login
-                                </Button>
-                                <div className="text-center p-1">{"No account? "}
-                                    <Link className="underline" to="/signup">
-                                        Signup here
-                                    </Link>
-                                </div>
-                            </form>
+    setIsPending(true);
+    try {
+      const response = await fetch(`${getBaseUrl()}/v1/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // "session_id": getSessionToken()
+        },
+        body: JSON.stringify({ email: email, password }),
+      });
+      console.log(`response from API: ${JSON.stringify(response)}`);
+      handleResponse(response);
+
+      if (response.status === 401) {
+        setError("Not authorized");
+        return;
+      }
+      if (response.status === 400) {
+        setError("Could not find account");
+        return;
+      }
+      const data = await response.json();
+      setSessionToken(response);
+      setIsPending(false);
+      setResult(data);
+      setError("");
+    } catch (error) {
+      setIsPending(false);
+      setError(`Could not fetch data: ${error}`);
+    }
+  };
+
+  return (
+    <>
+      {result && <Navigate to={"/editor"} />}
+      {!result && (
+        <div className="min-h-screen flex items-center justify-center w-240">
+          <div className="max-w-sm rounded-lg shadow-lg bg-white p-6 space-y-6 border border-gray-200 dark:border-gray-700">
+            <h1 className="text-3xl font-bold space-y-2">Login</h1>
+            <div className="space-y-4 text-left">
+              <form onSubmit={sendLogin}>
+                <Label className="" htmlFor="email">
+                  {" "}
+                  Email{" "}
+                </Label>
+                <Input
+                  id="email"
+                  placeholder="m@example.com"
+                  required
+                  type="email"
+                  onChange={(e) => {
+                    setemail(e.target.value);
+                    resetState(e);
+                  }}
+                  className="invalid:border-pink-500 invalid:text-pink-600"
+                />
+                <Label className="" htmlFor="password">
+                  {" "}
+                  Password{" "}
+                </Label>
+                <Input
+                  id="password"
+                  required
+                  type="password"
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    resetState(e);
+                  }}
+                />
+                <div className="p-4">
+                  {isPending && (
+                    <div className="bg-gray-200 w-full flex justify-center items-center">
+                      <div className="flex  w-full items-center justify-center bg-gray-200">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 animate-spin">
+                          <div className="h-9 w-9 rounded-full bg-gray-600"></div>
                         </div>
+                      </div>
                     </div>
-                </div >
-            }
-        </>
-    )
-} 
+                  )}
+                  {error && (
+                    <div>
+                      <div>Problem logging in: {error}</div>
+                      {/* {error} */}
+                    </div>
+                  )}
+                </div>
+                <Button
+                  disabled={disabled}
+                  className="border shadow-md p-2 w-full hover:bg-slate-400 hover:bg-green disabled:opacity-50"
+                  type="submit"
+                >
+                  Login
+                </Button>
+                <div className="text-center p-1">
+                  {"No account? "}
+                  <Link className="underline" to="/signup">
+                    Signup here
+                  </Link>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
