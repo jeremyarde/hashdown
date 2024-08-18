@@ -1,29 +1,29 @@
 import { getStage } from "./utils";
 
 export enum STAGE {
-    DEV = 'development',
-    PROD = 'production',
-};
+  DEV = "development",
+  PROD = "production",
+}
 
 export const BASE_URL: { [stage: string]: string } = {
-    [STAGE.DEV]: 'http://localhost:8080/v1',
-    // [STAGE.PROD]: 'https://mdp-api.onrender.com/v1',
-    [STAGE.PROD]: 'https://api.gethashdown.com/v1',
+  [STAGE.DEV]: "http://localhost:8080",
+  // [STAGE.PROD]: 'https://mdp-api.onrender.com/v1',
+  [STAGE.PROD]: "https://api.gethashdown.com",
 };
 
 export enum FEATURES {
-    WAITLIST,
-    LOGIN,
-    TESTTABS,
-    CHECKOUT
-};
+  WAITLIST,
+  LOGIN,
+  TESTTABS,
+  CHECKOUT,
+}
 
 export const EnabledFeatures: { [stage: string]: FEATURES[] } = {
-    [STAGE.DEV]: [FEATURES.LOGIN, FEATURES.TESTTABS, FEATURES.CHECKOUT],
-    [STAGE.PROD]: [FEATURES.LOGIN]
+  [STAGE.DEV]: [FEATURES.LOGIN, FEATURES.TESTTABS, FEATURES.CHECKOUT],
+  [STAGE.PROD]: [FEATURES.LOGIN],
 };
 
-export const SESSION_TOKEN_KEY = 'session_id';
+export const SESSION_TOKEN_KEY = "session_id";
 
 export const MARKDOWN_RULES = `# Titles have a '#' at the start
 
@@ -73,37 +73,36 @@ submit: This button sends the response. What you type here will be on the button
 // }
 
 export interface Root {
-    blocks: Block[]
-    id: string
-    parse_version: string
-    plaintext: string
-    questions: any[]
-    title: string
+  blocks: Block[];
+  id: string;
+  parse_version: string;
+  plaintext: string;
+  questions: any[];
+  title: string;
 }
 
 export interface Block {
-    block_type: string
-    id: string
-    index: number
-    properties: Properties
+  block_type: string;
+  id: string;
+  index: number;
+  properties: Properties;
 }
 
 export interface Properties {
-    title?: string
-    type: string
-    default?: string
-    id?: string
-    question?: string
-    options?: any[]
-    button?: string
+  title?: string;
+  type: string;
+  default?: string;
+  id?: string;
+  question?: string;
+  options?: any[];
+  button?: string;
 }
-
 
 export const styleTokens = {
-    /* CSS HSL */
-    blue: 'hsla(229, 22%, 29%, 1)',
-    pink: 'hsla(26, 80%, 88%, 1)',
-    powderBlue: 'hsla(218, 50%, 73%, 1)',
-    melon: 'hsla(10, 61%, 78%, 1)',
-    umber: 'hsla(20, 21%, 34%, 1)',
-}
+  /* CSS HSL */
+  blue: "hsla(229, 22%, 29%, 1)",
+  pink: "hsla(26, 80%, 88%, 1)",
+  powderBlue: "hsla(218, 50%, 73%, 1)",
+  melon: "hsla(10, 61%, 78%, 1)",
+  umber: "hsla(20, 21%, 34%, 1)",
+};

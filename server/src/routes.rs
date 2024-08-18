@@ -63,8 +63,9 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         .route("/v1/submit", post(submit_response))
         .route("/v1/auth/confirm", get(auth::confirm))
         // .route("/v1/payment/success", post(payments::echo))
-        .route("/v1/webhook", post(webhook::echo))
+        .route("/v1/webhook", post(webhook::handle_stripe_webhook))
         .route("/v1/health", get(ping))
+        .route("/create-checkout-session", post(stripe::checkout_session))
         .route("/v1/surveys/:id", get(get_survey).post(submit_survey));
 
     let auth_routes = Router::new()
@@ -72,7 +73,6 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         .route("/v1/surveys", post(create_survey).get(list_survey))
         .route("/v1/responses", get(survey_responses::list_response))
         // stripe related
-        .route("/create-checkout-session", post(stripe::checkout_session))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             validate_session_middleware,

@@ -5,7 +5,6 @@ use sea_orm::{
 };
 use tracing::{debug, info};
 
-
 use chrono::{self, Utc};
 
 // use crate::db::stripe;
@@ -172,7 +171,8 @@ mod tests {
             workspace_id: Some("ws_test".to_string()),
         };
 
-        let db = MdpDatabase::new().await.unwrap();
+        let database_url = dotenvy::var("DATABASE_URL").unwrap();
+        let db = MdpDatabase::new(database_url).await.unwrap();
         let user = db.create_user(create_user_request).await.unwrap();
 
         println!("success: {user:?}")
@@ -187,7 +187,8 @@ mod tests {
             workspace_id: Some("ws_test".to_string()),
         };
 
-        let db = MdpDatabase::new().await.unwrap();
+        let database_url = dotenvy::var("DATABASE_URL").unwrap();
+        let db = MdpDatabase::new(database_url).await.unwrap();
         let user = db.create_user(create_user_request).await.unwrap();
 
         let updated_user = db.verify_user(user.clone()).await.unwrap();

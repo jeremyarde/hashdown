@@ -1,11 +1,11 @@
-
+use argon2::password_hash::rand_core::impls;
 use axum::{extract::State, Json};
 use chrono::Utc;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, Set};
-use serde_json::Value;
+use serde_json::{json, Value};
 use tracing::info;
 
-use crate::{ServerError, ServerState};
+use crate::{db::database::CreateUserRequest, ServerError, ServerState};
 
 #[derive(PartialEq, PartialOrd)]
 enum StripeEvent {
@@ -25,9 +25,6 @@ enum StripeEvent {
     PaymentIntentSuccess,
     ChargeDisputeCreated,
 }
-
-// what should I do in response to a stripe event
-enum StripeAction {}
 
 // fn map_stripe_event_to_enum(event: &str) -> StripeEvent {
 //     return match &event {
@@ -54,18 +51,122 @@ enum StripeAction {}
 use entity::users::Entity as User;
 
 #[axum::debug_handler]
-pub async fn echo(State(state): State<ServerState>, payload: Json<Value>) {
-    info!("->> payments/echo");
+pub async fn handle_stripe_webhook(
+    State(state): State<ServerState>,
+    payload: Json<Value>,
+) -> anyhow::Result<Json<Value>, ServerError> {
+    info!("->> payments/handle_stripe_webhook");
     info!("payload: {:#?}", payload);
     let event_type = payload["type"].as_str().unwrap();
 
     // let event_enum = map_stripe_event_to_enum(payload.get("type").unwrap().as_str().unwrap());
 
     match event_type {
-        "stripe.checkout.session.async_payment_succeeded" => {}
-        "checkout.session.completed" => {}
-        "checkout.session.expired" => {}
-        "customer.source.expiring" => {}
+        // "stripe.checkout.session.async_payment_succeeded" => {}
+        "checkout.session.completed" => {
+            // successful payment
+            info!("Stripe subscription successful, setting up subscription");
+            let checkout_session_id: &str = payload["data"]["object"]["id"].as_str().unwrap();
+
+            // get the checkout session
+            // let secret_key = dotenvy::var("STRIPE_SECRETKEY").unwrap();
+            let secret_key = state.config.stripe_secret_key.clone();
+            // ```
+            // curl https://api.stripe.com/v1/checkout/sessions/cs_test_a11YYufWQzNY63zpQ6QSNRQhkUpVph4WRmzW0zWJO2znZKdVujZ0N0S22u \
+            //   -u "sk_test_51Hsx1SH1WJxpjVSWJXVaItV1vKonbcvxROMr1uluUz80z31f0vUzKN9xxG6HUd7r3pmcl9t5rwubgPeDm7y6vWql007HSWYOYx:"
+            // ```
+
+            // let session_id = "cs_test_a17ltYjf9B9OcUkXY7rNLyEhZpXs2Mum3u3NeLBbe2rSXBsFvSvdU7neRV";
+            let params = [("expand[]", "line_items")];
+            let encoded = serde_urlencoded::to_string(params).unwrap();
+
+            let client = reqwest::Client::new();
+
+            // Make the POST request to the Stripe API
+            let response = client
+                .post(format!(
+                    "https://api.stripe.com/v1/checkout/sessions/{}",
+                    checkout_session_id
+                ))
+                .header(
+                    reqwest::header::AUTHORIZATION,
+                    format!("Bearer {}", secret_key),
+                )
+                .header(
+                    reqwest::header::CONTENT_TYPE,
+                    "application/x-www-form-urlencoded",
+                )
+                .body(encoded)
+                .send()
+                .await
+                .unwrap();
+
+            // Check if the request was successful
+            if !response.status().is_success() {
+                return Err(ServerError::Stripe(
+                    "Could not complete checkout session for product purchased verification"
+                        .to_string(),
+                ));
+            }
+
+            // this is the stripe checkout session: https://docs.stripe.com/api/checkout/sessions/object?lang=curl
+            let json_session: Value = response.json().await.unwrap();
+            let customer_id = json_session["customer"].to_string();
+
+            let customer_json = get_stripe_customer(&customer_id).await;
+            let price_id = json_session["line_items"]["data"][0]["price"]["id"].to_string();
+
+            let customer_email = customer_json["email"].to_string();
+            if customer_email.is_empty() {
+                info!("handle_stripe_webhook: customer email is empty");
+                return Err(ServerError::Stripe("Customer was not found".to_string()));
+            }
+            // look for user in our database
+            let mut user = User::find()
+                .filter(entity::users::Column::Email.eq(customer_email))
+                .one(&state.db.pool)
+                .await
+                .map_err(|err| ServerError::Database(err.to_string()))
+                .unwrap();
+
+            if user.is_none() {
+                info!("handle_stripe_webhook: user not found in database: {customer_json} - this should not be possible...");
+                // state
+                //     .db
+                //     .create_user(CreateUserRequest {
+                //         name: customer_json["name"].clone(),
+                //         email: customer_json["email"].clone(),
+                //         // password_hash: todo!(),
+                //         // workspace_id: todo!(),
+                //     })
+                //     .await;
+            }
+
+            let mut user = user.unwrap().into_active_model();
+            // user.stripe_subscription_id = Set(Some()); // TODO: this might need to be set
+            user.stripe_subscription_price_id = Set(Some(price_id));
+
+            return Ok(Json(json!("NOT IMPLEMENTED")));
+
+            // let customer_id: &str = payload["data"]["object"]["id"].as_str().unwrap();
+            // let mut user = User::find()
+            //     .filter(entity::users::Column::StripeCustomerId.eq(customer_id))
+            //     .one(&state.db.pool)
+            //     .await
+            //     .map_err(|err| ServerError::Database(err.to_string()))
+            //     .unwrap()
+            //     .unwrap()
+            //     .into_active_model();
+
+            // user.stripe_subscription_id = Set(Some(stripe_id.to_string()));
+            // user.stripe_subscription_modified_at = Set(Some(Utc::now().fixed_offset()));
+            // let res = user
+            //     .save(&state.db.pool)
+            //     .await
+            //     .map_err(|err| ServerError::Database(err.to_string()));
+        }
+        // "checkout.session.expired" => {}
+        // "customer.source.expiring" => {}
         "customer.subscription.deleted" => {
             let stripe_customer = payload["data"]["object"]["customer"].as_str().unwrap();
             let mut user = User::find()
@@ -83,18 +184,22 @@ pub async fn echo(State(state): State<ServerState>, payload: Json<Value>) {
                 .save(&state.db.pool)
                 .await
                 .map_err(|err| ServerError::Database(err.to_string()));
+
+            return Ok(Json(json!("NOT IMPLEMENTED")));
         }
-        "customer.subscription.updated" => {}
-        "customer.subscription.created" => {}
-        "radar.early_fraud_warning.created" => {}
-        "invoice.payment_action_required" => {}
-        "customer.subscription.trial_will_end" => {}
-        "invoice.payment_failed" => {}
-        "invoice.paid" => {}
-        "setup_intent.succeeded" => {}
-        "payment_intent.succeeded" => {}
-        "charge.dispute.created" => {}
-        _ => {}
+        // "customer.subscription.updated" => {}
+        // "customer.subscription.created" => {}
+        // "radar.early_fraud_warning.created" => {}
+        // "invoice.payment_action_required" => {}
+        // "customer.subscription.trial_will_end" => {}
+        // "invoice.payment_failed" => {}
+        // "invoice.paid" => {}
+        // "setup_intent.succeeded" => {}
+        // "payment_intent.succeeded" => {}
+        // "charge.dispute.created" => {}
+        _ => {
+            return Err(ServerError::Stripe("Unhandled event".to_string()));
+        }
     }
 
     // match event_enum {
@@ -146,3 +251,32 @@ async fn handle_subscription_success(state: ServerState, payload: &Value) {
 // invoice.payment_action_required
 // customer.subscription.trial_will_end
 // invoice.payment_failed
+
+async fn get_stripe_customer(customer_id: &str) -> Value {
+    let secret_key = dotenvy::var("STRIPE_SECRETKEY").unwrap();
+    let customer_id = "cus_QgJkE2C3r5oQdc";
+
+    // Construct the reqwest client
+    let client = reqwest::Client::new();
+
+    let response = client
+        .post(format!(
+            "https://api.stripe.com/v1/customers/{}",
+            customer_id
+        ))
+        .header(
+            reqwest::header::AUTHORIZATION,
+            format!("Bearer {}", secret_key),
+        )
+        .header(
+            reqwest::header::CONTENT_TYPE,
+            "application/x-www-form-urlencoded",
+        )
+        // .body(encoded)
+        .send()
+        .await
+        .unwrap();
+
+    let json: Value = response.json().await.unwrap();
+    return json;
+}

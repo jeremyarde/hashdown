@@ -1,14 +1,17 @@
 use axum::{
     extract::State,
+    http::{response, status},
     response::Redirect,
-    Extension, Json,
+    Extension, Form, Json,
 };
+use reqwest::redirect;
 use sea_orm::ActiveModelBehavior;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use sqlx::{self, FromRow};
-
+use tracing::info;
+use tracing_subscriber::filter::FromEnvError;
 
 use crate::{mware::ctext::SessionContext, ServerError, ServerState};
 
@@ -35,14 +38,88 @@ use entity::stripe_events::Model as StripeEventModel;
 
 pub struct MdpStripeEvent(pub StripeEventModel);
 
+async fn create_checkout_session(
+    price_id: &str,
+    frontend_success_url: &str,
+    frontend_cancel_url: &str,
+) -> Result<Value, ServerError> {
+    let secret_key = dotenvy::var("STRIPE_SECRETKEY").unwrap();
+
+    // Construct the request body parameters
+    // let mut params = HashMap::new();
+
+    let params = [
+        ("success_url", frontend_success_url),
+        ("cancel_url", frontend_cancel_url),
+        ("line_items[0][price]", price_id),
+        ("line_items[0][quantity]", "1"),
+        ("mode", "subscription"),
+    ];
+
+    let encoded = serde_urlencoded::to_string(params).unwrap();
+
+    // Construct the reqwest client
+    let client = reqwest::Client::new();
+
+    // Make the POST request to the Stripe API
+    let response = client
+        .post("https://api.stripe.com/v1/checkout/sessions")
+        .header(
+            reqwest::header::AUTHORIZATION,
+            format!("Bearer {}", secret_key),
+        )
+        .header(
+            reqwest::header::CONTENT_TYPE,
+            "application/x-www-form-urlencoded",
+        )
+        .body(encoded)
+        .send()
+        .await
+        .unwrap();
+
+    // Check if the request was successful
+    if response.status().is_success() {
+        let json: Value = response.json().await.unwrap();
+
+        println!("Response: {:#?}", json);
+        return Ok(json);
+    } else {
+        // If not successful, print the error status code and message
+        let status = response.status();
+        let response_text = response.text().await.unwrap();
+        info!("Error: {} - {}", status, response_text);
+        return Err(ServerError::Stripe(format!(
+            "Issue creating new checkout session: {}",
+            response_text
+        )));
+    }
+}
+
 #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn checkout_session(
     state: State<ServerState>,
-    Extension(ctx): Extension<SessionContext>,
-    payload: Json<Value>,
-) -> Result<String, ServerError> {
-    return Ok(String::from("done"));
+    // Extension(ctx): Extension<SessionContext>, // need to pay to login?
+    // payload: Json<Value>,
+    Form(input): Form<Value>,
+) -> Redirect {
+    let price_id = "price_1PowrGH1WJxpjVSWQ48Fz7Vn".to_string();
+
+    let form_input_obj = input.as_object().unwrap();
+    let success_url = form_input_obj.get("success_url").unwrap().as_str().unwrap();
+    let cancel_url = form_input_obj.get("cancel_url").unwrap().as_str().unwrap();
+
+    let checkout_session =
+        match create_checkout_session(price_id.as_str(), success_url, cancel_url).await {
+            Ok(x) => x,
+            Err(err) => {
+                info!("Error creating checkout session: {err}");
+                return Redirect::to(&state.config.frontend_url);
+            }
+        };
+
+    let redirect_url = checkout_session.get("url").unwrap().as_str().unwrap();
+    return Redirect::to(redirect_url);
 }
 
 #[tracing::instrument]
@@ -89,7 +166,7 @@ pub async fn list_survey(
 // }
 
 pub async fn create_customer(name: &str, email: &str) -> Result<Value, ServerError> {
-    let secret_key = dotenvy::var("TEST_STRIPE_SECRETKEY").unwrap();
+    let secret_key = dotenvy::var("STRIPE_SECRETKEY").unwrap();
 
     let newcust = StripeCustomer {
         name: name.to_string(),

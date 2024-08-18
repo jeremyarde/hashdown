@@ -54,8 +54,8 @@ async fn main() -> anyhow::Result<()> {
     // println!("Loading environment variables from file");
     // dotenvy::dotenv()?;
     // dotenvy::from_filename("./server/.env")?;
-
-    let server_app = ServerApplication::new().await;
+    let config = EnvConfig::new();
+    let server_app = ServerApplication::new(config).await;
     info!("Running...");
     try_join!(server_app.server).unwrap();
     Ok(())
@@ -381,7 +381,7 @@ mod tests {
     }
     #[tokio::test]
     async fn test_stripe() {
-        let secret_key = dotenvy::var("TEST_STRIPE_SECRETKEY").unwrap();
+        let secret_key = dotenvy::var("STRIPE_SECRETKEY").unwrap();
 
         // Construct the request body parameters
         // let mut params = HashMap::new();
@@ -432,8 +432,87 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_stripe_get_checkout_session() {
+        let secret_key = dotenvy::var("STRIPE_SECRETKEY").unwrap();
+        // ```
+        // curl https://api.stripe.com/v1/checkout/sessions/cs_test_a11YYufWQzNY63zpQ6QSNRQhkUpVph4WRmzW0zWJO2znZKdVujZ0N0S22u \
+        //   -u "sk_test_51Hsx1SH1WJxpjVSWJXVaItV1vKonbcvxROMr1uluUz80z31f0vUzKN9xxG6HUd7r3pmcl9t5rwubgPeDm7y6vWql007HSWYOYx:"
+        // ```
+
+        let session_id = "cs_test_a17ltYjf9B9OcUkXY7rNLyEhZpXs2Mum3u3NeLBbe2rSXBsFvSvdU7neRV";
+        let params = [("expand[]", "line_items")];
+        let encoded = serde_urlencoded::to_string(params).unwrap();
+
+        let client = reqwest::Client::new();
+
+        // Make the POST request to the Stripe API
+        let response = client
+            .post(format!(
+                "https://api.stripe.com/v1/checkout/sessions/{}",
+                session_id
+            ))
+            .header(
+                reqwest::header::AUTHORIZATION,
+                format!("Bearer {}", secret_key),
+            )
+            .header(
+                reqwest::header::CONTENT_TYPE,
+                "application/x-www-form-urlencoded",
+            )
+            .body(encoded)
+            .send()
+            .await
+            .unwrap();
+
+        // Check if the request was successful
+        if response.status().is_success() {
+            let json: Value = response.json().await.unwrap();
+
+            println!("Response: {:#?}", json);
+        } else {
+            // If not successful, print the error status code and message
+            println!(
+                "Error: {} - {}",
+                response.status(),
+                response.text().await.unwrap()
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_stripe_get_customer() {
+        let secret_key = dotenvy::var("STRIPE_SECRETKEY").unwrap();
+        let customer_id = "cus_QgJkE2C3r5oQdc";
+
+        // Construct the reqwest client
+        let client = reqwest::Client::new();
+
+        let response = client
+            .post(format!(
+                "https://api.stripe.com/v1/customers/{}",
+                customer_id
+            ))
+            .header(
+                reqwest::header::AUTHORIZATION,
+                format!("Bearer {}", secret_key),
+            )
+            .header(
+                reqwest::header::CONTENT_TYPE,
+                "application/x-www-form-urlencoded",
+            )
+            // .body(encoded)
+            .send()
+            .await
+            .unwrap();
+
+        let json: Value = response.json().await.unwrap();
+
+        println!("Response: {:#?}", json);
+    }
+
+    #[tokio::test]
     async fn test_stripe_customer_create() {
-        let secret_key = dotenvy::var("TEST_STRIPE_SECRETKEY").unwrap();
+        let secret_key = dotenvy::var("STRIPE_SECRETKEY").unwrap();
 
         // curl https://api.stripe.com/v1/customers \
         // -u "sk_test_51Hsx1SH1WJxpjVSWJXVaItV1vKonbcvxROMr1uluUz80z31f0vUzKN9xxG6HUd7r3pmcl9t5rwubgPeDm7y6vWql007HSWYOYx:" \
@@ -473,42 +552,11 @@ mod tests {
         let json: Value = response.json().await.unwrap();
 
         println!("Response: {:#?}", json);
-
-        // Object {
-        //     "address": Null,
-        //     "balance": Number(0),
-        //     "created": Number(1707365872),
-        //     "currency": Null,
-        //     "default_currency": Null,
-        //     "default_source": Null,
-        //     "delinquent": Bool(false),
-        //     "description": Null,
-        //     "discount": Null,
-        //     "email": String("test@jeremyarde.com"),
-        //     "id": String("cus_PWRxPIJ5odGVnQ"),
-        //     "invoice_prefix": String("A754E100"),
-        //     "invoice_settings": Object {
-        //         "custom_fields": Null,
-        //         "default_payment_method": Null,
-        //         "footer": Null,
-        //         "rendering_options": Null,
-        //     },
-        //     "livemode": Bool(false),
-        //     "metadata": Object {},
-        //     "name": String("Jenny Ross"),
-        //     "next_invoice_sequence": Number(1),
-        //     "object": String("customer"),
-        //     "phone": Null,
-        //     "preferred_locales": Array [],
-        //     "shipping": Null,
-        //     "tax_exempt": String("none"),
-        //     "test_clock": Null,
-        // }
     }
 
     #[tokio::test]
     async fn test_stripe_subscription_create() {
-        let secret_key = dotenvy::var("TEST_STRIPE_SECRETKEY").unwrap();
+        let secret_key = dotenvy::var("STRIPE_SECRETKEY").unwrap();
 
         // curl https://api.stripe.com/v1/products \
         // -u "sk_test_51Hsx1SH1WJxpjVSWJXVaItV1vKonbcvxROMr1uluUz80z31f0vUzKN9xxG6HUd7r3pmcl9t5rwubgPeDm7y6vWql007HSWYOYx:" \
@@ -516,6 +564,7 @@ mod tests {
         // -d "default_price_data[unit_amount]"=1000 \
         // -d "default_price_data[currency]"=usd \
         // -d "default_price_data[recurring][interval]"=month \
+        // name: String,
         // -d "expand[]"=default_price
         struct StripeProduct {
             name: String,
@@ -540,7 +589,6 @@ mod tests {
                     ),
                     ("expand[]", "default_price".to_string()),
                 ];
-
                 let encoded = serde_urlencoded::to_string(params).unwrap();
                 return encoded;
             }

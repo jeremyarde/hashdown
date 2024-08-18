@@ -32,6 +32,8 @@ pub struct Model {
     #[sea_orm(column_type = "Text", nullable)]
     pub stripe_subscription_id: Option<String>,
     pub stripe_subscription_modified_at: Option<DateTimeWithTimeZone>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub stripe_subscription_price_id: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

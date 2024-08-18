@@ -1,3 +1,9 @@
+use lettre::transport::smtp;
+use sqlx::database;
+use tracing::info;
+
+use crate::stripe;
+
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Stage {
     Development,
@@ -18,6 +24,12 @@ impl Stage {
 pub struct EnvConfig {
     pub(crate) stage: Stage,
     pub frontend_url: String,
+    // pub stripe_success_url: String,
+    // pub stripe_cancel_url: String,
+    pub stripe_secret_key: String,
+    pub database_url: String,
+    pub smtp_username: String,
+    pub smtp_password: String,
     // pub database_url:
 }
 
@@ -26,10 +38,19 @@ impl EnvConfig {
         let stage =
             Stage::from(dotenvy::var("STAGE").expect("Stage environment variable should be set."));
         let frontend_url = Self::get_frontend_url(&stage);
+        let stripe_secret_key =
+            dotenvy::var("STRIPE_SECRETKEY").expect("Stripe secret key not set");
+        let database_url = dotenvy::var("DATABASE_URL").expect("Database url not set");
+        let smtp_username = dotenvy::var("SMTP_USERNAME").expect("SMTP username not set");
+        let smtp_password = dotenvy::var("SMTP_PASSWORD").expect("SMTP password not set");
 
         EnvConfig {
             stage,
             frontend_url,
+            stripe_secret_key,
+            database_url,
+            smtp_username,
+            smtp_password,
         }
     }
 
