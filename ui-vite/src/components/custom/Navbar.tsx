@@ -101,7 +101,7 @@ export function Navbar() {
                 <Link className="p-1" style={{ color: "black" }} to="/pricing">
                   Pricing
                 </Link>
-                <div className="p-1" style={{ color: "black" }}>
+                {/* <div className="p-1" style={{ color: "black" }}>
                   <form
                     action={`${getBaseUrl()}/create-checkout-session`}
                     method="POST"
@@ -110,7 +110,7 @@ export function Navbar() {
                       Checkout
                     </button>
                   </form>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

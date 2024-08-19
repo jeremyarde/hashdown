@@ -33,6 +33,7 @@ import { Home } from "./pages/Home.tsx";
 import { Waitlist } from "./components/custom/Waitlist.tsx";
 import { MARKDOWN_RULES, STAGE } from "./lib/constants.ts";
 import StripePage from "./pages/StripePage.tsx";
+import { PricingPage } from "./pages/PricingPage.tsx";
 
 export const exampleText = `# User Registration Form
 
@@ -207,6 +208,7 @@ export function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/checkout" element={<StripePage />}></Route>
+          <Route path="/pricing" element={<PricingPage />}></Route>
         </Routes>
       </BrowserRouter>
     </>
