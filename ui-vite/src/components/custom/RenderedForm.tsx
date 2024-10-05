@@ -8,6 +8,7 @@ import { getBaseUrl } from "../../lib/utils";
 import { useNavigate } from "react-router-dom";
 import { RenderedFormProps } from "@/lib/constants";
 import { Text } from "lucide-react";
+import { toast } from "../ui/use-toast";
 
 type SurveyEvent = {
   question_id: string;
@@ -145,11 +146,18 @@ export function RenderedForm({
             <form
               onKeyUp={(evt) => {
                 console.log("onkeyup...", evt.key);
-                evt.key === "Enter" ? handleSubmit(evt) : "";
+                if (evt.key === "Enter") {
+                  // handleSubmit(evt)
+                  toast({
+                    title: "Pressed Enter",
+                    description: JSON.stringify(exampleSubmission, null, 2),
+                  });
+                }
               }}
               onSubmit={handleSubmit}
               onChange={handleUpdate}
               className="text-left border border-solid rounded-xl"
+              // contentEditable={true}
             >
               {survey.blocks?.map((block) => {
                 // console.log("map entries: ", block)
