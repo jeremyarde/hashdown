@@ -29,15 +29,6 @@ runbe:
 ls:
     docker run --rm -it testserver ls -l /usr/local/bin
 
-migrate:
-    cd server && source .env && sqlx migrate run
-
-migrateprod:
-    cd server && source .prod.env && sqlx migrate run --database-url $DATABASE_URL
-
-migratef:
-    cd server && source .env && sqlx migrate revert && sqlx migrate run
-
 migrateprodf:
     # cd server && source .prod.env && sqlx migrate revert --database-url $DATABASE_URL && sqlx migrate run --database-url $DATABASE_URL
 

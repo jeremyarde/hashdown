@@ -42,6 +42,33 @@ CREATE table mdp.users (
     foreign key (workspace_id) references mdp.workspaces(workspace_id)
 );
 
+-- Features table to store the list of features that can be enabled for accounts
+-- we want to be able to enable/disable features for each account, at the user/account level
+-- we may also care about workspace level features, but that can be a new table
+CREATE TABLE mdp.features (
+    feature_id TEXT NOT NULL UNIQUE,
+    -- feature_id SERIAL PRIMARY KEY,  -- Adding this primary key
+    feature_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    workspace_id text NOT NULL,
+    foreign key (workspace_id) references mdp.workspaces(workspace_id)
+);
+
+CREATE TABLE mdp.user_features (
+    user_id TEXT NOT NULL,
+    feature_id TEXT NOT NULL,
+    enabled BOOLEAN DEFAULT TRUE,
+    enabled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    workspace_id text NOT NULL,
+
+    foreign key (feature_id) references mdp.features(feature_id),
+    foreign key (user_id) references mdp.users(user_id),
+    foreign key (workspace_id) references mdp.workspaces(workspace_id),
+
+    PRIMARY KEY (workspace_id, user_id, feature_id)  -- Composite primary key
+);
+
 create table mdp.stripe_events (
     -- id serial,
     stripe_event_id text not null unique,
@@ -94,20 +121,16 @@ CREATE table mdp.responses (
 );
 
 
-create table mdp.sessions (
-    -- id serial,
-    session_id TEXT not null unique,
-    workspace_id text not null,
+CREATE TABLE mdp.sessions (
+    session_id TEXT NOT NULL UNIQUE,
+    workspace_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
-    active_period_expires_at TIMESTAMP with time ZONE DEFAULT CURRENT_TIMESTAMP not null,
-    idle_period_expires_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP not null,
-    current_state TEXT default 'ACTIVE' not null,
-    -- primary key (session_id),
-    -- primary key (workspace_id, id),
-    primary key (workspace_id, session_id),
-    -- foreign key (workspace_id) references mdp.workspaces(id),
-    foreign key (workspace_id) references mdp.workspaces(workspace_id)
-    -- foreign key(user_id) references mdp.users(user_id) on delete cascade
+    active_period_expires_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    idle_period_expires_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    current_state TEXT DEFAULT 'ACTIVE' NOT NULL,
+    PRIMARY KEY (workspace_id, session_id),
+    foreign key (workspace_id) references mdp.workspaces(workspace_id),
+    foreign key (user_id) references mdp.users(user_id) ON DELETE CASCADE  -- Added reference to `user_id`
 );
 
 /* Useful to capture current analytics associated with usage of the api */
