@@ -160,6 +160,8 @@ impl MdpDatabase {
 
 #[cfg(test)]
 mod tests {
+    use tracing::info;
+
     use crate::db::database::{CreateUserRequest, MdpDatabase};
 
     #[tokio::test]

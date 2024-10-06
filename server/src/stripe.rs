@@ -125,7 +125,7 @@ pub async fn checkout_session(
     headers: HeaderMap,
     payload: Json<CheckoutSession>,
     // Form(input): Form<Value>,
-) -> Redirect {
+) -> anyhow::Result<Redirect, ServerError> {
     info!("Recieved checkout session request");
     let ctx = get_session_context(&state, headers).await?;
     debug!("User details: {:?}", ctx);
@@ -146,14 +146,14 @@ pub async fn checkout_session(
             Ok(x) => x,
             Err(err) => {
                 info!("Error creating checkout session: {err}");
-                return Redirect::to(&state.config.frontend_url);
+                return Ok(Redirect::to(&state.config.frontend_url));
             }
         };
 
     info!("Checkout session: {checkout_session:?}");
 
     let redirect_url = checkout_session.get("url").unwrap().as_str().unwrap();
-    return Redirect::to(redirect_url);
+    return Ok(Redirect::to(redirect_url));
 }
 
 #[tracing::instrument]

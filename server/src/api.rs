@@ -12,7 +12,7 @@ use tracing::{debug, info};
 
 use crate::ServerError;
 
-#[tracing::instrument]
+// #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn list_survey(
     state: State<ServerState>,
@@ -35,7 +35,7 @@ pub async fn list_survey(
     Ok(Json(json))
 }
 
-#[tracing::instrument]
+// #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn submit_response(
     State(state): State<ServerState>,

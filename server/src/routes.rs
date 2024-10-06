@@ -13,7 +13,7 @@ use tracing::info;
 
 use crate::{
     api::{list_survey, submit_response},
-    auth::{self, validate_session_middleware},
+    auth::{self},
     db::{
         database::MdpSurvey,
         surveys::{create_survey, get_survey, submit_survey},

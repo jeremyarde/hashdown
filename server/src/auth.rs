@@ -305,83 +305,40 @@ pub fn create_session_headers(session: &MdpSession) -> HeaderMap {
     headers
 }
 
-pub async fn validate_session_middleware(
-    State(state): State<ServerState>,
-    // you can add more extractors here but the last
-    // extractor must implement `FromRequest` which
-    // `Request` does
-    // _jar: CookieJar,
-    mut request: Request,
-    next: Next,
-) -> anyhow::Result<Response, ServerError> {
-    info!("--> validate_session_middleware");
+// pub async fn validate_session_middleware(
+//     State(state): State<ServerState>,
+//     // you can add more extractors here but the last
+//     // extractor must implement `FromRequest` which
+//     // `Request` does
+//     // _jar: CookieJar,
+//     mut request: Request,
+//     next: Next,
+// ) -> anyhow::Result<Response, ServerError> {
+//     info!("--> validate_session_middleware");
 
-    // other version
-    info!("->> Validating session");
+//     // other version
+//     info!("->> Validating session");
 
-    let session_id = match request
-        .headers()
-        .get(SESSION_ID_KEY)
-        .and_then(|header| header.to_str().ok())
-    {
-        Some(x) => {
-            info!("Session header: {x:?}");
+//     let session_id = match request
+//         .headers()
+//         .get(SESSION_ID_KEY)
+//         .and_then(|header| header.to_str().ok())
+//     {
+//         Some(x) => {
+//             info!("Session header: {x:?}");
 
-            if x.is_empty() {
-                return Err(ServerError::AuthFailNoSession);
-            } else {
-                x
-            }
-        }
-        None => {
-            info!("No session was found");
-            return Err(ServerError::LoginFail);
-        }
-    };
-
-    info!("Using session_id: {session_id:?}");
-
-    // get session from database using existing Session
-    let curr_session = state
-        .db
-        .get_session(session_id.to_string())
-        .await
-        .map_err(|err| ServerError::AuthFailNoSession)?;
-
-    let mut active_session = curr_session.0.into_active_model();
-    if &Utc::now().fixed_offset() > active_session.idle_period_expires_at.as_ref() {
-        return Err(ServerError::LoginFail);
-    }
-
-    info!("Current session: {:?}", active_session);
-    if &Utc::now().fixed_offset() > active_session.active_period_expires_at.as_ref() {
-        info!("session not active anymore?");
-
-        let new_active_expires = Utc::now().fixed_offset() + Duration::days(1);
-        let new_idle_expires = Utc::now().fixed_offset() + Duration::days(2);
-
-        active_session.active_period_expires_at = Set(new_active_expires);
-        active_session.idle_period_expires_at = Set(new_idle_expires);
-
-        let updated_session = active_session
-            .update(&state.db.pool)
-            .await
-            .map_err(|err| ServerError::Database(format!("Error with db: {err}")))?;
-
-        let sessionctx =
-            SessionContext::new(updated_session.user_id.clone(), MdpSession(updated_session));
-        request.extensions_mut().insert(sessionctx);
-    } else {
-        // remove this later
-        info!("Session still active, not updating");
-        let model = active_session.try_into_model().unwrap();
-        let sessionctx = SessionContext::new(model.user_id.clone(), MdpSession(model));
-        request.extensions_mut().insert(sessionctx);
-        info!("Added ctext to request data");
-    }
-
-    Ok(next.run(request).await)
-}
+//             if x.is_empty() {
+//                 return Err(ServerError::AuthFailNoSession);
+//             } else {
+//                 x
+//             }
+//         }
+//         None => {
+//             info!("No session was found");
+//             return Err(ServerError::LoginFail);
+//         }
+//     };
+// }
 
 pub async fn get_session_context(
     state: &ServerState,

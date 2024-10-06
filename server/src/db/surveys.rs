@@ -3,7 +3,7 @@ use markdownparser::{nanoid_gen, ParsedSurvey};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::server::Metadata;
+use crate::{auth::get_session_context, server::Metadata};
 
 use super::database::{MdpSession, MdpSurvey};
 
@@ -69,6 +69,7 @@ pub async fn create_survey(
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> create_survey");
+    let ctx = get_session_context(&state, headers).await?;
     info!("Creating new survey for user={:?}", ctx.user_id);
 
     let survey = MdpSurvey::new(payload, &ctx.session);
