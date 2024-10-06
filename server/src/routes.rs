@@ -74,12 +74,12 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
     let auth_routes = Router::new()
         .route("/v1/auth/logout", get(auth::logout))
         .route("/v1/surveys", post(create_survey).get(list_survey))
-        .route("/v1/responses", get(survey_responses::list_response))
-        // stripe related
-        .route_layer(middleware::from_fn_with_state(
-            state.clone(),
-            validate_session_middleware,
-        ));
+        .route("/v1/responses", get(survey_responses::list_response));
+    // stripe related
+    // .route_layer(middleware::from_fn_with_state(
+    //     state.clone(),
+    //     validate_session_middleware,
+    // ));
 
     // This does work
     // let static_routes = Router::new()
@@ -140,7 +140,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
     let all = public_routes
         .merge(auth_routes)
         // .merge(static_routes)
-        .layer(middleware::map_response(main_response_mapper))
+        // .layer(middleware::map_response(main_response_mapper))
         .with_state(state.clone())
         .layer(corslayer);
     // .layer(BufferLayer::new(1024))
@@ -167,119 +167,3 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
 pub async fn ping() -> anyhow::Result<Json<Value>, ServerError> {
     return Ok(Json(json!({"result": "Ok"})));
 }
-
-// #[tracing::instrument]
-// #[axum::debug_handler]
-// pub async fn create_survey(
-//     headers: HeaderMap,
-//     State(state): State<ServerState>,
-//     ctx: Extension<Option<Ctext>>,
-//     extract::Json(payload): extract::Json<CreateSurveyRequest>,
-// ) -> anyhow::Result<Json<Value>, ServerError> {
-//     info!("->> create_survey");
-//     info!("Creating new survey for user={:?}", ctx.session.user_id);
-
-//     let survey = SurveyModel::new(payload, &ctx.session);
-
-//     let insert_result: SurveyModel = state
-//         .db
-//         .create_survey(survey, &ctx.session.workspace_id)
-//         .await
-//         .map_err(|x| ServerError::Database(format!("Could not create new survey: {x}").to_string()))
-//         .unwrap();
-
-//     info!("     ->> Inserted survey");
-
-//     return Ok(Json(json!({ "survey": insert_result })));
-// }
-
-// #[tracing::instrument]
-// #[axum::debug_handler]
-// pub async fn submit_survey(
-//     State(state): State<ServerState>,
-//     Path(survey_id): Path<String>,
-//     // Extension(ctx): Extension<Option<Ctext>>,
-//     Json(payload): extract::Json<SubmitResponseRequest>, // for urlencoded
-// ) -> Result<Json<Value>, ServerError> {
-//     info!("->> submit_survey");
-//     debug!("    ->> survey: {:#?}", payload);
-
-//     state
-//         .db
-//         .create_answer(payload)
-//         .await
-//         .expect("Should create answer in database");
-
-//     info!("completed survey submit");
-
-//     return Ok(Json(json!({ "survey_id": survey_id })));
-// }
-
-// #[derive(Deserialize, Debug)]
-// pub struct GetSurveyQuery {
-//     pub format: SurveyFormat,
-// }
-
-// #[derive(Deserialize, Debug)]
-// #[serde(rename_all = "lowercase")]
-// pub enum SurveyFormat {
-//     Html,
-//     Json,
-// }
-
-// #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
-// pub struct CreateSurveyRequest {
-//     pub plaintext: String,
-//     pub organization: Option<String>,
-// }
-
-// // #[tracing::instrument]
-// #[axum::debug_handler]
-// pub async fn get_survey(
-//     State(_state): State<ServerState>,
-//     // Extension(ctx): Extension<Option<Ctext>>,
-//     // authorization: TypedHeader<Authorization<Bearer>>,
-//     Path(survey_id): Path<String>,
-// ) -> anyhow::Result<Json<Value>, ServerError> {
-//     let db_response = match _state.db.get_survey(&survey_id).await {
-//         Ok(x) => x,
-//         Err(_err) => return Err(ServerError::Database("Could not get survey".to_string())),
-//     };
-
-//     Ok(Json(json!(db_response)))
-// }
-
-// #[tracing::instrument]
-// #[axum::debug_handler]
-// pub async fn list_survey(
-//     state: State<ServerState>,
-//     Extension(session): Extension<Option<Ctext>>,
-//     // headers: HeaderMap,
-// ) -> anyhow::Result<Json<Value>, ServerError> {
-//     info!("->> list_survey");
-//     // info!("context: {:?}", ctx);
-
-//     // let ctx = if ctx.is_none() {
-//     //     return Err(ServerError::AuthFailNoTokenCookie);
-//     // } else {
-//     //     ctx.unwrap()
-//     // };
-
-//     // let user_id = &ctx.user_id().clone();
-
-//     info!("Getting surveys for user={}", session.user_id);
-//     let pool = &state.db.pool;
-
-//     let res = sqlx::query_as::<_, SurveyModel>(
-//         "select * from mdp.surveys where mdp.surveys.user_id = $1",
-//     )
-//     .bind(session.user_id.clone())
-//     .fetch_all(pool)
-//     .await
-//     .map_err(|err| ServerError::Database(err.to_string()))
-//     .unwrap();
-
-//     let resp = ListSurveyResponse { surveys: res };
-
-//     Ok(Json(json!(resp)))
-// }

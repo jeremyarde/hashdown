@@ -1,6 +1,9 @@
-use axum::{extract::State, Extension, Json};
+use axum::{extract::State, http::HeaderMap, Extension, Json};
 
-use crate::{mware::ctext::SessionContext, survey_responses::SubmitResponseRequest, ServerState};
+use crate::{
+    auth::get_session_context, mware::ctext::SessionContext,
+    survey_responses::SubmitResponseRequest, ServerState,
+};
 
 use axum::extract::{self};
 
@@ -13,11 +16,11 @@ use crate::ServerError;
 #[axum::debug_handler]
 pub async fn list_survey(
     state: State<ServerState>,
-    Extension(ctx): Extension<SessionContext>,
-    // headers: HeaderMap,
+    headers: HeaderMap,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> list_survey");
 
+    let ctx = get_session_context(&state, headers).await?;
     info!("Getting surveys for user={}", ctx.user_id);
     let res = &state
         .db

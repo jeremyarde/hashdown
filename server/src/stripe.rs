@@ -2,10 +2,11 @@ use std::time::Duration;
 
 use axum::{
     extract::State,
-    http::{response, status},
+    http::{response, status, HeaderMap},
     response::Redirect,
     Extension, Form, Json,
 };
+use lettre::message::header::Headers;
 use reqwest::redirect;
 use sea_orm::ActiveModelBehavior;
 use serde::{Deserialize, Serialize};
@@ -16,6 +17,7 @@ use tracing::{debug, info};
 use tracing_subscriber::filter::FromEnvError;
 
 use crate::{
+    auth::get_session_context,
     mware::{ctext::SessionContext, log},
     ServerError, ServerState,
 };
@@ -50,7 +52,7 @@ async fn create_checkout_session(
 ) -> Result<Value, ServerError> {
     info!("Creating checkout session...");
 
-    // check if stripe customer exists?
+    // check if stripe customer exists
 
     let secret_key = dotenvy::var("STRIPE_SECRETKEY")
         .map_err(|err| ServerError::ConfigError("Issue getting stripe secret key".to_string()))?;
@@ -120,12 +122,12 @@ pub struct CheckoutSession {
 #[axum::debug_handler]
 pub async fn checkout_session(
     state: State<ServerState>,
-    Extension(ctx): Extension<SessionContext>, // need to pay to login?
+    headers: HeaderMap,
     payload: Json<CheckoutSession>,
     // Form(input): Form<Value>,
 ) -> Redirect {
     info!("Recieved checkout session request");
-
+    let ctx = get_session_context(&state, headers).await?;
     debug!("User details: {:?}", ctx);
 
     // let price_id = "price_1PowrGH1WJxpjVSWQ48Fz7Vn".to_string();
@@ -158,7 +160,6 @@ pub async fn checkout_session(
 #[axum::debug_handler]
 pub async fn list_survey(
     state: State<ServerState>,
-    Extension(ctx): Extension<SessionContext>,
     payload: Json<Value>,
 ) -> anyhow::Result<Redirect, ServerError> {
     return Ok(Redirect::to(&state.config.frontend_url));

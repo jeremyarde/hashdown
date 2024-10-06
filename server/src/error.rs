@@ -4,7 +4,7 @@ use axum::Json;
 use axum::{http::StatusCode, response::Response};
 use serde::Serialize;
 use serde_json::json;
-use tracing::info;
+use tracing::{debug, info};
 use uuid::Uuid;
 
 use crate::mware::ctext::SessionContext;
@@ -88,6 +88,8 @@ impl IntoResponse for ServerError {
 
 impl ServerError {
     pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
+        debug!("client_status_and_error: {self:?}");
+
         // #[allow(unreachable_patterns)]
         match self {
             ServerError::LoginFail => (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL),
@@ -97,7 +99,6 @@ impl ServerError {
             }
 
             ServerError::Database { .. } => (StatusCode::BAD_REQUEST, ClientError::INVALID_PARAMS),
-
             // -- Fallback.
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
