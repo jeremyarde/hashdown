@@ -4,6 +4,7 @@ use axum::Json;
 use axum::{http::StatusCode, response::Response};
 use serde::Serialize;
 use serde_json::json;
+use tracing::info;
 use uuid::Uuid;
 
 use crate::mware::ctext::SessionContext;
@@ -44,7 +45,7 @@ pub async fn main_response_mapper(
     req_method: Method,
     res: Response,
 ) -> Response {
-    println!("->> {:<12} - main_response_mapper", "RES_MAPPER");
+    info!("->> {:<12} - main_response_mapper", "RES_MAPPER");
     let uuid = Uuid::new_v4();
 
     // -- Get the eventual response error.
@@ -62,7 +63,7 @@ pub async fn main_response_mapper(
                 }
             });
 
-            println!("    ->> client_error_body: {client_error_body}");
+            info!("    ->> client_error_body: {client_error_body}");
 
             // Build the new response from the client_error_body
             (*status_code, Json(client_error_body)).into_response()
@@ -72,15 +73,13 @@ pub async fn main_response_mapper(
     let client_error = client_status_error.unzip().1;
     // TODO: Need to hander if log_request fail (but should not fail request)
     let _ = log_request(uuid, req_method, uri, ctx, service_error, client_error).await;
-
-    println!();
     error_response.unwrap_or(res)
 }
 
 // So that errors get printed to the browser?
 impl IntoResponse for ServerError {
     fn into_response(self) -> axum::response::Response {
-        println!("->> {:<12} - {self:?}", "INTO_RES");
+        info!("->> {:<12} - {self:?}", "INTO_RES");
         let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
         response.extensions_mut().insert(self);
         response
