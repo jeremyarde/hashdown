@@ -6,7 +6,6 @@ use axum::{
     response::Redirect,
     Extension, Form, Json,
 };
-use chrono::Duration;
 use reqwest::redirect;
 use sea_orm::ActiveModelBehavior;
 use serde::{Deserialize, Serialize};
@@ -79,7 +78,7 @@ async fn create_checkout_session(
     // Make the POST request to the Stripe API
     let response = client
         .post("https://api.stripe.com/v1/checkout/sessions")
-        .basic_auth("sk_test_51Q6fmUHCinVRF92pMaieBLsJGfSiQWDiJ8HLtgCSlNLzPTyKGLdOt2KovXeQvxD8ectrQYctU1mXc8hYNVJLElkm00PV79CCV4", "")
+        .basic_auth("sk_test_51Q6fmUHCinVRF92pMaieBLsJGfSiQWDiJ8HLtgCSlNLzPTyKGLdOt2KovXeQvxD8ectrQYctU1mXc8hYNVJLElkm00PV79CCV4", None::<&str>)
         .header(
             reqwest::header::CONTENT_TYPE,
             "application/x-www-form-urlencoded",
