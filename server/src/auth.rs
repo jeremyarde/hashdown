@@ -4,20 +4,14 @@ use argon2::{PasswordHash, PasswordHasher};
 
 use axum::{
     extract::Query,
-    http::{
-        header::{SET_COOKIE},
-        HeaderMap, HeaderValue,
-    },
+    http::{header::SET_COOKIE, HeaderMap, HeaderValue},
 };
 
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use argon2::PasswordVerifier;
-use axum::{
-    extract::{State},
-    response::{IntoResponse},
-};
-use axum::{Json};
+use axum::Json;
+use axum::{extract::State, response::IntoResponse};
 use axum_extra::extract::cookie::Cookie;
 use chrono::{Duration, Utc};
 use entity::users::{self};
@@ -31,7 +25,7 @@ use serde_json::{json, Value};
 use sqlx::types::time::OffsetDateTime;
 use tracing::log::info;
 
-use crate::db::database::CreateUserRequest;
+use crate::db::database::{CreateUserRequest, MdpDatabase};
 use crate::db::database::{MdpSession, MdpUser};
 use crate::mware::ctext::SessionContext;
 use crate::routes::LoginPayload;
@@ -197,11 +191,13 @@ pub async fn signup(
 
 #[axum::debug_handler]
 pub async fn logout(
-    state: State<ServerState>,
+    State(state): State<ServerState>,
     headers: HeaderMap,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> logout");
-    let ctx = get_session_context(&state, headers).await?;
+    let ctx = get_session_context(&state.db, headers)
+        .await
+        .map_err(|err| ServerError::AuthFailNoSession)?;
 
     state.db.delete_session(&ctx.session.0).await?;
 
@@ -304,50 +300,16 @@ pub fn create_session_headers(session: &MdpSession) -> HeaderMap {
     headers
 }
 
-// pub async fn validate_session_middleware(
-//     State(state): State<ServerState>,
-//     // you can add more extractors here but the last
-//     // extractor must implement `FromRequest` which
-//     // `Request` does
-//     // _jar: CookieJar,
-//     mut request: Request,
-//     next: Next,
-// ) -> anyhow::Result<Response, ServerError> {
-//     info!("--> validate_session_middleware");
-
-//     // other version
-//     info!("->> Validating session");
-
-//     let session_id = match request
-//         .headers()
-//         .get(SESSION_ID_KEY)
-//         .and_then(|header| header.to_str().ok())
-//     {
-//         Some(x) => {
-//             info!("Session header: {x:?}");
-
-//             if x.is_empty() {
-//                 return Err(ServerError::AuthFailNoSession);
-//             } else {
-//                 x
-//             }
-//         }
-//         None => {
-//             info!("No session was found");
-//             return Err(ServerError::LoginFail);
-//         }
-//     };
-// }
-
 pub async fn get_session_context(
-    state: &ServerState,
+    // state: State<ServerState>,
     // you can add more extractors here but the last
     // extractor must implement `FromRequest` which
     // `Request` does
     // _jar: CookieJar,
     // mut request: Request,
+    db: &MdpDatabase,
     headers: HeaderMap,
-) -> anyhow::Result<SessionContext, ServerError> {
+) -> anyhow::Result<SessionContext> {
     info!("--> get_session_context");
 
     let session_id = match headers
@@ -358,29 +320,28 @@ pub async fn get_session_context(
             info!("Session header: {x:?}");
 
             if x.is_empty() {
-                return Err(ServerError::AuthFailNoSession);
+                return Err(ServerError::AuthFailNoSession.into());
             } else {
                 x
             }
         }
         None => {
             info!("No session was found");
-            return Err(ServerError::LoginFail);
+            return Err(ServerError::LoginFail.into());
         }
     };
 
     info!("Using session_id: {session_id:?}");
 
     // get session from database using existing Session
-    let curr_session = state
-        .db
+    let curr_session = db
         .get_session(session_id.to_string())
         .await
         .map_err(|err| ServerError::AuthFailNoSession)?;
 
-    let mut active_session = curr_session.0.into_active_model();
+    let mut active_session = curr_session.0.clone().into_active_model();
     if &Utc::now().fixed_offset() > active_session.idle_period_expires_at.as_ref() {
-        return Err(ServerError::LoginFail);
+        return Err(ServerError::LoginFail.into());
     }
 
     info!("Current session: {:?}", active_session);
@@ -394,21 +355,17 @@ pub async fn get_session_context(
         active_session.idle_period_expires_at = Set(new_idle_expires);
 
         let updated_session = active_session
-            .update(&state.db.pool)
+            .update(&db.pool)
             .await
             .map_err(|err| ServerError::Database(format!("Error with db: {err}")))?;
 
         let sessionctx =
             SessionContext::new(updated_session.user_id.clone(), MdpSession(updated_session));
-        // request.extensions_mut().insert(sessionctx);
         Ok(sessionctx)
     } else {
-        // remove this later
         info!("Session still active, not updating");
         let model = active_session.try_into_model().unwrap();
         let sessionctx = SessionContext::new(model.user_id.clone(), MdpSession(model));
-        // request.extensions_mut().insert(sessionctx);
-        info!("Added ctext to request data");
         Ok(sessionctx)
     }
 }

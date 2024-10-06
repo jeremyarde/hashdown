@@ -1,4 +1,4 @@
-import { getApiBaseUrl, getWebsiteUrl } from "@/lib/utils";
+import { getApiBaseUrl, getSessionToken, getWebsiteUrl } from "@/lib/utils";
 import React, { useState, useEffect } from "react";
 
 const createCheckoutSession = async () => {
@@ -8,6 +8,7 @@ const createCheckoutSession = async () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        session_id: getSessionToken(),
       },
       body: JSON.stringify({
         price_id: "price_1I1w6lI5j0q7u0x7x0",

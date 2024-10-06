@@ -1,4 +1,5 @@
 use axum::{
+    error_handling::HandleErrorLayer,
     http::Method,
     response::Response,
     routing::{get, post},
@@ -17,6 +18,7 @@ use crate::{
         database::MdpSurvey,
         surveys::{create_survey, get_survey, submit_survey},
     },
+    error::handle_error,
     stripe, survey_responses,
     webhook::{self},
     ServerError, ServerState,
@@ -140,7 +142,11 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         // .merge(static_routes)
         // .layer(middleware::map_response(main_response_mapper))
         .with_state(state.clone())
+        // .layer(HandleErrorLayer::new(handle_timeout_error))
+        // .timeout(Duration::from_secs(30))
+        // .layer(handle(handle_error))
         .layer(corslayer);
+    // .layer(HandleErrorLayer::new(handle_error));
     // .layer(BufferLayer::new(1024))
     // .layer(RateLimitLayer::new(5, Duration::from_secs(1)))
 
@@ -155,6 +161,19 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
 
     Ok(all)
 }
+
+// async fn handle_error(
+//     // `Method` and `Uri` are extractors so they can be used here
+//     method: Method,
+//     uri: Uri,
+//     // the last argument must be the error itself
+//     err: BoxError,
+// ) -> (StatusCode, String) {
+//     (
+//         StatusCode::INTERNAL_SERVER_ERROR,
+//         format!("`{method} {uri}` failed with {err}"),
+//     )
+// }
 
 // async fn propagate_header<B>(req: Request<Body>, next: Next) -> Response {
 //     next.run(req).await

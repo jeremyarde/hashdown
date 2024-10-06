@@ -1,5 +1,3 @@
-
-
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Stage {
     Development,
@@ -31,6 +29,10 @@ pub struct EnvConfig {
 
 impl EnvConfig {
     pub(crate) fn new() -> Self {
+        if !dotenvy::dotenv().is_ok() {
+            dotenvy::from_filename("./server/.env").expect("Could not load .env file");
+        }
+
         let stage =
             Stage::from(dotenvy::var("STAGE").expect("Stage environment variable should be set."));
         let frontend_url = Self::get_frontend_url(&stage);

@@ -12,7 +12,7 @@ use tokio::task::JoinHandle;
 use tracing::log::info;
 
 use crate::{
-    config::{EnvConfig},
+    config::EnvConfig,
     db::{self},
     mail::mailer::Mailer,
     routes::get_router,

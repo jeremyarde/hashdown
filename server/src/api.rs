@@ -1,9 +1,6 @@
 use axum::{extract::State, http::HeaderMap, Json};
 
-use crate::{
-    auth::get_session_context,
-    survey_responses::SubmitResponseRequest, ServerState,
-};
+use crate::{auth::get_session_context, survey_responses::SubmitResponseRequest, ServerState};
 
 use axum::extract::{self};
 
@@ -15,12 +12,14 @@ use crate::ServerError;
 // #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn list_survey(
-    state: State<ServerState>,
+    State(state): State<ServerState>,
     headers: HeaderMap,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> list_survey");
 
-    let ctx = get_session_context(&state, headers).await?;
+    let ctx = get_session_context(&state.db, headers)
+        .await
+        .map_err(|err| ServerError::AuthFailNoSession)?;
     info!("Getting surveys for user={}", ctx.user_id);
     let res = &state
         .db
@@ -41,7 +40,7 @@ pub async fn submit_response(
     State(state): State<ServerState>,
     // extract(session): Extract<Session>,
     Json(payload): extract::Json<SubmitResponseRequest>,
-) -> Result<Json<Value>, ServerError> {
+) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> submit_response");
     debug!("    ->> request: {:#?}", payload);
 
