@@ -1,7 +1,6 @@
 use axum::{
     extract::{Query, State},
-    http::HeaderMap,
-    Extension, Json,
+    http::HeaderMap, Json,
 };
 
 use entity::responses::Model;
@@ -12,7 +11,6 @@ use tracing::{debug, info};
 use crate::{
     auth::get_session_context,
     db::database::MdpSurvey,
-    mware::ctext::{self, SessionContext},
     ServerError, ServerState,
 };
 

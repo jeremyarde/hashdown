@@ -1,6 +1,5 @@
 use axum::{
     http::Method,
-    middleware,
     response::Response,
     routing::{get, post},
     Json, Router,
@@ -18,7 +17,6 @@ use crate::{
         database::MdpSurvey,
         surveys::{create_survey, get_survey, submit_survey},
     },
-    error::main_response_mapper,
     stripe, survey_responses,
     webhook::{self},
     ServerError, ServerState,

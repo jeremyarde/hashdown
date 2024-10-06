@@ -1,8 +1,4 @@
-use lettre::transport::smtp;
-use sqlx::database;
-use tracing::info;
 
-use crate::stripe;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Stage {

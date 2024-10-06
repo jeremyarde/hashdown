@@ -1,15 +1,11 @@
 // use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 
-use async_trait::async_trait;
-use axum::{extract::FromRequestParts, http::request::Parts};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use tracing::info;
 
-use crate::{db::database::MdpSession, ServerError};
+use crate::{db::database::MdpSession};
 
 pub const AUTH_TOKEN: &str = "x-auth-token";
-use super::super::error::Result;
 // struct Keys {
 //     encoding: EncodingKey,
 //     decoding: DecodingKey,

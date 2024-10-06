@@ -2,23 +2,18 @@ use std::time::Duration;
 
 use axum::{
     extract::State,
-    http::{response, status, HeaderMap},
-    response::Redirect,
-    Extension, Form, Json,
+    http::{HeaderMap},
+    response::Redirect, Json,
 };
-use lettre::message::header::Headers;
-use reqwest::redirect;
 use sea_orm::ActiveModelBehavior;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use sqlx::{self, FromRow};
 use tracing::{debug, info};
-use tracing_subscriber::filter::FromEnvError;
 
 use crate::{
     auth::get_session_context,
-    mware::{ctext::SessionContext, log},
     ServerError, ServerState,
 };
 

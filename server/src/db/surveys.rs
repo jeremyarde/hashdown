@@ -9,15 +9,14 @@ use super::database::{MdpSession, MdpSurvey};
 
 use axum::{
     extract::{self, Path, State},
-    http::HeaderMap,
-    Extension, Json,
+    http::HeaderMap, Json,
 };
 // use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
 
 use tracing::{debug, info};
 
 use crate::{
-    mware::ctext::SessionContext, survey_responses::SubmitResponseRequest, ServerError, ServerState,
+    survey_responses::SubmitResponseRequest, ServerError, ServerState,
 };
 
 // #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]

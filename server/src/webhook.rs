@@ -1,11 +1,10 @@
-use argon2::password_hash::rand_core::impls;
 use axum::{extract::State, Json};
 use chrono::Utc;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, Set};
 use serde_json::{json, Value};
 use tracing::info;
 
-use crate::{db::database::CreateUserRequest, ServerError, ServerState};
+use crate::{ServerError, ServerState};
 
 #[derive(PartialEq, PartialOrd)]
 enum StripeEvent {
@@ -122,7 +121,7 @@ pub async fn handle_stripe_webhook(
                 return Err(ServerError::Stripe("Customer was not found".to_string()));
             }
             // look for user in our database
-            let mut user = User::find()
+            let user = User::find()
                 .filter(entity::users::Column::Email.eq(customer_email))
                 .one(&state.db.pool)
                 .await
