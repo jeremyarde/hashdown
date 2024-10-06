@@ -1,7 +1,11 @@
+// use std::sync::Arc;
+
+use std::sync::Arc;
+
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
-use axum::Json;
 use axum::{http::StatusCode, response::Response};
+use axum::{BoxError, Json};
 use serde::Serialize;
 use serde_json::json;
 use tracing::{debug, info};
@@ -36,7 +40,7 @@ impl core::fmt::Display for ServerError {
     }
 }
 
-pub type Result<T> = core::result::Result<T, ServerError>;
+// pub type Result<T> = core::result::Result<T, ServerError>;
 impl std::error::Error for ServerError {}
 
 pub async fn main_response_mapper(
@@ -79,10 +83,14 @@ pub async fn main_response_mapper(
 // So that errors get printed to the browser?
 impl IntoResponse for ServerError {
     fn into_response(self) -> axum::response::Response {
-        info!("->> {:<12} - {self:?}", "INTO_RES");
-        let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        response.extensions_mut().insert(self);
-        response
+        // info!("->> {:<12} - {self:?}", "INTO_RES");
+        debug!("{:<12} - model::Error {self:?}", "INTO_RESPONSE");
+
+        let (status, error) = self.client_status_and_error();
+        return (status, Json(json!({"error": error}))).into_response();
+
+        // let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        // response.extensions_mut().insert(Arc::new(self));
     }
 }
 
@@ -92,27 +100,50 @@ impl ServerError {
 
         // #[allow(unreachable_patterns)]
         match self {
-            ServerError::LoginFail => (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL),
+            ServerError::LoginFail => (
+                StatusCode::FORBIDDEN,
+                ClientError::LOGIN_FAIL("Unable to log in".to_string()),
+            ),
 
-            ServerError::AuthFailNoSession | ServerError::AuthFailCtxNotInRequest => {
-                (StatusCode::FORBIDDEN, ClientError::NO_AUTH)
-            }
+            ServerError::AuthFailNoSession | ServerError::AuthFailCtxNotInRequest => (
+                StatusCode::FORBIDDEN,
+                ClientError::NO_AUTH("Not able to find your account, please log in".to_string()),
+            ),
 
-            ServerError::Database { .. } => (StatusCode::BAD_REQUEST, ClientError::INVALID_PARAMS),
+            ServerError::Database { .. } => (
+                StatusCode::BAD_REQUEST,
+                ClientError::INVALID_PARAMS("Could not find the requested resource".to_string()),
+            ),
             // -- Fallback.
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                ClientError::SERVICE_ERROR,
+                ClientError::SERVICE_ERROR(
+                    "Failure to complete request. Please contact support".to_string(),
+                ),
             ),
         }
     }
 }
+pub async fn handle_error(
+    // // `Method` and `Uri` are extractors so they can be used here
+    // method: Method,
+    // uri: Uri,
+    // // the last argument must be the error itself
+    // err: BoxError,
+    err: anyhow::Error,
+) -> (StatusCode, String) {
+    let (status, error) = err
+        .downcast::<ServerError>()
+        .unwrap()
+        .client_status_and_error();
+    return (status, Json(json!({"error": error})).to_string());
+}
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, strum_macros::AsRefStr)]
+#[derive(Debug, strum_macros::AsRefStr, Serialize)]
 pub enum ClientError {
-    LOGIN_FAIL,
-    NO_AUTH,
-    INVALID_PARAMS,
-    SERVICE_ERROR,
+    LOGIN_FAIL(String),
+    NO_AUTH(String),
+    INVALID_PARAMS(String),
+    SERVICE_ERROR(String),
 }

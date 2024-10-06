@@ -1,10 +1,6 @@
 use std::time::Duration;
 
-use axum::{
-    extract::State,
-    http::{HeaderMap},
-    response::Redirect, Json,
-};
+use axum::{extract::State, http::HeaderMap, response::Redirect, Json};
 use sea_orm::ActiveModelBehavior;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -12,10 +8,7 @@ use serde_json::Value;
 use sqlx::{self, FromRow};
 use tracing::{debug, info};
 
-use crate::{
-    auth::get_session_context,
-    ServerError, ServerState,
-};
+use crate::{auth::get_session_context, ServerError, ServerState};
 
 struct StripeProducts {
     price: String,
@@ -46,9 +39,6 @@ async fn create_checkout_session(
     frontend_cancel_url: &str,
 ) -> Result<Value, ServerError> {
     info!("Creating checkout session...");
-
-    // check if stripe customer exists
-
     let secret_key = dotenvy::var("STRIPE_SECRETKEY")
         .map_err(|err| ServerError::ConfigError("Issue getting stripe secret key".to_string()))?;
 
@@ -116,13 +106,16 @@ pub struct CheckoutSession {
 
 #[axum::debug_handler]
 pub async fn checkout_session(
-    state: State<ServerState>,
+    State(state): State<ServerState>,
     headers: HeaderMap,
     payload: Json<CheckoutSession>,
     // Form(input): Form<Value>,
 ) -> anyhow::Result<Redirect, ServerError> {
     info!("Recieved checkout session request");
-    let ctx = get_session_context(&state, headers).await?;
+
+    let ctx = get_session_context(&state.db, headers)
+        .await
+        .map_err(|err| ServerError::AuthFailNoSession)?;
     debug!("User details: {:?}", ctx);
 
     // let price_id = "price_1PowrGH1WJxpjVSWQ48Fz7Vn".to_string();

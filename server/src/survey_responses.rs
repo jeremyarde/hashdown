@@ -1,6 +1,7 @@
 use axum::{
     extract::{Query, State},
-    http::HeaderMap, Json,
+    http::HeaderMap,
+    Json,
 };
 
 use entity::responses::Model;
@@ -8,11 +9,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::{debug, info};
 
-use crate::{
-    auth::get_session_context,
-    db::database::MdpSurvey,
-    ServerError, ServerState,
-};
+use crate::{auth::get_session_context, db::database::MdpSurvey, ServerError, ServerState};
 
 #[derive(Deserialize, Debug)]
 pub struct SubmitResponseRequest {
@@ -42,8 +39,9 @@ pub async fn list_response(
     info!("->> submit_survey");
     debug!("    ->> survey: {:#?}", response_query);
 
-    let ctx = get_session_context(&state, headers).await?;
-    // json version
+    let ctx = get_session_context(&state.db, headers)
+        .await
+        .map_err(|err| ServerError::AuthFailNoSession)?; // json version
     let responses: Vec<Model> = state
         .db
         .list_responses(&response_query.survey_id, &ctx.session.0.workspace_id)

@@ -9,15 +9,14 @@ use super::database::{MdpSession, MdpSurvey};
 
 use axum::{
     extract::{self, Path, State},
-    http::HeaderMap, Json,
+    http::HeaderMap,
+    Json,
 };
 // use tower::{buffer::BufferLayer, limit::RateLimitLayer, ServiceBuilder};
 
 use tracing::{debug, info};
 
-use crate::{
-    survey_responses::SubmitResponseRequest, ServerError, ServerState,
-};
+use crate::{survey_responses::SubmitResponseRequest, ServerError, ServerState};
 
 // #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 // pub struct SurveyModel {
@@ -68,7 +67,9 @@ pub async fn create_survey(
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> create_survey");
-    let ctx = get_session_context(&state, headers).await?;
+    let ctx = get_session_context(&state.db, headers)
+        .await
+        .map_err(|err| ServerError::AuthFailNoSession)?;
     info!("Creating new survey for user={:?}", ctx.user_id);
 
     let survey = MdpSurvey::new(payload, &ctx.session);
