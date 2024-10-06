@@ -1,5 +1,6 @@
 use axum::{
     extract::{Query, State},
+    http::HeaderMap,
     Extension, Json,
 };
 
@@ -9,8 +10,9 @@ use serde_json::{json, Value};
 use tracing::{debug, info};
 
 use crate::{
+    auth::get_session_context,
     db::database::MdpSurvey,
-    mware::ctext::SessionContext,
+    mware::ctext::{self, SessionContext},
     ServerError, ServerState,
 };
 
@@ -36,13 +38,13 @@ struct Answer {
 pub async fn list_response(
     State(state): State<ServerState>,
     // Path(survey_id): Path<String>,
+    headers: HeaderMap,
     response_query: Query<ResponseQuery>,
-    Extension(ctx): Extension<SessionContext>,
-    // Json(payload): extract::Json<Value>, // for urlencoded
 ) -> Result<Json<Value>, ServerError> {
     info!("->> submit_survey");
     debug!("    ->> survey: {:#?}", response_query);
 
+    let ctx = get_session_context(&state, headers).await?;
     // json version
     let responses: Vec<Model> = state
         .db
@@ -78,7 +80,6 @@ fn get_block_details(survey: MdpSurvey) {
     });
     info!("jere/ {:#?}", block_ids);
     // return block_ids;
-    
 }
 
 fn combine_survey_with_response(survey: MdpSurvey, response: Value) -> Value {

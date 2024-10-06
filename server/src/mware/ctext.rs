@@ -207,20 +207,20 @@ impl SessionContext {
     }
 }
 
-#[async_trait]
-impl<S: Send + Sync> FromRequestParts<S> for SessionContext {
-    type Rejection = crate::error::ServerError;
+// #[async_trait]
+// impl<S: Send + Sync> FromRequestParts<S> for SessionContext {
+//     type Rejection = crate::error::ServerError;
 
-    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
-        info!("->> {:<12} - Ctx", "EXTRACTOR");
+//     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
+//         info!("->> {:<12} - Ctx", "EXTRACTOR");
 
-        parts
-            .extensions
-            .get::<Result<SessionContext>>()
-            .ok_or(ServerError::AuthFailCtxNotInRequest)?
-            .clone()
-    }
-}
+//         parts
+//             .extensions
+//             .get::<Result<SessionContext>>()
+//             .ok_or(ServerError::AuthFailCtxNotInRequest)?
+//             .clone()
+//     }
+// }
 
 // pub fn create_jwt_token(user: &Ctext) -> Result<String, ServerError> {
 //     let nowutc = chrono::Utc::now();
