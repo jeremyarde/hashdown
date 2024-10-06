@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
+import { getApiBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
 
 type LoginResult = {
   email: string;
@@ -23,7 +23,7 @@ export function useLogin(
 
     setIsPending(true);
     try {
-      const response = await fetch(`${getBaseUrl()}/v1/login}`, {
+      const response = await fetch(`${getApiBaseUrl()}/v1/login}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

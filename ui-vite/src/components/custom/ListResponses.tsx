@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useGetSurvey } from "../../hooks/useGetSurvey.ts";
 import { createTable } from "./createTable.tsx";
 import {
-  getBaseUrl,
+  getApiBaseUrl,
   getSessionToken,
   handleResponse,
 } from "../../lib/utils.ts";
@@ -36,7 +36,7 @@ export function ListResponses() {
     }
 
     const response = await fetch(
-      `${getBaseUrl()}/v1/responses?${new URLSearchParams({
+      `${getApiBaseUrl()}/v1/responses?${new URLSearchParams({
         survey_id: queryParams.get(SURVEY_ID_QUERY_KEY) || "",
       })}`,
       {

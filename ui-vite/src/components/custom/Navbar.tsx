@@ -2,7 +2,7 @@ import { FEATURES, SESSION_TOKEN_KEY, STAGE } from "../../lib/constants";
 import { Link, useNavigate } from "react-router-dom";
 import { Toaster } from "../ui/toaster";
 import {
-  getBaseUrl,
+  getApiBaseUrl,
   getSessionToken,
   getStage,
   isDev,
@@ -31,18 +31,13 @@ export function Navbar() {
   const distance = 2; // padding of outer element
   const outerRadius = innerRadius + distance;
 
-  let middleTabs = [
+  const middleTabs = [
     { route: "/surveys", display: "Surveys" },
     { route: "/editor", display: "Editor" },
   ];
 
   if (isFeatureEnabled(FEATURES.CHECKOUT)) {
     middleTabs.push({ route: "/checkout", display: "Checkout" });
-  }
-
-  if (testTabs) {
-    middleTabs.push({ route: "/dev", display: "dev" });
-    middleTabs.push({ route: "/test", display: "test" });
   }
 
   return (

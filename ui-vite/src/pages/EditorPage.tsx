@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { RenderedForm } from "../components/custom/RenderedForm";
 import { useToast } from "@/components/ui/use-toast";
 import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
-import { getBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
+import { getApiBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
 import { redirect } from "react-router-dom";
 import { clsx } from "clsx";
 
@@ -186,7 +186,7 @@ export function EditorPage({
   // const [token, setToken] = useState('');
 
   async function submitSurvey(event: React.MouseEvent<HTMLElement>) {
-    const response = await fetch(`${getBaseUrl()}/v1/surveys`, {
+    const response = await fetch(`${getApiBaseUrl()}/v1/surveys`, {
       method: "POST",
       // credentials: 'include',
       headers: {

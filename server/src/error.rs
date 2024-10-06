@@ -24,6 +24,9 @@ pub enum ServerError {
 
     // Third party errors
     Stripe(String),
+
+    // Other errors
+    ConfigError(String),
 }
 
 impl core::fmt::Display for ServerError {

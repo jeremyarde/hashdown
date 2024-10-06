@@ -21,7 +21,7 @@ import { ListResponses } from "./components/custom/ListResponses.tsx";
 import { useGetSurvey } from "./hooks/useGetSurvey.ts";
 import Dashboard from "./pages/Dashboard.tsx";
 import {
-  getBaseUrl,
+  getApiBaseUrl,
   getSessionToken,
   getStage,
   handleResponse,
@@ -126,7 +126,7 @@ export function ConfirmEmail() {
   const confirmEmail = async () => {
     try {
       const response = await fetch(
-        `${getBaseUrl()}/v1/auth/confirm?` +
+        `${getApiBaseUrl()}/v1/auth/confirm?` +
           new URLSearchParams({ t: params.get("t") || "" }),
         {
           method: "GET",
@@ -189,8 +189,6 @@ export function App() {
             <Route path="/responses" element={<ListResponses />} />
             <Route path="/waitlist" element={<Waitlist />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dev" element={<Crud />} />
-            <Route path="/test" element={<TestPage />} />
             <Route
               path="/testEditor"
               element={

@@ -3,7 +3,11 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { ChangeEvent, FormEvent, useContext, useState } from "react";
 import { Link, Navigate, redirect } from "react-router-dom";
-import { getBaseUrl, handleResponse, setSessionToken } from "../../lib/utils";
+import {
+  getApiBaseUrl,
+  handleResponse,
+  setSessionToken,
+} from "../../lib/utils";
 import { useLogin } from "../../hooks/useLogin";
 
 /**
@@ -49,7 +53,7 @@ export function Login() {
 
     setIsPending(true);
     try {
-      const response = await fetch(`${getBaseUrl()}/v1/auth/login`, {
+      const response = await fetch(`${getApiBaseUrl()}/v1/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

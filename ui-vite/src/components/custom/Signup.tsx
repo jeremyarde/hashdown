@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { SESSION_TOKEN_KEY } from "../../lib/constants";
 import { FormEvent, useContext, useState } from "react";
-import { getBaseUrl, handleResponse } from "../../lib/utils";
+import { getApiBaseUrl, handleResponse } from "../../lib/utils";
 import { Link } from "react-router-dom";
 // import { GlobalState, GlobalStateContext } from "./main";
 
@@ -24,7 +24,7 @@ export function Signup() {
     event.preventDefault();
     const payload = JSON.stringify({ name: name, email: username, password });
     try {
-      const response = await fetch(`${getBaseUrl()}/v1/auth/signup`, {
+      const response = await fetch(`${getApiBaseUrl()}/v1/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
