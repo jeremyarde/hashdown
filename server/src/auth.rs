@@ -5,7 +5,7 @@ use argon2::{PasswordHash, PasswordHasher};
 use axum::{
     extract::Query,
     http::{
-        header::{self, SET_COOKIE},
+        header::{SET_COOKIE},
         HeaderMap, HeaderValue,
     },
 };
@@ -14,11 +14,10 @@ use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use argon2::PasswordVerifier;
 use axum::{
-    extract::{Request, State},
-    middleware::Next,
-    response::{IntoResponse, Response},
+    extract::{State},
+    response::{IntoResponse},
 };
-use axum::{Extension, Json};
+use axum::{Json};
 use axum_extra::extract::cookie::Cookie;
 use chrono::{Duration, Utc};
 use entity::users::{self};

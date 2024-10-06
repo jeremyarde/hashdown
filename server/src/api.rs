@@ -1,7 +1,7 @@
-use axum::{extract::State, http::HeaderMap, Extension, Json};
+use axum::{extract::State, http::HeaderMap, Json};
 
 use crate::{
-    auth::get_session_context, mware::ctext::SessionContext,
+    auth::get_session_context,
     survey_responses::SubmitResponseRequest, ServerState,
 };
 
