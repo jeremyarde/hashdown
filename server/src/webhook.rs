@@ -145,7 +145,7 @@ pub async fn handle_stripe_webhook(
             // user.stripe_subscription_id = Set(Some()); // TODO: this might need to be set
             user.stripe_subscription_price_id = Set(Some(price_id));
 
-            return Ok(Json(json!("NOT IMPLEMENTED")));
+            Ok(Json(json!("NOT IMPLEMENTED")))
 
             // let customer_id: &str = payload["data"]["object"]["id"].as_str().unwrap();
             // let mut user = User::find()
@@ -184,7 +184,7 @@ pub async fn handle_stripe_webhook(
                 .await
                 .map_err(|err| ServerError::Database(err.to_string()));
 
-            return Ok(Json(json!("NOT IMPLEMENTED")));
+            Ok(Json(json!("NOT IMPLEMENTED")))
         }
         // "customer.subscription.updated" => {}
         // "customer.subscription.created" => {}
@@ -197,7 +197,7 @@ pub async fn handle_stripe_webhook(
         // "payment_intent.succeeded" => {}
         // "charge.dispute.created" => {}
         _ => {
-            return Err(ServerError::Stripe("Unhandled event".to_string()));
+            Err(ServerError::Stripe("Unhandled event".to_string()))
         }
     }
 
@@ -277,5 +277,5 @@ async fn get_stripe_customer(customer_id: &str) -> Value {
         .unwrap();
 
     let json: Value = response.json().await.unwrap();
-    return json;
+    json
 }

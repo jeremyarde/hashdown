@@ -4,7 +4,7 @@ use crate::ServerError;
 
 pub fn is_burner_email_provider(email: &str) -> Result<bool, ServerError> {
     let domain = email
-        .split("@")
+        .split('@')
         .nth(1)
         .ok_or(ServerError::RequestParams("Email not accepted".to_string()))?;
     let bad_domains: HashSet<&str> = include_str!("../../server/static/emails.txt")
