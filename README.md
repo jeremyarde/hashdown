@@ -1,3 +1,5 @@
+[![CI](https://github.com/jeremyarde/markdownparser/actions/workflows/main.yml/badge.svg)](https://github.com/jeremyarde/markdownparser/actions/workflows/main.yml)
+
 Goals
 1. parse markdown file/text into survey
 - [ ] 
