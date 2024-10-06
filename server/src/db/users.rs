@@ -46,7 +46,7 @@ use entity::users::{self, Entity as User};
 use entity::workspaces::{self};
 impl MdpDatabase {
     pub async fn create_user(&self, request: CreateUserRequest) -> Result<MdpUser, ServerError> {
-        println!("->> create_user");
+        info!("->> create_user");
 
         let ws_id: String;
         if request.workspace_id.is_none() {
@@ -175,7 +175,7 @@ mod tests {
         let db = MdpDatabase::new(database_url).await.unwrap();
         let user = db.create_user(create_user_request).await.unwrap();
 
-        println!("success: {user:?}")
+        info!("success: {user:?}")
     }
 
     #[tokio::test]
@@ -193,7 +193,7 @@ mod tests {
 
         let updated_user = db.verify_user(user.clone()).await.unwrap();
 
-        println!("User: {user:#?}");
-        println!("Updated User: {updated_user:#?}");
+        info!("User: {user:#?}");
+        info!("Updated User: {updated_user:#?}");
     }
 }

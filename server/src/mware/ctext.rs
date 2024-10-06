@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use axum::{extract::FromRequestParts, http::request::Parts};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use tracing::info;
 
 use crate::{db::database::MdpSession, ServerError};
 
@@ -46,16 +47,16 @@ use super::super::error::Result;
 
 //         let auth_token = match headers.get("x-auth-token") {
 //             Some(x) => {
-//                 println!("Parsing header auth token: {:?}", &x);
+//                 info!("Parsing header auth token: {:?}", &x);
 //                 x.to_str().expect("Auth token was not a string")
 //             }
 //             None => "",
 //         };
-//         println!("Parsed auth_token: {:?}", &auth_token);
+//         info!("Parsed auth_token: {:?}", &auth_token);
 
 //         let session_id = match headers.get("session_id") {
 //             Some(x) => {
-//                 println!("Parsing header auth token: {:?}", &x);
+//                 info!("Parsing header auth token: {:?}", &x);
 //                 x.to_str().expect("Auth token was not a string")
 //             }
 //             None => "",
@@ -211,7 +212,7 @@ impl<S: Send + Sync> FromRequestParts<S> for SessionContext {
     type Rejection = crate::error::ServerError;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
-        println!("->> {:<12} - Ctx", "EXTRACTOR");
+        info!("->> {:<12} - Ctx", "EXTRACTOR");
 
         parts
             .extensions

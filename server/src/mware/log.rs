@@ -7,6 +7,7 @@ use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
 use serde_with::skip_serializing_none;
+use tracing::info;
 use uuid::Uuid;
 
 use crate::{error::ClientError, mware::ctext::SessionContext, ServerError};
@@ -60,7 +61,7 @@ pub async fn log_request(
         error_data,
     };
 
-    println!("   ->> log_request: \n{}", json!(log_line));
+    info!("   ->> log_request: \n{}", json!(log_line));
 
     // TODO - Send to cloud-watch.
 

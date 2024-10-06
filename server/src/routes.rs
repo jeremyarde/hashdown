@@ -257,7 +257,7 @@ pub async fn ping() -> anyhow::Result<Json<Value>, ServerError> {
 //     // headers: HeaderMap,
 // ) -> anyhow::Result<Json<Value>, ServerError> {
 //     info!("->> list_survey");
-//     // println!("context: {:?}", ctx);
+//     // info!("context: {:?}", ctx);
 
 //     // let ctx = if ctx.is_none() {
 //     //     return Err(ServerError::AuthFailNoTokenCookie);
@@ -267,7 +267,7 @@ pub async fn ping() -> anyhow::Result<Json<Value>, ServerError> {
 
 //     // let user_id = &ctx.user_id().clone();
 
-//     println!("Getting surveys for user={}", session.user_id);
+//     info!("Getting surveys for user={}", session.user_id);
 //     let pool = &state.db.pool;
 
 //     let res = sqlx::query_as::<_, SurveyModel>(

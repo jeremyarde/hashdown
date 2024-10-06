@@ -42,16 +42,16 @@ const BINARY_NAME: &str = "mdpserver";
 #[instrument]
 async fn main() -> anyhow::Result<()> {
     info!("Starting server...");
-    // println!("Ending early :)");
+    // info!("Ending early :)");
     // return Ok(());
     // cargo watch -d 1.5 -- cargo run
     tracing_subscriber::fmt()
         // .with_max_level(tracing::Level::TRACE)
         // .with_env_filter(format!("{BINARY_NAME}=info,sqlx=error"))
-        // .with_env_filter(format!("{BINARY_NAME}=debug,sqlx=debug"))
+        .with_env_filter(format!("{BINARY_NAME}=debug,sqlx=debug"))
         .init();
 
-    // println!("Loading environment variables from file");
+    // info!("Loading environment variables from file");
     // dotenvy::dotenv()?;
     // dotenvy::from_filename("./server/.env")?;
     let config = EnvConfig::new();
@@ -92,7 +92,7 @@ mod tests {
     //         let mut router = ServerApplication::get_router().await;
 
     //         let client_url = format!("http://localhost:8080{}", "/ping");
-    //         println!("Client sending to: {client_url}");
+    //         info!("Client sending to: {client_url}");
 
     //         let request = Request::builder()
     //             .method("GET")
@@ -123,14 +123,14 @@ mod tests {
     //         // router.ready().await.unwrap();
 
     //         let client_url = format!("http://localhost:8080{}", "/auth/login");
-    //         println!("Client sending to: {client_url}");
+    //         info!("Client sending to: {client_url}");
 
     //         let token = signup_or_login(&mut router).await;
-    //         println!("{}", token);
+    //         info!("{}", token);
 
     //         // List surveys
     //         let client_url = format!("http://localhost:8080{}", "/surveys");
-    //         println!("Sending create survey with headers...");
+    //         info!("Sending create survey with headers...");
 
     //         let create_request: Request<Body> = Request::builder()
     //             .method("POST")
@@ -147,7 +147,7 @@ mod tests {
     //         let response = router.borrow_mut().oneshot(create_request).await.unwrap();
 
     //         assert_ne!(response.status(), 500);
-    //         println!("{response:?}");
+    //         info!("{response:?}");
     //         let list_response: Value = serde_json::from_slice(
     //             &axum::body::to_bytes(response.into_body(), usize::MAX)
     //                 .await
@@ -199,7 +199,7 @@ mod tests {
     //         let url = "/auth/login";
     //         let client_url = format!("http://{}{}", "localhost:8080", url);
 
-    //         println!("Sending req to: {client_url}");
+    //         info!("Sending req to: {client_url}");
 
     //         let request = LoginPayload {
     //             email: "test@test.com".to_string(),
@@ -246,7 +246,7 @@ mod tests {
     //     async fn test_signup() {
     //         setup_environment();
 
-    //         println!("=== Signup testing");
+    //         info!("=== Signup testing");
     //         let _app = ServerApplication::new().await;
     //         let mut router = ServerApplication::get_router().await;
     //         // router.ready().await.unwrap();
@@ -256,7 +256,7 @@ mod tests {
     //         let url = "/v1/auth/signup";
     //         let client_url = format!("http://{}{}", "localhost:8080", url);
 
-    //         println!("Sending req to: {client_url}");
+    //         info!("Sending req to: {client_url}");
 
     //         let username = nanoid_gen(5);
     //         let request: LoginPayload = LoginPayload {
@@ -298,7 +298,7 @@ mod tests {
     //         };
 
     //         let client_url = format!("http://localhost:8080{}", "/auth/signup");
-    //         println!("Client sending to: {client_url}");
+    //         info!("Client sending to: {client_url}");
     //         let request: Request<Body> = Request::builder()
     //             .method("POST")
     //             .uri(client_url)
@@ -315,10 +315,10 @@ mod tests {
     //             let session_id = headers.get(SESSION_ID_KEY).unwrap();
     //             return session_id.to_str().unwrap().to_string();
     //         }
-    //         println!("Was NOT able to signup, attempting login...");
+    //         info!("Was NOT able to signup, attempting login...");
 
     //         let client_url = format!("http://localhost:8080{}", "/auth/login");
-    //         println!("Client sending to: {client_url}");
+    //         info!("Client sending to: {client_url}");
     //         let request: Request<Body> = Request::builder()
     //             .method("POST")
     //             .uri(client_url)
@@ -369,7 +369,7 @@ mod tests {
 
         // Send the email
         match mailer.send(&email) {
-            Ok(_) => println!("Email sent successfully!"),
+            Ok(_) => info!("Email sent successfully!"),
             Err(e) => panic!("Could not send email: {e:?}"),
         }
     }
@@ -420,10 +420,10 @@ mod tests {
         if response.status().is_success() {
             let json: Value = response.json().await.unwrap();
 
-            println!("Response: {:#?}", json);
+            info!("Response: {:#?}", json);
         } else {
             // If not successful, print the error status code and message
-            println!(
+            info!(
                 "Error: {} - {}",
                 response.status(),
                 response.text().await.unwrap()
@@ -468,10 +468,10 @@ mod tests {
         if response.status().is_success() {
             let json: Value = response.json().await.unwrap();
 
-            println!("Response: {:#?}", json);
+            info!("Response: {:#?}", json);
         } else {
             // If not successful, print the error status code and message
-            println!(
+            info!(
                 "Error: {} - {}",
                 response.status(),
                 response.text().await.unwrap()
@@ -507,7 +507,7 @@ mod tests {
 
         let json: Value = response.json().await.unwrap();
 
-        println!("Response: {:#?}", json);
+        info!("Response: {:#?}", json);
     }
 
     #[tokio::test]
@@ -551,7 +551,7 @@ mod tests {
 
         let json: Value = response.json().await.unwrap();
 
-        println!("Response: {:#?}", json);
+        info!("Response: {:#?}", json);
     }
 
     #[tokio::test]
@@ -621,6 +621,6 @@ mod tests {
 
         let json: Value = response.json().await.unwrap();
 
-        println!("Response: {:#?}", json);
+        info!("Response: {:#?}", json);
     }
 }

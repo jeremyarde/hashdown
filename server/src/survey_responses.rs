@@ -60,9 +60,9 @@ pub async fn list_response(
         .inner()
         .blocks
         .as_array()
-        .map(|blocks| println!("jere/ {:?}", blocks));
+        .map(|blocks| info!("jere/ {:?}", blocks));
 
-    println!("jere/ after: {:?}", block_ids);
+    info!("jere/ after: {:?}", block_ids);
 
     info!("completed survey submit");
     Ok(Json(json!({ "responses": responses, "survey": survey })))
@@ -73,17 +73,17 @@ pub async fn list_response(
 
 fn get_block_details(survey: MdpSurvey) {
     let block_ids = survey.inner().blocks.as_array().map(|blocks| {
-        // println!("jere/ {:#?}", blocks);
+        // info!("jere/ {:#?}", blocks);
         blocks.iter().map(|block| block.as_object())
     });
-    println!("jere/ {:#?}", block_ids);
+    info!("jere/ {:#?}", block_ids);
     // return block_ids;
     
 }
 
 fn combine_survey_with_response(survey: MdpSurvey, response: Value) -> Value {
     //     let block_ids: Vec<BlockIdName> = survey.blocks.as_array().map(|blocks| {
-    //         println!("jere/ {:#?}", blocks);
+    //         info!("jere/ {:#?}", blocks);
     //         blocks.iter().map(|block| {
     //             BlockIdName(
     //                 block.get("id"),
@@ -91,7 +91,7 @@ fn combine_survey_with_response(survey: MdpSurvey, response: Value) -> Value {
     //             )
     //         })
     //     });
-    //     println!("jere/ blocks: {:#?}", block_ids);
+    //     info!("jere/ blocks: {:#?}", block_ids);
     json!({"test": "another"})
 }
 

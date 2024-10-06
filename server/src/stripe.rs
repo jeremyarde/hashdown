@@ -49,6 +49,9 @@ async fn create_checkout_session(
     frontend_cancel_url: &str,
 ) -> Result<Value, ServerError> {
     info!("Creating checkout session...");
+
+    // check if stripe customer exists?
+
     let secret_key = dotenvy::var("STRIPE_SECRETKEY")
         .map_err(|err| ServerError::ConfigError("Issue getting stripe secret key".to_string()))?;
 
@@ -117,11 +120,14 @@ pub struct CheckoutSession {
 #[axum::debug_handler]
 pub async fn checkout_session(
     state: State<ServerState>,
-    // Extension(ctx): Extension<SessionContext>, // need to pay to login?
+    Extension(ctx): Extension<SessionContext>, // need to pay to login?
     payload: Json<CheckoutSession>,
     // Form(input): Form<Value>,
 ) -> Redirect {
     info!("Recieved checkout session request");
+
+    debug!("User details: {:?}", ctx);
+
     // let price_id = "price_1PowrGH1WJxpjVSWQ48Fz7Vn".to_string();
 
     // let form_input_obj = input.as_object().unwrap();
@@ -159,7 +165,7 @@ pub async fn list_survey(
 }
 
 // async fn log_event(request: Value) -> Result<MdpStripeEvent, ServerError> {
-//     println!("->> log_event");
+//     info!("->> log_event");
 
 //     let _time = chrono::Utc::now();
 //     // let stripeevent = sqlx::query_as::<_, StripeEvent>(

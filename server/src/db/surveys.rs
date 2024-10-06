@@ -151,7 +151,7 @@ pub async fn get_survey(
 // ) -> anyhow::Result<Json<Value>, ServerError> {
 //     info!("->> list_survey");
 
-//     println!("Getting surveys for user={}", ctx.user_id);
+//     info!("Getting surveys for user={}", ctx.user_id);
 //     let pool = &state.db.pool;
 
 //     let res = sqlx::query_as::<_, SurveyModel>(
