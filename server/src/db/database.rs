@@ -488,6 +488,6 @@ mod tests {
             .await
             .unwrap();
 
-        info!("session: {:?}", session);
+        println!("session: {:?}", session);
     }
 }
