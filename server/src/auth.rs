@@ -401,7 +401,7 @@ pub async fn get_session_context(
         let sessionctx =
             SessionContext::new(updated_session.user_id.clone(), MdpSession(updated_session));
         // request.extensions_mut().insert(sessionctx);
-        return Ok(sessionctx);
+        Ok(sessionctx)
     } else {
         // remove this later
         info!("Session still active, not updating");
@@ -409,6 +409,6 @@ pub async fn get_session_context(
         let sessionctx = SessionContext::new(model.user_id.clone(), MdpSession(model));
         // request.extensions_mut().insert(sessionctx);
         info!("Added ctext to request data");
-        return Ok(sessionctx);
+        Ok(sessionctx)
     }
 }

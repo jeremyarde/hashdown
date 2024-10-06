@@ -94,16 +94,16 @@ async fn create_checkout_session(
     if response.status().is_success() {
         info!("Checkout successful: {:#?}", response);
         let json: Value = response.json().await.unwrap();
-        return Ok(json);
+        Ok(json)
     } else {
         // If not successful, print the error status code and message
         let status = response.status();
         let response_text = response.text().await.unwrap();
         info!("Error: {} - {}", status, response_text);
-        return Err(ServerError::Stripe(format!(
+        Err(ServerError::Stripe(format!(
             "Issue creating new checkout session: {}",
             response_text
-        )));
+        )))
     }
 }
 
@@ -148,7 +148,7 @@ pub async fn checkout_session(
     info!("Checkout session: {checkout_session:?}");
 
     let redirect_url = checkout_session.get("url").unwrap().as_str().unwrap();
-    return Ok(Redirect::to(redirect_url));
+    Ok(Redirect::to(redirect_url))
 }
 
 #[tracing::instrument]
