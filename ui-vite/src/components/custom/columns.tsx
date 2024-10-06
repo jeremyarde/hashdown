@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Block, styleTokens } from "@/lib/constants";
-import { getBaseUrl } from "@/lib/utils";
+import { getApiBaseUrl } from "@/lib/utils";
 import { table } from "console";
 
 export const data2: Survey[] = [
@@ -332,7 +332,7 @@ export const surveyColumns: ColumnDef<any>[] = [
             <DropdownMenuItem
               onClick={(evt) =>
                 navigator.clipboard.writeText(
-                  `${getBaseUrl()}/v1/${survey.survey_id}`
+                  `${getApiBaseUrl()}/v1/${survey.survey_id}`
                 )
               }
             >
@@ -630,7 +630,7 @@ export function mapAnswersToColumns(
               <DropdownMenuItem
                 onClick={(evt) =>
                   navigator.clipboard.writeText(
-                    `${getBaseUrl()}/v1/${survey.survey_id}`
+                    `${getApiBaseUrl()}/v1/${survey.survey_id}`
                   )
                 }
               >

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { markdown_to_form_wasm_v2 } from "../../../backend/pkg/markdownparser";
-import { getBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
+import { getApiBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
 import { Survey } from "@/components/custom/columns";
 
 /**
@@ -26,7 +26,7 @@ export function useGetSurvey(surveyId: string | undefined): {
     setIsPending(true);
     try {
       const response = await fetch(
-        `${getBaseUrl()}/v1/surveys/${getSurveyId}`,
+        `${getApiBaseUrl()}/v1/surveys/${getSurveyId}`,
         {
           method: "GET",
           headers: {

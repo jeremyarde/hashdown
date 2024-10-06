@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "../ui/textarea";
-import { getBaseUrl } from "../../lib/utils";
+import { getApiBaseUrl } from "../../lib/utils";
 import { useNavigate } from "react-router-dom";
 import { RenderedFormProps } from "@/lib/constants";
 import { Text } from "lucide-react";
@@ -93,7 +93,7 @@ export function RenderedForm({
     console.log("jere/ surveyid", survey_id);
 
     if (survey_id) {
-      const response = await fetch(`${getBaseUrl()}/v1/submit`, {
+      const response = await fetch(`${getApiBaseUrl()}/v1/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

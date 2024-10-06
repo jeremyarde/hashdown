@@ -19,3 +19,4 @@ server/.secrets
 # ui-vite/.env.production
 market-research.md
 server/.prod.env
+*/.env

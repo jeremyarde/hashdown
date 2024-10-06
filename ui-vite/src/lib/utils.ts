@@ -41,10 +41,15 @@ export function getSessionToken(): string {
   return window.sessionStorage.getItem(SESSION_TOKEN_KEY) || "";
 }
 
-export function getBaseUrl(): string {
+export function getApiBaseUrl(): string {
   let stage: string = import.meta.env.MODE || STAGE.DEV;
 
   return BASE_URL[stage];
+}
+
+export function getWebsiteUrl(): string {
+  // return import.meta.env.VITE_WEBSITE_URL || "";
+  return window.location.host;
 }
 
 export function getStage(): STAGE {
@@ -62,7 +67,7 @@ export function isFeatureEnabled(feature: FEATURES): boolean {
 // create a nicer interface for the rust api...
 export async function logout() {
   try {
-    const response = await fetch(`${getBaseUrl()}/v1/auth/logout`, {
+    const response = await fetch(`${getApiBaseUrl()}/v1/auth/logout`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

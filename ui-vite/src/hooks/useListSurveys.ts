@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
+import { getApiBaseUrl, getSessionToken, handleResponse } from "@/lib/utils";
 import { Survey } from "@/components/custom/columns";
 
 type ListSurvey = {
@@ -22,7 +22,7 @@ export function useListSurveys(): {
   const listSurvey = async () => {
     setIsPending(true);
     try {
-      const response = await fetch(`${getBaseUrl()}/v1/surveys`, {
+      const response = await fetch(`${getApiBaseUrl()}/v1/surveys`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

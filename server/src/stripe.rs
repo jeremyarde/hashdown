@@ -1,19 +1,25 @@
+use std::time::Duration;
+
 use axum::{
     extract::State,
     http::{response, status},
     response::Redirect,
     Extension, Form, Json,
 };
+use chrono::Duration;
 use reqwest::redirect;
 use sea_orm::ActiveModelBehavior;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use sqlx::{self, FromRow};
-use tracing::info;
+use tracing::{debug, info};
 use tracing_subscriber::filter::FromEnvError;
 
-use crate::{mware::ctext::SessionContext, ServerError, ServerState};
+use crate::{
+    mware::{ctext::SessionContext, log},
+    ServerError, ServerState,
+};
 
 struct StripeProducts {
     price: String,
@@ -43,31 +49,37 @@ async fn create_checkout_session(
     frontend_success_url: &str,
     frontend_cancel_url: &str,
 ) -> Result<Value, ServerError> {
-    let secret_key = dotenvy::var("STRIPE_SECRETKEY").unwrap();
+    info!("Creating checkout session...");
+    let secret_key = dotenvy::var("STRIPE_SECRETKEY")
+        .map_err(|err| ServerError::ConfigError("Issue getting stripe secret key".to_string()))?;
 
     // Construct the request body parameters
     // let mut params = HashMap::new();
 
-    let params = [
+    let params: [(&str, &str); 5] = [
         ("success_url", frontend_success_url),
         ("cancel_url", frontend_cancel_url),
         ("line_items[0][price]", price_id),
         ("line_items[0][quantity]", "1"),
         ("mode", "subscription"),
     ];
+    debug!("Checkout params: {params:?}");
 
     let encoded = serde_urlencoded::to_string(params).unwrap();
+    debug!("Encoded params: {encoded:?}");
 
     // Construct the reqwest client
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(3))
+        .build()
+        .map_err(|err| {
+            ServerError::ConfigError(format!("Could not create reqwest client: {err}"))
+        })?;
 
     // Make the POST request to the Stripe API
     let response = client
         .post("https://api.stripe.com/v1/checkout/sessions")
-        .header(
-            reqwest::header::AUTHORIZATION,
-            format!("Bearer {}", secret_key),
-        )
+        .basic_auth("sk_test_51Q6fmUHCinVRF92pMaieBLsJGfSiQWDiJ8HLtgCSlNLzPTyKGLdOt2KovXeQvxD8ectrQYctU1mXc8hYNVJLElkm00PV79CCV4", "")
         .header(
             reqwest::header::CONTENT_TYPE,
             "application/x-www-form-urlencoded",
@@ -75,13 +87,14 @@ async fn create_checkout_session(
         .body(encoded)
         .send()
         .await
-        .unwrap();
+        .map_err(|err| ServerError::Stripe(format!("Failure creating checkout session: {err}")))?;
+
+    info!("Stripe response: {:#?}", response);
 
     // Check if the request was successful
     if response.status().is_success() {
+        info!("Checkout successful: {:#?}", response);
         let json: Value = response.json().await.unwrap();
-
-        println!("Response: {:#?}", json);
         return Ok(json);
     } else {
         // If not successful, print the error status code and message
@@ -95,28 +108,42 @@ async fn create_checkout_session(
     }
 }
 
-#[tracing::instrument]
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
+pub struct CheckoutSession {
+    cancel_url: String,
+    success_url: String,
+    price_id: String,
+}
+
 #[axum::debug_handler]
 pub async fn checkout_session(
     state: State<ServerState>,
     // Extension(ctx): Extension<SessionContext>, // need to pay to login?
-    // payload: Json<Value>,
-    Form(input): Form<Value>,
+    payload: Json<CheckoutSession>,
+    // Form(input): Form<Value>,
 ) -> Redirect {
-    let price_id = "price_1PowrGH1WJxpjVSWQ48Fz7Vn".to_string();
+    info!("Recieved checkout session request");
+    // let price_id = "price_1PowrGH1WJxpjVSWQ48Fz7Vn".to_string();
 
-    let form_input_obj = input.as_object().unwrap();
-    let success_url = form_input_obj.get("success_url").unwrap().as_str().unwrap();
-    let cancel_url = form_input_obj.get("cancel_url").unwrap().as_str().unwrap();
+    // let form_input_obj = input.as_object().unwrap();
+    // let success_url = form_input_obj.get("success_url").unwrap().as_str().unwrap();
+    // let cancel_url = form_input_obj.get("cancel_url").unwrap().as_str().unwrap();
+    // let success_url = payload.success_url;
+    // let cancel_url = payload.cancel_url;
 
+    let price_id = payload.price_id.clone();
     let checkout_session =
-        match create_checkout_session(price_id.as_str(), success_url, cancel_url).await {
+        match create_checkout_session(price_id.as_str(), &payload.success_url, &payload.cancel_url)
+            .await
+        {
             Ok(x) => x,
             Err(err) => {
                 info!("Error creating checkout session: {err}");
                 return Redirect::to(&state.config.frontend_url);
             }
         };
+
+    info!("Checkout session: {checkout_session:?}");
 
     let redirect_url = checkout_session.get("url").unwrap().as_str().unwrap();
     return Redirect::to(redirect_url);
