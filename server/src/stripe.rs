@@ -50,10 +50,17 @@ async fn create_checkout_session(
     // Construct the request body parameters
     // let mut params = HashMap::new();
 
-    let params: [(&str, &str); 5] = [
-        ("success_url", frontend_success_url),
-        ("cancel_url", frontend_cancel_url),
-        ("line_items[0][price]", price_id),
+    // let params: [(&str, &str); 5] = [
+    //     ("success_url", frontend_success_url),
+    //     ("cancel_url", frontend_cancel_url),
+    //     ("line_items[0][price]", price_id),
+    //     ("line_items[0][quantity]", "1"),
+    //     ("mode", "subscription"),
+    // ];
+    let params: [(&str, &str); 2] = [
+        // ("success_url", frontend_success_url),
+        // ("cancel_url", frontend_cancel_url),
+        // ("line_items[0][price]", price_id),
         ("line_items[0][quantity]", "1"),
         ("mode", "subscription"),
     ];
@@ -63,16 +70,16 @@ async fn create_checkout_session(
     info!("Encoded params: {encoded:?}");
 
     // Construct the reqwest client
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(3))
-        .build()
-        .map_err(|err| {
-            info!("Something about the client failed: {err}");
-            ServerError::ConfigError(format!("Could not create reqwest client: {err}"))
-        })?;
+    // let client = reqwest::Client::builder()
+    //     .timeout(Duration::from_secs(3))
+    //     .build()
+    //     .map_err(|err| {
+    //         info!("Something about the client failed: {err}");
+    //         ServerError::ConfigError(format!("Could not create reqwest client: {err}"))
+    //     })?;
     debug!("Client created");
     // Make the POST request to the Stripe API
-    let response = client
+    let response = reqwest::Client::new()
         .post("https://api.stripe.com/v1/checkout/sessions")
         .basic_auth("sk_test_51Q6fmUHCinVRF92pMaieBLsJGfSiQWDiJ8HLtgCSlNLzPTyKGLdOt2KovXeQvxD8ectrQYctU1mXc8hYNVJLElkm00PV79CCV4", None::<&str>)
         .header(
@@ -81,26 +88,32 @@ async fn create_checkout_session(
         )
         .body(encoded)
         .send()
-        .await.expect("should send request from checkout session");
+        .await;
     // .map_err(|err| ServerError::Stripe(format!("Failure creating checkout session: {err}")))?;
 
     info!("Stripe response: {:#?}", response);
+    let json: Value = response.unwrap().json().await.unwrap();
+    info!("Stripe response json: {:#?}", json);
 
     // Check if the request was successful
-    if response.status().is_success() {
-        info!("Checkout successful: {:#?}", response);
-        let json: Value = response.json().await.unwrap();
-        Ok(json)
-    } else {
-        // If not successful, print the error status code and message
-        let status = response.status();
-        let response_text = response.text().await.unwrap();
-        info!("Error: {} - {}", status, response_text);
-        Err(ServerError::Stripe(format!(
-            "Issue creating new checkout session: {}",
-            response_text
-        )))
-    }
+    // if response.status().is_success() {
+    //     info!("Checkout successful: {:#?}", response);
+    //     let json: Value = response.json().await.unwrap();
+    //     Ok(json)
+    // } else {
+    //     // If not successful, print the error status code and message
+    //     let status = response.status();
+    //     let response_text = response.text().await.unwrap();
+    //     info!("Error: {} - {}", status, response_text);
+    //     Err(ServerError::Stripe(format!(
+    //         "Issue creating new checkout session: {}",
+    //         response_text
+    //     )))
+    // }
+    Err(ServerError::Stripe(format!(
+        "Issue creating new checkout session: {}",
+        json["error"]["message"].as_str().unwrap()
+    )))
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
@@ -259,4 +272,42 @@ pub async fn create_customer(name: &str, email: &str) -> Result<Value, ServerErr
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use serde_json::{json, Value};
+
+    #[tokio::test]
+    // #[serial]
+    //     async fn test_signup() {
+    async fn test_stripe_checkout() {
+        let frontend_success_url = "http://localhost:5173/v1/payment/success";
+        let frontend_cancel_url = "http://localhost:5173/v1/payment/cancel";
+        let price_id = "price_1I1w6lI5j0q7u0x7x0";
+
+        let params: [(&str, &str); 5] = [
+            ("success_url", frontend_success_url),
+            ("cancel_url", frontend_cancel_url),
+            ("line_items[0][price]", price_id),
+            ("line_items[0][quantity]", "1"),
+            ("mode", "subscription"),
+        ];
+
+        let encoded = serde_urlencoded::to_string(params).expect("Not able to encode params");
+        println!("Encoded params: {encoded:?}");
+
+        let response = reqwest::Client::new()
+            .post("https://api.stripe.com/v1/checkout/sessions")
+            .basic_auth("sk_test_51Q6fmUHCinVRF92pMaieBLsJGfSiQWDiJ8HLtgCSlNLzPTyKGLdOt2KovXeQvxD8ectrQYctU1mXc8hYNVJLElkm00PV79CCV4", None::<&str>)
+            .header(
+                reqwest::header::CONTENT_TYPE,
+                "application/x-www-form-urlencoded",
+            )
+            .body(encoded)
+            .send()
+            .await;
+
+        assert!(response.is_ok());
+        let result: Value = response.unwrap().json::<Value>().await.unwrap();
+
+        assert_eq!(result, json!({}));
+    }
+}
