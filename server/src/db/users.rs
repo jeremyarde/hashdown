@@ -175,7 +175,7 @@ mod tests {
 
         let database_url = dotenvy::var("DATABASE_URL").unwrap();
         let db = MdpDatabase::new(database_url).await.unwrap();
-        let user = db.create_user(create_user_request).await.unwrap();
+        let user = &db.create_user(create_user_request).await.unwrap();
 
         info!("success: {user:?}")
     }
@@ -191,9 +191,9 @@ mod tests {
 
         let database_url = dotenvy::var("DATABASE_URL").unwrap();
         let db = MdpDatabase::new(database_url).await.unwrap();
-        let user = db.create_user(create_user_request).await.unwrap();
+        let user = &db.create_user(create_user_request).await.unwrap();
 
-        let updated_user = db.verify_user(user.clone()).await.unwrap();
+        let updated_user = &db.verify_user(user.clone()).await.unwrap();
 
         info!("User: {user:#?}");
         info!("Updated User: {updated_user:#?}");

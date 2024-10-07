@@ -10,7 +10,7 @@ impl MigrationTrait for Migration {
         let db = manager.get_connection();
 
         // Use `execute_unprepared` if the SQL statement doesn't have value bindings
-        db.execute_unprepared(include_str!(
+        &db.execute_unprepared(include_str!(
             "../../server/migrations/20230623220617_init.up.sql"
         ))
         .await?;
@@ -23,7 +23,7 @@ impl MigrationTrait for Migration {
         let db = manager.get_connection();
 
         // Use `execute_unprepared` if the SQL statement doesn't have value bindings
-        db.execute_unprepared("drop schema if exists mdp cascade;")
+        &db.execute_unprepared("drop schema if exists mdp cascade;")
             .await?;
 
         Ok(())

@@ -1,5 +1,6 @@
 use config::EnvConfig;
 use mail::mailer::Mailer;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 
 use crate::server::ServerApplication;
 use tokio::try_join;
@@ -45,10 +46,14 @@ async fn main() -> anyhow::Result<()> {
     // info!("Ending early :)");
     // return Ok(());
     // cargo watch -d 1.5 -- cargo run
-    tracing_subscriber::fmt()
+
+    let default = "{BINARY_NAME}=debug,sqlx=debug,tokio=trace,runtime=trace";
+    tracing_subscriber::registry()
         // .with_max_level(tracing::Level::TRACE)
         // .with_env_filter(format!("{BINARY_NAME}=info,sqlx=error"))
-        .with_env_filter(format!("{BINARY_NAME}=debug,sqlx=debug"))
+        .with(console_subscriber::spawn())
+        .with(tracing_subscriber::fmt::layer())
+        .with(EnvFilter::new(default))
         .init();
 
     // info!("Loading environment variables from file");

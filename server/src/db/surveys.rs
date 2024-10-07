@@ -63,11 +63,11 @@ impl MdpSurvey {
 #[axum::debug_handler]
 pub async fn create_survey(
     headers: HeaderMap,
-    State(state): State<ServerState>,
+    state: State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> create_survey");
-    let ctx = get_session_context(&state.db, headers)
+    let ctx = get_session_context(&state, headers)
         .await
         .map_err(|err| ServerError::AuthFailNoSession)?;
     info!("Creating new survey for user={:?}", ctx.user_id);

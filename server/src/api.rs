@@ -12,12 +12,12 @@ use crate::ServerError;
 // #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn list_survey(
-    State(state): State<ServerState>,
+    state: State<ServerState>,
     headers: HeaderMap,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> list_survey");
 
-    let ctx = get_session_context(&state.db, headers)
+    let ctx = get_session_context(&state, headers)
         .await
         .map_err(|err| ServerError::AuthFailNoSession)?;
     info!("Getting surveys for user={}", ctx.user_id);
