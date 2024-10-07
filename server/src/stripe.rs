@@ -7,8 +7,13 @@ use serde_json::Value;
 
 use sqlx::{self, FromRow};
 use tracing::{debug, info};
+use tracing_subscriber::field::debug;
 
-use crate::{auth::get_session_context, ServerError, ServerState};
+use crate::{
+    auth::{get_session_context, get_session_context_test},
+    constants::SESSION_ID_KEY,
+    ServerError, ServerState,
+};
 
 struct StripeProducts {
     price: String,
@@ -54,17 +59,18 @@ async fn create_checkout_session(
     ];
     debug!("Checkout params: {params:?}");
 
-    let encoded = serde_urlencoded::to_string(params).unwrap();
-    debug!("Encoded params: {encoded:?}");
+    let encoded = serde_urlencoded::to_string(params).expect("Not able to encode params");
+    info!("Encoded params: {encoded:?}");
 
     // Construct the reqwest client
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(3))
         .build()
         .map_err(|err| {
+            info!("Something about the client failed: {err}");
             ServerError::ConfigError(format!("Could not create reqwest client: {err}"))
         })?;
-
+    debug!("Client created");
     // Make the POST request to the Stripe API
     let response = client
         .post("https://api.stripe.com/v1/checkout/sessions")
@@ -75,8 +81,8 @@ async fn create_checkout_session(
         )
         .body(encoded)
         .send()
-        .await
-        .map_err(|err| ServerError::Stripe(format!("Failure creating checkout session: {err}")))?;
+        .await.expect("should send request from checkout session");
+    // .map_err(|err| ServerError::Stripe(format!("Failure creating checkout session: {err}")))?;
 
     info!("Stripe response: {:#?}", response);
 
@@ -106,17 +112,20 @@ pub struct CheckoutSession {
 
 #[axum::debug_handler]
 pub async fn checkout_session(
-    State(state): State<ServerState>,
     headers: HeaderMap,
+    state: State<ServerState>,
+    // State(state): State<ServerState>,
     payload: Json<CheckoutSession>,
     // Form(input): Form<Value>,
 ) -> anyhow::Result<Redirect, ServerError> {
     info!("Recieved checkout session request");
-
-    let ctx = get_session_context(&state.db, headers)
-        .await
-        .map_err(|err| ServerError::AuthFailNoSession)?;
-    debug!("User details: {:?}", ctx);
+    // let ctx = get_session_context_test(&state, headers)
+    //     .await
+    //     .map_err(|err| ServerError::AuthFailNoSession)?;
+    // let ctx = get_session_context(&state, headers)
+    //     .await
+    //     .map_err(|err| ServerError::AuthFailNoSession)?;
+    // debug!("User details: {:?}", ctx);
 
     // let price_id = "price_1PowrGH1WJxpjVSWQ48Fz7Vn".to_string();
 

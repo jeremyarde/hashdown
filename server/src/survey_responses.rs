@@ -9,7 +9,10 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::{debug, info};
 
-use crate::{auth::get_session_context, db::database::MdpSurvey, ServerError, ServerState};
+use crate::{
+    auth::get_session_context, constants::SESSION_ID_KEY, db::database::MdpSurvey, ServerError,
+    ServerState,
+};
 
 #[derive(Deserialize, Debug)]
 pub struct SubmitResponseRequest {
@@ -31,15 +34,14 @@ struct Answer {
 #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn list_response(
-    State(state): State<ServerState>,
+    state: State<ServerState>,
     // Path(survey_id): Path<String>,
     headers: HeaderMap,
     response_query: Query<ResponseQuery>,
 ) -> Result<Json<Value>, ServerError> {
     info!("->> submit_survey");
     debug!("    ->> survey: {:#?}", response_query);
-
-    let ctx = get_session_context(&state.db, headers)
+    let ctx = get_session_context(&state, headers)
         .await
         .map_err(|err| ServerError::AuthFailNoSession)?; // json version
     let responses: Vec<Model> = state

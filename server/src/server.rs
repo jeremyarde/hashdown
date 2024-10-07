@@ -45,14 +45,7 @@ impl ServerApplication {
         info!("Spinning up the server.");
 
         // const V1: &str = "v1";
-        let _ = tracing_subscriber::fmt::try_init();
-
-        // tracing_subscriber::registry()
-        //     .with(
-        //         tracing_subscriber::EnvFilter::try_from_default_env()
-        //             .unwrap_or_else(|_| "tower_http=debug".into()),
-        //     )
-        //     .with(tracing_subscriber::fmt::layer());
+        // let _ = tracing_subscriber::fmt::try_init();
 
         let app = ServerApplication::get_router(&config).await;
 

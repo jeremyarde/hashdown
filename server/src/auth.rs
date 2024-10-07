@@ -191,11 +191,11 @@ pub async fn signup(
 
 #[axum::debug_handler]
 pub async fn logout(
-    State(state): State<ServerState>,
+    state: State<ServerState>,
     headers: HeaderMap,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> logout");
-    let ctx = get_session_context(&state.db, headers)
+    let ctx = get_session_context(&state, headers)
         .await
         .map_err(|err| ServerError::AuthFailNoSession)?;
 
@@ -301,13 +301,13 @@ pub fn create_session_headers(session: &MdpSession) -> HeaderMap {
 }
 
 pub async fn get_session_context(
-    // state: State<ServerState>,
+    state: &State<ServerState>,
     // you can add more extractors here but the last
     // extractor must implement `FromRequest` which
     // `Request` does
     // _jar: CookieJar,
     // mut request: Request,
-    db: &MdpDatabase,
+    // db: &MdpDatabase,
     headers: HeaderMap,
 ) -> anyhow::Result<SessionContext> {
     info!("--> get_session_context");
@@ -334,7 +334,8 @@ pub async fn get_session_context(
     info!("Using session_id: {session_id:?}");
 
     // get session from database using existing Session
-    let curr_session = db
+    let curr_session = &state
+        .db
         .get_session(session_id.to_string())
         .await
         .map_err(|err| ServerError::AuthFailNoSession)?;
@@ -355,7 +356,78 @@ pub async fn get_session_context(
         active_session.idle_period_expires_at = Set(new_idle_expires);
 
         let updated_session = active_session
-            .update(&db.pool)
+            .update(&state.db.pool)
+            .await
+            .map_err(|err| ServerError::Database(format!("Error with db: {err}")))?;
+
+        let sessionctx =
+            SessionContext::new(updated_session.user_id.clone(), MdpSession(updated_session));
+        Ok(sessionctx)
+    } else {
+        info!("Session still active, not updating");
+        let model = active_session.try_into_model().unwrap();
+        let sessionctx = SessionContext::new(model.user_id.clone(), MdpSession(model));
+        Ok(sessionctx)
+    }
+}
+
+pub async fn get_session_context_test(
+    state: &ServerState,
+    // you can add more extractors here but the last
+    // extractor must implement `FromRequest` which
+    // `Request` does
+    // _jar: CookieJar,
+    // mut request: Request,
+    // db: &MdpDatabase,
+    headers: HeaderMap,
+) -> anyhow::Result<SessionContext> {
+    info!("--> get_session_context");
+
+    let session_id = match headers
+        .get(SESSION_ID_KEY)
+        .and_then(|header| header.to_str().ok())
+    {
+        Some(x) => {
+            info!("Session header: {x:?}");
+
+            if x.is_empty() {
+                return Err(ServerError::AuthFailNoSession.into());
+            } else {
+                x
+            }
+        }
+        None => {
+            info!("No session was found");
+            return Err(ServerError::LoginFail.into());
+        }
+    };
+
+    info!("Using session_id: {session_id:?}");
+
+    // get session from database using existing Session
+    let curr_session = &state
+        .db
+        .get_session(session_id.to_string())
+        .await
+        .map_err(|err| ServerError::AuthFailNoSession)?;
+
+    let mut active_session = curr_session.0.clone().into_active_model();
+    if &Utc::now().fixed_offset() > active_session.idle_period_expires_at.as_ref() {
+        return Err(ServerError::LoginFail.into());
+    }
+
+    info!("Current session: {:?}", active_session);
+    if &Utc::now().fixed_offset() > active_session.active_period_expires_at.as_ref() {
+        info!("session not active anymore?");
+
+        let new_active_expires = Utc::now().fixed_offset() + Duration::days(1);
+        let new_idle_expires = Utc::now().fixed_offset() + Duration::days(2);
+
+        active_session.active_period_expires_at = Set(new_active_expires);
+        active_session.idle_period_expires_at = Set(new_idle_expires);
+
+        let updated_session = active_session
+            .update(&state.db.pool)
             .await
             .map_err(|err| ServerError::Database(format!("Error with db: {err}")))?;
 
