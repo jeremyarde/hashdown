@@ -1,6 +1,6 @@
 use axum::{extract::State, http::HeaderMap, Json};
 
-use crate::{auth::get_session_context, survey_responses::SubmitResponseRequest, ServerState};
+use crate::{auth::get_session_header, survey_responses::SubmitResponseRequest, ServerState};
 
 use axum::extract::{self};
 
@@ -17,13 +17,16 @@ pub async fn list_survey(
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> list_survey");
 
-    let ctx = get_session_context(&state, headers)
-        .await
-        .map_err(|err| ServerError::AuthFailNoSession)?;
-    info!("Getting surveys for user={}", ctx.user_id);
+    // let ctx = get_session_context(&state, headers)
+    //     .await
+    //     .map_err(|err| ServerError::AuthFailNoSession)?;
+    let sessionid = get_session_header(&headers);
+    let ctx = state.db.get_session(sessionid.unwrap()).await?;
+
+    info!("Getting surveys for user={}", ctx.0.user_id);
     let res = &state
         .db
-        .list_survey(ctx)
+        .list_survey(&ctx.0.user_id)
         .await
         .map_err(|err| ServerError::Database(err.to_string()))
         .unwrap();
