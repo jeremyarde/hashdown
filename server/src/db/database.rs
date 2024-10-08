@@ -237,9 +237,9 @@ impl MdpDatabase {
         Ok(MdpSurvey(result.unwrap()))
     }
 
-    pub async fn list_survey(&self, ctx: SessionContext) -> Result<Vec<MdpSurvey>, ServerError> {
+    pub async fn list_survey(&self, user_id: &str) -> Result<Vec<MdpSurvey>, ServerError> {
         let all_surveys = entity::surveys::Entity::find()
-            .filter(entity::surveys::Column::UserId.eq(ctx.session.0.user_id))
+            .filter(entity::surveys::Column::UserId.eq(user_id))
             .all(&self.pool)
             .await
             .map_err(|err| ServerError::Database(err.to_string()))?
@@ -415,16 +415,20 @@ impl MdpDatabase {
         }
     }
 
-    pub async fn create_session(&self, user: MdpUser) -> anyhow::Result<MdpSession, ServerError> {
+    pub async fn create_session(
+        &self,
+        workspace_id: &str,
+        user_id: &str,
+    ) -> anyhow::Result<MdpSession, ServerError> {
         // let session_id = nanoid_gen(32);
 
         let new_active_expires = DateTime::fixed_offset(&Utc::now().add(Duration::days(1)));
         let new_idle_expires = DateTime::fixed_offset(&Utc::now().add(Duration::days(2)));
 
         let new_session = sessions::ActiveModel {
-            workspace_id: Set(user.inner().workspace_id.clone()),
+            workspace_id: Set(workspace_id.to_owned()),
             session_id: Set(NanoId::from("sen").to_string()),
-            user_id: Set(user.inner().user_id.to_string()),
+            user_id: Set(user_id.to_string()),
             active_period_expires_at: Set(new_active_expires),
             idle_period_expires_at: Set(new_idle_expires),
             current_state: Set(SessionState::ACTIVE.to_string()),
@@ -438,11 +442,15 @@ impl MdpDatabase {
 
     pub async fn get_session_by_userid(
         &self,
-        user: MdpUser,
+        // user: MdpUser,
+        workspace_id: &str,
+        user_id: &str,
     ) -> anyhow::Result<Option<MdpSession>, ServerError> {
         let session = sessions::Entity::find_by_id((
-            user.inner().workspace_id.clone(),
-            user.inner().user_id.clone(),
+            // user.inner().workspace_id.clone(),
+            // user.inner().user_id.clone(),
+            workspace_id.to_string(),
+            user_id.to_string(),
         ))
         .filter(sessions::Column::CurrentState.eq(SessionState::ACTIVE.to_string()))
         .one(&self.pool)
@@ -457,9 +465,11 @@ impl MdpDatabase {
 
     pub async fn delete_session(
         &self,
-        session: &SessionModel,
+        // session: &SessionModel,
+        session_id: &str,
     ) -> anyhow::Result<bool, ServerError> {
-        let mut active_session = session.clone().into_active_model();
+        let session = self.get_session(session_id.to_owned()).await?;
+        let mut active_session = session.0.clone().into_active_model();
         active_session.current_state = Set(SessionState::DELETED.to_string());
 
         let results = active_session

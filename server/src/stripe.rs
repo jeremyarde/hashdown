@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use axum::{extract::State, http::HeaderMap, response::Redirect, Json};
+use axum::{extract::State, http::HeaderMap, response::Redirect, Json, RequestExt};
 use sea_orm::ActiveModelBehavior;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -9,11 +9,7 @@ use sqlx::{self, FromRow};
 use tracing::{debug, info};
 use tracing_subscriber::field::debug;
 
-use crate::{
-    auth::{get_session_context, get_session_context_test},
-    constants::SESSION_ID_KEY,
-    ServerError, ServerState,
-};
+use crate::{auth::get_session_header, constants::SESSION_ID_KEY, ServerError, ServerState};
 
 struct StripeProducts {
     price: String,
@@ -39,6 +35,7 @@ use entity::stripe_events::Model as StripeEventModel;
 pub struct MdpStripeEvent(pub StripeEventModel);
 
 async fn create_checkout_session(
+    stripe_customer_id: &str,
     price_id: &str,
     frontend_success_url: &str,
     frontend_cancel_url: &str,
@@ -47,41 +44,20 @@ async fn create_checkout_session(
     let secret_key = dotenvy::var("STRIPE_SECRETKEY")
         .map_err(|err| ServerError::ConfigError("Issue getting stripe secret key".to_string()))?;
 
-    // Construct the request body parameters
-    // let mut params = HashMap::new();
-
-    // let params: [(&str, &str); 5] = [
-    //     ("success_url", frontend_success_url),
-    //     ("cancel_url", frontend_cancel_url),
-    //     ("line_items[0][price]", price_id),
-    //     ("line_items[0][quantity]", "1"),
-    //     ("mode", "subscription"),
-    // ];
-    let params: [(&str, &str); 2] = [
-        // ("success_url", frontend_success_url),
-        // ("cancel_url", frontend_cancel_url),
-        // ("line_items[0][price]", price_id),
+    let params: [(&str, &str); 6] = [
+        ("success_url", frontend_success_url),
+        ("cancel_url", frontend_cancel_url),
+        ("line_items[0][price]", price_id),
         ("line_items[0][quantity]", "1"),
         ("mode", "subscription"),
+        ("customer", stripe_customer_id),
     ];
-    debug!("Checkout params: {params:?}");
-
     let encoded = serde_urlencoded::to_string(params).expect("Not able to encode params");
-    info!("Encoded params: {encoded:?}");
+    println!("Encoded params: {encoded:?}");
 
-    // Construct the reqwest client
-    // let client = reqwest::Client::builder()
-    //     .timeout(Duration::from_secs(3))
-    //     .build()
-    //     .map_err(|err| {
-    //         info!("Something about the client failed: {err}");
-    //         ServerError::ConfigError(format!("Could not create reqwest client: {err}"))
-    //     })?;
-    debug!("Client created");
-    // Make the POST request to the Stripe API
     let response = reqwest::Client::new()
         .post("https://api.stripe.com/v1/checkout/sessions")
-        .basic_auth("sk_test_51Q6fmUHCinVRF92pMaieBLsJGfSiQWDiJ8HLtgCSlNLzPTyKGLdOt2KovXeQvxD8ectrQYctU1mXc8hYNVJLElkm00PV79CCV4", None::<&str>)
+        .basic_auth(secret_key, None::<&str>)
         .header(
             reqwest::header::CONTENT_TYPE,
             "application/x-www-form-urlencoded",
@@ -89,31 +65,11 @@ async fn create_checkout_session(
         .body(encoded)
         .send()
         .await;
-    // .map_err(|err| ServerError::Stripe(format!("Failure creating checkout session: {err}")))?;
 
-    info!("Stripe response: {:#?}", response);
-    let json: Value = response.unwrap().json().await.unwrap();
-    info!("Stripe response json: {:#?}", json);
+    let result: Value = response.unwrap().json::<Value>().await.unwrap();
+    info!("Stripe response json: {:#?}", result);
 
-    // Check if the request was successful
-    // if response.status().is_success() {
-    //     info!("Checkout successful: {:#?}", response);
-    //     let json: Value = response.json().await.unwrap();
-    //     Ok(json)
-    // } else {
-    //     // If not successful, print the error status code and message
-    //     let status = response.status();
-    //     let response_text = response.text().await.unwrap();
-    //     info!("Error: {} - {}", status, response_text);
-    //     Err(ServerError::Stripe(format!(
-    //         "Issue creating new checkout session: {}",
-    //         response_text
-    //     )))
-    // }
-    Err(ServerError::Stripe(format!(
-        "Issue creating new checkout session: {}",
-        json["error"]["message"].as_str().unwrap()
-    )))
+    return Ok(result);
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
@@ -132,33 +88,52 @@ pub async fn checkout_session(
     // Form(input): Form<Value>,
 ) -> anyhow::Result<Redirect, ServerError> {
     info!("Recieved checkout session request");
-    // let ctx = get_session_context_test(&state, headers)
-    //     .await
-    //     .map_err(|err| ServerError::AuthFailNoSession)?;
-    // let ctx = get_session_context(&state, headers)
-    //     .await
-    //     .map_err(|err| ServerError::AuthFailNoSession)?;
-    // debug!("User details: {:?}", ctx);
 
-    // let price_id = "price_1PowrGH1WJxpjVSWQ48Fz7Vn".to_string();
+    let session_id = get_session_header(&headers).unwrap();
 
-    // let form_input_obj = input.as_object().unwrap();
-    // let success_url = form_input_obj.get("success_url").unwrap().as_str().unwrap();
-    // let cancel_url = form_input_obj.get("cancel_url").unwrap().as_str().unwrap();
-    // let success_url = payload.success_url;
-    // let cancel_url = payload.cancel_url;
+    let ctx = get_session_context(&state, headers)
+        .await
+        .map_err(|err| ServerError::AuthFailNoSession)?;
 
-    let price_id = payload.price_id.clone();
-    let checkout_session =
-        match create_checkout_session(price_id.as_str(), &payload.success_url, &payload.cancel_url)
-            .await
-        {
-            Ok(x) => x,
-            Err(err) => {
-                info!("Error creating checkout session: {err}");
-                return Ok(Redirect::to(&state.config.frontend_url));
-            }
-        };
+    if ctx.user_id.is_empty() {
+        info!("No session found, direct customer to create an account");
+        return Ok(Redirect::to(&state.config.frontend_url));
+    }
+    debug!("User details: {:?}", ctx);
+
+    let user = &state
+        .db
+        .get_user_by_id(ctx.user_id)
+        .await
+        .expect("Database failed")
+        .expect("Did not find user");
+
+    debug!("User details: {:?}", user);
+
+    let stripeid = user
+        .0
+        .stripe_customer_id
+        .clone()
+        .expect("User has no stripe customer id");
+
+    info!("Stripe customer id: {stripeid}");
+
+    let price_id = "price_1Q7Na3HCinVRF92pWfMSH0wI"; // sandbox price
+
+    let checkout_session = match create_checkout_session(
+        &stripeid,
+        price_id,
+        &payload.success_url,
+        &payload.cancel_url,
+    )
+    .await
+    {
+        Ok(x) => x,
+        Err(err) => {
+            info!("Error creating checkout session: {err}");
+            return Ok(Redirect::to(&state.config.frontend_url));
+        }
+    };
 
     info!("Checkout session: {checkout_session:?}");
 
@@ -175,40 +150,8 @@ pub async fn list_survey(
     return Ok(Redirect::to(&state.config.frontend_url));
 }
 
-// async fn log_event(request: Value) -> Result<MdpStripeEvent, ServerError> {
-//     info!("->> log_event");
-
-//     let _time = chrono::Utc::now();
-//     // let stripeevent = sqlx::query_as::<_, StripeEvent>(
-//     //     "insert into mdp.stripe_events (
-//     //             stripe_event_id,
-//     //             attributes,
-//     //             event_type
-//     //         ) values ($1, $2, $3) returning *",
-//     // )
-//     // .bind(request.get("id"))
-//     // .bind(json!({"test": "test event attribute"}))
-//     // .bind(request.get("type"))
-//     // .fetch_one(&self.pool)
-//     // .await
-//     // .map_err(|err| ServerError::Database(format!("Could not create log_event: {err}")))?;
-
-//     // Ok(stripeevent)
-//     Ok(MdpStripeEvent(
-//         entity::stripe_events::ActiveModel {
-//             stripe_event_id: NanoId::new().to_string(),
-//             from_stripe_event_id: request.get("id"),
-//             attributes: request,
-//             event_type: todo!(),
-//             created_at: todo!(),
-//             workspace_id: todo!(),
-//         }
-//         .try_into_model()
-//         .unwrap(),
-//     ))
-// }
-
 pub async fn create_customer(name: &str, email: &str) -> Result<Value, ServerError> {
+    info!("Creating customer in Stripe");
     let secret_key = dotenvy::var("STRIPE_SECRETKEY").unwrap();
 
     let newcust = StripeCustomer {
@@ -237,58 +180,47 @@ pub async fn create_customer(name: &str, email: &str) -> Result<Value, ServerErr
         .unwrap();
 
     let json: Value = response.json().await.unwrap();
-    // Object {
-    //     "address": Null,
-    //     "balance": Number(0),
-    //     "created": Number(1707365872),
-    //     "currency": Null,
-    //     "default_currency": Null,
-    //     "default_source": Null,
-    //     "delinquent": Bool(false),
-    //     "description": Null,
-    //     "discount": Null,
-    //     "email": String("test@jeremyarde.com"),
-    //     "id": String("cus_PWRxPIJ5odGVnQ"),
-    //     "invoice_prefix": String("A754E100"),
-    //     "invoice_settings": Object {
-    //         "custom_fields": Null,
-    //         "default_payment_method": Null,
-    //         "footer": Null,
-    //         "rendering_options": Null,
-    //     },
-    //     "livemode": Bool(false),
-    //     "metadata": Object {},
-    //     "name": String("Jenny Ross"),
-    //     "next_invoice_sequence": Number(1),
-    //     "object": String("customer"),
-    //     "phone": Null,
-    //     "preferred_locales": Array [],
-    //     "shipping": Null,
-    //     "tax_exempt": String("none"),
-    //     "test_clock": Null,
-    // }
 
     Ok(json)
 }
 
 #[cfg(test)]
 mod tests {
+    use argon2::password_hash::SaltString;
+    use rand::rngs::OsRng;
     use serde_json::{json, Value};
+
+    use crate::{
+        db::database::{CreateUserRequest, MdpDatabase},
+        stripe::create_customer,
+    };
 
     #[tokio::test]
     // #[serial]
     //     async fn test_signup() {
     async fn test_stripe_checkout() {
+        let name = "test user";
+        let email = "test@jeremyarde.com";
+
+        let stripe_customer = create_customer(name.as_ref(), email.as_ref())
+            .await
+            .expect("Stripe customer should be created");
+
+        let stripe_customer_id = stripe_customer.get("id").unwrap().as_str().unwrap();
+
         let frontend_success_url = "http://localhost:5173/v1/payment/success";
         let frontend_cancel_url = "http://localhost:5173/v1/payment/cancel";
-        let price_id = "price_1I1w6lI5j0q7u0x7x0";
+        // let price_id = "price_1I1w6lI5j0q7u0x7x0";
+        let price_id = "price_1Q7Na3HCinVRF92pWfMSH0wI"; // sandbox price
 
-        let params: [(&str, &str); 5] = [
+        let params: [(&str, &str); 6] = [
             ("success_url", frontend_success_url),
             ("cancel_url", frontend_cancel_url),
             ("line_items[0][price]", price_id),
             ("line_items[0][quantity]", "1"),
             ("mode", "subscription"),
+            ("customer", stripe_customer_id),
+            // ("currency", "cad"),
         ];
 
         let encoded = serde_urlencoded::to_string(params).expect("Not able to encode params");
@@ -304,10 +236,12 @@ mod tests {
             .body(encoded)
             .send()
             .await;
-
-        assert!(response.is_ok());
         let result: Value = response.unwrap().json::<Value>().await.unwrap();
 
-        assert_eq!(result, json!({}));
+        // assert!(response.is_ok());
+
+        println!("Stripe checkout response: {result:?}");
+
+        assert!(result.get("url").is_some());
     }
 }

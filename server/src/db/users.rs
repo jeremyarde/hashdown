@@ -16,32 +16,6 @@ use super::database::CreateUserRequest;
 
 use entity::users::{self, Entity as User};
 
-// trait UsersTrait {
-//     fn new(req: CreateUserRequest) -> users::ActiveModel;
-// }
-
-// impl UsersTrait for users::ActiveModel {
-//     fn new(req: CreateUserRequest) -> users::ActiveModel {
-//         return users::ActiveModel {
-//             name: todo!(),
-//             email: todo!(),
-//             password_hash: todo!(),
-//             created_at: todo!(),
-//             modified_at: todo!(),
-//             deleted_at: todo!(),
-//             email_status: todo!(),
-//             user_id: todo!(),
-//             workspace_id: todo!(),
-//             email_confirmed_at: todo!(),
-//             confirmation_token: todo!(),
-//             confirmation_token_expire_at: todo!(),
-//             role: todo!(),
-//             stripe_customer_id: todo!(),
-//             stripe_subscription_id: todo!(),
-//             stripe_subscription_modified_at: todo!(),
-//         };
-//     }
-// }
 
 use entity::workspaces::{self};
 impl MdpDatabase {
@@ -105,6 +79,23 @@ impl MdpDatabase {
 
         let user = User::find()
             .filter(users::Column::Email.eq(email.clone()))
+            .one(&self.pool)
+            .await
+            .map_err(|err| ServerError::Database(format!("Error in database: {err}")))?;
+
+        debug!("user: {:#?}", user);
+
+        match user {
+            Some(x) => Ok(Some(MdpUser(x))),
+            None => Ok(None),
+        }
+    }
+
+    pub async fn get_user_by_id(&self, id: String) -> Result<Option<MdpUser>, ServerError> {
+        info!("Search for user with id: {id:?}");
+
+        let user = User::find()
+            .filter(users::Column::UserId.eq(id.clone()))
             .one(&self.pool)
             .await
             .map_err(|err| ServerError::Database(format!("Error in database: {err}")))?;

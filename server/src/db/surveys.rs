@@ -3,7 +3,7 @@ use markdownparser::{nanoid_gen, ParsedSurvey};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::{auth::get_session_context, server::Metadata};
+use crate::{auth::get_session_header, server::Metadata};
 
 use super::database::{MdpSession, MdpSurvey};
 
@@ -35,7 +35,11 @@ use crate::{survey_responses::SubmitResponseRequest, ServerError, ServerState};
 //     // pub parsed_json: Option<Value>,
 // }
 impl MdpSurvey {
-    pub(crate) fn new(payload: CreateSurveyRequest, session: &MdpSession) -> MdpSurvey {
+    pub(crate) fn new(
+        payload: CreateSurveyRequest,
+        user_id: &str,
+        workspace_id: &str,
+    ) -> MdpSurvey {
         // let parsed_survey =
         //     (payload.plaintext.clone()).expect("Could not parse the survey");
         // let survey = markdown_to_form_wasm_v2(payload.plaintext);
@@ -46,7 +50,7 @@ impl MdpSurvey {
             // id: 0,
             survey_id: nanoid_gen(12),
             plaintext: payload.plaintext.clone(),
-            user_id: session.0.user_id.to_owned(),
+            user_id: user_id.to_owned(),
             created_at: metadata.created_at.into(),
             modified_at: metadata.modified_at.into(),
             // version: Some(survey),
@@ -54,7 +58,7 @@ impl MdpSurvey {
             name: Some("name - todo".to_string()),
             version: Some("version - todo".to_string()),
             blocks: json!(&survey.blocks),
-            workspace_id: session.0.workspace_id.clone(),
+            workspace_id: workspace_id.clone().to_owned(),
         })
     }
 }
@@ -67,16 +71,18 @@ pub async fn create_survey(
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> create_survey");
-    let ctx = get_session_context(&state, headers)
-        .await
-        .map_err(|err| ServerError::AuthFailNoSession)?;
-    info!("Creating new survey for user={:?}", ctx.user_id);
+    // let ctx = get_session_context(&state, headers)
+    //     .await
+    //     .map_err(|err| ServerError::AuthFailNoSession)?;
+    let sessionid = get_session_header(&headers).unwrap();
+    let ctx = state.db.get_session(sessionid).await?;
+    info!("Creating new survey for user={:?}", ctx.0.user_id);
 
-    let survey = MdpSurvey::new(payload, &ctx.session);
+    let survey = MdpSurvey::new(payload, &ctx.0.user_id, &ctx.0.workspace_id);
 
     let insert_result = state
         .db
-        .create_survey(survey, &ctx.session.0.workspace_id)
+        .create_survey(survey, &ctx.0.workspace_id)
         .await
         .map_err(|x| {
             ServerError::Database(format!("Could not create new survey: {x}").to_string())
