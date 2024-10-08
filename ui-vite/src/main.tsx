@@ -206,6 +206,24 @@ export function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/checkout" element={<StripePage />}></Route>
+          <Route
+            path="/checkout/success"
+            element={
+              <html>
+                <head>
+                  <title>Thanks for your order!</title>
+                </head>
+                <body>
+                  <h1>Thanks for your order!</h1>
+                  <p>
+                    We appreciate your business! If you have any questions,
+                    please email
+                    <a href="mailto:orders@example.com">orders@example.com</a>.
+                  </p>
+                </body>
+              </html>
+            }
+          ></Route>
           <Route path="/pricing" element={<PricingPage />}></Route>
         </Routes>
       </BrowserRouter>
