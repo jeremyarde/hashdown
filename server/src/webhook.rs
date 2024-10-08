@@ -144,25 +144,7 @@ pub async fn handle_stripe_webhook(
             let mut user = user.unwrap().into_active_model();
             // user.stripe_subscription_id = Set(Some()); // TODO: this might need to be set
             user.stripe_subscription_price_id = Set(Some(price_id));
-
             Ok(Json(json!("NOT IMPLEMENTED")))
-
-            // let customer_id: &str = payload["data"]["object"]["id"].as_str().unwrap();
-            // let mut user = User::find()
-            //     .filter(entity::users::Column::StripeCustomerId.eq(customer_id))
-            //     .one(&state.db.pool)
-            //     .await
-            //     .map_err(|err| ServerError::Database(err.to_string()))
-            //     .unwrap()
-            //     .unwrap()
-            //     .into_active_model();
-
-            // user.stripe_subscription_id = Set(Some(stripe_id.to_string()));
-            // user.stripe_subscription_modified_at = Set(Some(Utc::now().fixed_offset()));
-            // let res = user
-            //     .save(&state.db.pool)
-            //     .await
-            //     .map_err(|err| ServerError::Database(err.to_string()));
         }
         // "checkout.session.expired" => {}
         // "customer.source.expiring" => {}
@@ -196,9 +178,7 @@ pub async fn handle_stripe_webhook(
         // "setup_intent.succeeded" => {}
         // "payment_intent.succeeded" => {}
         // "charge.dispute.created" => {}
-        _ => {
-            Err(ServerError::Stripe("Unhandled event".to_string()))
-        }
+        _ => Err(ServerError::Stripe("Unhandled event".to_string())),
     }
 
     // match event_enum {
@@ -230,14 +210,14 @@ async fn handle_subscription_success(state: ServerState, payload: &Value) {
     info!("handling stripe subscription for stripe id: {stripe_id}");
     // let mut user = User::find_by_id((stripe_id))
     //     .filter(entity::users::Column::StripeId.eq(stripe_id))
-    //     .one(&state.db.sea_pool)
+    //     .one(state.db.sea_pool)
     //     .await
     //     .unwrap();
 
     // let active_user = user.unwrap().into_active_model();
 
     // active_user.role = Set("basic");
-    // active_user.update(&state.db.sea_pool).await.unwrap();
+    // active_user.update(state.db.sea_pool).await.unwrap();
 }
 
 // checkout.session.completed

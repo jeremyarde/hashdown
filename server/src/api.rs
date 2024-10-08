@@ -12,7 +12,7 @@ use crate::ServerError;
 // #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn list_survey(
-    state: State<ServerState>,
+    State(state): State<ServerState>,
     headers: HeaderMap,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> list_survey");

@@ -34,7 +34,7 @@ struct Answer {
 #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn list_response(
-    state: State<ServerState>,
+    State(state): State<ServerState>,
     // Path(survey_id): Path<String>,
     headers: HeaderMap,
     response_query: Query<ResponseQuery>,

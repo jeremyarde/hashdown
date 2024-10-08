@@ -66,8 +66,8 @@ impl MdpSurvey {
 #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn create_survey(
+    State(state): State<ServerState>,
     headers: HeaderMap,
-    state: State<ServerState>,
     extract::Json(payload): extract::Json<CreateSurveyRequest>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> create_survey");
@@ -135,12 +135,12 @@ pub struct CreateSurveyRequest {
 // #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn get_survey(
-    State(_state): State<ServerState>,
+    State(state): State<ServerState>,
     // Extension(ctx): Extension<Ctext>,
     // authorization: TypedHeader<Authorization<Bearer>>,
     Path(survey_id): Path<String>,
 ) -> anyhow::Result<Json<Value>, ServerError> {
-    let db_response = match _state.db.get_survey(&survey_id).await {
+    let db_response = match state.db.get_survey(&survey_id).await {
         Ok(x) => x,
         Err(_err) => return Err(ServerError::Database("Could not get survey".to_string())),
     };
