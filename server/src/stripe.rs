@@ -99,19 +99,19 @@ pub async fn checkout_session(
     //     .map_err(|err| ServerError::AuthFailNoSession)?;
     // let sessionid = get_session_header(&headers).unwrap();
     debug!("sessionid: {sessionid:?}");
-    // let ctx = &state.db.get_session(sessionid).await?;
-    // debug!("ctx: {ctx:?}");
+    let ctx = &state.db.get_session(sessionid).await?;
+    debug!("ctx: {ctx:?}");
 
-    // if ctx.0.user_id.is_empty() {
-    //     info!("No session found, direct customer to create an account");
-    //     return Ok(Redirect::to(&state.config.frontend_url));
-    // }
-    // debug!("User details: {:?}", ctx);
-    let user_id = "this is something".to_string();
+    if ctx.0.user_id.is_empty() {
+        info!("No session found, direct customer to create an account");
+        return Ok(Redirect::to(&state.config.frontend_url));
+    }
+    debug!("User details: {:?}", ctx);
+    // let user_id = "this is something".to_string();
     let user = &state
         .db
-        .get_user_by_id(user_id.clone())
-        // .get_user_by_id(ctx.0.user_id.clone())
+        // .get_user_by_id(user_id.clone())
+        .get_user_by_id(ctx.0.user_id.clone())
         .await
         .expect("Database failed")
         .expect("Did not find user");
