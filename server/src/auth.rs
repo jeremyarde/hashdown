@@ -132,7 +132,7 @@ pub struct SignupPayload {
 
 #[axum::debug_handler]
 pub async fn signup(
-    state: State<ServerState>,
+    State(state): State<ServerState>,
     payload: Json<SignupPayload>,
 ) -> Result<Json<Value>, ServerError> {
     info!("->> signup");
@@ -200,7 +200,7 @@ pub async fn signup(
 
 #[axum::debug_handler]
 pub async fn logout(
-    state: State<ServerState>,
+    State(state): State<ServerState>,
     headers: HeaderMap,
 ) -> anyhow::Result<Json<Value>, ServerError> {
     info!("->> logout");
@@ -214,7 +214,7 @@ use entity::users::Entity as User;
 
 #[axum::debug_handler]
 pub async fn login(
-    state: State<ServerState>,
+    State(state): State<ServerState>,
     // headers: HeaderMap,
     payload: Json<LoginPayload>,
 ) -> impl IntoResponse {

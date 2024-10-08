@@ -1,3 +1,4 @@
+use entity::responses::Model;
 use markdownparser::NanoId;
 use sea_orm::{
     ActiveModelBehavior, ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, ModelTrait,
@@ -15,7 +16,6 @@ use crate::db::database::MdpUser;
 use super::database::CreateUserRequest;
 
 use entity::users::{self, Entity as User};
-
 
 use entity::workspaces::{self};
 impl MdpDatabase {
@@ -74,6 +74,22 @@ impl MdpDatabase {
         Ok(new_user)
     }
 
+    pub async fn delete_user(&self, user: MdpUser) -> Result<bool, ServerError> {
+        let mut active_user = user.inner().clone().into_active_model();
+        // active_user.deleted_at = Set(Some(Utc::now().fixed_offset()));
+        // let res = active_user
+        //     .update(&self.pool)
+        //     .await
+        //     .map_err(|err| ServerError::Database(format!("Database issue: {}", err)))?;
+
+        User::delete(active_user)
+            .exec(&self.pool)
+            .await
+            .map_err(|err| ServerError::Database(format!("Database issue: {}", err)))?;
+
+        Ok(true)
+    }
+
     pub async fn get_user_by_email(&self, email: String) -> Result<Option<MdpUser>, ServerError> {
         info!("Search for user with email: {email:?}");
 
@@ -99,13 +115,13 @@ impl MdpDatabase {
             .one(&self.pool)
             .await
             .map_err(|err| ServerError::Database(format!("Error in database: {err}")))?;
-
         debug!("user: {:#?}", user);
 
         match user {
             Some(x) => Ok(Some(MdpUser(x))),
             None => Ok(None),
         }
+        // return Ok(None);
     }
 
     pub async fn get_user_by_confirmation_code(
@@ -166,7 +182,31 @@ mod tests {
 
         let database_url = dotenvy::var("DATABASE_URL").unwrap();
         let db = MdpDatabase::new(database_url).await.unwrap();
-        let user = &db.create_user(create_user_request).await.unwrap();
+
+        let mut user = match &db
+            .get_user_by_email(create_user_request.email.clone())
+            .await
+        {
+            Ok(x) => {
+                if x.is_none() {
+                    // info!("user: {x:?}");
+                    db.create_user(create_user_request).await.unwrap()
+                } else {
+                    db.delete_user(x.clone().unwrap()).await.unwrap();
+                    db.create_user(create_user_request).await.unwrap()
+                }
+            }
+            Err(err) => todo!(),
+        };
+
+        info!("success: {user:?}")
+    }
+
+    #[tokio::test]
+    async fn test_get_user_by_id() {
+        let database_url = dotenvy::var("DATABASE_URL").unwrap();
+        let db = MdpDatabase::new(database_url).await.unwrap();
+        let user = &db.get_user_by_id("usr_default2".to_string()).await.unwrap();
 
         info!("success: {user:?}")
     }
@@ -182,11 +222,25 @@ mod tests {
 
         let database_url = dotenvy::var("DATABASE_URL").unwrap();
         let db = MdpDatabase::new(database_url).await.unwrap();
-        let user = &db.create_user(create_user_request).await.unwrap();
 
-        let updated_user = &db.verify_user(user.clone()).await.unwrap();
-
+        let mut user = match &db
+            .get_user_by_email(create_user_request.email.clone())
+            .await
+        {
+            Ok(x) => {
+                if x.is_none() {
+                    // info!("user: {x:?}");
+                    db.create_user(create_user_request).await.unwrap()
+                } else {
+                    x.clone().unwrap()
+                }
+            }
+            Err(err) => todo!(),
+        };
         info!("User: {user:#?}");
+
+        let updated_user = &db.verify_user(user).await.unwrap();
+
         info!("Updated User: {updated_user:#?}");
     }
 }

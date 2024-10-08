@@ -9,7 +9,10 @@ use sqlx::{self, FromRow};
 use tracing::{debug, info};
 use tracing_subscriber::field::debug;
 
-use crate::{auth::get_session_header, constants::SESSION_ID_KEY, ServerError, ServerState};
+use crate::{
+    auth::get_session_header, constants::SESSION_ID_KEY, db::database::MdpSession, ServerError,
+    ServerState,
+};
 
 struct StripeProducts {
     price: String,
@@ -81,31 +84,34 @@ pub struct CheckoutSession {
 
 #[axum::debug_handler]
 pub async fn checkout_session(
-    headers: HeaderMap,
     state: State<ServerState>,
     // State(state): State<ServerState>,
+    headers: HeaderMap,
     payload: Json<CheckoutSession>,
     // Form(input): Form<Value>,
 ) -> anyhow::Result<Redirect, ServerError> {
     info!("Recieved checkout session request");
 
-    let session_id = get_session_header(&headers).unwrap();
+    let sessionid = get_session_header(&headers).unwrap();
 
     // let ctx = get_session_context(&state, headers)
     //     .await
     //     .map_err(|err| ServerError::AuthFailNoSession)?;
-    let sessionid = get_session_header(&headers).unwrap();
-    let ctx = state.db.get_session(sessionid).await?;
+    // let sessionid = get_session_header(&headers).unwrap();
+    debug!("sessionid: {sessionid:?}");
+    // let ctx = &state.db.get_session(sessionid).await?;
+    // debug!("ctx: {ctx:?}");
 
-    if ctx.0.user_id.is_empty() {
-        info!("No session found, direct customer to create an account");
-        return Ok(Redirect::to(&state.config.frontend_url));
-    }
-    debug!("User details: {:?}", ctx);
-
+    // if ctx.0.user_id.is_empty() {
+    //     info!("No session found, direct customer to create an account");
+    //     return Ok(Redirect::to(&state.config.frontend_url));
+    // }
+    // debug!("User details: {:?}", ctx);
+    let user_id = "this is something".to_string();
     let user = &state
         .db
-        .get_user_by_id(ctx.0.user_id)
+        .get_user_by_id(user_id.clone())
+        // .get_user_by_id(ctx.0.user_id.clone())
         .await
         .expect("Database failed")
         .expect("Did not find user");
@@ -146,7 +152,7 @@ pub async fn checkout_session(
 #[tracing::instrument]
 #[axum::debug_handler]
 pub async fn list_survey(
-    state: State<ServerState>,
+    State(state): State<ServerState>,
     payload: Json<Value>,
 ) -> anyhow::Result<Redirect, ServerError> {
     return Ok(Redirect::to(&state.config.frontend_url));
