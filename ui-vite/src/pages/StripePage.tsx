@@ -25,7 +25,9 @@ export default function StripePage() {
     }
   }, []);
 
-  const createCheckoutSession = async () => {
+  const createCheckoutSession = async (evt) => {
+    evt.preventDefault();
+
     const response = await fetch(
       `${getApiBaseUrl()}/v1/create-checkout-session`,
       {
@@ -36,8 +38,10 @@ export default function StripePage() {
         },
         body: JSON.stringify({
           price_id: "price_1I1w6lI5j0q7u0x7x0",
-          success_url: `${getWebsiteUrl()}?success=true`,
-          cancel_url: `${getWebsiteUrl()}?canceled=true`,
+          // success_url: `${getWebsiteUrl()}/checkoutsuccess`,
+          // cancel_url: `${getWebsiteUrl()}/checkout/canceled`,
+          success_url: `http://${getWebsiteUrl()}/checkout?success=true`,
+          cancel_url: `http://${getWebsiteUrl()}/checkout?canceled=true`,
         }),
       }
     );
