@@ -10,7 +10,7 @@ use serde_json::{json, Value};
 use tracing::{debug, info};
 
 use crate::{
-    auth::get_session_context, constants::SESSION_ID_KEY, db::database::MdpSurvey, ServerError,
+    auth::get_session_header, constants::SESSION_ID_KEY, db::database::MdpSurvey, ServerError,
     ServerState,
 };
 
@@ -41,12 +41,14 @@ pub async fn list_response(
 ) -> Result<Json<Value>, ServerError> {
     info!("->> submit_survey");
     debug!("    ->> survey: {:#?}", response_query);
-    let ctx = get_session_context(&state, headers)
-        .await
-        .map_err(|err| ServerError::AuthFailNoSession)?; // json version
+    // let ctx = get_session_context(&state, headers)
+    //     .await
+    //     .map_err(|err| ServerError::AuthFailNoSession)?; // json version
+    let sessionid = get_session_header(&headers).unwrap();
+    let ctx = state.db.get_session(sessionid).await?;
     let responses: Vec<Model> = state
         .db
-        .list_responses(&response_query.survey_id, &ctx.session.0.workspace_id)
+        .list_responses(&response_query.survey_id, &ctx.0.workspace_id)
         .await
         .expect("Could not get responses from db");
 

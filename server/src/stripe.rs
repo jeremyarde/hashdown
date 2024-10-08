@@ -91,11 +91,13 @@ pub async fn checkout_session(
 
     let session_id = get_session_header(&headers).unwrap();
 
-    let ctx = get_session_context(&state, headers)
-        .await
-        .map_err(|err| ServerError::AuthFailNoSession)?;
+    // let ctx = get_session_context(&state, headers)
+    //     .await
+    //     .map_err(|err| ServerError::AuthFailNoSession)?;
+    let sessionid = get_session_header(&headers).unwrap();
+    let ctx = state.db.get_session(sessionid).await?;
 
-    if ctx.user_id.is_empty() {
+    if ctx.0.user_id.is_empty() {
         info!("No session found, direct customer to create an account");
         return Ok(Redirect::to(&state.config.frontend_url));
     }
@@ -103,7 +105,7 @@ pub async fn checkout_session(
 
     let user = &state
         .db
-        .get_user_by_id(ctx.user_id)
+        .get_user_by_id(ctx.0.user_id)
         .await
         .expect("Database failed")
         .expect("Did not find user");
