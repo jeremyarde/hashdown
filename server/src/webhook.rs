@@ -70,10 +70,6 @@ pub async fn handle_stripe_webhook(
             // get the checkout session
             // let secret_key = dotenvy::var("STRIPE_SECRETKEY").unwrap();
             let secret_key = state.config.stripe_secret_key.clone();
-            // ```
-            // curl https://api.stripe.com/v1/checkout/sessions/cs_test_a11YYufWQzNY63zpQ6QSNRQhkUpVph4WRmzW0zWJO2znZKdVujZ0N0S22u \
-            //   -u "sk_test_51Hsx1SH1WJxpjVSWJXVaItV1vKonbcvxROMr1uluUz80z31f0vUzKN9xxG6HUd7r3pmcl9t5rwubgPeDm7y6vWql007HSWYOYx:"
-            // ```
 
             // let session_id = "cs_test_a17ltYjf9B9OcUkXY7rNLyEhZpXs2Mum3u3NeLBbe2rSXBsFvSvdU7neRV";
             let params = [("expand[]", "line_items")];
@@ -130,21 +126,12 @@ pub async fn handle_stripe_webhook(
 
             if user.is_none() {
                 info!("handle_stripe_webhook: user not found in database: {customer_json} - this should not be possible...");
-                // state
-                //     .db
-                //     .create_user(CreateUserRequest {
-                //         name: customer_json["name"].clone(),
-                //         email: customer_json["email"].clone(),
-                //         // password_hash: todo!(),
-                //         // workspace_id: todo!(),
-                //     })
-                //     .await;
             }
 
             let mut user = user.unwrap().into_active_model();
             // user.stripe_subscription_id = Set(Some()); // TODO: this might need to be set
             user.stripe_subscription_price_id = Set(Some(price_id));
-            Ok(Json(json!("NOT IMPLEMENTED")))
+            Ok(Json(json!({"success": true})))
         }
         // "checkout.session.expired" => {}
         // "customer.source.expiring" => {}
