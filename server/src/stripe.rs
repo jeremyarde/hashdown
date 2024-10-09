@@ -75,11 +75,15 @@ async fn create_checkout_session(
     return Ok(result);
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CheckoutSession {
     cancel_url: String,
     success_url: String,
     price_id: String,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct StripeCheckoutResponse {
+    url: String,
 }
 
 #[axum::debug_handler]
@@ -89,7 +93,7 @@ pub async fn checkout_session(
     headers: HeaderMap,
     payload: Json<CheckoutSession>,
     // Form(input): Form<Value>,
-) -> anyhow::Result<Redirect, ServerError> {
+) -> anyhow::Result<Json<StripeCheckoutResponse>, ServerError> {
     info!("Recieved checkout session request");
 
     let sessionid = get_session_header(&headers).unwrap();
@@ -104,7 +108,7 @@ pub async fn checkout_session(
 
     if ctx.0.user_id.is_empty() {
         info!("No session found, direct customer to create an account");
-        return Ok(Redirect::to(&state.config.frontend_url));
+        return Err(ServerError::LoginFail);
     }
     debug!("User details: {:?}", ctx);
     // let user_id = "this is something".to_string();
@@ -139,14 +143,20 @@ pub async fn checkout_session(
         Ok(x) => x,
         Err(err) => {
             info!("Error creating checkout session: {err}");
-            return Ok(Redirect::to(&state.config.frontend_url));
+            // return Ok(Redirect::to(&state.config.frontend_url));
+            return Err(ServerError::Stripe(
+                "Could not create checkout session".to_string(),
+            ));
         }
     };
 
     info!("Checkout session: {checkout_session:?}");
 
     let redirect_url = checkout_session.get("url").unwrap().as_str().unwrap();
-    Ok(Redirect::to(redirect_url))
+    // Ok(Redirect::to(redirect_url))
+    Ok(Json(StripeCheckoutResponse {
+        url: redirect_url.to_string(),
+    }))
 }
 
 #[tracing::instrument]

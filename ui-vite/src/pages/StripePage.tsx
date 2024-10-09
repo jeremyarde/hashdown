@@ -1,5 +1,6 @@
 import { getApiBaseUrl, getSessionToken, getWebsiteUrl } from "@/lib/utils";
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Message = ({ message }: { message: string }) => (
   <section>
@@ -45,7 +46,9 @@ export default function StripePage() {
         }),
       }
     );
-    console.log(`createCheckoutSession response: ${JSON.stringify(response)}`);
+    const json = await response.json();
+    console.log(`createCheckoutSession response: ${JSON.stringify(json)}`);
+    window.location.href = json.url;
   };
 
   return message ? (

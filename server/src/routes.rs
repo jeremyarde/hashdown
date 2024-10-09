@@ -98,8 +98,9 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         origins.append(&mut vec![
             //     "http://localhost:8080".parse().unwrap(),
             "http://localhost:5173".parse().unwrap(), //     "http:127.0.0.1:5173".parse().unwrap(),
-                                                      // "https://mdp-api.onrender.com".parse().unwrap(),
-                                                      // "https://gethashdown.com".parse().unwrap(),
+            // "https://mdp-api.onrender.com".parse().unwrap(),
+            // "https://gethashdown.com".parse().unwrap(),
+            "https://checkout.stripe.com".parse().unwrap(),
         ]);
     }
     if state.config.is_prod() {
@@ -116,6 +117,7 @@ pub fn get_router(state: ServerState) -> anyhow::Result<Router> {
         .allow_headers([
             axum::http::header::CONTENT_TYPE,
             axum::http::header::ACCEPT,
+            // axum::http::header::R
             // axum::http::header::AUTHORIZATION,
             // axum::http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
             // axum::http::header::ACCESS_CONTROL_REQUEST_METHOD,
