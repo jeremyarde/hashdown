@@ -62,7 +62,8 @@ pub async fn handle_stripe_webhook(
 
     match event_type {
         // "stripe.checkout.session.async_payment_succeeded" => {}
-        "checkout.session.completed" => {
+        // "checkout.session.completed" => {
+        "customer.subscription.updated" => {
             // successful payment
             info!("Stripe subscription successful, setting up subscription");
             let checkout_session_id: &str = payload["data"]["object"]["id"].as_str().unwrap();

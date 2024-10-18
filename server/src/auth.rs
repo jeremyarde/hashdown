@@ -137,6 +137,8 @@ pub async fn signup(
 ) -> Result<Json<Value>, ServerError> {
     info!("->> signup");
 
+    // todo: rate limit
+
     match state.db.get_user_by_email(payload.email.clone()).await {
         Ok(user) => match user {
             None => {}

@@ -43,12 +43,12 @@ const BINARY_NAME: &str = "mdpserver";
 #[instrument]
 async fn main() -> anyhow::Result<()> {
     info!("Starting server...");
-    // info!("Ending early :)");
-    // return Ok(());
+
     // cargo watch -d 1.5 -- cargo run
 
     let default = format!("{BINARY_NAME}=debug,sqlx=debug,axum=debug");
     // let default = format!("{BINARY_NAME}=debug,sqlx=debug,tokio=trace,runtime=trace");
+
     tracing_subscriber::registry()
         // .with_max_level(tracing::Level::TRACE)
         // .with_env_filter(format!("{BINARY_NAME}=info,sqlx=error"))
