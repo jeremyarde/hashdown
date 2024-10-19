@@ -15,8 +15,6 @@ server/surveyapp.db-*
 server/.env
 research/
 server/.secrets
-# ui-vite/.env.development
-# ui-vite/.env.production
 market-research.md
 server/.prod.env
 */.env

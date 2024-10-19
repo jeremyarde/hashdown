@@ -9,7 +9,7 @@ export function Home() {
 
   return (
     <>
-      <HeroSection></HeroSection>
+      <HeroSection />
       {/* <div className="flex flex-row p-5 pt-8 pb-16 justify-evenly"> */}
       <div className="flex flex-row justify-between p-5">
         <div className="flex-1"></div>
