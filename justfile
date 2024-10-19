@@ -22,7 +22,7 @@ rund:
     docker run --env-file ./server/.env -p 8080:8080 -it mdp-server
 
 runfe:
-    cd ui-vite && npm run dev
+    cd ui && npm run dev
 runbe:
     cd server && cargo r
 
@@ -33,13 +33,13 @@ migrateprodf:
     # cd server && source .prod.env && sqlx migrate revert --database-url $DATABASE_URL && sqlx migrate run --database-url $DATABASE_URL
 
 gentypes:
-    supabase gen types typescript --project-id vbvounbggaxtaofatdyg > ui-vite/src/types/supabase.ts
+    supabase gen types typescript --project-id vbvounbggaxtaofatdyg > ui/src/types/supabase.ts
 
 buildwasm:
     cd backend && wasm-pack build --target bundler
     
 buildfe:
-    cd ui-vite && npm run build
+    cd ui && npm run build
 
 seamigrate:
     sea-orm-cli migrate refresh
