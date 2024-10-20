@@ -113,25 +113,23 @@ if (typeof window !== "undefined") {
 }
 ---
 
-<div style={styles.pricingPage}>
-  <h1 style={styles.title}>Our Pricing Plans</h1>
-  <div style={styles.tiersContainer}>
+<div id="pricing" class="pricing-page">
+  <h1 class="title">Our Pricing Plans</h1>
+  <div class="tiers-container">
     {
       tiers.map((tier, index) => (
-        <div key={index} style={styles.tier}>
-          <h2 style={styles.tierName}>{tier.name}</h2>
-          <p style={styles.price}>
+        <div class="tier">
+          <h2 class="tier-name">{tier.name}</h2>
+          <p class="price">
             {tier.price}
-            <span style={styles.perMonth}>/month</span>
+            <span class="per-month">/month</span>
           </p>
-          <ul style={styles.features}>
+          <ul class="features">
             {tier.features.map((feature, featureIndex) => (
-              <li key={featureIndex} style={styles.feature}>
-                {feature}
-              </li>
+              <li class="feature">{feature}</li>
             ))}
           </ul>
-          <button style={styles.button}>Choose Plan</button>
+          <button class="button">Choose Plan</button>
         </div>
       ))
     }
