@@ -11,7 +11,7 @@ export function Home() {
     <>
       <HeroSection />
       {/* <div className="flex flex-row p-5 pt-8 pb-16 justify-evenly"> */}
-      <div className="flex flex-row justify-between p-5">
+      <div className="flex flex-col justify-between p-5">
         <div className="flex-1"></div>
         <Link
           className="flex-1 p-2 text-2xl rounded outline outline-1 button"
