@@ -1,62 +1,181 @@
 ---
-import { PricingPage } from "../components/Pricing";
+import Pricing from "@components/Pricing.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import MySiteLayout from "../layouts/BaseLayout.astro";
 
+// let sampleSurvey = markdown_to_form_wasm_v2(heroContent);
+---
 
-
-
-const heading = (
-  <div>
-    <h1
-      class="flex justify-center pt-4 text-4xl text-center top-10"
-      style={{ fontWeight: "700", color: "black" }}
-    >
-      Create forms and surveys with ease - using just text.
-    </h1>
+<div class="flex flex-col p-6 space-y-8">
+  <div class="p-6 pb-24">
+    <div>
+      <h1
+        class="flex justify-center pt-4 text-4xl text-center top-10"
+        style={{ fontWeight: "700", color: "black" }}
+      >
+        Create forms and surveys with ease - using just text.
+      </h1>
+    </div>
+    <div>
+      <span class="text-xl">
+        <h2>Turn simple text into powerful forms.</h2>
+        At Hashdown, we believe creating forms and surveys should be effortless.
+        With our unique system, all you need is a subset of Markdown to build dynamic
+        forms—no coding required.
+      </span>
+    </div>
+    <div>
+      <h3>Get Started Today</h3>
+      <p>
+        Start creating forms and surveys with Hashdown in just a few minutes.
+        Try it out today!
+      </p>
+      <a
+        class="flex-1 p-2 text-2xl rounded outline outline-1 button"
+        href="/testEditor"
+      >
+        Try it now
+      </a>
+    </div>
   </div>
-);
-
-const subheading = (
-  <div>
-    <span class="text-xl">
-      <h2>Turn simple text into powerful forms.</h2>
-      At Hashdown, we believe creating forms and surveys should be effortless.
-      With our unique system, all you need is a subset of Markdown to build
-      dynamic forms—no coding required.
-    </span>
+  <div class="flex flex-row p-6">
+    <div class="flex flex-col items-center p-2">
+      {"A few lines of text like this"}
+      {"Turns into this"}
+      <div class="w-1/2 pr-10"></div>
+    </div>
   </div>
-);
-
-const comparison = (
   <div>
-    <span class="text-xl">
-      <h2>Hashdown vs. Google Forms</h2>
-      Hashdown is a simpler alternative to Google Forms. It's designed to be
-      easy to use, with a focus on simplicity and ease of use. Google Forms, on
-      the other hand, is a more powerful tool that offers more advanced features
-      and capabilities.
-    </span>
+    <h3>Features</h3>
+    <ul>
+      <li>
+        Markdown-Driven: Use familiar Markdown syntax to create forms and
+        surveys in seconds.
+      </li>
+      <li>
+        Instant Sharing: Get a shareable URL instantly—no extra setup needed.
+      </li>
+      <li>
+        API Ready: Prefer automation? Use our API to integrate form creation
+        directly into your workflow.
+      </li>
+    </ul>
   </div>
-);
+  <div>
+    <div>
+      <h2>comparison</h2>
+      <div>
+        <span class="text-xl">
+          <h2>Hashdown vs. Google Forms</h2>
+          Hashdown is a simpler alternative to Google Forms. It's designed to be
+          easy to use, with a focus on simplicity and ease of use. Google Forms,
+          on the other hand, is a more powerful tool that offers more advanced features
+          and capabilities.
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="benefits-section">
+    <h2>Benefits of Using Hashdown vs. Traditional GUI-Based Form Builders</h2>
 
-const features = (
-  <ul>
-    <li>
-      Markdown-Driven: Use familiar Markdown syntax to create forms and surveys
-      in seconds.
-    </li>
-    <li>
-      Instant Sharing: Get a shareable URL instantly—no extra setup needed.
-    </li>
-    <li>
-      API Ready: Prefer automation? Use our API to integrate form creation
-      directly into your workflow.
-    </li>
-  </ul>
-);
+    <div class="benefit-item">
+      <h3>1. Speed and Simplicity</h3>
+      <p>
+        With Hashdown, creating forms is as fast as typing. You don’t need to
+        click through multiple menus or interfaces—just write in plain text
+        using Markdown syntax. This is ideal for users who prefer a streamlined,
+        no-frills approach to form creation.
+      </p>
+    </div>
 
-const howitworks = (
+    <div class="benefit-item">
+      <h3>2. Markdown Familiarity</h3>
+      <p>
+        For those already familiar with Markdown, Hashdown feels intuitive. Many
+        developers, writers, and content creators use Markdown daily, making it
+        second nature to create forms without having to learn a new visual
+        editor.
+      </p>
+    </div>
+
+    <div class="benefit-item">
+      <h3>3. Focus on Functionality, Not Design</h3>
+      <p>
+        Hashdown emphasizes function over form, so you can quickly generate
+        forms without getting bogged down in design decisions. If your priority
+        is collecting responses, rather than making the form look a certain way,
+        Hashdown helps you cut to the chase.
+      </p>
+    </div>
+
+    <div class="benefit-item">
+      <h3>4. API Access and Automation</h3>
+      <p>
+        Traditional GUI form builders often limit the level of automation and
+        integration options. Hashdown provides an API, making it ideal for
+        integrating form creation into your app or automating workflows. This is
+        a major advantage for developers and businesses looking to streamline
+        operations.
+      </p>
+    </div>
+
+    <div class="benefit-item">
+      <h3>5. Lightweight and Accessible</h3>
+      <p>
+        Without the overhead of a full GUI, Hashdown is lightweight, making it
+        faster to load and use. This is especially beneficial when working in
+        environments with limited resources or when quick edits are needed.
+      </p>
+    </div>
+
+    <div class="benefit-item">
+      <h3>6. Flexibility for Developers</h3>
+      <p>
+        Developers can generate forms dynamically by writing plain text or
+        through code, which allows for easier version control and scriptable
+        workflows. Traditional GUI builders often have limitations when it comes
+        to automation or integrating with development pipelines.
+      </p>
+    </div>
+
+    <div class="benefit-item">
+      <h3>7. Lower Learning Curve for Text-Based Creators</h3>
+      <p>
+        For users who work in text-based environments (writers, researchers,
+        etc.), Hashdown fits seamlessly into their workflow. There’s no need to
+        adjust to a graphical interface—they can stick to their preferred way of
+        working.
+      </p>
+    </div>
+
+    <div class="benefit-item">
+      <h3>8. Clean and Consistent Output</h3>
+      <p>
+        Because forms are built from a consistent, Markdown-based syntax, the
+        output is always predictable and clean. You won’t need to worry about
+        design inconsistencies that can sometimes occur in drag-and-drop
+        builders.
+      </p>
+    </div>
+
+    <div class="benefit-item">
+      <h3>9. Shareable and Embeddable</h3>
+      <p>
+        Hashdown instantly generates a shareable URL for your form, which can be
+        shared anywhere or embedded on websites. This makes distribution simple,
+        without requiring additional steps that GUI form builders might involve.
+      </p>
+    </div>
+
+    <div class="benefit-item">
+      <h3>10. Cost-Effective for Advanced Users</h3>
+      <p>
+        Since Hashdown doesn’t require the development and maintenance of a
+        heavy graphical interface, it may be more cost-effective for users who
+        don’t need all the design capabilities of a traditional form builder.
+      </p>
+    </div>
+  </div>
   <div>
     <h3>How Hashdown Works</h3>
     <div>
@@ -68,25 +187,7 @@ const howitworks = (
       </p>
     </div>
   </div>
-);
-
-const callToAction = (
-  <div>
-    <h3>Get Started Today</h3>
-    <p>
-      Start creating forms and surveys with Hashdown in just a few minutes. Try
-      it out today!
-    </p>
-    <a
-      class="flex-1 p-2 text-2xl rounded outline outline-1 button"
-      href="/testEditor"
-    >
-      Try it now
-    </a>
-  </div>
-);
-
-const faqs = (
+  <Pricing />
   <div class="">
     <h2>Frequently Asked Questions</h2>
     <div class="faq-section">
@@ -258,132 +359,4 @@ const faqs = (
       </div>
     </div>
   </div>
-);
-
-const benefits = (
-  <div class="benefits-section">
-    <h2>Benefits of Using Hashdown vs. Traditional GUI-Based Form Builders</h2>
-
-    <div class="benefit-item">
-      <h3>1. Speed and Simplicity</h3>
-      <p>
-        With Hashdown, creating forms is as fast as typing. You don’t need to
-        click through multiple menus or interfaces—just write in plain text
-        using Markdown syntax. This is ideal for users who prefer a streamlined,
-        no-frills approach to form creation.
-      </p>
-    </div>
-
-    <div class="benefit-item">
-      <h3>2. Markdown Familiarity</h3>
-      <p>
-        For those already familiar with Markdown, Hashdown feels intuitive. Many
-        developers, writers, and content creators use Markdown daily, making it
-        second nature to create forms without having to learn a new visual
-        editor.
-      </p>
-    </div>
-
-    <div class="benefit-item">
-      <h3>3. Focus on Functionality, Not Design</h3>
-      <p>
-        Hashdown emphasizes function over form, so you can quickly generate
-        forms without getting bogged down in design decisions. If your priority
-        is collecting responses, rather than making the form look a certain way,
-        Hashdown helps you cut to the chase.
-      </p>
-    </div>
-
-    <div class="benefit-item">
-      <h3>4. API Access and Automation</h3>
-      <p>
-        Traditional GUI form builders often limit the level of automation and
-        integration options. Hashdown provides an API, making it ideal for
-        integrating form creation into your app or automating workflows. This is
-        a major advantage for developers and businesses looking to streamline
-        operations.
-      </p>
-    </div>
-
-    <div class="benefit-item">
-      <h3>5. Lightweight and Accessible</h3>
-      <p>
-        Without the overhead of a full GUI, Hashdown is lightweight, making it
-        faster to load and use. This is especially beneficial when working in
-        environments with limited resources or when quick edits are needed.
-      </p>
-    </div>
-
-    <div class="benefit-item">
-      <h3>6. Flexibility for Developers</h3>
-      <p>
-        Developers can generate forms dynamically by writing plain text or
-        through code, which allows for easier version control and scriptable
-        workflows. Traditional GUI builders often have limitations when it comes
-        to automation or integrating with development pipelines.
-      </p>
-    </div>
-
-    <div class="benefit-item">
-      <h3>7. Lower Learning Curve for Text-Based Creators</h3>
-      <p>
-        For users who work in text-based environments (writers, researchers,
-        etc.), Hashdown fits seamlessly into their workflow. There’s no need to
-        adjust to a graphical interface—they can stick to their preferred way of
-        working.
-      </p>
-    </div>
-
-    <div class="benefit-item">
-      <h3>8. Clean and Consistent Output</h3>
-      <p>
-        Because forms are built from a consistent, Markdown-based syntax, the
-        output is always predictable and clean. You won’t need to worry about
-        design inconsistencies that can sometimes occur in drag-and-drop
-        builders.
-      </p>
-    </div>
-
-    <div class="benefit-item">
-      <h3>9. Shareable and Embeddable</h3>
-      <p>
-        Hashdown instantly generates a shareable URL for your form, which can be
-        shared anywhere or embedded on websites. This makes distribution simple,
-        without requiring additional steps that GUI form builders might involve.
-      </p>
-    </div>
-
-    <div class="benefit-item">
-      <h3>10. Cost-Effective for Advanced Users</h3>
-      <p>
-        Since Hashdown doesn’t require the development and maintenance of a
-        heavy graphical interface, it may be more cost-effective for users who
-        don’t need all the design capabilities of a traditional form builder.
-      </p>
-    </div>
-  </div>
-);
-
-// let sampleSurvey = markdown_to_form_wasm_v2(heroContent);
----
-
-<div class="flex flex-col p-6 space-y-8">
-  <div class="p-6 pb-24">
-    {heading}
-    {subheading}
-    {callToAction}
-  </div>
-  <div class="flex flex-row p-6">
-    <div class="flex flex-col items-center p-2">
-      {"A few lines of text like this"}
-      {"Turns into this"}
-      <div class="w-1/2 pr-10"></div>
-    </div>
-  </div>
-  {features}
-  {benefits}
-  {howitworks}
-  <PricingPage />
-  {faqs}
-  {callToAction}
 </div>
