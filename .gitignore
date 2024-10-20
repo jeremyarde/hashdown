@@ -11,10 +11,10 @@ server/target/
 ui-astro/.env.*
 server/dev.env
 
-server/surveyapp.db-*
 server/.env
 research/
 server/.secrets
 market-research.md
 server/.prod.env
 */.env
+*.md

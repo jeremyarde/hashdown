@@ -188,7 +188,7 @@ export function App() {
             <Route path="/surveys" element={<ListSurveys />} />
             <Route path="/responses" element={<ListResponses />} />
             <Route path="/waitlist" element={<Waitlist />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             <Route
               path="/testEditor"
               element={
