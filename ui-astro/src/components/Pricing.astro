@@ -1,47 +1,21 @@
-export function PricingPage() {
-  const tiers = [
-    {
-      name: "Basic",
-      price: "$9.99",
-      features: ["1 User", "10GB Storage", "Basic Support"],
-    },
-    {
-      name: "Pro",
-      price: "$19.99",
-      features: ["5 Users", "50GB Storage", "Priority Support"],
-    },
-    {
-      name: "Enterprise",
-      price: "$49.99",
-      features: ["Unlimited Users", "1TB Storage", "24/7 Support"],
-    },
-  ];
-
-  return (
-    <div style={styles.pricingPage}>
-      <h1 style={styles.title}>Our Pricing Plans</h1>
-      <div style={styles.tiersContainer}>
-        {tiers.map((tier, index) => (
-          <div key={index} style={styles.tier}>
-            <h2 style={styles.tierName}>{tier.name}</h2>
-            <p style={styles.price}>
-              {tier.price}
-              <span style={styles.perMonth}>/month</span>
-            </p>
-            <ul style={styles.features}>
-              {tier.features.map((feature, featureIndex) => (
-                <li key={featureIndex} style={styles.feature}>
-                  {feature}
-                </li>
-              ))}
-            </ul>
-            <button style={styles.button}>Choose Plan</button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+---
+const tiers = [
+  {
+    name: "Basic",
+    price: "$9.99",
+    features: ["1 User", "10GB Storage", "Basic Support"],
+  },
+  {
+    name: "Pro",
+    price: "$19.99",
+    features: ["5 Users", "50GB Storage", "Priority Support"],
+  },
+  {
+    name: "Enterprise",
+    price: "$49.99",
+    features: ["Unlimited Users", "1TB Storage", "24/7 Support"],
+  },
+];
 
 const styles = {
   pricingPage: {
@@ -137,3 +111,29 @@ if (typeof window !== "undefined") {
     }
   });
 }
+---
+
+<div style={styles.pricingPage}>
+  <h1 style={styles.title}>Our Pricing Plans</h1>
+  <div style={styles.tiersContainer}>
+    {
+      tiers.map((tier, index) => (
+        <div key={index} style={styles.tier}>
+          <h2 style={styles.tierName}>{tier.name}</h2>
+          <p style={styles.price}>
+            {tier.price}
+            <span style={styles.perMonth}>/month</span>
+          </p>
+          <ul style={styles.features}>
+            {tier.features.map((feature, featureIndex) => (
+              <li key={featureIndex} style={styles.feature}>
+                {feature}
+              </li>
+            ))}
+          </ul>
+          <button style={styles.button}>Choose Plan</button>
+        </div>
+      ))
+    }
+  </div>
+</div>
