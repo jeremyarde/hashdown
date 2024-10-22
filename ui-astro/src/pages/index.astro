@@ -7,39 +7,6 @@ import MySiteLayout from "../layouts/BaseLayout.astro";
 ---
 
 <style>
-  @import "tailwindcss/base";
-  @import "tailwindcss/components";
-  @import "tailwindcss/utilities";
-
-  /*  from here: https://twitter.com/souporserious/status/1746378842787459501/photo/1 */
-  * {
-    /* include padding and border in size calculation */
-    box-sizing: border-box;
-    /* position based on immediate parent and allow adjusting trbl */
-    /* position: relative; */
-    /* prevent grid and flex items from spilling out of container */
-    min-width: 0;
-    border: 1px solid pink;
-  }
-
-  body {
-    /* body fills entire view port */
-    min-height: 100dvh;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4 {
-    /* balance headings across multiple lines into even block */
-    text-wrap: balance;
-  }
-
-  p {
-    /* prevent single words of text on new line */
-    text-wrap: balance;
-  }
-
   .faq-section {
     max-width: 720px;
     input {
@@ -68,12 +35,6 @@ import MySiteLayout from "../layouts/BaseLayout.astro";
       max-height: 100px; /* Adjust this value based on the content height */
       padding: 10px;
     }
-  }
-
-  * {
-    max-width: 1280px;
-    margin: 0 auto;
-    text-align: center;
   }
 
   /* https://coolors.co/3a405a-f9dec9-99b2dd-e9afa3-685044
@@ -111,40 +72,49 @@ import MySiteLayout from "../layouts/BaseLayout.astro";
 --robin-egg-blue: hsla(179, 100%, 40%, 1);
 --maize: hsla(53, 100%, 70%, 1);
 */
+  .content {
+    position: relative;
+    /* width: 100%; */
+    min-width: 520px;
+    max-width: 1260px;
+    height: 100%;
+    background: var(--backgroundColor);
+    display: flex;
+    flex-direction: column;
+    top: 20px;
+  }
 </style>
 
 <BaseLayout>
-  <div class="flex flex-col p-6 space-y-8">
-    <div class="p-6 pb-24">
-      <div>
-        <h1
-          class="flex justify-center pt-4 text-4xl text-center top-10"
-          style={{ fontWeight: "700", color: "black" }}
-        >
-          Create forms and surveys with ease - using just text.
-        </h1>
-      </div>
-      <div>
-        <span class="text-xl">
-          <h2>Turn simple text into powerful forms.</h2>
-          At Hashdown, we believe creating forms and surveys should be effortless.
-          With our unique system, all you need is a subset of Markdown to build dynamic
-          forms—no coding required.
-        </span>
-      </div>
-      <div>
-        <h3>Get Started Today</h3>
-        <p>
-          Start creating forms and surveys with Hashdown in just a few minutes.
-          Try it out today!
-        </p>
-        <a
-          class="flex-1 p-2 text-2xl rounded outline outline-1 button"
-          href="/testEditor"
-        >
-          Try it now
-        </a>
-      </div>
+  <div class="content">
+    <div>
+      <h1
+        class="flex justify-center pt-4 text-4xl text-center top-10"
+        style={{ fontWeight: "700", color: "black" }}
+      >
+        Create forms and surveys with ease - using just text.
+      </h1>
+    </div>
+    <div>
+      <span class="text-xl">
+        <h2>Turn simple text into powerful forms.</h2>
+        At Hashdown, we believe creating forms and surveys should be effortless.
+        With our unique system, all you need is a subset of Markdown to build dynamic
+        forms—no coding required.
+      </span>
+    </div>
+    <div>
+      <h3>Get Started Today</h3>
+      <p>
+        Start creating forms and surveys with Hashdown in just a few minutes.
+        Try it out today!
+      </p>
+      <a
+        class="flex-1 p-2 text-2xl rounded outline outline-1 button"
+        href="/testEditor"
+      >
+        Try it now
+      </a>
     </div>
     <div class="flex flex-row p-6">
       <div class="flex flex-col items-center p-2">

@@ -1,9 +1,115 @@
 ---
 const { title } = Astro.props;
-const innerRadius = 16;
-const distance = 2; // padding of outer element
-const outerRadius = innerRadius + distance;
+const innerRadiusVal = 16;
+const distanceVal = 2; // padding of outer element
+const outerRadiusVal = innerRadiusVal + distanceVal;
+
+const innerRadius = `${innerRadiusVal}px`;
+const distance = `${distanceVal}px`;
+const outerRadius = `${outerRadiusVal}px`;
+
+const backgroundColor = "#E0E0CE";
+// const navbarBackgroundColor = "#E0E0CE";
+const navbarBackgroundColor = "rgba(2, 230, 0, 0.1)";
+const accent = "#AD343E";
+
+/* --bittersweet: hsla(1, 100%, 68%, 1);
+  --timberwolf: hsla(0, 0%, 85%, 1);
+  --ivory: hsla(60, 100%, 96%, 1);
+  --robin-egg-blue: hsla(179, 100%, 40%, 1);
+  --maize: hsla(53, 100%, 70%, 1); */
 ---
+
+<style
+  is:global
+  define:vars={{
+    innerRadius,
+    outerRadius,
+    distance,
+    backgroundColor,
+    accent,
+    navbarBackgroundColor,
+  }}
+>
+  .frosted {
+    position: relative;
+    z-index: 2;
+    backdrop-filter: blur(4px);
+    color: #fff;
+    /* font-size: 30px; */
+    /* padding: 50px; */
+    /* border-radius: 10px; */
+    /* box-shadow: 0 5px 50px rgba(0, 0, 0, 0.5); */
+  }
+  .navbar {
+    display: flex;
+    flex-direction: row;
+    /* justify-content: space-between; */
+    align-items: center;
+    gap: 10px;
+    top: 20px;
+    /* left: 20px; */
+    /* padding: 10px; */
+    /* margin-left: 20px; */
+    /* margin-right: 20px; */
+    /* padding-left: 20px; */
+    /* border: 2px solid var(--accent); */
+    /* background-color: var(--navbarBackgroundColor); */
+    border-radius: var(--outerRadius);
+    padding: var(--distance);
+    /* box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.1),
+      0 1px 3px rgba(0, 0, 0, 0.08); */
+
+    box-shadow:
+      0 6px 12px rgba(0, 0, 0, 0.02),
+      0 3px 6px rgba(0, 0, 0, 0.1);
+    left: 0;
+    min-width: fit-content;
+    position: sticky;
+    width: 90%;
+    z-index: 9999;
+  }
+  .nav-item {
+    borderradius: var(--outerRadius);
+    padding: var(--distance);
+    backgroundcolor: "#ffed66ff";
+    text-decoration: none;
+  }
+  /*  from here: https://twitter.com/souporserious/status/1746378842787459501/photo/1 */
+  * {
+    /* include padding and border in size calculation */
+    box-sizing: border-box;
+    /* position based on immediate parent and allow adjusting trbl */
+    position: relative;
+    /* prevent grid and flex items from spilling out of container */
+    min-width: 0;
+    /* border: 1px solid pink; */
+    max-width: 1280px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+  }
+
+  body {
+    /* body fills entire view port */
+    min-height: 100dvh;
+    max-width: 1080px;
+    background-color: var(--backgroundColor);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    /* balance headings across multiple lines into even block */
+    text-wrap: balance;
+  }
+
+  p {
+    /* prevent single words of text on new line */
+    text-wrap: balance;
+  }
+</style>
 
 <html lang="en">
   <head>
@@ -14,34 +120,23 @@ const outerRadius = innerRadius + distance;
     <title>Hashdown</title>
   </head>
   <body>
-    <div
-      class="navbar"
-    >
-      <a class="text-2xl font-bold" href="/">
-        <img src="/hashdown.png" alt="logo" width={250} height={50} />
+    <div class="navbar frosted">
+      <a style="width: 100%; padding-left: 20px;" class="" href="/">
+        <img src="/hashdown.png" alt="logo" height={50} />
       </a>
-      <a href="#pricing">Pricing</a>
-      <a href="https://app.gethashdown.com">Sign up</a> 
+      <div
+        style={{
+          // padding: "10px",
+          display: "flex",
+          flexDirection: "row",
+          width: "100%",
+          justifyContent: "flex-end",
+        }}
+      >
+        <a class="nav-item" href="#pricing">Pricing</a>
+        <a class="nav-item" href="https://app.gethashdown.com">Sign up</a>
+      </div>
     </div>
     <slot />
-    <!-- <Footer /> -->
   </body>
-
-  <style>
-    .navbar {
-      borderRadius: `${outerRadius}px`,
-      padding: `${distance}px`,
-      backgroundColor: "whitesmoke",
-      borderWidth: "1.5px",
-    }
-    .nav-item {
-      
-              borderRadius: `${outerRadius}px`,
-              padding: `${distance}px`,
-              backgroundColor: "#ffed66ff",
-            }
-    h1 {
-      font-size: 2rem;
-    }
-  </style>
 </html>
