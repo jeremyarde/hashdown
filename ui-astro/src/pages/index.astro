@@ -1,8 +1,6 @@
 ---
 import Pricing from "@components/Pricing.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import MySiteLayout from "../layouts/BaseLayout.astro";
-
 // let sampleSurvey = markdown_to_form_wasm_v2(heroContent);
 ---
 
@@ -35,6 +33,11 @@ import MySiteLayout from "../layouts/BaseLayout.astro";
       max-height: 100px; /* Adjust this value based on the content height */
       padding: 10px;
     }
+  }
+
+  .section {
+    padding: var(--sectionPadding);
+    text-align: center;
   }
 
   /* https://coolors.co/3a405a-f9dec9-99b2dd-e9afa3-685044
