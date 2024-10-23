@@ -87,20 +87,35 @@ import MySiteLayout from "../layouts/BaseLayout.astro";
 
 <BaseLayout>
   <div class="content">
-    <div>
-      <h1
-        class="flex justify-center pt-4 text-4xl text-center top-10"
-        style={{ fontWeight: "700", color: "black" }}
-      >
-        Create forms and surveys with ease - using just text.
+    <div class="section">
+      <h1 style={{ fontWeight: "700", color: "black" }}>
+        <span>
+          Hashdown is a new, simpler way to create forms and surveys
+        </span>
       </h1>
+      <h2>
+        <span
+          >Use text to create forms with our editor or API and start gathering
+          responses in minutes.</span
+        >
+      </h2>
+      <a
+        class="flex-1 p-2 text-2xl rounded outline outline-1 button"
+        href="/testEditor"
+      >
+        <button> Try it now </button>
+      </a>
     </div>
-    <div>
+    <div class="section">
+      <h2>This is a demo area</h2>
+    </div>
+    <div class="section">
       <span class="text-xl">
         <h2>Turn simple text into powerful forms.</h2>
-        At Hashdown, we believe creating forms and surveys should be effortless.
-        With our unique system, all you need is a subset of Markdown to build dynamic
-        forms—no coding required.
+        We believe creating forms and surveys should be effortless, as easy as writing your questions in a text file rather than learning a new visual editor.
+		With our unique system, all you need is a subset of Markdown to build dynamic forms—no coding required.
+
+		
       </span>
     </div>
     <div>
@@ -113,7 +128,7 @@ import MySiteLayout from "../layouts/BaseLayout.astro";
         class="flex-1 p-2 text-2xl rounded outline outline-1 button"
         href="/testEditor"
       >
-        Try it now
+        <button> Try it now </button>
       </a>
     </div>
     <div class="flex flex-row p-6">
