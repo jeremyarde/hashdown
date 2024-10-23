@@ -12,6 +12,7 @@ const backgroundColor = "#FFFFFF";
 const navbarBackgroundColor = "rgba(255, 255, 255, 0.2)";
 const accent = "#AD343E";
 const sectionPadding = "70px";
+const maxWidth = "960px";
 ---
 
 <style
@@ -23,6 +24,8 @@ const sectionPadding = "70px";
     backgroundColor,
     accent,
     navbarBackgroundColor,
+    maxWidth,
+    sectionPadding,
   }}
 >
   .frosted {
@@ -54,6 +57,7 @@ const sectionPadding = "70px";
     position: sticky;
     width: 90%;
     z-index: 9999;
+    max-width: var(--maxWidth);
   }
   .navbar-list {
     width: 100%;
