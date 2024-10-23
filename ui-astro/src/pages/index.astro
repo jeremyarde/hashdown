@@ -76,7 +76,7 @@ import MySiteLayout from "../layouts/BaseLayout.astro";
     position: relative;
     /* width: 100%; */
     min-width: 520px;
-    max-width: 1260px;
+    max-width: var(--maxWidth);
     height: 100%;
     background: var(--backgroundColor);
     display: flex;
@@ -93,12 +93,12 @@ import MySiteLayout from "../layouts/BaseLayout.astro";
           Hashdown is a new, simpler way to create forms and surveys
         </span>
       </h1>
-      <h2>
+      <h3 style={{ fontWeight: "100", color: "#444" }}>
         <span
           >Use text to create forms with our editor or API and start gathering
           responses in minutes.</span
         >
-      </h2>
+      </h3>
       <a
         class="flex-1 p-2 text-2xl rounded outline outline-1 button"
         href="/testEditor"
@@ -109,13 +109,13 @@ import MySiteLayout from "../layouts/BaseLayout.astro";
     <div class="section">
       <h2>This is a demo area</h2>
     </div>
-    <div class="section">
+    <div class="section" style="text-align: center;">
       <span class="text-xl">
-        <h2>Turn simple text into powerful forms.</h2>
-        We believe creating forms and surveys should be effortless, as easy as writing your questions in a text file rather than learning a new visual editor.
-		With our unique system, all you need is a subset of Markdown to build dynamic forms—no coding required.
-
-		
+        <h2>Turn text into powerful forms.</h2>
+        We believe creating forms and surveys should be effortless, as easy as writing
+        your questions in a text file rather than learning a new visual editor. With
+        our unique system, all you need is a subset of Markdown to build dynamic
+        forms—no coding required.
       </span>
     </div>
     <div>
