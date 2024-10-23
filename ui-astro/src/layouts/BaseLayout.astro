@@ -1,5 +1,5 @@
 ---
-const { title } = Astro.props;
+// const { title } = Astro.props;
 const innerRadiusVal = 16;
 const distanceVal = 2; // padding of outer element
 const outerRadiusVal = innerRadiusVal + distanceVal;
@@ -13,6 +13,7 @@ const navbarBackgroundColor = "rgba(255, 255, 255, 0.2)";
 const accent = "#AD343E";
 const sectionPadding = "70px";
 const maxWidth = "960px";
+const title = "Hashdown - Forms made easy";
 ---
 
 <style
@@ -57,7 +58,9 @@ const maxWidth = "960px";
     position: sticky;
     width: 90%;
     z-index: 9999;
-    max-width: var(--maxWidth);
+    max-width: calc(var(--maxWidth) + 40px);
+    height: 70px;
+    align-items: center;
   }
   .navbar-list {
     width: 100%;
@@ -89,8 +92,6 @@ const maxWidth = "960px";
     /* max-width: 1280px; */
     /* margin: 0 auto; */
     font-family: Arial, sans-serif;
-  }
-  .section {
   }
 
   body {
@@ -128,7 +129,7 @@ const maxWidth = "960px";
     <link rel="icon" type="image/svg+xml" href="./hlogo.png" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <title>Hashdown</title>
+    <title>{title}</title>
   </head>
   <body>
     <div class="navbar frosted">
