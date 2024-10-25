@@ -34,12 +34,12 @@ import {
 const items = [
   {
     title: "Home",
-    url: "#",
+    url: "",
     icon: Home,
   },
   {
     title: "Editor",
-    url: "#",
+    url: "/editor",
     icon: Inbox,
   },
   {
