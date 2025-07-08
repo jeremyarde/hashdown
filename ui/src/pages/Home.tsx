@@ -15,7 +15,7 @@ export function Home() {
         <div className="flex-1"></div>
         <Link
           className="flex-1 p-2 text-2xl rounded outline outline-1 button"
-          to="/testEditor"
+          to="/editor"
         >
           Try it now
         </Link>

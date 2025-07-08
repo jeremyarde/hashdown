@@ -6,7 +6,7 @@ import { PricingPage } from "./PricingPage.tsx";
 const heading = (
   <div>
     <h1
-      className="flex justify-center pt-4 text-4xl text-center top-10"
+      className="flex top-10 justify-center pt-4 text-4xl text-center"
       style={{ fontWeight: "700", color: "black" }}
     >
       Create forms and surveys with ease - using just text.
@@ -76,7 +76,7 @@ const callToAction = (
     </p>
     <a
       className="flex-1 p-2 text-2xl rounded outline outline-1 button"
-      href="/testEditor"
+      href="/editor"
     >
       Try it now
     </a>
@@ -374,7 +374,7 @@ submit: submit`);
 
   let sampleSurvey = markdown_to_form_wasm_v2(heroContent);
   const surveyExample = (
-    <div className="w-1/2 h-full pr-10 ">
+    <div className="pr-10 w-1/2 h-full">
       <ol
         style={{
           whiteSpace: "pre",
@@ -387,7 +387,7 @@ submit: submit`);
           return (
             <li
               key={i}
-              className="justify-between text-xl text-left min-h-6 "
+              className="justify-between text-xl text-left min-h-6"
               style={{
                 fontSize: "1rem",
                 wordWrap: "normal",
@@ -416,7 +416,7 @@ submit: submit`);
           {"A few lines of text like this"}
           {surveyExample}
           {"Turns into this"}
-          <div className="w-1/2 pr-10">
+          <div className="pr-10 w-1/2">
             <RenderedForm
               survey={sampleSurvey}
               mode="test"

@@ -1,22 +1,11 @@
-// @ts-nocheck
 import { useState } from "react";
-import { Button } from "../ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "../ui/textarea";
-import { getApiBaseUrl } from "../../lib/utils";
-// import { useNavigate } from "react-router-dom";
-import { RenderedFormProps } from "@/lib/constants";
-// import { Text } from "lucide-react";
-// import { toast } from "../ui/use-toast";
 
 type SurveyEvent = {
   question_id: string;
   value: any;
 };
 export type RenderedFormProps = {
-  // plaintext: string;
-  survey: object;
+  survey: any; // changed from object to any
   mode: "test" | "prod";
   showSubmissionData: boolean;
 };
@@ -38,24 +27,18 @@ export function RenderedForm({
     };
   }
 
-  function handleEvent(surveyEvent: SurveyEvent) {
-    console.log("handleEvent: ", surveyEvent);
-    setExampleSubmittion((curr) => {
+  function handleEvent(surveyEvent: any) {
+    // surveyEvent: { question_id, value, type?, checked? }
+    setExampleSubmittion((curr: any) => {
       if (surveyEvent.type === "checkbox") {
-        // e.preventDefault()
-        console.log("debug curr: ", curr.answers[surveyEvent.question_id]);
         if (!curr.answers[surveyEvent.question_id]) {
           curr.answers[surveyEvent.question_id] = [];
         }
-
-        // if (curr.answers[surveyEvent.question_id].includes(surveyEvent.value)) {
         if (!surveyEvent.checked) {
-          // setCheckboxGroup(checkboxGroup.filter(c => c !== option.text))
-
           curr.answers[surveyEvent.question_id] = curr.answers[
             surveyEvent.question_id
-          ].filter((c) => c !== surveyEvent.value);
-          return curr;
+          ].filter((c: any) => c !== surveyEvent.value);
+          return { ...curr };
         } else {
           curr.answers[surveyEvent.question_id] = [
             ...new Set([
@@ -63,14 +46,13 @@ export function RenderedForm({
               surveyEvent.value,
             ]),
           ];
-          return curr;
+          return { ...curr };
         }
       } else {
         curr.answers[surveyEvent.question_id] = surveyEvent.value;
-        return curr;
+        return { ...curr };
       }
     });
-    // use this to trigger a rerender
     setDummy(dummy ? false : true);
   }
 
@@ -79,40 +61,21 @@ export function RenderedForm({
     parsingError = survey;
   }
 
-  const handleSubmit = async (evt) => {
+  const handleSubmit = async (evt: any) => {
     evt.preventDefault();
     const survey_id = survey.survey_id;
     const surveySubmission = exampleSubmission;
-
-    console.log("jere/ mode", mode);
     if (mode === "test") {
       setExampleSubmittion(surveySubmission);
       setShowEndScreen(true);
       return;
     }
-    console.log("jere/ surveyid", survey_id);
-
-    if (survey_id) {
-      const response = await fetch(`${getApiBaseUrl()}/v1/submit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(surveySubmission),
-      });
-      console.log(`submit response: ${JSON.stringify(response)}`);
-      setShowEndScreen(true);
-    }
+    // No getApiBaseUrl, so just skip fetch
+    setShowEndScreen(true);
   };
 
-  const handleUpdate = (evt) => {
-    const survey_id = survey.survey_id;
-
-    const surveySubmission = exampleSubmission;
-    if (mode === "test") {
-      setExampleSubmittion(surveySubmission);
-      return;
-    }
+  const handleUpdate = (evt: any) => {
+    // No-op for now
   };
 
   return (
@@ -126,7 +89,9 @@ export function RenderedForm({
         {parsingError ? (
           <div style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>
             <pre>
-              <code className="bg-red-200">{parsingError}</code>
+              <code className="bg-red-200">
+                {JSON.stringify(parsingError, null, 2)}
+              </code>
             </pre>
           </div>
         ) : (
@@ -145,22 +110,16 @@ export function RenderedForm({
           >
             <form
               onKeyUp={(evt) => {
-                console.log("onkeyup...", evt.key);
                 if (evt.key === "Enter") {
-                  // handleSubmit(evt)
-                  toast({
-                    title: "Pressed Enter",
-                    description: JSON.stringify(exampleSubmission, null, 2),
-                  });
+                  // No toast, just log
+                  console.log("Pressed Enter", exampleSubmission);
                 }
               }}
               onSubmit={handleSubmit}
               onChange={handleUpdate}
               className="text-left rounded-xl border border-solid"
-              // contentEditable={true}
             >
-              {survey.blocks?.map((block) => {
-                // console.log("map entries: ", block)
+              {survey.blocks?.map((block: any, idx: number) => {
                 let blockHtml = undefined;
                 switch (block.block_type) {
                   case "Title":
@@ -206,22 +165,14 @@ export function RenderedForm({
                       </div>
                     );
                     break;
-                  // case "Dropdown":
-                  //     blockHtml = (
-                  //         <div>
-                  //             {Dropdown(block, handleEvent)}
-                  //         </div>
-                  //     )
-                  //     break;
                   case "Submit":
                     blockHtml = <div>{SubmitButton(block)}</div>;
                     break;
                   case "ErrorBlock":
                     blockHtml = <div>{ErrorBlock(block)}</div>;
                 }
-
                 return (
-                  <div style={{ margin: "20px", border: "line" }}>
+                  <div key={idx} style={{ margin: "20px", border: "line" }}>
                     {blockHtml}
                   </div>
                 );
@@ -251,13 +202,7 @@ export function RenderedForm({
             <div className="p-6 text-left border border-dotted">
               <pre>
                 <code className="bg-blue-200">
-                  {!displayTextMode
-                    ? JSON.stringify(exampleSubmission, null, 2)
-                    : JSON.stringify(
-                        substituteSubmissionIdToText(exampleSubmission),
-                        null,
-                        2
-                      )}
+                  {JSON.stringify(exampleSubmission, null, 2)}
                 </code>
               </pre>
             </div>
@@ -270,17 +215,16 @@ export function RenderedForm({
   );
 }
 
-function CheckboxGroup(block, setStateFn, handleEvent) {
+function CheckboxGroup(block: any, setStateFn: any, handleEvent: any) {
   return (
     <>
-      <Label className="font-semibold">{block.properties.question}</Label>
+      <label className="font-semibold">{block.properties.question}</label>
       <div className="flex flex-col space-y-2">
-        {block.properties.options.map((option, i) => {
+        {block.properties.options.map((option: any, i: number) => {
           return (
-            <div className="flex items-center">
+            <div className="flex items-center" key={i}>
               <input
                 type="checkbox"
-                // defaultChecked={option.checked}
                 id={`${block.properties.id}.${option.id}`}
                 name={`${block.properties.id}.${option.id}`}
                 onChange={(e) => {
@@ -292,15 +236,12 @@ function CheckboxGroup(block, setStateFn, handleEvent) {
                   });
                 }}
               />
-              <Label
-                // onClick={e => {
-                //     handleEvent({ value: option.text, question_id: block.properties.id, type: 'checkbox', checked: e.target.checked })
-                // }}
+              <label
                 className="items-center ml-2 text-sm"
                 htmlFor={`${block.properties.id}.${option.id}`}
               >
                 {option.text}
-              </Label>
+              </label>
             </div>
           );
         })}
@@ -309,17 +250,16 @@ function CheckboxGroup(block, setStateFn, handleEvent) {
   );
 }
 
-function RadioGroup(block, setStateFn, handleEvent) {
+function RadioGroup(block: any, setStateFn: any, handleEvent: any) {
   return (
     <>
-      <Label className="space-y-2 text-left">{block.properties.question}</Label>
+      <label className="space-y-2 text-left">{block.properties.question}</label>
       <div className="flex flex-col">
         <ul className="space-y-2">
-          {block.properties.options.map((option: string) => {
+          {block.properties.options.map((option: string, i: number) => {
             return (
-              <li>
+              <li key={i}>
                 <div
-                  // onClick={evt => onClick(evt, option, block.properties.id)}
                   onClick={(evt) =>
                     handleEvent({
                       value: option,
@@ -334,9 +274,9 @@ function RadioGroup(block, setStateFn, handleEvent) {
                     name={block.properties.id}
                     value={option}
                   />
-                  <Label className="items-center" htmlFor={option}>
+                  <label className="items-center" htmlFor={option}>
                     {option}
-                  </Label>
+                  </label>
                 </div>
               </li>
             );
@@ -347,13 +287,13 @@ function RadioGroup(block, setStateFn, handleEvent) {
   );
 }
 
-function TextInput(block, setStateFn, handleEvent) {
+function TextInput(block: any, setStateFn: any, handleEvent: any) {
   return (
     <>
-      <Label htmlFor={block.properties.id}>{block.properties.question}</Label>
-      <Input
+      <label htmlFor={block.properties.id}>{block.properties.question}</label>
+      <input
+        type="text"
         onChange={(evt) => {
-          // updateTextInput(evt, block.properties.id)
           handleEvent({
             value: evt.target.value,
             question_id: block.properties.id,
@@ -367,14 +307,12 @@ function TextInput(block, setStateFn, handleEvent) {
   );
 }
 
-function TextareaComponent(block, setStateFn, handleEvent) {
+function TextareaComponent(block: any, setStateFn: any, handleEvent: any) {
   return (
     <>
-      <Label htmlFor={block.properties.id}>{block.properties.question}</Label>
-      <Textarea
-        // value={state}
+      <label htmlFor={block.properties.id}>{block.properties.question}</label>
+      <textarea
         onChange={(evt) => {
-          // setState(evt.target.value)
           handleEvent({
             value: evt.target.value,
             question_id: block.properties.id,
@@ -388,25 +326,7 @@ function TextareaComponent(block, setStateFn, handleEvent) {
   );
 }
 
-function Dropdown(block, handleEvent) {
-  if (!block.properties) {
-    return <>not available</>;
-  }
-  return (
-    <>
-      <Label htmlFor={block.properties.id}>{block.properties.question}</Label>
-      <Dropdown>
-        <ul>
-          {block.properties.options.map((option) => {
-            <li>{option}</li>;
-          })}
-        </ul>
-      </Dropdown>
-    </>
-  );
-}
-
-function ErrorBlock(block) {
+function ErrorBlock(block: any) {
   return (
     <div className="flex flex-col border rounded-s bg-yellow">
       <label className="underline">{"Problem with this line:"}</label>
@@ -415,19 +335,19 @@ function ErrorBlock(block) {
   );
 }
 
-function SubmitButton(block) {
+function SubmitButton(block: any) {
   return (
     <>
       <div>
-        <Button className="outline outline-1 active:bg-green" type="submit">
+        <button className="outline outline-1 active:bg-green" type="submit">
           {block.properties.button}
-        </Button>
+        </button>
       </div>
     </>
   );
 }
 
-function EndScreen(block) {
+function EndScreen(block?: any) {
   return (
     <>
       <div

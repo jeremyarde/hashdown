@@ -1,0 +1,112 @@
+---
+import { EditorPage } from "../../components/custom/EditorPage.tsx";
+import { RenderedForm } from "../../components/custom/RenderedForm.tsx";
+
+let content = `# hashdown User Feedback
+
+Textarea: How was your experience using hashdown
+
+Textarea: What is the number one complaint you have?
+
+radio: How did you hear about us?
+- Friend
+- Online
+- Search
+Text: Other?`;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Editor - Hashdown</title>
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/png" href="/hashdown.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Nunito", "Segoe UI", Arial, sans-serif;
+        background: #f9fafb;
+        color: #222;
+        min-height: 100vh;
+      }
+      .navbar {
+        width: 100%;
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        min-height: 64px;
+        border-radius: 0;
+      }
+      .navbar-content {
+        width: 100%;
+        max-width: 1100px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 1.5rem;
+      }
+      .navbar-logo {
+        display: flex;
+        align-items: center;
+        font-weight: 700;
+        font-size: 1.3rem;
+        color: #2563eb;
+        text-decoration: none;
+        gap: 0.5rem;
+      }
+      .navbar-logo img {
+        border-radius: 0 !important;
+      }
+      .navbar-links {
+        display: flex;
+        gap: 1.5rem;
+      }
+      .navbar-links a {
+        color: #222;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+      .navbar-links a:hover {
+        color: #2563eb;
+      }
+      @media (max-width: 600px) {
+        .navbar-content {
+          padding: 0 0.5rem;
+        }
+        .navbar-links {
+          gap: 0.75rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="navbar-content">
+        <a class="navbar-logo" href="/">
+          <img src="/hashdown.png" alt="Hashdown logo" height="36" />
+        </a>
+        <div class="navbar-links">
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="https://app.gethashdown.com">Sign up</a>
+        </div>
+      </div>
+    </nav>
+    <div class="editor-container">
+      <EditorPage client:load mode="test" startingContent={content} />
+    </div>
+  </body>
+</html>
