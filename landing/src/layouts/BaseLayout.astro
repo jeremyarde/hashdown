@@ -1,158 +1,122 @@
 ---
-// const { title } = Astro.props;
-const innerRadiusVal = 16;
-const distanceVal = 2; // padding of outer element
-const outerRadiusVal = innerRadiusVal + distanceVal;
-
-const innerRadius = `${innerRadiusVal}px`;
-const distance = `${distanceVal}px`;
-const outerRadius = `${outerRadiusVal}px`;
-
-const backgroundColor = "#FFFFFF";
-const navbarBackgroundColor = "rgba(255, 255, 255, 0.2)";
-const accent = "#AD343E";
-const sectionPadding = "70px";
-const maxWidth = "960px";
 const title = "Hashdown - Forms made easy";
 ---
 
-<style
-  is:global
-  define:vars={{
-    innerRadius,
-    outerRadius,
-    distance,
-    backgroundColor,
-    accent,
-    navbarBackgroundColor,
-    maxWidth,
-    sectionPadding,
-  }}
->
-  .frosted {
-    position: relative;
-    z-index: 2;
-    backdrop-filter: blur(4px);
-    color: #fff;
-    /* font-size: 30px; */
-    /* padding: 50px; */
-    /* border-radius: 10px; */
-    /* box-shadow: 0 5px 50px rgba(0, 0, 0, 0.5); */
+<style is:global>
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: "Nunito", "Segoe UI", Arial, sans-serif;
+    background: #f9fafb;
+    color: #222;
+    min-height: 100vh;
   }
   .navbar {
-    display: flex;
-    flex-direction: row;
-    top: 20px;
-    /* margin-left: 20px;
-    margin-right: 20px; */
-    border: 2px solid var(--accent);
-    background-color: var(--navbarBackgroundColor);
-    border-radius: var(--outerRadius);
-    /* padding: var(--distance); */
-    box-shadow:
-      0 6px 12px rgba(0, 0, 0, 0.01),
-      0 3px 6px rgba(0, 0, 0, 0.1);
-    /* left: 0; */
-    min-width: fit-content;
-    /* position: sticky; */
-    position: sticky;
-    width: 90%;
-    z-index: 9999;
-    max-width: calc(var(--maxWidth) + 40px);
-    height: 70px;
-    align-items: center;
-  }
-  .navbar-list {
     width: 100%;
-    list-style: none;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
     display: flex;
-    flex-direction: row;
-    /* align-items: stretch; */
-    justify-content: space-between;
-    /* min-height: calc(var(--header-height) - var(--header-top)); */
-    justify-items: center;
-  }
-  .nav-item {
-    borderradius: var(--outerRadius);
-    padding: var(--distance);
-    backgroundcolor: "#ffed66ff";
-    text-decoration: none;
-    font-size: x-large;
-    margin-left: 20px;
-  }
-
-  .section {
-    padding: var(--sectionPadding);
-    text-align: center;
-  }
-
-  /*  from here: https://twitter.com/souporserious/status/1746378842787459501/photo/1 */
-  * {
-    /* include padding and border in size calculation */
-    box-sizing: border-box;
-    /* position based on immediate parent and allow adjusting trbl */
-    position: relative;
-    /* prevent grid and flex items from spilling out of container */
-    min-width: 0;
-    /* border: 1px solid pink; */
-    /* max-width: 1280px; */
-    /* margin: 0 auto; */
-    font-family: Arial, sans-serif;
-  }
-
-  body {
-    /* body fills entire view port */
-    min-height: 100dvh;
-    /* max-width: 1080px; */
-    background-color: var(--backgroundColor);
-    display: flex;
-    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    min-height: 64px;
+    border-radius: 0;
   }
-
-  h1,
-  h2,
-  h3,
-  h4 {
-    /* balance headings across multiple lines into even block */
-    text-wrap: balance;
+  .navbar-content {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
   }
-
-  p {
-    /* prevent single words of text on new line */
-    text-wrap: balance;
-  }
-  a {
+  .navbar-logo {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: #2563eb;
     text-decoration: none;
-    cursor: pointer;
-    color: var(--accent);
+    gap: 0.5rem;
+  }
+  .navbar-logo img {
+    border-radius: 0 !important;
+  }
+  .navbar-links {
+    display: flex;
+    gap: 1.5rem;
+  }
+  .navbar-links a {
+    color: #222;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .navbar-links a:hover {
+    color: #2563eb;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem 3rem 1rem;
+    border-radius: 0;
+  }
+  @media (max-width: 600px) {
+    .container {
+      padding: 1rem 0.5rem;
+    }
+    .navbar-content {
+      padding: 0 0.5rem;
+    }
+    .navbar-links {
+      gap: 0.75rem;
+    }
+  }
+  /* Square buttons */
+  .cta-btn {
+    border-radius: 0 !important;
+  }
+  .cta-btn:hover {
+  }
+  /* FAQ items square */
+  .faq-item {
+    border-radius: 0 !important;
+    background: #fff;
   }
 </style>
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="./hlogo.png" />
+    <title>{title}</title>
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
+    <link rel="icon" type="image/png" href="/hashdown.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <div class="navbar frosted">
-      <ul class="navbar-list">
-        <li>
-          <a style="left: 0px;" href="/">
-            <img src="/hashdown.png" alt="logo" height={50} />
-          </a>
-        </li>
-        <li
-          style="display: flex; flex-direction: row; align-items: center; right: 20px;"
-        >
-          <a class="nav-item" href="#pricing">Pricing</a>
-          <a class="nav-item" href="https://app.gethashdown.com">Sign up</a>
-        </li>
-      </ul>
-    </div>
-    <slot />
+    <nav class="navbar">
+      <div class="navbar-content">
+        <a class="navbar-logo" href="/">
+          <img src="/hashdown.png" alt="Hashdown logo" height="36" />
+        </a>
+        <div class="navbar-links">
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="https://app.gethashdown.com">Sign up</a>
+        </div>
+      </div>
+    </nav>
+    <main class="container">
+      <slot />
+    </main>
   </body>
 </html>

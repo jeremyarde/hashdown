@@ -21,9 +21,9 @@ test:
 rund: 
     docker run --env-file ./server/.env -p 8080:8080 -it mdp-server
 
-runfe:
+fe:
     cd ui && npm run dev
-runbe:
+be:
     cd server && cargo r
 
 ls:

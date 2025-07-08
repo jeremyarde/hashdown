@@ -190,7 +190,7 @@ export function App() {
             <Route path="/waitlist" element={<Waitlist />} />
             {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             <Route
-              path="/testEditor"
+              path="/editor"
               element={
                 <EditorPage
                   mode={"test"}
