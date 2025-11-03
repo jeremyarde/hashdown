@@ -18,3 +18,4 @@ market-research.md
 server/.prod.env
 */.env
 *.md
+*/.DS_Store

@@ -8,73 +8,91 @@ const faqItems = [
     id: "faq1",
     question: "What is Hashdown?",
     answer:
-      "Hashdown is a tool that allows you to create forms and surveys using a simple subset of Markdown syntax. You can generate forms quickly through text, share them via a URL, or integrate them via our API.",
+      "A tool to create forms using Markdown. Write text, get a form, share the link.",
   },
   {
     id: "faq2",
-    question: "Do I need to know how to code to use Hashdown?",
+    question: "Do I need to know how to code?",
     answer:
-      "No coding is required! Hashdown leverages easy-to-learn Markdown syntax, making form creation accessible to anyone familiar with basic text formatting.",
+      "Nope. If you know basic Markdown, you're good to go.",
   },
   {
     id: "faq3",
     question: "What types of forms can I create?",
     answer:
-      "You can create a variety of forms, including surveys, feedback forms, contact forms, registration forms, and more. If your use case involves collecting information, Hashdown has you covered.",
+      "Surveys, contact forms, registrations—anything where you need to collect information.",
   },
   {
     id: "faq4",
-    question: "How do I share the forms I create?",
+    question: "How do I share forms?",
     answer:
-      "Once you create a form, Hashdown generates a unique URL that you can share anywhere—via email, social media, or embedded on your website. Users can access and fill out the form through that link.",
+      "We give you a URL. Share it anywhere or embed it on your site.",
   },
   {
     id: "faq5",
-    question: "Can I embed the forms on my website?",
+    question: "Can I embed forms on my website?",
     answer:
-      "Yes, you can embed the forms directly into your website using the provided URL or iFrame code, ensuring they fit seamlessly with your existing content.",
+      "Yes. Use the URL or iframe code we provide.",
   },
   {
     id: "faq6",
-    question: "Does Hashdown offer an API?",
+    question: "Does Hashdown have an API?",
     answer:
-      "Yes, Hashdown comes with a fully functional API. You can integrate form creation and submission collection into your applications, allowing for automation and custom workflows.",
+      "Yes. Create forms and collect responses programmatically.",
   },
   {
     id: "faq7",
     question: "How is my data stored? Is it secure?",
     answer:
-      "We prioritize security. All data submitted through forms is encrypted and stored securely on our servers. You can also export responses for your own record-keeping or analysis.",
+      "Data is encrypted and stored securely. You can export responses anytime.",
   },
   {
     id: "faq8",
-    question: "Can I customize the look and feel of my forms?",
+    question: "Can I customize how forms look?",
     answer:
-      "While the default forms have a clean, simple design, you can apply custom CSS for more advanced styling, allowing you to match the forms to your brand’s visual identity.",
+      "Default forms are clean and simple. You can add custom CSS if you want more control.",
   },
   {
     id: "faq9",
-    question: "Is there a limit to the number of forms I can create?",
+    question: "How many forms can I create?",
     answer:
-      "The number of forms you can create depends on your subscription plan. Our free plan offers a limited number of forms, while our premium plans offer unlimited form creation and advanced features.",
+      "Depends on your plan. Free plan has limits, paid plans are unlimited.",
   },
   {
     id: "faq10",
-    question: "How much does Hashdown cost?",
+    question: "How much does it cost?",
     answer:
-      "We offer several pricing tiers to suit your needs. You can start for free, with premium features and more forms available in paid plans. Visit our pricing page for more details.",
+      "You can start free. Paid plans unlock more features and forms. Check the pricing section above.",
   },
   {
     id: "faq11",
-    question: "Can I use Hashdown for team collaboration?",
+    question: "Can teams use this together?",
     answer:
-      "Yes! Our team features allow you to collaborate with others by sharing forms, reviewing responses, and managing form settings within your organization.",
+      "Yes. Share forms, review responses, and manage settings with your team.",
   },
   {
     id: "faq12",
-    question: "What kind of support do you offer?",
+    question: "What support do you offer?",
     answer:
-      "We provide a detailed knowledge base and email support. Our premium users receive priority customer support for faster resolutions.",
+      "We have a knowledge base and email support. Premium users get priority support.",
+  },
+];
+
+const features = [
+  {
+    title: "Write in Markdown",
+    description: "Just type. No dragging and dropping.",
+    icon: "📝",
+  },
+  {
+    title: "Get a link instantly",
+    description: "Share it anywhere or embed on your site.",
+    icon: "🔗",
+  },
+  {
+    title: "Use our API",
+    description: "Build forms programmatically if you want.",
+    icon: "⚡",
   },
 ];
 ---
@@ -82,239 +100,361 @@ const faqItems = [
 <style is:global>
   .hero {
     text-align: center;
-    margin-top: 2rem;
-    margin-bottom: 3rem;
+    padding: 4rem 0 5rem 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    margin: 2rem 0 4rem 0;
   }
   .hero-title {
-    font-size: 2.5rem;
+    font-size: clamp(2rem, 5vw, 3.5rem);
     font-weight: 700;
-    color: #222;
-    margin-bottom: 1rem;
+    color: white;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1rem;
   }
   .hero-sub {
-    font-size: 1.25rem;
-    color: #444;
-    margin-bottom: 2rem;
+    font-size: clamp(1rem, 2vw, 1.35rem);
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 2.5rem;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1rem;
+    line-height: 1.6;
   }
   .cta-btn {
     display: inline-block;
-    background: #2563eb;
-    color: #fff;
+    background: white;
+    color: #2563eb;
     font-weight: 600;
     font-size: 1.1rem;
     border: none;
-    border-radius: 6px;
-    padding: 0.75rem 2rem;
-    margin: 0.5rem 0 0 0;
+    border-radius: 8px;
+    padding: 1rem 2.5rem;
+    margin: 0.5rem 0.5rem;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
     text-decoration: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
   .cta-btn:hover {
-    background: #1746a2;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  .cta-btn-secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+    box-shadow: none;
+  }
+  .cta-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
   }
   section {
-    margin-bottom: 3rem;
+    margin-bottom: 5rem;
+  }
+  .section-title {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .section-subtitle {
+    font-size: 1.2rem;
+    color: #6b7280;
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto 3rem auto;
+    line-height: 1.6;
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+  .feature-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #e5e7eb;
+  }
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  .feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+  .feature-card h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.75rem;
+  }
+  .feature-card p {
+    color: #6b7280;
+    line-height: 1.6;
+    font-size: 1rem;
+  }
+  .benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+  .benefit-card {
+    background: #f9fafb;
+    padding: 2rem;
+    border-radius: 12px;
+    border-left: 4px solid #2563eb;
+  }
+  .benefit-card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.75rem;
+  }
+  .benefit-card p {
+    color: #6b7280;
+    line-height: 1.6;
+  }
+  .how-it-works {
+    background: #f9fafb;
+    padding: 3rem 2rem;
+    border-radius: 12px;
+    margin-top: 2rem;
+  }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  .step {
+    text-align: center;
+  }
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: #2563eb;
+    color: white;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+  .step h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+  }
+  .step p {
+    color: #6b7280;
+    line-height: 1.6;
   }
   .features-list {
+    list-style: none;
+    padding: 0;
     margin: 1.5rem 0 0 0;
-    padding-left: 1.2rem;
   }
-  .benefits-list {
-    margin: 1.5rem 0 0 0;
-    padding-left: 1.2rem;
+  .features-list li {
+    padding: 0.75rem 0;
+    padding-left: 2rem;
+    position: relative;
+    color: #4b5563;
+    line-height: 1.6;
+  }
+  .features-list li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #2563eb;
+    font-weight: bold;
+    font-size: 1.2rem;
   }
   .faq-section {
-    margin-top: 2rem;
+    margin-top: 4rem;
     margin-bottom: 3rem;
   }
   .faq-item {
-    border-bottom: 1px solid #e5e7eb;
-    padding: 1rem 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .faq-item:hover {
+    border-color: #2563eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  .faq-item.open {
+    border-color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
   }
   .faq-question {
     font-weight: 600;
     cursor: pointer;
-    color: #2563eb;
+    color: #1f2937;
     margin: 0;
     font-size: 1.1rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    user-select: none;
+  }
+  .faq-question:hover {
+    color: #2563eb;
   }
   .faq-answer {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease;
-    color: #444;
+    transition: max-height 0.3s ease, margin-top 0.3s ease;
+    color: #6b7280;
     font-size: 1rem;
-    margin-top: 0.5rem;
+    margin-top: 0;
+    line-height: 1.6;
   }
   .faq-item.open .faq-answer {
-    max-height: 200px;
-    margin-top: 0.5rem;
+    max-height: 500px;
+    margin-top: 1rem;
   }
   .faq-toggle {
-    font-size: 1.2rem;
-    margin-left: 0.5rem;
+    font-size: 1.5rem;
+    margin-left: 1rem;
     color: #2563eb;
-    user-select: none;
+    font-weight: 300;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+  }
+  .faq-item.open .faq-toggle {
+    transform: rotate(45deg);
+  }
+  .content-section {
+    background: white;
+    padding: 3rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 3rem;
+  }
+  .content-section p {
+    font-size: 1.1rem;
+    color: #4b5563;
+    line-height: 1.7;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  @media (max-width: 768px) {
+    .hero {
+      padding: 3rem 1rem 4rem 1rem;
+      margin: 1rem 0 3rem 0;
+    }
+    .features-grid,
+    .benefits-grid,
+    .steps {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    .cta-btn {
+      display: block;
+      margin: 0.5rem 0;
+    }
+    section {
+      margin-bottom: 3rem;
+    }
   }
 </style>
 
 <BaseLayout>
   <section class="hero">
     <h1 class="hero-title">
-      Hashdown is a new, simpler way to create forms and surveys
+      Create forms by typing,<br />not clicking
     </h1>
     <div class="hero-sub">
-      Use text to create forms with our editor or API and start gathering
-      responses in minutes.
+      Write your forms in Markdown. Get a link. Start collecting responses.
     </div>
-    <a class="cta-btn" href="/editor">Try it now</a>
+    <div>
+      <a class="cta-btn" href="/editor">Try it →</a>
+    </div>
   </section>
 
-  <section>
-    <h2 id="features">Turn text into powerful forms.</h2>
+  <section id="features">
+    <h2 class="section-title">That's it</h2>
+    <div class="features-grid">
+      {
+        features.map((feature) => (
+          <div class="feature-card">
+            <div class="feature-icon">{feature.icon}</div>
+            <h3>{feature.title}</h3>
+            <p>{feature.description}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="how-it-works">
+    <h2 class="section-title">How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Type your form</h3>
+        <p>Use Markdown in our editor or via API.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Get a link</h3>
+        <p>Share it or embed it on your site.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>See responses</h3>
+        <p>Done.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <h2 class="section-title">Built for developers</h2>
     <p>
-      We believe creating forms and surveys should be effortless, as easy as
-      writing your questions in a text file rather than learning a new visual
-      editor. With our unique system, all you need is a subset of Markdown to
-      build dynamic forms—no coding required.
+      Generate forms from code. Version control them like any other text file.
+      No GUI to fight with.
     </p>
-  </section>
-
-  <section>
-    <h3>Get Started Today</h3>
-    <p>
-      Start creating forms and surveys with Hashdown in just a few minutes. Try
-      it out today!
-    </p>
-    <a class="cta-btn" href="/editor">Try it now</a>
-  </section>
-
-  <section>
-    <h3>Features</h3>
-    <ul class="features-list">
-      <li>
-        Markdown-Driven: Use familiar Markdown syntax to create forms and
-        surveys in seconds.
-      </li>
-      <li>
-        Instant Sharing: Get a shareable URL instantly—no extra setup needed.
-      </li>
-      <li>
-        API Ready: Prefer automation? Use our API to integrate form creation
-        directly into your workflow.
-      </li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>Hashdown vs. Google Forms</h2>
-    <p>
-      Hashdown is a simpler alternative to Google Forms. It's designed to be
-      easy to use, with a focus on simplicity and ease of use. Google Forms, on
-      the other hand, is a more powerful tool that offers more advanced features
-      and capabilities.
-    </p>
-  </section>
-
-  <section>
-    <h2>Benefits of Using Hashdown vs. Traditional GUI-Based Form Builders</h2>
-    <ol class="benefits-list">
-      <li>
-        <b>Speed and Simplicity:</b> With Hashdown, creating forms is as fast as
-        typing. You don’t need to click through multiple menus or interfaces—just
-        write in plain text using Markdown syntax. This is ideal for users who prefer
-        a streamlined, no-frills approach to form creation.
-      </li>
-      <li>
-        <b>Markdown Familiarity:</b> For those already familiar with Markdown, Hashdown
-        feels intuitive. Many developers, writers, and content creators use Markdown
-        daily, making it second nature to create forms without having to learn a
-        new visual editor.
-      </li>
-      <li>
-        <b>Focus on Functionality, Not Design:</b> Hashdown emphasizes function over
-        form, so you can quickly generate forms without getting bogged down in design
-        decisions. If your priority is collecting responses, rather than making the
-        form look a certain way, Hashdown helps you cut to the chase.
-      </li>
-      <li>
-        <b>API Access and Automation:</b> Traditional GUI form builders often limit
-        the level of automation and integration options. Hashdown provides an API,
-        making it ideal for integrating form creation into your app or automating
-        workflows. This is a major advantage for developers and businesses looking
-        to streamline operations.
-      </li>
-      <li>
-        <b>Lightweight and Accessible:</b> Without the overhead of a full GUI, Hashdown
-        is lightweight, making it faster to load and use. This is especially beneficial
-        when working in environments with limited resources or when quick edits are
-        needed.
-      </li>
-      <li>
-        <b>Flexibility for Developers:</b> Developers can generate forms dynamically
-        by writing plain text or through code, which allows for easier version control
-        and scriptable workflows. Traditional GUI builders often have limitations
-        when it comes to automation or integrating with development pipelines.
-      </li>
-      <li>
-        <b>Lower Learning Curve for Text-Based Creators:</b> For users who work in
-        text-based environments (writers, researchers, etc.), Hashdown fits seamlessly
-        into their workflow. There’s no need to adjust to a graphical interface—they
-        can stick to their preferred way of working.
-      </li>
-      <li>
-        <b>Clean and Consistent Output:</b> Because forms are built from a consistent,
-        Markdown-based syntax, the output is always predictable and clean. You won’t
-        need to worry about design inconsistencies that can sometimes occur in drag-and-drop
-        builders.
-      </li>
-      <li>
-        <b>Shareable and Embeddable:</b> Hashdown instantly generates a shareable
-        URL for your form, which can be shared anywhere or embedded on websites.
-        This makes distribution simple, without requiring additional steps that GUI
-        form builders might involve.
-      </li>
-      <li>
-        <b>Cost-Effective for Advanced Users:</b> Since Hashdown doesn’t require
-        the development and maintenance of a heavy graphical interface, it may be
-        more cost-effective for users who don’t need all the design capabilities
-        of a traditional form builder.
-      </li>
-    </ol>
-  </section>
-
-  <section>
-    <h3>How Hashdown Works</h3>
-    <ol>
-      <li>Write your form in our online editor or send text to our API</li>
-      <li>Get your shareable link or embed code</li>
-      <li>
-        Add the link to your emails, website or embed our form on your site, and
-        that's it!
-      </li>
-    </ol>
+    <div style="text-align: center; margin-top: 2rem">
+      <a class="cta-btn" href="/editor">Try it →</a>
+    </div>
   </section>
 
   <section id="pricing">
-    <h2>Pricing</h2>
+    <h2 class="section-title">Pricing</h2>
     <Pricing />
   </section>
 
   <section class="faq-section">
-    <h2>Frequently Asked Questions</h2>
+    <h2 class="section-title">Questions?</h2>
     <div id="faq-list">
       {
-        faqItems.map((faq, idx) => (
+        faqItems.map((faq) => (
           <div class="faq-item" id={faq.id}>
             <div
               class="faq-question"
               onclick={`this.parentElement.classList.toggle('open')`}
             >
-              {faq.question}
+              <span>{faq.question}</span>
               <span class="faq-toggle">+</span>
             </div>
             <div class="faq-answer">{faq.answer}</div>
