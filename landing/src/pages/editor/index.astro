@@ -24,34 +24,50 @@ Text: Other?`;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <style>
+    <style is:global>
+      :root {
+        --bg-dark: #0B0D11;
+        --text-primary: #EDEDED;
+        --text-secondary: #A1A1AA;
+        --accent: #fff;
+        --border-color: #27272A;
+        --grid-color: rgba(255, 255, 255, 0.05);
+      }
+
+      html,
       body {
         margin: 0;
         padding: 0;
-        font-family: "Nunito", "Segoe UI", Arial, sans-serif;
-        background: #f9fafb;
-        color: #222;
+        font-family: "Inter", system-ui, sans-serif;
+        background-color: var(--bg-dark);
+        background-image: 
+          linear-gradient(var(--grid-color) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+        background-size: 40px 40px;
+        color: var(--text-primary);
         min-height: 100vh;
       }
+      
+      /* Navbar */
       .navbar {
         width: 100%;
-        background: #fff;
-        border-bottom: 1px solid #e5e7eb;
+        background: rgba(11, 13, 17, 0.8);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-color);
         display: flex;
         align-items: center;
         justify-content: center;
         position: sticky;
         top: 0;
         z-index: 100;
-        min-height: 64px;
-        border-radius: 0;
+        height: 64px;
       }
       .navbar-content {
         width: 100%;
-        max-width: 1100px;
+        max-width: 1200px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -61,46 +77,56 @@ Text: Other?`;
         display: flex;
         align-items: center;
         font-weight: 700;
-        font-size: 1.3rem;
-        color: #2563eb;
+        font-size: 1.25rem;
+        color: var(--text-primary);
         text-decoration: none;
-        gap: 0.5rem;
+        gap: 0.75rem;
       }
       .navbar-logo img {
-        border-radius: 0 !important;
+        border-radius: 6px;
       }
       .navbar-links {
         display: flex;
-        gap: 1.5rem;
+        gap: 2rem;
+        align-items: center;
       }
       .navbar-links a {
-        color: #222;
+        color: var(--text-secondary);
         text-decoration: none;
         font-weight: 500;
         transition: color 0.2s;
+        font-size: 0.9rem;
       }
       .navbar-links a:hover {
-        color: #2563eb;
+        color: var(--text-primary);
       }
-      @media (max-width: 600px) {
-        .navbar-content {
-          padding: 0 0.5rem;
-        }
-        .navbar-links {
-          gap: 0.75rem;
-        }
+
+      .editor-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
       }
+      
+      /* Override React Component Styles where possible */
+      .editor-wrapper textarea {
+        background-color: #15171B !important;
+        color: #EDEDED !important;
+        border-color: #27272A !important;
+      }
+      
     </style>
   </head>
   <body>
     <nav class="navbar">
       <div class="navbar-content">
         <a class="navbar-logo" href="/">
-          <img src="/hashdown.png" alt="Hashdown logo" height="36" />
+          <img src="/hashdown.png" alt="Hashdown logo" height="32" />
+          <span>Hashdown</span>
         </a>
         <div class="navbar-links">
-          <a href="#features">Features</a>
-          <a href="#pricing">Pricing</a>
+          <a href="/">Home</a>
+          <a href="/#features">Features</a>
+          <a href="/#pricing">Pricing</a>
           <a href="https://app.gethashdown.com">Sign up</a>
         </div>
       </div>

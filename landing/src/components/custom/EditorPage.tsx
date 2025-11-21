@@ -117,16 +117,18 @@ function TabItem({
   return (
     <div
       style={{
-        backgroundColor: active ? "rgb(19, 206, 102)" : "#FFFFFF",
+        backgroundColor: active ? "#EDEDED" : "transparent",
+        color: active ? "#0B0D11" : "#EDEDED",
         flexGrow: 1,
-        padding: 4,
+        padding: 8,
         margin: 4,
         fontSize: 12,
-        borderRadius: 4,
-        outline: "1px solid #ccc",
+        borderRadius: 6,
+        border: "1px solid #27272A",
         cursor: "pointer",
         fontWeight: active ? "bold" : "normal",
-        boxShadow: active ? "0 0 4px #13ce66" : undefined,
+        boxShadow: active ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
+        transition: "all 0.2s",
       }}
       onClick={onClick}
     >
@@ -143,7 +145,7 @@ export function SampleForms({
   const [selected, setSelected] = useState(0);
 
   return (
-    <div style={{ display: "flex", width: "100%" }}>
+    <div style={{ display: "flex", width: "100%", gap: 4 }}>
       {tabTemplates.map((template: TabContent, i) => (
         <TabItem
           key={i}
@@ -179,34 +181,7 @@ export function EditorPage({ mode = "test", startingContent }: EditorProps) {
     }
   }, [editorContent, markdownToForm]);
 
-  if (!markdownToForm || !survey) return <div>Loading WASM...</div>;
-
-  // async function submitSurvey() {
-  //   const response = await fetch(`${getApiBaseUrl()}/v1/surveys`, {
-  //     method: "POST",
-  //     headers: {
-  //       "content-type": "application/json",
-  //       session_id: getSessionToken(),
-  //     },
-  //     body: JSON.stringify({ plaintext: editorContent }),
-  //   });
-  //   handleResponse(response);
-  //   const result = await response.json();
-
-  //   if (response.status === 401) {
-  //     // toast({
-  //     //   title: "Submit Survey: Failed",
-  //     //   description: result.message,
-  //     // });
-  //   }
-
-  //   if (response.status === 200) {
-  //     // toast({
-  //     //   title: "Submit Survey: Success",
-  //     //   description: result.message,
-  //     // });
-  //   }
-  // }
+  if (!markdownToForm || !survey) return <div style={{color: "#EDEDED"}}>Loading WASM...</div>;
 
   return (
     <div
@@ -214,6 +189,9 @@ export function EditorPage({ mode = "test", startingContent }: EditorProps) {
         display: "flex",
         flexDirection: "row",
         width: "100%",
+        background: "#0B0D11",
+        color: "#EDEDED",
+        gap: 24,
       }}
     >
       <div
@@ -221,20 +199,25 @@ export function EditorPage({ mode = "test", startingContent }: EditorProps) {
           display: "flex",
           flexDirection: "column",
           flex: 1,
-          padding: 16,
+          padding: 0,
           boxSizing: "border-box",
-          borderRight: "1px solid #ccc",
         }}
       >
         <textarea
           style={{
-            padding: 8,
+            padding: 16,
             width: "100%",
             borderRadius: 8,
-            border: "1px solid #ccc",
+            border: "1px solid #27272A",
+            background: "#15171B",
+            color: "#EDEDED",
             height: "65vh",
             boxSizing: "border-box",
-            marginBottom: 8,
+            marginBottom: 16,
+            fontFamily: "monospace",
+            fontSize: "14px",
+            outline: "none",
+            resize: "none",
           }}
           placeholder="Enter form content here..."
           value={editorContent}
@@ -244,23 +227,34 @@ export function EditorPage({ mode = "test", startingContent }: EditorProps) {
           <button
             disabled={!survey.validation[0]}
             style={{
-              padding: 8,
+              padding: "10px 20px",
               width: "100%",
-              border: "1px solid #ccc",
-              background: survey.validation[0] ? "#13ce66" : "#eee",
+              borderRadius: 6,
+              border: "none",
+              background: survey.validation[0] ? "#fff" : "#333",
+              color: survey.validation[0] ? "#000" : "#666",
+              fontWeight: 600,
               opacity: survey.validation[0] ? 1 : 0.5,
               cursor: survey.validation[0] ? "pointer" : "not-allowed",
+              transition: "all 0.2s",
             }}
-            // onClick={submit Survey}
           >
-            Save Survey
+            {survey.validation[0] ? "Save Survey" : "Invalid Syntax"}
           </button>
         </div>
         <div>
-          <ul style={{ paddingLeft: 16 }}>
+          <ul style={{ paddingLeft: 16, listStyle: "none", margin: 0 }}>
             {survey.validation[1].map((error: string) => (
               <li
-                style={{ background: "#ffe066", marginBottom: 4 }}
+                style={{ 
+                    background: "rgba(239, 68, 68, 0.1)", 
+                    color: "#ef4444",
+                    border: "1px solid rgba(239, 68, 68, 0.2)",
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    marginBottom: 4,
+                    fontSize: "14px"
+                }}
                 key={error}
               >
                 {error}
@@ -279,30 +273,50 @@ export function EditorPage({ mode = "test", startingContent }: EditorProps) {
         >
           <button
             style={{
-              border: "1px solid #ccc",
-              background: "#ffe066",
-              padding: 4,
+              border: "1px solid #27272A",
+              background: "transparent",
+              color: "#A1A1AA",
+              padding: "8px 16px",
+              borderRadius: 6,
+              cursor: "pointer",
+              fontSize: "14px",
             }}
             onClick={() => setRules((r) => !r)}
           >
-            {rules ? "hide rules" : "show rules"}
+            {rules ? "Hide Rules" : "Show Rules"}
           </button>
           <button
             style={{
-              border: "1px solid #ccc",
-              background: "#ffe066",
-              padding: 4,
+              border: "1px solid #27272A",
+              background: "transparent",
+              color: "#A1A1AA",
+              padding: "8px 16px",
+              borderRadius: 6,
+              cursor: "pointer",
+              fontSize: "14px",
             }}
             onClick={() => setHidden((h) => !h)}
           >
-            {hidden ? "hide examples" : "show examples"}
+            {hidden ? "Hide Examples" : "Show Examples"}
           </button>
         </div>
         <div style={{ textAlign: "center" }}>
           {hidden && <SampleForms setEditorContent={setEditorContent} />}
           {rules && (
-            <div>
-              <pre style={{ paddingLeft: 16, textAlign: "left" }}>
+            <div style={{
+                background: "#15171B",
+                border: "1px solid #27272A",
+                borderRadius: 8,
+                marginTop: 16,
+                padding: 16,
+            }}>
+              <pre style={{ 
+                  textAlign: "left", 
+                  color: "#A1A1AA", 
+                  fontSize: "13px",
+                  whiteSpace: "pre-wrap",
+                  margin: 0
+              }}>
                 {MARKDOWN_RULES}
               </pre>
             </div>
@@ -315,12 +329,21 @@ export function EditorPage({ mode = "test", startingContent }: EditorProps) {
           display: "flex",
           flexDirection: "column",
           flex: 1,
-          padding: 16,
+          padding: 0,
           boxSizing: "border-box",
         }}
       >
-        <h2 style={{ fontSize: 24, fontWeight: "bold" }}>Preview</h2>
-        <RenderedForm survey={survey} mode={mode} showSubmissionData={true} />
+        <h2 style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>Preview</h2>
+        <div style={{
+            background: "#fff", 
+            color: "#000", 
+            padding: 24, 
+            borderRadius: 12,
+            minHeight: "65vh"
+        }}>
+             {/* Force light mode for preview as forms might be light by default */}
+            <RenderedForm survey={survey} mode={mode} showSubmissionData={true} />
+        </div>
       </div>
     </div>
   );

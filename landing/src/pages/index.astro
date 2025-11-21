@@ -1,332 +1,852 @@
 ---
-import Pricing from "@components/Pricing.astro";
-import BaseLayout from "../layouts/BaseLayout.astro";
-// let sampleSurvey = markdown_to_form_wasm_v2(heroContent);
+const title = "Hashdown - The Fastest Way to Build Forms";
 
 const faqItems = [
   {
     id: "faq1",
     question: "What is Hashdown?",
     answer:
-      "A tool to create forms using Markdown. Write text, get a form, share the link.",
+      "Hashdown is a developer-first form builder. It allows you to create fully functional forms using simple Markdown syntax. It's perfect for developers who prefer typing over dragging and dropping.",
   },
   {
     id: "faq2",
-    question: "Do I need to know how to code?",
+    question: "Do I need coding skills?",
     answer:
-      "Nope. If you know basic Markdown, you're good to go.",
+      "Not strictly, but being comfortable with Markdown helps. If you can write a README, you can build a form with Hashdown.",
   },
   {
     id: "faq3",
-    question: "What types of forms can I create?",
+    question: "What kind of forms can I build?",
     answer:
-      "Surveys, contact forms, registrations—anything where you need to collect information.",
+      "You can build surveys, feedback forms, contact forms, and event registrations. We support text inputs, checkboxes, radio buttons, and more.",
   },
   {
     id: "faq4",
-    question: "How do I share forms?",
+    question: "How do I share my forms?",
     answer:
-      "We give you a URL. Share it anywhere or embed it on your site.",
+      "Every form gets a unique, secure URL. You can share this link directly or use our embed code to place the form on your own website.",
   },
   {
     id: "faq5",
-    question: "Can I embed forms on my website?",
+    question: "Can I embed forms?",
     answer:
-      "Yes. Use the URL or iframe code we provide.",
+      "Absolutely. We provide a simple iframe snippet that you can drop into any website or documentation page.",
   },
   {
     id: "faq6",
-    question: "Does Hashdown have an API?",
+    question: "Is there an API?",
     answer:
-      "Yes. Create forms and collect responses programmatically.",
+      "Yes. Our API allows you to programmatically create forms and retrieve responses, enabling deep integration with your applications.",
   },
   {
     id: "faq7",
-    question: "How is my data stored? Is it secure?",
+    question: "Is my data secure?",
     answer:
-      "Data is encrypted and stored securely. You can export responses anytime.",
+      "Yes. All data is encrypted in transit and at rest. You retain full ownership of your data and can export it at any time.",
   },
   {
     id: "faq8",
-    question: "Can I customize how forms look?",
+    question: "Can I style my forms?",
     answer:
-      "Default forms are clean and simple. You can add custom CSS if you want more control.",
+      "Our default theme is clean and minimal. Pro plans allow for custom CSS injection to match your brand's identity perfectly.",
   },
   {
     id: "faq9",
-    question: "How many forms can I create?",
+    question: "Are there limits on forms?",
     answer:
-      "Depends on your plan. Free plan has limits, paid plans are unlimited.",
+      "The Free plan has generous limits for hobbyists. Paid plans offer unlimited forms and higher response quotas.",
   },
   {
     id: "faq10",
-    question: "How much does it cost?",
+    question: "How does pricing work?",
     answer:
-      "You can start free. Paid plans unlock more features and forms. Check the pricing section above.",
+      "We offer a free tier to get started. Our paid plans are simple flat rates designed for power users and teams. See the pricing section for details.",
   },
   {
     id: "faq11",
-    question: "Can teams use this together?",
+    question: "Is there team collaboration?",
     answer:
-      "Yes. Share forms, review responses, and manage settings with your team.",
+      "Yes, Team plans allow you to invite members to collaborate on forms and analyze responses together.",
   },
   {
     id: "faq12",
-    question: "What support do you offer?",
+    question: "What about support?",
     answer:
-      "We have a knowledge base and email support. Premium users get priority support.",
+      "We offer email support for all users, with priority response times for Pro and Team customers.",
   },
 ];
 
 const features = [
   {
-    title: "Write in Markdown",
-    description: "Just type. No dragging and dropping.",
+    title: "Markdown Native",
+    description:
+      "Write forms as easily as writing a document. Support for all standard inputs.",
     icon: "📝",
   },
   {
-    title: "Get a link instantly",
-    description: "Share it anywhere or embed on your site.",
-    icon: "🔗",
+    title: "Instant Deployment",
+    description:
+      "Your form is live the moment you save. Share via link or embed anywhere.",
+    icon: "🚀",
   },
   {
-    title: "Use our API",
-    description: "Build forms programmatically if you want.",
+    title: "Developer API",
+    description:
+      "Full API access for programmatic form generation and response handling.",
     icon: "⚡",
+  },
+];
+
+const tiers = [
+  {
+    name: "Starter",
+    price: "$9.99",
+    features: [
+      "10 Active Forms",
+      "1,000 Responses / mo",
+      "Standard Email Support",
+      "Email Notifications",
+    ],
+  },
+  {
+    name: "Growth",
+    price: "$19.99",
+    features: [
+      "Unlimited Active Forms",
+      "10,000 Responses / mo",
+      "Priority Email Support",
+      "Full API Access",
+      "Remove Hashdown Branding",
+    ],
   },
 ];
 ---
 
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{title}</title>
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/png" href="/hashdown.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="navbar-content">
+        <a class="navbar-logo" href="/">
+          <img src="/hashdown.png" alt="Hashdown logo" height="32" />
+          <span>Hashdown</span>
+        </a>
+        <div class="navbar-links">
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="https://app.gethashdown.com" class="nav-login">Log in</a>
+          <a href="https://app.gethashdown.com" class="nav-cta">Sign up</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <section class="hero">
+        <div class="hero-content">
+          <h1 class="hero-title">
+            The database for<br />
+            <span class="text-gradient">developers</span> who build forms.
+          </h1>
+          <p class="hero-sub">
+            Turn simple Markdown into powerful forms in seconds. No
+            drag-and-drop, no complex builders—just text.
+          </p>
+          <div class="hero-actions">
+            <a class="cta-btn primary" href="https://app.gethashdown.com"
+              >Start for free</a
+            >
+            <a class="cta-btn secondary" href="#features">Read the docs</a>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="code-window">
+            <div class="code-header">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+              <div class="window-title">form.md</div>
+            </div>
+            <div class="code-content">
+              <div class="code-line">
+                <span class="line-num">1</span><span
+                  ><span class="token-hash">#</span>
+                  <span class="token-text">Product Feedback</span></span
+                >
+              </div>
+              <div class="code-line">
+                <span class="line-num">2</span><span></span>
+              </div>
+              <div class="code-line">
+                <span class="line-num">3</span><span
+                  ><span class="token-text">Please rate your experience:</span
+                  ></span
+                >
+              </div>
+              <div class="code-line">
+                <span class="line-num">4</span><span
+                  ><span class="token-field">- [ ]</span>
+                  <span class="token-text">Excellent</span></span
+                >
+              </div>
+              <div class="code-line">
+                <span class="line-num">5</span><span
+                  ><span class="token-field">- [ ]</span>
+                  <span class="token-text">Good</span></span
+                >
+              </div>
+              <div class="code-line">
+                <span class="line-num">6</span><span
+                  ><span class="token-field">- [ ]</span>
+                  <span class="token-text">Needs Improvement</span></span
+                >
+              </div>
+              <div class="code-line">
+                <span class="line-num">7</span><span></span>
+              </div>
+              <div class="code-line">
+                <span class="line-num">8</span><span
+                  ><span class="token-text">Any comments?</span></span
+                >
+              </div>
+              <div class="code-line">
+                <span class="line-num">9</span><span
+                  ><span class="token-field">___</span></span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features">
+        <h2 class="section-title">Why Hashdown?</h2>
+        <div class="features-grid">
+          {
+            features.map((feature) => (
+              <div class="feature-card">
+                <div class="feature-icon">{feature.icon}</div>
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="how-it-works">
+        <h2 class="section-title">How it works</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3>Write</h3>
+            <p>Define your questions using standard Markdown syntax.</p>
+          </div>
+          <div class="step">
+            <div class="step-arrow">→</div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3>Share</h3>
+            <p>Get a unique URL or embed code for your website instantly.</p>
+          </div>
+          <div class="step">
+            <div class="step-arrow">→</div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3>Collect</h3>
+            <p>View responses in real-time or export them for analysis.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2 class="section-title">Treat Forms Like Code</h2>
+        <p>
+          Version control your forms, generate them dynamically, and integrate
+          seamlessly with your existing workflow. No more wrestling with clunky
+          UI builders.
+        </p>
+        <div style="text-align: center; margin-top: 2rem">
+          <a class="cta-btn primary" href="https://app.gethashdown.com"
+            >Try it now</a
+          >
+        </div>
+      </section>
+
+      <section id="pricing">
+        <h2 class="section-title">Pricing</h2>
+        <div class="pricing-page">
+          <div class="tiers-container">
+            {
+              tiers.map((tier) => (
+                <div class="tier">
+                  <h2 class="tier-name">{tier.name}</h2>
+                  <p class="price">
+                    {tier.price}
+                    <span class="per-month">/month</span>
+                  </p>
+                  <ul class="features-list-pricing">
+                    {tier.features.map((feature) => (
+                      <li class="feature">{feature}</li>
+                    ))}
+                  </ul>
+                  <button class="plan-button">Choose Plan</button>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="faq-section">
+        <h2 class="section-title">Questions?</h2>
+        <div id="faq-list">
+          {
+            faqItems.map((faq) => (
+              <div class="faq-item" id={faq.id}>
+                <div
+                  class="faq-question"
+                  onclick={`this.parentElement.classList.toggle('open')`}
+                >
+                  <span>{faq.question}</span>
+                  <span class="faq-toggle">+</span>
+                </div>
+                <div class="faq-answer">{faq.answer}</div>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <footer>
+        <div class="footer-content">
+          <p>© 2025 Hashdown. All rights reserved.</p>
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>
+
 <style is:global>
+  :root {
+    --bg-dark: #0b0d11;
+    --text-primary: #ededed;
+    --text-secondary: #a1a1aa;
+    --accent: #fff;
+    --accent-hover: #e5e5e5;
+    --border-color: #27272a;
+    --card-bg: #15171b;
+    --grid-color: rgba(255, 255, 255, 0.05);
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", system-ui, sans-serif;
+    background-color: var(--bg-dark);
+    background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    color: var(--text-primary);
+    min-height: 100vh;
+    scroll-behavior: smooth;
+  }
+
+  /* Navbar */
+  .navbar {
+    width: 100%;
+    background: rgba(11, 13, 17, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 64px;
+  }
+  .navbar-content {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+  }
+  .navbar-logo {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    gap: 0.75rem;
+  }
+  .navbar-logo img {
+    border-radius: 6px;
+  }
+  .navbar-links {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+  }
+  .navbar-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+    font-size: 0.9rem;
+  }
+  .navbar-links a:hover {
+    color: var(--text-primary);
+  }
+  .nav-login {
+    margin-left: 1rem;
+  }
+  .nav-cta {
+    background: var(--accent);
+    color: #000 !important;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 600;
+    transition:
+      transform 0.2s,
+      background-color 0.2s !important;
+  }
+  .nav-cta:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    overflow-x: hidden;
+  }
+
+  /* Hero Section */
   .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    padding: 4rem 0 5rem 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 12px;
-    margin: 2rem 0 4rem 0;
+    padding: 8rem 0 6rem;
+    gap: 3rem;
+  }
+  .hero-content {
+    max-width: 800px;
   }
   .hero-title {
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 700;
-    color: white;
+    font-size: clamp(3rem, 6vw, 4.5rem);
+    font-weight: 800;
+    color: var(--text-primary);
     margin-bottom: 1.5rem;
-    line-height: 1.2;
-    max-width: 900px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 0 1rem;
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+  }
+  .text-gradient {
+    background: linear-gradient(120deg, #fff, #999);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
   .hero-sub {
-    font-size: clamp(1rem, 2vw, 1.35rem);
-    color: rgba(255, 255, 255, 0.95);
+    font-size: clamp(1.1rem, 2vw, 1.3rem);
+    color: var(--text-secondary);
     margin-bottom: 2.5rem;
-    max-width: 700px;
+    line-height: 1.6;
+    max-width: 600px;
     margin-left: auto;
     margin-right: auto;
-    padding: 0 1rem;
-    line-height: 1.6;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
   }
   .cta-btn {
-    display: inline-block;
-    background: white;
-    color: #2563eb;
+    display: inline-flex;
+    align-items: center;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1rem;
     border: none;
-    border-radius: 8px;
-    padding: 1rem 2.5rem;
-    margin: 0.5rem 0.5rem;
+    border-radius: 6px;
+    padding: 0.75rem 1.5rem;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.2s;
     text-decoration: none;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
-  .cta-btn:hover {
+  .cta-btn.primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .cta-btn.primary:hover {
+    background: var(--accent-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
   }
-  .cta-btn-secondary {
+  .cta-btn.secondary {
     background: transparent;
-    color: white;
-    border: 2px solid white;
-    box-shadow: none;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
   }
-  .cta-btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
+  .cta-btn.secondary:hover {
+    border-color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
   }
+
+  .hero-visual {
+    width: 100%;
+    max-width: 800px;
+    perspective: 1000px;
+    position: relative;
+  }
+  .hero-visual::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(
+      circle,
+      rgba(37, 99, 235, 0.15) 0%,
+      transparent 70%
+    );
+    z-index: -1;
+    filter: blur(60px);
+    pointer-events: none;
+  }
+
+  .code-window {
+    background: #0f1115;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow:
+      0 0 0 1px #333,
+      0 20px 50px -10px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: "Menlo", "Monaco", "Courier New", monospace;
+    overflow: hidden;
+    transform: rotateX(2deg);
+    transition: transform 0.3s ease;
+  }
+  .code-window:hover {
+    transform: rotateX(0deg) scale(1.01);
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #27272a;
+  }
+  .window-title {
+    margin-left: auto;
+    margin-right: auto;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    transform: translateX(-24px); /* Adjust for dots */
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .dot-red {
+    background: #ef4444;
+  }
+  .dot-yellow {
+    background: #f59e0b;
+  }
+  .dot-green {
+    background: #22c55e;
+  }
+
+  .code-content {
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  .code-line {
+    display: flex;
+    gap: 1.5rem;
+  }
+  .line-num {
+    color: #4b5563;
+    user-select: none;
+    width: 20px;
+    text-align: right;
+  }
+  .token-hash {
+    color: #60a5fa;
+  }
+  .token-text {
+    color: #f1f5f9;
+  }
+  .token-field {
+    color: #4ade80;
+  }
+
   section {
-    margin-bottom: 5rem;
+    margin-bottom: 8rem;
   }
   .section-title {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-size: clamp(2rem, 4vw, 2.5rem);
     font-weight: 700;
-    color: #1f2937;
-    margin-bottom: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 4rem;
     text-align: center;
+    letter-spacing: -0.02em;
   }
-  .section-subtitle {
-    font-size: 1.2rem;
-    color: #6b7280;
-    text-align: center;
-    max-width: 700px;
-    margin: 0 auto 3rem auto;
-    line-height: 1.6;
-  }
+
+  /* Features */
   .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
-  }
-  .feature-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid #e5e7eb;
-  }
-  .feature-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-  .feature-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-  }
-  .feature-card h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 0.75rem;
-  }
-  .feature-card p {
-    color: #6b7280;
-    line-height: 1.6;
-    font-size: 1rem;
-  }
-  .benefits-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
-    margin-top: 3rem;
   }
-  .benefit-card {
-    background: #f9fafb;
-    padding: 2rem;
+  .feature-card {
+    background: var(--card-bg);
+    padding: 2.5rem;
     border-radius: 12px;
-    border-left: 4px solid #2563eb;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
   }
-  .benefit-card h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 0.75rem;
+  .feature-card:hover {
+    border-color: var(--text-secondary);
+    transform: translateY(-4px);
   }
-  .benefit-card p {
-    color: #6b7280;
-    line-height: 1.6;
-  }
-  .how-it-works {
-    background: #f9fafb;
-    padding: 3rem 2rem;
-    border-radius: 12px;
-    margin-top: 2rem;
-  }
-  .steps {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-  }
-  .step {
-    text-align: center;
-  }
-  .step-number {
-    display: inline-flex;
+  .feature-icon {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    width: 56px;
+    height: 56px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 60px;
-    height: 60px;
-    background: #2563eb;
-    color: white;
+    border-radius: 10px;
+  }
+  .feature-card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+  }
+  .feature-card p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* How It Works */
+  .how-it-works {
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 6rem 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.02),
+      transparent
+    );
+  }
+  .steps {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .step {
+    flex: 1;
+    min-width: 250px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .step-arrow {
+    font-size: 2rem;
+    color: var(--text-secondary);
+    padding-top: 2rem;
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .step-arrow {
+      display: block;
+    }
+  }
+  .step-number {
+    width: 40px;
+    height: 40px;
+    background: var(--text-primary);
+    color: var(--bg-dark);
     border-radius: 50%;
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .step h3 {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
   }
   .step p {
-    color: #6b7280;
+    color: var(--text-secondary);
     line-height: 1.6;
+    max-width: 300px;
   }
-  .features-list {
-    list-style: none;
+
+  /* Content Section */
+  .content-section {
+    text-align: center;
+    border: 1px solid var(--border-color);
+    padding: 4rem 2rem;
+    border-radius: 16px;
+    background: radial-gradient(
+      circle at center,
+      rgba(255, 255, 255, 0.05),
+      transparent 70%
+    );
+  }
+  .content-section p {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  /* Pricing */
+  .tiers-container {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .tier {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+  }
+  .tier:hover {
+    border-color: var(--text-primary);
+    transform: translateY(-4px);
+  }
+  .tier-name {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .price {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 1rem 0;
+    line-height: 1;
+  }
+  .per-month {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+  .features-list-pricing {
+    list-style-type: none;
     padding: 0;
-    margin: 1.5rem 0 0 0;
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
-  .features-list li {
-    padding: 0.75rem 0;
-    padding-left: 2rem;
+  .feature {
+    padding-left: 1.5rem;
     position: relative;
-    color: #4b5563;
-    line-height: 1.6;
+    color: var(--text-secondary);
   }
-  .features-list li:before {
+  .feature:before {
     content: "✓";
     position: absolute;
     left: 0;
-    color: #2563eb;
-    font-weight: bold;
-    font-size: 1.2rem;
+    color: var(--text-primary);
   }
+  .plan-button {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: auto;
+    width: 100%;
+  }
+  .plan-button:hover {
+    background: var(--text-primary);
+    color: var(--bg-dark);
+  }
+
+  /* FAQ */
   .faq-section {
-    margin-top: 4rem;
-    margin-bottom: 3rem;
+    max-width: 800px;
+    margin: 0 auto 6rem auto;
   }
   .faq-item {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.5rem 0;
   }
-  .faq-item:hover {
-    border-color: #2563eb;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-  .faq-item.open {
-    border-color: #2563eb;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+  .faq-item:first-child {
+    border-top: 1px solid var(--border-color);
   }
   .faq-question {
-    font-weight: 600;
+    font-size: 1.125rem;
+    color: var(--text-primary);
     cursor: pointer;
-    color: #1f2937;
-    margin: 0;
-    font-size: 1.1rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     user-select: none;
-  }
-  .faq-question:hover {
-    color: #2563eb;
+    font-weight: 500;
   }
   .faq-answer {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease, margin-top 0.3s ease;
-    color: #6b7280;
+    transition:
+      max-height 0.3s ease,
+      margin-top 0.3s ease;
+    color: var(--text-secondary);
     font-size: 1rem;
-    margin-top: 0;
     line-height: 1.6;
   }
   .faq-item.open .faq-answer {
@@ -334,133 +854,32 @@ const features = [
     margin-top: 1rem;
   }
   .faq-toggle {
-    font-size: 1.5rem;
-    margin-left: 1rem;
-    color: #2563eb;
-    font-weight: 300;
+    color: var(--text-secondary);
     transition: transform 0.3s ease;
-    flex-shrink: 0;
+    font-size: 1.5rem;
   }
   .faq-item.open .faq-toggle {
+    color: var(--text-primary);
     transform: rotate(45deg);
   }
-  .content-section {
-    background: white;
-    padding: 3rem 2rem;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 3rem;
+
+  footer {
+    border-top: 1px solid var(--border-color);
+    padding: 3rem 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
   }
-  .content-section p {
-    font-size: 1.1rem;
-    color: #4b5563;
-    line-height: 1.7;
-    max-width: 700px;
-    margin: 0 auto;
-  }
+
   @media (max-width: 768px) {
-    .hero {
-      padding: 3rem 1rem 4rem 1rem;
-      margin: 1rem 0 3rem 0;
+    .hero-title {
+      font-size: 2.5rem;
     }
-    .features-grid,
-    .benefits-grid,
-    .steps {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
+    .navbar-links {
+      display: none; /* Simplified mobile menu */
     }
-    .cta-btn {
-      display: block;
-      margin: 0.5rem 0;
-    }
-    section {
-      margin-bottom: 3rem;
+    .step-arrow {
+      display: none;
     }
   }
 </style>
-
-<BaseLayout>
-  <section class="hero">
-    <h1 class="hero-title">
-      Create forms by typing,<br />not clicking
-    </h1>
-    <div class="hero-sub">
-      Write your forms in Markdown. Get a link. Start collecting responses.
-    </div>
-    <div>
-      <a class="cta-btn" href="/editor">Try it →</a>
-    </div>
-  </section>
-
-  <section id="features">
-    <h2 class="section-title">That's it</h2>
-    <div class="features-grid">
-      {
-        features.map((feature) => (
-          <div class="feature-card">
-            <div class="feature-icon">{feature.icon}</div>
-            <h3>{feature.title}</h3>
-            <p>{feature.description}</p>
-          </div>
-        ))
-      }
-    </div>
-  </section>
-
-  <section class="how-it-works">
-    <h2 class="section-title">How it works</h2>
-    <div class="steps">
-      <div class="step">
-        <div class="step-number">1</div>
-        <h3>Type your form</h3>
-        <p>Use Markdown in our editor or via API.</p>
-      </div>
-      <div class="step">
-        <div class="step-number">2</div>
-        <h3>Get a link</h3>
-        <p>Share it or embed it on your site.</p>
-      </div>
-      <div class="step">
-        <div class="step-number">3</div>
-        <h3>See responses</h3>
-        <p>Done.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="content-section">
-    <h2 class="section-title">Built for developers</h2>
-    <p>
-      Generate forms from code. Version control them like any other text file.
-      No GUI to fight with.
-    </p>
-    <div style="text-align: center; margin-top: 2rem">
-      <a class="cta-btn" href="/editor">Try it →</a>
-    </div>
-  </section>
-
-  <section id="pricing">
-    <h2 class="section-title">Pricing</h2>
-    <Pricing />
-  </section>
-
-  <section class="faq-section">
-    <h2 class="section-title">Questions?</h2>
-    <div id="faq-list">
-      {
-        faqItems.map((faq) => (
-          <div class="faq-item" id={faq.id}>
-            <div
-              class="faq-question"
-              onclick={`this.parentElement.classList.toggle('open')`}
-            >
-              <span>{faq.question}</span>
-              <span class="faq-toggle">+</span>
-            </div>
-            <div class="faq-answer">{faq.answer}</div>
-          </div>
-        ))
-      }
-    </div>
-  </section>
-</BaseLayout>
