@@ -1,4 +1,6 @@
 ---
+import { getBaseLandingPageUrl } from "src/lib/utils";
+
 const title = "Hashdown - The Fastest Way to Build Forms";
 
 const faqItems = [
@@ -145,9 +147,10 @@ const tiers = [
         </a>
         <div class="navbar-links">
           <a href="#features">Features</a>
-          <a href="#pricing">Pricing</a>
-          <a href="https://app.gethashdown.com" class="nav-login">Log in</a>
-          <a href="https://app.gethashdown.com" class="nav-cta">Sign up</a>
+          <a href="editor">Editor</a>
+          <!-- <a href="#pricing">Pricing</a> -->
+          <!-- <a href="/login" class="nav-login">Log in</a>
+          <a href="/signup" class="nav-cta">Sign up</a> -->
         </div>
       </div>
     </nav>
@@ -164,8 +167,9 @@ const tiers = [
             drag-and-drop, no complex builders—just text.
           </p>
           <div class="hero-actions">
-            <a class="cta-btn primary" href="https://app.gethashdown.com"
-              >Start for free</a
+            <a
+              class="cta-btn primary"
+              href={getBaseLandingPageUrl() + "/editor"}>Test it now</a
             >
             <a class="cta-btn secondary" href="#features">Read the docs</a>
           </div>
@@ -281,7 +285,7 @@ const tiers = [
           UI builders.
         </p>
         <div style="text-align: center; margin-top: 2rem">
-          <a class="cta-btn primary" href="https://app.gethashdown.com"
+          <a class="cta-btn primary" href={getBaseLandingPageUrl() + "/editor"}
             >Try it now</a
           >
         </div>

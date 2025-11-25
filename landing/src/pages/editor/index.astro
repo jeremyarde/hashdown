@@ -1,18 +1,23 @@
 ---
+import { getBaseLandingPageUrl } from "src/lib/utils";
 import { EditorPage } from "../../components/custom/EditorPage.tsx";
-import { RenderedForm } from "../../components/custom/RenderedForm.tsx";
 
-let content = `# hashdown User Feedback
+let content = `# User Feedback
 
 Textarea: How was your experience using hashdown
 
 Textarea: What is the number one complaint you have?
 
 radio: How did you hear about us?
-- Friend
+- Friends
 - Online
 - Search
-Text: Other?`;
+- Advertisement
+
+Text: Other comments? 
+
+Submit: Submit
+`;
 ---
 
 <html lang="en">
@@ -24,16 +29,18 @@ Text: Other?`;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <style is:global>
       :root {
-        --bg-dark: #0B0D11;
-        --text-primary: #EDEDED;
-        --text-secondary: #A1A1AA;
+        --bg-dark: #0b0d11;
+        --text-primary: #ededed;
+        --text-secondary: #a1a1aa;
         --accent: #fff;
-        --border-color: #27272A;
+        --accent-hover: #e5e5e5;
+        --border-color: #27272a;
+        --card-bg: #15171b;
         --grid-color: rgba(255, 255, 255, 0.05);
       }
 
@@ -43,14 +50,18 @@ Text: Other?`;
         padding: 0;
         font-family: "Inter", system-ui, sans-serif;
         background-color: var(--bg-dark);
-        background-image: 
-          linear-gradient(var(--grid-color) 1px, transparent 1px),
+        background-image: linear-gradient(
+            var(--grid-color) 1px,
+            transparent 1px
+          ),
           linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
         background-size: 40px 40px;
         color: var(--text-primary);
         min-height: 100vh;
+        display: flex;
+        flex-direction: column;
       }
-      
+
       /* Navbar */
       .navbar {
         width: 100%;
@@ -100,20 +111,183 @@ Text: Other?`;
       .navbar-links a:hover {
         color: var(--text-primary);
       }
+      .nav-login {
+        margin-left: 1rem;
+      }
+      .nav-cta {
+        background: var(--accent);
+        color: #000 !important;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-weight: 600;
+        transition:
+          transform 0.2s,
+          background-color 0.2s !important;
+      }
+      .nav-cta:hover {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+      }
 
       .editor-container {
-        max-width: 1400px;
+        max-width: 1600px;
         margin: 2rem auto;
-        padding: 0 1.5rem;
+        padding: 0 2rem;
+        width: 100%;
+        box-sizing: border-box;
+        flex: 1;
       }
-      
+
+      @media (max-width: 1200px) {
+        .editor-container {
+          padding: 0 1.5rem;
+        }
+      }
+
+      footer {
+        border-top: 1px solid var(--border-color);
+        padding: 3rem 0;
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        background: var(--bg-dark);
+        margin-top: auto;
+      }
+
       /* Override React Component Styles where possible */
       .editor-wrapper textarea {
-        background-color: #15171B !important;
-        color: #EDEDED !important;
-        border-color: #27272A !important;
+        background-color: #15171b !important;
+        color: #ededed !important;
+        border-color: #27272a !important;
       }
-      
+
+      @media (max-width: 1200px) {
+        .editor-container {
+          padding: 0 1rem;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .navbar-links {
+          display: none;
+        }
+        .editor-container {
+          padding: 0 1rem;
+        }
+      }
+
+      /* Minimal Tailwind shim for RenderedForm.tsx */
+      .flex {
+        display: flex;
+      }
+      .flex-col {
+        flex-direction: column;
+      }
+      .justify-center {
+        justify-content: center;
+      }
+      .items-center {
+        align-items: center;
+      }
+      .space-y-2 > * + * {
+        margin-top: 0.5rem;
+      }
+      .space-x-2 > * + * {
+        margin-left: 0.5rem;
+      }
+      .ml-2 {
+        margin-left: 0.5rem;
+      }
+      .p-2 {
+        padding: 0.5rem;
+      }
+      .p-6 {
+        padding: 1.5rem;
+      }
+      .w-2\/3 {
+        width: 66.666667%;
+      }
+
+      .text-xl {
+        font-size: 1.25rem;
+        line-height: 1.75rem;
+      }
+      .text-sm {
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+      }
+      .font-bold {
+        font-weight: 700;
+      }
+      .font-semibold {
+        font-weight: 600;
+      }
+      .text-center {
+        text-align: center;
+      }
+      .text-left {
+        text-align: left;
+      }
+      .underline {
+        text-decoration: underline;
+      }
+
+      .rounded-xl {
+        border-radius: 0.75rem;
+      }
+      .rounded-s {
+        border-radius: 0.125rem;
+      }
+      .border {
+        border-width: 1px;
+      }
+      .border-solid {
+        border-style: solid;
+      }
+      .border-dotted {
+        border-style: dotted;
+      }
+
+      .bg-red-200 {
+        background-color: #fecaca;
+        color: #000;
+      }
+      .bg-blue-200 {
+        background-color: #bfdbfe;
+        color: #000;
+      }
+      .bg-yellow {
+        background-color: #fef08a;
+        color: #000;
+      } /* yellow-200-ish */
+      .bg-green {
+        background-color: #bbf7d0;
+        color: #000;
+      } /* green-200-ish */
+      .bg-purple {
+        background-color: #e9d5ff;
+        color: #000;
+      } /* purple-200-ish */
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Responsive editor layout */
+      .editor-layout {
+        flex-direction: row;
+      }
+
+      @media (max-width: 1024px) {
+        .editor-layout {
+          flex-direction: column;
+        }
+        .editor-layout > div {
+          flex: 1 1 100% !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -124,15 +298,20 @@ Text: Other?`;
           <span>Hashdown</span>
         </a>
         <div class="navbar-links">
-          <a href="/">Home</a>
           <a href="/#features">Features</a>
-          <a href="/#pricing">Pricing</a>
-          <a href="https://app.gethashdown.com">Sign up</a>
+          <a href={getBaseLandingPageUrl() + "/editor"}>Editor</a>
         </div>
       </div>
     </nav>
+
     <div class="editor-container">
       <EditorPage client:load mode="test" startingContent={content} />
     </div>
+
+    <footer>
+      <div class="footer-content">
+        <p>© 2025 Hashdown. All rights reserved.</p>
+      </div>
+    </footer>
   </body>
 </html>

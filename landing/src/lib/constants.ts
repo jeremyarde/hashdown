@@ -4,7 +4,7 @@ export enum STAGE {
 }
 
 export const BASE_URL: { [stage: string]: string } = {
-  [STAGE.DEV]: "http://localhost:8080",
+  [STAGE.DEV]: "http://localhost:4321",
   [STAGE.PROD]: "https://api.gethashdown.com",
 };
 

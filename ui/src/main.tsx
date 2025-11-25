@@ -19,19 +19,16 @@ import { Signup } from "./components/custom/Signup.tsx";
 import { EditorPage } from "./pages/EditorPage.tsx";
 import { ListResponses } from "./components/custom/ListResponses.tsx";
 import { useGetSurvey } from "./hooks/useGetSurvey.ts";
-import Dashboard from "./pages/Dashboard.tsx";
+// import Dashboard from "./pages/Dashboard.tsx";
 import {
   getApiBaseUrl,
   getSessionToken,
   getStage,
   handleResponse,
-  isDev,
 } from "./lib/utils.ts";
-import { Crud } from "./components/Crud.tsx";
-import TestPage from "./pages/TestPage.tsx";
 import { Home } from "./pages/Home.tsx";
 import { Waitlist } from "./components/custom/Waitlist.tsx";
-import { MARKDOWN_RULES, STAGE } from "./lib/constants.ts";
+import { STAGE } from "./lib/constants.ts";
 import StripePage from "./pages/StripePage.tsx";
 import { PricingPage } from "./pages/PricingPage.tsx";
 

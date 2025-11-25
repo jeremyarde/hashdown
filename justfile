@@ -21,8 +21,6 @@ test:
 rund: 
     docker run --env-file ./server/.env -p 8080:8080 -it mdp-server
 
-fe:
-    cd ui && npm run dev
 be:
     cd server && cargo r
 
@@ -50,3 +48,8 @@ seamigrateprod:
 sea:
     sea-orm-cli migrate refresh && cd server && sea-orm-cli generate entity --with-serde both -s mdp -o ../entity/src/entities
 
+fe:
+    cd landing && npm run dev
+
+febuild:
+    cd landing && npm run build

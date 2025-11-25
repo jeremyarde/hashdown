@@ -1,6 +1,5 @@
 import { getApiBaseUrl, getSessionToken, getWebsiteUrl } from "@/lib/utils";
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 const Message = ({ message }: { message: string }) => (
   <section>
@@ -26,7 +25,9 @@ export default function StripePage() {
     }
   }, []);
 
-  const createCheckoutSession = async (evt) => {
+  const createCheckoutSession = async (
+    evt: React.MouseEvent<HTMLButtonElement>
+  ) => {
     evt.preventDefault();
 
     const response = await fetch(
@@ -54,14 +55,14 @@ export default function StripePage() {
   return message ? (
     <Message message={message} />
   ) : (
-    <section className="w-2/3 gap-2 p-4 bg-yellow">
+    <section className="gap-2 p-4 w-2/3 bg-yellow">
       <div className="flex flex-row p-2">
         <img
           src="https://i.imgur.com/EHyR2nP.png"
           alt="The cover of Stubborn Attachments"
           className="w-32 h-32 aspect-square"
         />
-        <div className="items-center w-full h-full p-2 text-left">
+        <div className="items-center p-2 w-full h-full text-left">
           <h3>Stubborn Attachments</h3>
           <h5>$20.00</h5>
         </div>

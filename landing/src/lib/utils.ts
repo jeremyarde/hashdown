@@ -7,6 +7,12 @@ import {
   STAGE,
 } from "./constants";
 
+export function getBaseLandingPageUrl(): string {
+  return getStage() === STAGE.DEV
+    ? "localhost:4321"
+    : "https://gethashdown.com";
+}
+
 export function handleResponse(apiResponse: Response) {
   switch (apiResponse.status) {
     case 200:
