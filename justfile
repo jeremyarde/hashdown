@@ -49,7 +49,20 @@ sea:
     sea-orm-cli migrate refresh && cd server && sea-orm-cli generate entity --with-serde both -s mdp -o ../entity/src/entities
 
 fe:
-    cd landing && npm run dev
+    cd landing && pnpm dev
 
 febuild:
-    cd landing && npm run build
+    cd landing && pnpm build
+
+devui:
+    cd ui-app && pnpm dev
+
+devall:
+    # Run both landing and ui-app dev servers
+    # In separate terminals, run:
+    #   just fe      (for landing page)
+    #   just devui   (for ui-app)
+    @echo "Run 'just fe' in one terminal and 'just devui' in another"
+
+buildl:
+    cd landing && pnpm build

@@ -1,5 +1,0 @@
-/target
-*.wasm
-dist/*
-ui2/*
-node_modules/*

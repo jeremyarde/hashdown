@@ -47,6 +47,12 @@ export function getWebsiteUrl(): string {
   return window.location.host;
 }
 
+export function getAppUrl(): string {
+  return isDev()
+    ? "http://localhost:5173/editor"
+    : "https://jeremyarde.github.io/mdp-app/editor";
+}
+
 export function getStage(): STAGE {
   return import.meta.env.MODE === "production" ? STAGE.PROD : STAGE.DEV;
 }

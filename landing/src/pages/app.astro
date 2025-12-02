@@ -1,0 +1,22 @@
+---
+import { getAppUrl } from "../lib/utils";
+
+const appUrl = getAppUrl();
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content={`0; url=${appUrl}`} />
+    <link rel="canonical" href={appUrl} />
+    <title>Redirecting to Hashdown App...</title>
+    <script is:inline define:vars={{ appUrl }}>
+      window.location.href = appUrl;
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to <a href={appUrl}>Hashdown App</a>...</p>
+  </body>
+</html>
+

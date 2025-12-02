@@ -20,7 +20,7 @@ const subheading = (
       <h2>Turn simple text into powerful forms.</h2>
       At Hashdown, we believe creating forms and surveys should be effortless.
       With our unique system, all you need is a subset of Markdown to build
-      dynamic forms—no coding required.
+      dynamic forms - no coding required.
     </span>
   </div>
 );
@@ -44,7 +44,7 @@ const features = (
       in seconds.
     </li>
     <li>
-      Instant Sharing: Get a shareable URL instantly—no extra setup needed.
+      Instant Sharing: Get a shareable URL instantly - no extra setup needed.
     </li>
     <li>
       API Ready: Prefer automation? Use our API to integrate form creation
@@ -137,8 +137,8 @@ const faqs = (
         <div className="faq-content">
           <p>
             Once you create a form, Hashdown generates a unique URL that you can
-            share anywhere—via email, social media, or embedded on your website.
-            Users can access and fill out the form through that link.
+            share anywhere - via email, social media, or embedded on your
+            website. Users can access and fill out the form through that link.
           </p>
         </div>
       </div>
@@ -265,7 +265,7 @@ const benefits = (
       <h3>1. Speed and Simplicity</h3>
       <p>
         With Hashdown, creating forms is as fast as typing. You don’t need to
-        click through multiple menus or interfaces—just write in plain text
+        click through multiple menus or interfaces - just write in plain text
         using Markdown syntax. This is ideal for users who prefer a streamlined,
         no-frills approach to form creation.
       </p>
@@ -326,8 +326,8 @@ const benefits = (
       <p>
         For users who work in text-based environments (writers, researchers,
         etc.), Hashdown fits seamlessly into their workflow. There’s no need to
-        adjust to a graphical interface—they can stick to their preferred way of
-        working.
+        adjust to a graphical interface - they can stick to their preferred way
+        of working.
       </p>
     </div>
 

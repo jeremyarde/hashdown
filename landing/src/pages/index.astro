@@ -1,5 +1,5 @@
 ---
-import { getBaseLandingPageUrl } from "src/lib/utils";
+import { getAppUrl, getBaseLandingPageUrl } from "src/lib/utils";
 
 const title = "Hashdown - The Fastest Way to Build Forms";
 
@@ -130,7 +130,7 @@ const tiers = [
     <title>{title}</title>
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <link rel="icon" type="image/png" href="/hashdown.png" />
+    <link rel="icon" type="image/png" href="/hlogo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -147,7 +147,7 @@ const tiers = [
         </a>
         <div class="navbar-links">
           <a href="#features">Features</a>
-          <a href="editor">Editor</a>
+          <a href={getAppUrl()}>Editor</a>
           <!-- <a href="#pricing">Pricing</a> -->
           <!-- <a href="/login" class="nav-login">Log in</a>
           <a href="/signup" class="nav-cta">Sign up</a> -->
@@ -159,19 +159,16 @@ const tiers = [
       <section class="hero">
         <div class="hero-content">
           <h1 class="hero-title">
-            The database for<br />
-            <span class="text-gradient">developers</span> who build forms.
+            The best form builder for<br />
+            <span class="text-gradient">everyone</span>.
           </h1>
           <p class="hero-sub">
             Turn simple Markdown into powerful forms in seconds. No
-            drag-and-drop, no complex builders—just text.
+            drag-and-drop, no complex builders - just text.
           </p>
           <div class="hero-actions">
-            <a
-              class="cta-btn primary"
-              href={getBaseLandingPageUrl() + "/editor"}>Test it now</a
-            >
-            <a class="cta-btn secondary" href="#features">Read the docs</a>
+            <a class="cta-btn primary" href={getAppUrl()}>Test it now</a>
+            <a class="cta-btn secondary" href="#features">Features</a>
           </div>
         </div>
 
@@ -285,9 +282,7 @@ const tiers = [
           UI builders.
         </p>
         <div style="text-align: center; margin-top: 2rem">
-          <a class="cta-btn primary" href={getBaseLandingPageUrl() + "/editor"}
-            >Try it now</a
-          >
+          <a class="cta-btn primary" href={getAppUrl()}>Try it now</a>
         </div>
       </section>
 
