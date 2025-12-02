@@ -75,7 +75,7 @@ jobs:
         # PUBLIC_POKEAPI: 'https://pokeapi.co/api/v2' # Use single quotation marks for the variable value. (optional)
 
   deployl:
-    needs: build
+    needs: buildl
     runs-on: ubuntu-latest
     environment:
       name: github-pages
