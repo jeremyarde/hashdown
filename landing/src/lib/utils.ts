@@ -50,7 +50,7 @@ export function getWebsiteUrl(): string {
 export function getAppUrl(): string {
   return isDev()
     ? "http://localhost:5173/editor"
-    : "https://jeremyarde.github.io/mdp-app/editor";
+    : "https://mdp-app.jere-arde.workers.dev";
 }
 
 export function getStage(): STAGE {
