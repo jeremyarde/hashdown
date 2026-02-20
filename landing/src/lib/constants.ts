@@ -1,3 +1,5 @@
+export const PUBLIC_EMAIL = "hello@gethashdown.com";
+
 export enum STAGE {
   DEV = "development",
   PROD = "production",

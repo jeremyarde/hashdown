@@ -1,5 +1,6 @@
 ---
 import { getAppUrl } from "src/lib/utils";
+import { PUBLIC_EMAIL } from "src/lib/constants";
 
 const title = "Hashdown - Markdown-first forms";
 
@@ -18,7 +19,6 @@ const features = [
     description: "Embed in docs or a site, and export responses when needed.",
   },
 ];
-
 ---
 
 <html lang="en">
@@ -215,7 +215,7 @@ const features = [
         <h2 class="section-title">Questions?</h2>
         <p>
           Want to confirm a feature or roadmap item? Email
-          <a href="mailto:hello@hashdown.com">hello@hashdown.com</a>.
+          <a href="mailto:{PUBLIC_EMAIL}">{PUBLIC_EMAIL}</a>.
         </p>
       </section>
 
