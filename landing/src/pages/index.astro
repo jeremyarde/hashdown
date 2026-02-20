@@ -1,101 +1,21 @@
 ---
-import { getAppUrl, getBaseLandingPageUrl } from "src/lib/utils";
+import { getAppUrl } from "src/lib/utils";
 
-const title = "Hashdown - The Fastest Way to Build Forms";
-
-const faqItems = [
-  {
-    id: "faq1",
-    question: "What is Hashdown?",
-    answer:
-      "Hashdown is a developer-first form builder. It allows you to create fully functional forms using simple Markdown syntax. It's perfect for developers who prefer typing over dragging and dropping.",
-  },
-  {
-    id: "faq2",
-    question: "Do I need coding skills?",
-    answer:
-      "Not strictly, but being comfortable with Markdown helps. If you can write a README, you can build a form with Hashdown.",
-  },
-  {
-    id: "faq3",
-    question: "What kind of forms can I build?",
-    answer:
-      "You can build surveys, feedback forms, contact forms, and event registrations. We support text inputs, checkboxes, radio buttons, and more.",
-  },
-  {
-    id: "faq4",
-    question: "How do I share my forms?",
-    answer:
-      "Every form gets a unique, secure URL. You can share this link directly or use our embed code to place the form on your own website.",
-  },
-  {
-    id: "faq5",
-    question: "Can I embed forms?",
-    answer:
-      "Absolutely. We provide a simple iframe snippet that you can drop into any website or documentation page.",
-  },
-  {
-    id: "faq6",
-    question: "Is there an API?",
-    answer:
-      "Yes. Our API allows you to programmatically create forms and retrieve responses, enabling deep integration with your applications.",
-  },
-  {
-    id: "faq7",
-    question: "Is my data secure?",
-    answer:
-      "Yes. All data is encrypted in transit and at rest. You retain full ownership of your data and can export it at any time.",
-  },
-  {
-    id: "faq8",
-    question: "Can I style my forms?",
-    answer:
-      "Our default theme is clean and minimal. Pro plans allow for custom CSS injection to match your brand's identity perfectly.",
-  },
-  {
-    id: "faq9",
-    question: "Are there limits on forms?",
-    answer:
-      "The Free plan has generous limits for hobbyists. Paid plans offer unlimited forms and higher response quotas.",
-  },
-  {
-    id: "faq10",
-    question: "How does pricing work?",
-    answer:
-      "We offer a free tier to get started. Our paid plans are simple flat rates designed for power users and teams. See the pricing section for details.",
-  },
-  {
-    id: "faq11",
-    question: "Is there team collaboration?",
-    answer:
-      "Yes, Team plans allow you to invite members to collaborate on forms and analyze responses together.",
-  },
-  {
-    id: "faq12",
-    question: "What about support?",
-    answer:
-      "We offer email support for all users, with priority response times for Pro and Team customers.",
-  },
-];
+const title = "Hashdown - Markdown-first forms";
 
 const features = [
   {
-    title: "Markdown Native",
+    title: "Markdown First",
     description:
-      "Write forms as easily as writing a document. Support for all standard inputs.",
-    icon: "📝",
+      "Write questions in Markdown and keep forms in version control.",
   },
   {
-    title: "Instant Deployment",
-    description:
-      "Your form is live the moment you save. Share via link or embed anywhere.",
-    icon: "🚀",
+    title: "Shareable Links",
+    description: "Publish a hosted form and share a single URL.",
   },
   {
-    title: "Developer API",
-    description:
-      "Full API access for programmatic form generation and response handling.",
-    icon: "⚡",
+    title: "Embeds & Exports",
+    description: "Embed in docs or a site, and export responses when needed.",
   },
 ];
 
@@ -134,7 +54,7 @@ const tiers = [
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
   </head>
@@ -158,17 +78,18 @@ const tiers = [
     <main class="container">
       <section class="hero">
         <div class="hero-content">
+          <div class="hero-eyebrow">Markdown-first form builder</div>
           <h1 class="hero-title">
-            The best form builder for<br />
-            <span class="text-gradient">everyone</span>.
+            Forms you can version<br />
+            <span class="text-gradient">and publish</span>.
           </h1>
           <p class="hero-sub">
-            Turn simple Markdown into powerful forms in seconds. No
-            drag-and-drop, no complex builders - just text.
+            Draft a form in plain text, publish a hosted link, and edit it
+            alongside your code.
           </p>
           <div class="hero-actions">
-            <a class="cta-btn primary" href={getAppUrl()}>Test it now</a>
-            <a class="cta-btn secondary" href="#features">Features</a>
+            <a class="cta-btn primary" href={getAppUrl()}>Open editor</a>
+            <a class="cta-btn secondary" href="#features">View features</a>
           </div>
         </div>
 
@@ -236,9 +157,9 @@ const tiers = [
         <h2 class="section-title">Why Hashdown?</h2>
         <div class="features-grid">
           {
-            features.map((feature) => (
+            features.map((feature, index) => (
               <div class="feature-card">
-                <div class="feature-icon">{feature.icon}</div>
+                <div class="feature-tag">0{index + 1}</div>
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
               </div>
@@ -261,7 +182,7 @@ const tiers = [
           <div class="step">
             <div class="step-number">2</div>
             <h3>Share</h3>
-            <p>Get a unique URL or embed code for your website instantly.</p>
+            <p>Get a unique URL or embed code for your website.</p>
           </div>
           <div class="step">
             <div class="step-arrow">→</div>
@@ -269,7 +190,7 @@ const tiers = [
           <div class="step">
             <div class="step-number">3</div>
             <h3>Collect</h3>
-            <p>View responses in real-time or export them for analysis.</p>
+            <p>Review responses or export them.</p>
           </div>
         </div>
       </section>
@@ -277,12 +198,11 @@ const tiers = [
       <section class="content-section">
         <h2 class="section-title">Treat Forms Like Code</h2>
         <p>
-          Version control your forms, generate them dynamically, and integrate
-          seamlessly with your existing workflow. No more wrestling with clunky
-          UI builders.
+          Keep forms alongside your code. Review changes, reuse templates, and
+          ship updates without a complex UI.
         </p>
         <div style="text-align: center; margin-top: 2rem">
-          <a class="cta-btn primary" href={getAppUrl()}>Try it now</a>
+          <a class="cta-btn primary" href={getAppUrl()}>Open editor</a>
         </div>
       </section>
 
@@ -303,7 +223,7 @@ const tiers = [
                       <li class="feature">{feature}</li>
                     ))}
                   </ul>
-                  <button class="plan-button">Choose Plan</button>
+                  <button class="plan-button">Select plan</button>
                 </div>
               ))
             }
@@ -311,29 +231,17 @@ const tiers = [
         </div>
       </section>
 
-      <section class="faq-section">
+      <section class="questions">
         <h2 class="section-title">Questions?</h2>
-        <div id="faq-list">
-          {
-            faqItems.map((faq) => (
-              <div class="faq-item" id={faq.id}>
-                <div
-                  class="faq-question"
-                  onclick={`this.parentElement.classList.toggle('open')`}
-                >
-                  <span>{faq.question}</span>
-                  <span class="faq-toggle">+</span>
-                </div>
-                <div class="faq-answer">{faq.answer}</div>
-              </div>
-            ))
-          }
-        </div>
+        <p>
+          Want to confirm a feature or roadmap item? Email
+          <a href="mailto:hello@hashdown.com">hello@hashdown.com</a>.
+        </p>
       </section>
 
       <footer>
         <div class="footer-content">
-          <p>© 2025 Hashdown. All rights reserved.</p>
+          <p>© 2026 Hashdown. All rights reserved.</p>
         </div>
       </footer>
     </main>
@@ -342,34 +250,66 @@ const tiers = [
 
 <style is:global>
   :root {
-    --bg-dark: #0b0d11;
-    --text-primary: #ededed;
-    --text-secondary: #a1a1aa;
-    --accent: #fff;
-    --accent-hover: #e5e5e5;
-    --border-color: #27272a;
-    --card-bg: #15171b;
-    --grid-color: rgba(255, 255, 255, 0.05);
+    --bg-dark: #0f0d0b;
+    --bg-elevated: #15120f;
+    --text-primary: #f7f1e8;
+    --text-secondary: #c3b8ab;
+    --accent: #d4b37b;
+    --accent-hover: #dec28f;
+    --accent-ink: #1d1710;
+    --border-color: rgba(247, 241, 232, 0.1);
+    --card-bg: rgba(21, 18, 15, 0.92);
+    --grid-color: rgba(212, 179, 123, 0.05);
   }
 
   html,
   body {
     margin: 0;
     padding: 0;
-    font-family: "Inter", system-ui, sans-serif;
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
     background-color: var(--bg-dark);
-    background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-    background-size: 40px 40px;
+    background-image: radial-gradient(
+        circle at top left,
+        rgba(212, 179, 123, 0.06),
+        transparent 55%
+      ),
+      radial-gradient(
+        circle at 20% 20%,
+        rgba(247, 241, 232, 0.04),
+        transparent 60%
+      );
     color: var(--text-primary);
     min-height: 100vh;
     scroll-behavior: smooth;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+        0deg,
+        rgba(247, 241, 232, 0.02) 0px,
+        rgba(247, 241, 232, 0.02) 1px,
+        transparent 1px,
+        transparent 3px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgba(12, 10, 8, 0.2) 0px,
+        rgba(12, 10, 8, 0.2) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.18;
   }
 
   /* Navbar */
   .navbar {
     width: 100%;
-    background: rgba(11, 13, 17, 0.8);
+    background: rgba(12, 10, 8, 0.82);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border-color);
     display: flex;
@@ -438,6 +378,8 @@ const tiers = [
     margin: 0 auto;
     padding: 0 1.5rem;
     overflow-x: hidden;
+    position: relative;
+    z-index: 1;
   }
 
   /* Hero Section */
@@ -453,16 +395,25 @@ const tiers = [
   .hero-content {
     max-width: 800px;
   }
+  .hero-eyebrow {
+    font-family: "IBM Plex Mono", "Menlo", "Monaco", "Courier New", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.25rem;
+  }
   .hero-title {
     font-size: clamp(3rem, 6vw, 4.5rem);
-    font-weight: 800;
+    font-weight: 700;
+    font-family: "Fraunces", serif;
     color: var(--text-primary);
     margin-bottom: 1.5rem;
     line-height: 1.1;
     letter-spacing: -0.04em;
   }
   .text-gradient {
-    background: linear-gradient(120deg, #fff, #999);
+    background: linear-gradient(120deg, #f7f1e8, #d4b37b 60%, #dec28f);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -494,12 +445,10 @@ const tiers = [
   }
   .cta-btn.primary {
     background: var(--accent);
-    color: #000;
+    color: var(--accent-ink);
   }
   .cta-btn.primary:hover {
     background: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
   }
   .cta-btn.secondary {
     background: transparent;
@@ -527,29 +476,24 @@ const tiers = [
     height: 120%;
     background: radial-gradient(
       circle,
-      rgba(37, 99, 235, 0.15) 0%,
+      rgba(212, 179, 123, 0.1) 0%,
       transparent 70%
     );
     z-index: -1;
-    filter: blur(60px);
+    filter: blur(50px);
     pointer-events: none;
   }
 
   .code-window {
-    background: #0f1115;
+    background: #11100e;
     border-radius: 12px;
     padding: 1rem;
     box-shadow:
-      0 0 0 1px #333,
-      0 20px 50px -10px rgba(0, 0, 0, 0.5);
+      0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 18px 40px -16px rgba(0, 0, 0, 0.55);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    font-family: "Menlo", "Monaco", "Courier New", monospace;
+    font-family: "IBM Plex Mono", "Menlo", "Monaco", "Courier New", monospace;
     overflow: hidden;
-    transform: rotateX(2deg);
-    transition: transform 0.3s ease;
-  }
-  .code-window:hover {
-    transform: rotateX(0deg) scale(1.01);
   }
   .code-header {
     display: flex;
@@ -557,7 +501,7 @@ const tiers = [
     gap: 8px;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid #27272a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
   .window-title {
     margin-left: auto;
@@ -591,19 +535,19 @@ const tiers = [
     gap: 1.5rem;
   }
   .line-num {
-    color: #4b5563;
+    color: #6b6257;
     user-select: none;
     width: 20px;
     text-align: right;
   }
   .token-hash {
-    color: #60a5fa;
+    color: #d4b37b;
   }
   .token-text {
-    color: #f1f5f9;
+    color: #f7f1e8;
   }
   .token-field {
-    color: #4ade80;
+    color: #9bd3a3;
   }
 
   section {
@@ -612,6 +556,7 @@ const tiers = [
   .section-title {
     font-size: clamp(2rem, 4vw, 2.5rem);
     font-weight: 700;
+    font-family: "Fraunces", serif;
     color: var(--text-primary);
     margin-bottom: 4rem;
     text-align: center;
@@ -632,19 +577,22 @@ const tiers = [
     transition: all 0.3s ease;
   }
   .feature-card:hover {
-    border-color: var(--text-secondary);
-    transform: translateY(-4px);
+    border-color: rgba(247, 241, 232, 0.3);
   }
-  .feature-icon {
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
-    background: rgba(255, 255, 255, 0.05);
-    width: 56px;
-    height: 56px;
-    display: flex;
+  .feature-tag {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
+    width: 44px;
+    height: 28px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-family: "IBM Plex Mono", "Menlo", "Monaco", "Courier New", monospace;
+    color: var(--accent-ink);
+    background: rgba(212, 179, 123, 0.6);
+    margin-bottom: 1.5rem;
   }
   .feature-card h3 {
     font-size: 1.25rem;
@@ -664,7 +612,7 @@ const tiers = [
     padding: 6rem 0;
     background: linear-gradient(
       to bottom,
-      rgba(255, 255, 255, 0.02),
+      rgba(212, 179, 123, 0.03),
       transparent
     );
   }
@@ -697,8 +645,8 @@ const tiers = [
   .step-number {
     width: 40px;
     height: 40px;
-    background: var(--text-primary);
-    color: var(--bg-dark);
+    background: var(--accent);
+    color: var(--accent-ink);
     border-radius: 50%;
     font-size: 1.1rem;
     font-weight: 700;
@@ -727,7 +675,7 @@ const tiers = [
     border-radius: 16px;
     background: radial-gradient(
       circle at center,
-      rgba(255, 255, 255, 0.05),
+      rgba(212, 179, 123, 0.04),
       transparent 70%
     );
   }
@@ -758,14 +706,14 @@ const tiers = [
     transition: all 0.3s ease;
   }
   .tier:hover {
-    border-color: var(--text-primary);
-    transform: translateY(-4px);
+    border-color: rgba(247, 241, 232, 0.3);
   }
   .tier-name {
     color: var(--text-primary);
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
+    font-family: "Fraunces", serif;
   }
   .price {
     font-size: 3rem;
@@ -812,54 +760,8 @@ const tiers = [
     width: 100%;
   }
   .plan-button:hover {
-    background: var(--text-primary);
-    color: var(--bg-dark);
-  }
-
-  /* FAQ */
-  .faq-section {
-    max-width: 800px;
-    margin: 0 auto 6rem auto;
-  }
-  .faq-item {
-    border-bottom: 1px solid var(--border-color);
-    padding: 1.5rem 0;
-  }
-  .faq-item:first-child {
-    border-top: 1px solid var(--border-color);
-  }
-  .faq-question {
-    font-size: 1.125rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    user-select: none;
-    font-weight: 500;
-  }
-  .faq-answer {
-    max-height: 0;
-    overflow: hidden;
-    transition:
-      max-height 0.3s ease,
-      margin-top 0.3s ease;
-    color: var(--text-secondary);
-    font-size: 1rem;
-    line-height: 1.6;
-  }
-  .faq-item.open .faq-answer {
-    max-height: 500px;
-    margin-top: 1rem;
-  }
-  .faq-toggle {
-    color: var(--text-secondary);
-    transition: transform 0.3s ease;
-    font-size: 1.5rem;
-  }
-  .faq-item.open .faq-toggle {
-    color: var(--text-primary);
-    transform: rotate(45deg);
+    background: var(--accent);
+    color: var(--accent-ink);
   }
 
   footer {
@@ -868,6 +770,25 @@ const tiers = [
     text-align: center;
     color: var(--text-secondary);
     font-size: 0.9rem;
+  }
+  .questions {
+    text-align: center;
+    margin: 0 auto 6rem auto;
+    max-width: 700px;
+  }
+  .questions p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 1.05rem;
+  }
+  .questions a {
+    color: var(--text-primary);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(212, 179, 123, 0.45);
+  }
+  .questions a:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
   }
 
   @media (max-width: 768px) {
